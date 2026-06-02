@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>우편번호 조회 / Tra Mã Bưu Điện</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --blue: #3182ce;
+      --blue-dark: #2b6cb0;
+      --blue-light: #ebf8ff;
+      --green: #38a169;
+      --red: #e53e3e;
+      --gray-50: #f7fafc;
+      --gray-100: #edf2f7;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e0;
+      --gray-400: #a0aec0;
+      --gray-500: #718096;
+      --gray-600: #4a5568;
+      --gray-700: #2d3748;
+      --gray-900: #1a202c;
+      --radius: 8px;
+      --shadow: 0 1px 5px rgba(0,0,0,0.1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', 'Noto Sans KR', 'Arial', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+      color: var(--gray-700);
+    }
+
+    .container { max-width: 900px; margin: 0 auto; }
+
+    /* ── Top bar ── */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .topbar-title h1 { font-size: 1.4rem; color: var(--gray-900); }
+    .topbar-title p  { font-size: 0.85rem; color: var(--gray-500); margin-top: 3px; }
+
+    .lang-switcher { display: flex; gap: 6px; }
+
+    .lang-btn {
+      padding: 5px 13px;
+      border: 1.5px solid var(--gray-300);
+      border-radius: 99px;
+      background: white;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--gray-600);
+    }
+    .lang-btn.active, .lang-btn:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+      background: var(--blue-light);
+    }
+
+    /* ── API Key ── */
+    .api-box {
+      background: white;
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .api-box label {
+      font-size: 0.83rem;
+      font-weight: 700;
+      color: var(--gray-600);
+      white-space: nowrap;
+    }
+
+    .api-box input {
+      flex: 1;
+      min-width: 200px;
+      padding: 7px 11px;
+      border: 1.5px solid var(--gray-300);
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-family: monospace;
+    }
+
+    .api-box input:focus { outline: none; border-color: var(--blue); }
+
+    .api-box a {
+      font-size: 0.8rem;
+      color: var(--blue);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .api-box a:hover { text-decoration: underline; }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 0;
+      border-bottom: 2px solid var(--gray-200);
+    }
+
+    .tab-btn {
+      padding: 11px 22px;
+      border: none;
+      background: transparent;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--gray-500);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.15s;
+    }
+
+    .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .tab-btn:hover:not(.active) { color: var(--gray-700); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Card ── */
+    .card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-top: 16px;
+    }
+
+    .card label {
+      display: block;
+      font-size: 0.83rem;
+      font-weight: 700;
+      color: var(--gray-600);
+      margin-bottom: 7px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 190px;
+      padding: 10px 12px;
+      border: 1.5px solid var(--gray-300);
+      border-radius: 6px;
+      font-size: 0.88rem;
+      resize: vertical;
+      line-height: 1.7;
+      font-family: inherit;
+    }
+    textarea:focus { outline: none; border-color: var(--blue); }
+
+    .hint { font-size: 0.78rem; color: var(--gray-400); margin-top: 6px; line-height: 1.5; }
+
+    /* ── Buttons ── */
+    .btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+
+    .btn {
+      padding: 9px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-primary  { background: var(--blue); color: white; }
+    .btn-primary:hover  { background: var(--blue-dark); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-ghost { background: var(--gray-100); color: var(--gray-600); }
+    .btn-ghost:hover { background: var(--gray-200); }
+
+    .btn-green { background: var(--green); color: white; }
+    .btn-green:hover { background: #2f855a; }
+    .btn-green:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-orange { background: #dd6b20; color: white; }
+    .btn-orange:hover { background: #c05621; }
+    .btn-orange:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .ml-auto { margin-left: auto; }
+
+    /* ── Progress ── */
+    .progress-bar-wrap {
+      display: none;
+      margin-top: 14px;
+      background: var(--gray-100);
+      border-radius: 99px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--blue);
+      border-radius: 99px;
+      transition: width 0.2s;
+      width: 0%;
+    }
+
+    .progress-label {
+      display: none;
+      font-size: 0.82rem;
+      color: var(--gray-500);
+      margin-top: 5px;
+      text-align: right;
+    }
+
+    /* ── Results table ── */
+    .results-box {
+      margin-top: 16px;
+      display: none;
+    }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .results-header .summary { font-size: 0.88rem; color: var(--gray-600); font-weight: 600; }
+
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); box-shadow: var(--shadow); }
+
+    table { width: 100%; border-collapse: collapse; background: white; font-size: 0.88rem; }
+    th {
+      background: var(--gray-50);
+      padding: 9px 14px;
+      text-align: left;
+      font-size: 0.78rem;
+      color: var(--gray-500);
+      font-weight: 700;
+      border-bottom: 1.5px solid var(--gray-200);
+      white-space: nowrap;
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--gray-100);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--gray-50); }
+
+    .zip-found { font-weight: 700; color: #1a56db; font-family: monospace; font-size: 1rem; }
+    .zip-error { color: var(--red); font-size: 0.8rem; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 99px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .badge-road   { background: #ebf8ff; color: #1a56db; }
+    .badge-jibun  { background: #fefcbf; color: #744210; }
+    .badge-error  { background: #fff5f5; color: var(--red); }
+
+    .addr-small { font-size: 0.78rem; color: var(--gray-400); margin-top: 2px; }
+
+    /* ── Upload area ── */
+    .upload-area {
+      border: 2px dashed var(--gray-300);
+      border-radius: var(--radius);
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: var(--gray-50);
+    }
+    .upload-area:hover, .upload-area.drag-over {
+      border-color: var(--blue);
+      background: var(--blue-light);
+    }
+    .upload-icon { font-size: 2.2rem; margin-bottom: 8px; }
+    .upload-area p { font-size: 0.88rem; color: var(--gray-500); }
+    .upload-area strong { color: var(--blue); }
+    #fileInput { display: none; }
+
+    .file-info {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: #f0fff4;
+      border: 1px solid #9ae6b4;
+      border-radius: 6px;
+      margin-top: 10px;
+      font-size: 0.88rem;
+    }
+    .file-info .file-name { font-weight: 600; color: var(--gray-700); }
+    .file-info .file-size { color: var(--gray-400); font-size: 0.78rem; }
+
+    .col-select-row {
+      display: none;
+      gap: 12px;
+      align-items: center;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .col-select-row label { font-size: 0.83rem; font-weight: 700; color: var(--gray-600); }
+    .col-select-row select {
+      padding: 7px 11px;
+      border: 1.5px solid var(--gray-300);
+      border-radius: 6px;
+      font-size: 0.88rem;
+      background: white;
+    }
+    .col-select-row select:focus { outline: none; border-color: var(--blue); }
+
+    .preview-table-wrap {
+      display: none;
+      margin-top: 14px;
+      max-height: 180px;
+      overflow: auto;
+      border-radius: 6px;
+      border: 1px solid var(--gray-200);
+    }
+    .preview-table-wrap table { font-size: 0.8rem; }
+    .preview-table-wrap th { font-size: 0.72rem; }
+    .preview-table-wrap td { padding: 6px 10px; }
+    .preview-table-wrap th.highlight-col,
+    .preview-table-wrap td.highlight-col {
+      background: #ebf8ff;
+      color: var(--blue);
+      font-weight: 600;
+    }
+
+    .error-banner {
+      padding: 10px 14px;
+      background: #fff5f5;
+      border: 1px solid #fed7d7;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: var(--red);
+      margin-top: 10px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-title">
+      <h1 data-i18n="title">Tra Mã Bưu Điện Hàn Quốc</h1>
+      <p data-i18n="subtitle">Nhập địa chỉ hoặc upload file Excel để lấy 우편번호 (5 chữ số)</p>
+    </div>
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('vi')">Tiếng Việt</button>
+      <button class="lang-btn" onclick="setLang('en')">English</button>
+      <button class="lang-btn" onclick="setLang('ko')">한국어</button>
+    </div>
+  </div>
+
+  <!-- API Key -->
+  <div class="api-box">
+    <label data-i18n="apiKeyLabel">Kakao REST API Key</label>
+    <input type="text" id="apiKey" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
+    <a href="https://developers.kakao.com/console/app" target="_blank" data-i18n="getKey">Lấy API Key miễn phí →</a>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="manual" data-i18n="tabManual" onclick="switchTab('manual')">Tìm kiếm thủ công</button>
+    <button class="tab-btn" data-tab="excel" data-i18n="tabExcel" onclick="switchTab('excel')">Upload Excel</button>
+  </div>
+
+  <!-- ══ TAB 1: Manual ══ -->
+  <div class="tab-panel active" id="tab-manual">
+    <div class="card">
+      <label data-i18n="manualLabel">Danh sách địa chỉ (mỗi dòng 1 địa chỉ)</label>
+      <textarea id="addressInput" data-i18n-placeholder="manualPlaceholder"></textarea>
+      <p class="hint" data-i18n="manualHint">Gợi ý: bỏ số phòng/tên tòa nhà sẽ cho kết quả chính xác hơn.</p>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="searchBtn" onclick="runManualSearch()" data-i18n="btnSearch">Tra cứu</button>
+        <button class="btn btn-ghost" onclick="clearManual()" data-i18n="btnClear">Xóa</button>
+        <button class="btn btn-ghost ml-auto" onclick="loadSample()" data-i18n="btnSample">Tải địa chỉ mẫu</button>
+      </div>
+      <div class="progress-bar-wrap" id="manualProgressWrap"><div class="progress-bar-fill" id="manualProgressFill"></div></div>
+      <div class="progress-label" id="manualProgressLabel"></div>
+    </div>
+
+    <div class="results-box" id="manualResults">
+      <div class="results-header">
+        <span class="summary" id="manualSummary"></span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" onclick="copyManualResults()" data-i18n="btnCopy">Sao chép kết quả</button>
+          <button class="btn btn-green" onclick="downloadManualExcel()" data-i18n="btnDownloadResult">Tải file kết quả</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th data-i18n="colZip">Mã bưu điện</th>
+              <th data-i18n="colInput">Địa chỉ nhập</th>
+              <th data-i18n="colNormalized">Địa chỉ chuẩn hóa</th>
+              <th data-i18n="colType">Loại</th>
+            </tr>
+          </thead>
+          <tbody id="manualBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB 2: Excel ══ -->
+  <div class="tab-panel" id="tab-excel">
+    <div class="card">
+      <!-- Upload area -->
+      <label data-i18n="excelUploadLabel">Tải lên file Excel</label>
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+        <div class="upload-icon">📂</div>
+        <p><strong data-i18n="uploadClick">Nhấp để chọn file</strong> <span data-i18n="uploadDrag">hoặc kéo thả vào đây</span></p>
+        <p style="margin-top:5px;font-size:0.78rem;" data-i18n="uploadFormats">Hỗ trợ: .xlsx, .xls, .csv</p>
+      </div>
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" onchange="onFileSelected(event)" />
+
+      <div class="file-info" id="fileInfo">
+        <span>📄</span>
+        <span class="file-name" id="fileName"></span>
+        <span class="file-size" id="fileSize"></span>
+        <button class="btn btn-ghost" style="margin-left:auto;padding:4px 12px;font-size:0.78rem;" onclick="resetFile()" data-i18n="btnRemove">Xóa file</button>
+      </div>
+
+      <!-- Column selector -->
+      <div class="col-select-row" id="colSelectRow">
+        <label data-i18n="colSelectLabel">Cột chứa địa chỉ:</label>
+        <select id="colSelect" onchange="updatePreview()"></select>
+        <label data-i18n="headerRowLabel">Hàng tiêu đề:</label>
+        <select id="headerRowSelect" onchange="onHeaderRowChange()">
+          <option value="1">1</option>
+          <option value="0" data-i18n-option="noHeader">Không có tiêu đề</option>
+        </select>
+      </div>
+
+      <!-- Preview -->
+      <div class="preview-table-wrap" id="previewWrap"></div>
+
+      <div class="error-banner" id="uploadError"></div>
+
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn btn-primary" id="excelSearchBtn" onclick="runExcelSearch()" disabled data-i18n="btnProcess">Tra cứu mã bưu điện</button>
+        <button class="btn btn-ghost" onclick="resetFile()" data-i18n="btnClear">Xóa</button>
+      </div>
+
+      <div class="progress-bar-wrap" id="excelProgressWrap"><div class="progress-bar-fill" id="excelProgressFill"></div></div>
+      <div class="progress-label" id="excelProgressLabel"></div>
+    </div>
+
+    <div class="results-box" id="excelResults">
+      <div class="results-header">
+        <span class="summary" id="excelSummary"></span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-ghost" id="btnDownloadOriginal" onclick="downloadOriginal()" data-i18n="btnDownloadOriginal">Tải file gốc</button>
+          <button class="btn btn-green" id="btnDownloadResultExcel" onclick="downloadExcelResult()" data-i18n="btnDownloadResult">Tải file kết quả</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="excelResultTable">
+          <thead id="excelResultHead"></thead>
+          <tbody id="excelResultBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ══════════════════════════════════════════════
+//  i18n
+// ══════════════════════════════════════════════
+const LANGS = {
+  vi: {
+    title: 'Tra Mã Bưu Điện Hàn Quốc',
+    subtitle: 'Nhập địa chỉ hoặc upload file Excel để lấy 우편번호 (5 chữ số)',
+    apiKeyLabel: 'Kakao REST API Key',
+    getKey: 'Lấy API Key miễn phí →',
+    tabManual: 'Tìm kiếm thủ công',
+    tabExcel: 'Upload Excel',
+    manualLabel: 'Danh sách địa chỉ (mỗi dòng 1 địa chỉ)',
+    manualPlaceholder: 'Ví dụ:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
+    manualHint: 'Gợi ý: bỏ số phòng / tên tòa nhà sẽ cho kết quả chính xác hơn.',
+    btnSearch: 'Tra cứu',
+    btnClear: 'Xóa',
+    btnSample: 'Tải địa chỉ mẫu',
+    btnCopy: 'Sao chép kết quả',
+    btnDownloadResult: 'Tải file kết quả (.xlsx)',
+    btnDownloadOriginal: 'Tải file gốc',
+    btnProcess: 'Tra cứu mã bưu điện',
+    btnRemove: 'Xóa file',
+    colZip: 'Mã bưu điện',
+    colInput: 'Địa chỉ nhập',
+    colNormalized: 'Địa chỉ chuẩn hóa',
+    colType: 'Loại',
+    excelUploadLabel: 'Tải lên file Excel',
+    uploadClick: 'Nhấp để chọn file',
+    uploadDrag: 'hoặc kéo thả vào đây',
+    uploadFormats: 'Hỗ trợ: .xlsx, .xls, .csv',
+    colSelectLabel: 'Cột chứa địa chỉ:',
+    headerRowLabel: 'Hàng tiêu đề:',
+    noHeader: 'Không có tiêu đề',
+    summaryFound: (f, t) => `Kết quả: ${f}/${t} địa chỉ tìm thấy mã bưu điện`,
+    progressText: (i, t) => `Đang tra cứu... ${i}/${t}`,
+    errNoApiKey: 'Vui lòng nhập Kakao REST API Key.',
+    errNoAddress: 'Vui lòng nhập ít nhất 1 địa chỉ.',
+    errNoFile: 'Chưa chọn file.',
+    errInvalidKey: 'API Key không hợp lệ (lỗi 401). Kiểm tra lại key.',
+    errNotFound: 'Không tìm thấy',
+    typeRoad: 'Tên đường',
+    typeJibun: 'Số lô',
+    typeError: 'Lỗi',
+    colZipResult: 'Mã bưu điện',
+    copied: 'Đã sao chép!',
+    previewLabel: 'Xem trước (5 dòng đầu):',
+  },
+  en: {
+    title: 'Korea Postal Code Lookup',
+    subtitle: 'Enter addresses or upload an Excel file to get 우편번호 (5-digit ZIP)',
+    apiKeyLabel: 'Kakao REST API Key',
+    getKey: 'Get free API Key →',
+    tabManual: 'Manual Search',
+    tabExcel: 'Upload Excel',
+    manualLabel: 'Address list (one address per line)',
+    manualPlaceholder: 'Example:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
+    manualHint: 'Tip: removing room numbers / building names improves accuracy.',
+    btnSearch: 'Search',
+    btnClear: 'Clear',
+    btnSample: 'Load sample addresses',
+    btnCopy: 'Copy results',
+    btnDownloadResult: 'Download result (.xlsx)',
+    btnDownloadOriginal: 'Download original file',
+    btnProcess: 'Look up postal codes',
+    btnRemove: 'Remove file',
+    colZip: 'Postal Code',
+    colInput: 'Input Address',
+    colNormalized: 'Normalized Address',
+    colType: 'Type',
+    excelUploadLabel: 'Upload Excel File',
+    uploadClick: 'Click to select a file',
+    uploadDrag: 'or drag & drop here',
+    uploadFormats: 'Supported: .xlsx, .xls, .csv',
+    colSelectLabel: 'Address column:',
+    headerRowLabel: 'Header row:',
+    noHeader: 'No header',
+    summaryFound: (f, t) => `Results: ${f}/${t} addresses found`,
+    progressText: (i, t) => `Looking up... ${i}/${t}`,
+    errNoApiKey: 'Please enter your Kakao REST API Key.',
+    errNoAddress: 'Please enter at least one address.',
+    errNoFile: 'No file selected.',
+    errInvalidKey: 'Invalid API Key (401 error). Please check your key.',
+    errNotFound: 'Not found',
+    typeRoad: 'Road',
+    typeJibun: 'Jibun',
+    typeError: 'Error',
+    colZipResult: 'Postal Code',
+    copied: 'Copied!',
+    previewLabel: 'Preview (first 5 rows):',
+  },
+  ko: {
+    title: '한국 우편번호 조회',
+    subtitle: '주소를 입력하거나 엑셀 파일을 업로드하여 5자리 우편번호를 조회하세요',
+    apiKeyLabel: 'Kakao REST API 키',
+    getKey: '무료 API 키 발급 →',
+    tabManual: '수동 검색',
+    tabExcel: '엑셀 업로드',
+    manualLabel: '주소 목록 (한 줄에 하나씩)',
+    manualPlaceholder: '예시:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
+    manualHint: '팁: 호수/동호 정보를 제거하면 더 정확한 결과를 얻을 수 있습니다.',
+    btnSearch: '우편번호 조회',
+    btnClear: '초기화',
+    btnSample: '예시 주소 불러오기',
+    btnCopy: '결과 복사',
+    btnDownloadResult: '결과 파일 다운로드 (.xlsx)',
+    btnDownloadOriginal: '원본 파일 다운로드',
+    btnProcess: '우편번호 조회 시작',
+    btnRemove: '파일 제거',
+    colZip: '우편번호',
+    colInput: '입력 주소',
+    colNormalized: '정규화 주소',
+    colType: '유형',
+    excelUploadLabel: '엑셀 파일 업로드',
+    uploadClick: '파일 선택',
+    uploadDrag: '또는 여기에 드래그 앤 드롭',
+    uploadFormats: '지원 형식: .xlsx, .xls, .csv',
+    colSelectLabel: '주소가 있는 열:',
+    headerRowLabel: '헤더 행:',
+    noHeader: '헤더 없음',
+    summaryFound: (f, t) => `결과: ${t}건 중 ${f}건 우편번호 확인`,
+    progressText: (i, t) => `조회 중... (${i}/${t})`,
+    errNoApiKey: 'Kakao REST API 키를 입력하세요.',
+    errNoAddress: '주소를 하나 이상 입력하세요.',
+    errNoFile: '파일을 선택하세요.',
+    errInvalidKey: 'API 키가 올바르지 않습니다 (401 오류).',
+    errNotFound: '찾을 수 없음',
+    typeRoad: '도로명',
+    typeJibun: '지번',
+    typeError: '오류',
+    colZipResult: '우편번호',
+    copied: '복사 완료!',
+    previewLabel: '미리보기 (첫 5행):',
+  }
+};
+
+let currentLang = 'vi';
+
+function t(key, ...args) {
+  const val = LANGS[currentLang][key];
+  if (typeof val === 'function') return val(...args);
+  return val || key;
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('lang', lang);
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    if (b.textContent.includes(lang === 'vi' ? 'Việt' : lang === 'en' ? 'English' : '한국')) b.classList.add('active');
+  });
+  // Re-activate by onclick attribute
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    const fn = b.getAttribute('onclick');
+    if (fn && fn.includes(`'${lang}'`)) b.classList.add('active');
+    else b.classList.remove('active');
+  });
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (LANGS[currentLang][key]) el.textContent = LANGS[currentLang][key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    if (LANGS[currentLang][key]) el.placeholder = LANGS[currentLang][key];
+  });
+  // header row no-header option
+  const noHeaderOpt = document.querySelector('[data-i18n-option="noHeader"]');
+  if (noHeaderOpt) noHeaderOpt.textContent = t('noHeader');
+
+  document.title = t('title');
+  updatePreview();
+}
+
+// ══════════════════════════════════════════════
+//  Tab switching
+// ══════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+}
+
+// ══════════════════════════════════════════════
+//  Kakao API
+// ══════════════════════════════════════════════
+const SAMPLE = `대구시 중구 삼덕동2가 112-1번지(태경빌) 101호
+경기 수원시 팔달구 향교로 122 303호
+경기도 화성시 향남읍 한절이2길 29 202호
+광주광역시 광산구 남부대길 1 국제교육원 기숙사
+경상북도 포항시 북구 학산동 149-1 106호
+(54003) 전북특별자치도 군산시 비응6길 23 5 4003
+부산 동래구 미남로116번길 79-4 카이저빌 401호
+강릉시 지변동280-1 율곡원룸 원룸301호
+경기도 시흥시 정왕동 1586-5,106호
+부산광역시 기장군 장안읍 장안산단로 31
+강원특별자치도 강릉시 관대길 42 (내곡동) 206호
+(38523) 경상북도 경산시 둥지로21길 51 시티21 105호
+(52930) 경상남도 고성군 고성읍 덕선2길 26-10 파레스 301호
+경기도 안성시 동본동3 드림오피스텔 102호
+경북 경주시 국민주택길40-22 104호
+경기도 평택시 포승읍 신촌길 65-17
+충청남도 당진시 천변1길 80 대덕동 조은마을 404호 (31777)
+경주시 원화로 386-5 101호 (동천동)
+대구광역시 북구 태암로6길 37, 205호 (태전동)
+전라남도 목포시 동명들목로 33, 그린오피스텔 310호`;
+
+function cleanAddress(addr) {
+  return addr
+    // strip leading postal code like (54003)
+    .replace(/^\(\d{5}\)\s*/, '')
+    // strip building name common patterns
+    .replace(/\s*(빌라?|오피스텔|아파트|빌딩|타워|카이저빌|태경빌|율곡원룸|드림오피스텔|시티\d*|파레스|조은마을|그린오피스텔|국제교육원\s*기숙사)\s*/g, ' ')
+    // strip unit numbers like 101호, 3동 405호, 206호
+    .replace(/\s*\d+[동층]\s*\d*호?\s*/g, ' ')
+    .replace(/\s*\d+호\s*/g, ' ')
+    // strip parenthetical annotations like (내곡동)
+    .replace(/\s*\([^)]*\)\s*/g, ' ')
+    // strip comma
+    .replace(/,\s*/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+async function kakaoLookup(rawAddr, apiKey) {
+  const cleaned = cleanAddress(rawAddr);
+
+  const search = async (q) => {
+    const r = await fetch(
+      `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(q)}&size=1`,
+      { headers: { Authorization: `KakaoAK ${apiKey}` } }
+    );
+    if (r.status === 401) throw new Error('AUTH');
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  };
+
+  let data = await search(cleaned);
+
+  // fallback: try keyword search then re-query road address
+  if (!data.documents?.length) {
+    const r2 = await fetch(
+      `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(cleaned)}&size=1`,
+      { headers: { Authorization: `KakaoAK ${apiKey}` } }
+    );
+    if (r2.ok) {
+      const d2 = await r2.json();
+      if (d2.documents?.[0]?.road_address_name) {
+        data = await search(d2.documents[0].road_address_name);
+      }
+    }
+  }
+
+  if (data.documents?.length) {
+    const doc = data.documents[0];
+    const road = doc.road_address;
+    const jibun = doc.address;
+    if (road?.zone_no) return { zip: road.zone_no, display: road.address_name, type: 'road' };
+    if (jibun)         return { zip: null, display: jibun.address_name, type: 'jibun' };
+  }
+
+  return { zip: null, display: null, type: 'not_found' };
+}
+
+async function batchLookup(addresses, apiKey, onProgress) {
+  const results = [];
+  for (let i = 0; i < addresses.length; i++) {
+    onProgress(i + 1, addresses.length);
+    try {
+      const r = await kakaoLookup(addresses[i], apiKey);
+      results.push({ original: addresses[i], ...r });
+    } catch (e) {
+      if (e.message === 'AUTH') {
+        results.push({ original: addresses[i], zip: null, display: null, type: 'auth_error' });
+        // fill rest as auth error
+        for (let j = i + 1; j < addresses.length; j++)
+          results.push({ original: addresses[j], zip: null, display: null, type: 'auth_error' });
+        return { results, authError: true };
+      }
+      results.push({ original: addresses[i], zip: null, display: null, type: 'error', error: e.message });
+    }
+    if (i < addresses.length - 1) await new Promise(r => setTimeout(r, 110));
+  }
+  return { results, authError: false };
+}
+
+// ══════════════════════════════════════════════
+//  Manual tab
+// ══════════════════════════════════════════════
+let manualRows = [];
+
+function loadSample() { document.getElementById('addressInput').value = SAMPLE; }
+function clearManual() {
+  document.getElementById('addressInput').value = '';
+  document.getElementById('manualResults').style.display = 'none';
+  manualRows = [];
+}
+
+async function runManualSearch() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const raw = document.getElementById('addressInput').value.trim();
+  if (!apiKey) { alert(t('errNoApiKey')); return; }
+  if (!raw)    { alert(t('errNoAddress')); return; }
+
+  const addresses = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const btn = document.getElementById('searchBtn');
+  const wrap = document.getElementById('manualProgressWrap');
+  const fill = document.getElementById('manualProgressFill');
+  const lbl  = document.getElementById('manualProgressLabel');
+
+  btn.disabled = true;
+  wrap.style.display = 'block';
+  lbl.style.display = 'block';
+  document.getElementById('manualResults').style.display = 'none';
+
+  const { results, authError } = await batchLookup(addresses, apiKey, (i, total) => {
+    fill.style.width = `${Math.round(i / total * 100)}%`;
+    lbl.textContent = t('progressText', i, total);
+  });
+
+  btn.disabled = false;
+  wrap.style.display = 'none';
+  lbl.style.display = 'none';
+
+  if (authError) { alert(t('errInvalidKey')); }
+
+  manualRows = results;
+  renderManualResults(results);
+}
+
+function renderManualResults(rows) {
+  const tbody = document.getElementById('manualBody');
+  tbody.innerHTML = '';
+  rows.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${r.zip ? `<span class="zip-found">${r.zip}</span>` : `<span class="zip-error">${t('errNotFound')}</span>`}</td>
+      <td>${esc(r.original)}</td>
+      <td>${r.display ? esc(r.display) : '—'}</td>
+      <td>${typeBadge(r.type)}</td>`;
+    tbody.appendChild(tr);
+  });
+  const found = rows.filter(r => r.zip).length;
+  document.getElementById('manualSummary').textContent = t('summaryFound', found, rows.length);
+  document.getElementById('manualResults').style.display = 'block';
+}
+
+function copyManualResults() {
+  const lines = manualRows.map(r => `${r.zip || t('errNotFound')}\t${r.original}\t${r.display || ''}`);
+  navigator.clipboard.writeText(lines.join('\n'))
+    .then(() => { const b = event.target; b.textContent = t('copied'); setTimeout(() => { setLang(currentLang); }, 1500); });
+}
+
+function downloadManualExcel() {
+  if (!manualRows.length) return;
+  const ws_data = [[t('colInput'), t('colZipResult'), t('colNormalized'), t('colType')]];
+  manualRows.forEach(r => ws_data.push([r.original, r.zip || '', r.display || '', typeLabel(r.type)]));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ws_data), '우편번호');
+  XLSX.writeFile(wb, 'postal_codes_result.xlsx');
+}
+
+// ══════════════════════════════════════════════
+//  Excel tab
+// ══════════════════════════════════════════════
+let uploadedFile = null;
+let originalFileBlob = null;
+let workbookData = [];   // array of arrays (all rows)
+let headers = [];
+let excelRows = [];      // processed result rows
+
+function onDragOver(e)  { e.preventDefault(); document.getElementById('uploadArea').classList.add('drag-over'); }
+function onDragLeave(e) { document.getElementById('uploadArea').classList.remove('drag-over'); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadArea').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) processFile(file);
+}
+function onFileSelected(e) {
+  const file = e.target.files[0];
+  if (file) processFile(file);
+}
+
+function processFile(file) {
+  uploadedFile = file;
+  originalFileBlob = file;
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileSize').textContent = formatBytes(file.size);
+  document.getElementById('fileInfo').style.display = 'flex';
+  document.getElementById('uploadError').style.display = 'none';
+  document.getElementById('excelResults').style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      workbookData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+      if (!workbookData.length) throw new Error('Empty file');
+      populateColSelect();
+      document.getElementById('excelSearchBtn').disabled = false;
+    } catch(err) {
+      showUploadError('파일을 읽을 수 없습니다: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function resetFile() {
+  uploadedFile = null;
+  originalFileBlob = null;
+  workbookData = [];
+  document.getElementById('fileInfo').style.display = 'none';
+  document.getElementById('colSelectRow').style.display = 'none';
+  document.getElementById('previewWrap').style.display = 'none';
+  document.getElementById('excelResults').style.display = 'none';
+  document.getElementById('excelSearchBtn').disabled = true;
+  document.getElementById('uploadError').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+}
+
+function populateColSelect() {
+  const headerRow = parseInt(document.getElementById('headerRowSelect').value);
+  const row = headerRow > 0 ? workbookData[0] : workbookData[0];
+  headers = row.map((v, i) => headerRow > 0 ? String(v || `열 ${i+1}`) : `열 ${i+1}`);
+
+  const sel = document.getElementById('colSelect');
+  sel.innerHTML = '';
+  headers.forEach((h, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${colLetter(i)}: ${h}`;
+    sel.appendChild(opt);
+  });
+
+  // auto-detect address column (contains Korean address keywords)
+  const addrKeywords = ['주소', 'address', 'addr', '住所'];
+  let best = 0;
+  headers.forEach((h, i) => {
+    if (addrKeywords.some(k => h.toLowerCase().includes(k))) best = i;
+  });
+  // also check first few data rows for Korean address patterns
+  if (best === 0) {
+    const dataStart = parseInt(document.getElementById('headerRowSelect').value) > 0 ? 1 : 0;
+    const sampleRow = workbookData[dataStart] || [];
+    sampleRow.forEach((v, i) => {
+      if (typeof v === 'string' && /[시구동읍면로길]/.test(v)) best = i;
+    });
+  }
+  sel.value = best;
+
+  document.getElementById('colSelectRow').style.display = 'flex';
+  updatePreview();
+}
+
+function onHeaderRowChange() {
+  if (workbookData.length) populateColSelect();
+}
+
+function updatePreview() {
+  if (!workbookData.length) return;
+  const colIdx = parseInt(document.getElementById('colSelect').value);
+  const hasHeader = parseInt(document.getElementById('headerRowSelect').value) > 0;
+  const dataStart = hasHeader ? 1 : 0;
+  const previewRows = workbookData.slice(0, dataStart + 5);
+
+  let html = '<table><thead><tr>';
+  if (hasHeader) {
+    workbookData[0].forEach((h, i) => {
+      html += `<th${i === colIdx ? ' class="highlight-col"' : ''}>${esc(String(h))}</th>`;
+    });
+  } else {
+    workbookData[0].forEach((_, i) => {
+      html += `<th${i === colIdx ? ' class="highlight-col"' : ''}>${colLetter(i)}</th>`;
+    });
+  }
+  html += '</tr></thead><tbody>';
+
+  previewRows.slice(dataStart).forEach(row => {
+    html += '<tr>';
+    row.forEach((cell, i) => {
+      html += `<td${i === colIdx ? ' class="highlight-col"' : ''}>${esc(String(cell))}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+
+  const wrap = document.getElementById('previewWrap');
+  wrap.innerHTML = html;
+  wrap.style.display = 'block';
+}
+
+async function runExcelSearch() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey)         { alert(t('errNoApiKey')); return; }
+  if (!workbookData.length) { alert(t('errNoFile')); return; }
+
+  const colIdx   = parseInt(document.getElementById('colSelect').value);
+  const hasHeader = parseInt(document.getElementById('headerRowSelect').value) > 0;
+  const dataStart = hasHeader ? 1 : 0;
+
+  const dataRows = workbookData.slice(dataStart);
+  const addresses = dataRows.map(row => String(row[colIdx] || '').trim()).filter(Boolean);
+
+  if (!addresses.length) { alert(t('errNoAddress')); return; }
+
+  const btn  = document.getElementById('excelSearchBtn');
+  const wrap = document.getElementById('excelProgressWrap');
+  const fill = document.getElementById('excelProgressFill');
+  const lbl  = document.getElementById('excelProgressLabel');
+
+  btn.disabled = true;
+  wrap.style.display = 'block';
+  lbl.style.display = 'block';
+  document.getElementById('excelResults').style.display = 'none';
+
+  const { results, authError } = await batchLookup(addresses, apiKey, (i, total) => {
+    fill.style.width = `${Math.round(i / total * 100)}%`;
+    lbl.textContent = t('progressText', i, total);
+  });
+
+  btn.disabled = false;
+  wrap.style.display = 'none';
+  lbl.style.display = 'none';
+
+  if (authError) alert(t('errInvalidKey'));
+
+  excelRows = dataRows.map((row, i) => ({ rowData: row, ...results[i] }));
+  renderExcelResults(excelRows, hasHeader ? workbookData[0] : null);
+}
+
+function renderExcelResults(rows, headerRow) {
+  const thead = document.getElementById('excelResultHead');
+  const tbody = document.getElementById('excelResultBody');
+
+  // Build header
+  const colCount = rows[0]?.rowData?.length || 0;
+  let hHtml = '<tr>';
+  if (headerRow) {
+    headerRow.forEach(h => { hHtml += `<th>${esc(String(h))}</th>`; });
+  } else {
+    for (let i = 0; i < colCount; i++) hHtml += `<th>${colLetter(i)}</th>`;
+  }
+  hHtml += `<th style="color:var(--blue)">★ ${t('colZipResult')}</th><th>${t('colNormalized')}</th><th>${t('colType')}</th></tr>`;
+  thead.innerHTML = hHtml;
+
+  // Build body
+  tbody.innerHTML = '';
+  rows.forEach(r => {
+    let tr = '<tr>';
+    r.rowData.forEach(cell => { tr += `<td>${esc(String(cell))}</td>`; });
+    tr += `<td>${r.zip ? `<span class="zip-found">${r.zip}</span>` : `<span class="zip-error">${t('errNotFound')}</span>`}</td>`;
+    tr += `<td>${r.display ? esc(r.display) : '—'}</td>`;
+    tr += `<td>${typeBadge(r.type)}</td>`;
+    tr += '</tr>';
+    tbody.innerHTML += tr;
+  });
+
+  const found = rows.filter(r => r.zip).length;
+  document.getElementById('excelSummary').textContent = t('summaryFound', found, rows.length);
+  document.getElementById('excelResults').style.display = 'block';
+}
+
+function downloadOriginal() {
+  if (!originalFileBlob) return;
+  const url = URL.createObjectURL(originalFileBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = uploadedFile.name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadExcelResult() {
+  if (!excelRows.length) return;
+  const hasHeader = parseInt(document.getElementById('headerRowSelect').value) > 0;
+
+  const ws_data = [];
+  if (hasHeader && workbookData[0]) {
+    ws_data.push([...workbookData[0], t('colZipResult'), t('colNormalized'), t('colType')]);
+  }
+  excelRows.forEach(r => {
+    ws_data.push([...r.rowData, r.zip || '', r.display || '', typeLabel(r.type)]);
+  });
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+  // Style the zip column header (just bold via XLSX is limited in free version, skip for now)
+  XLSX.utils.book_append_sheet(wb, ws, '우편번호_결과');
+  const origName = uploadedFile?.name.replace(/\.[^.]+$/, '') || 'result';
+  XLSX.writeFile(wb, `${origName}_우편번호.xlsx`);
+}
+
+function showUploadError(msg) {
+  const el = document.getElementById('uploadError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// ══════════════════════════════════════════════
+//  Helpers
+// ══════════════════════════════════════════════
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function typeBadge(type) {
+  if (type === 'road') return `<span class="badge badge-road">${t('typeRoad')}</span>`;
+  if (type === 'jibun') return `<span class="badge badge-jibun">${t('typeJibun')}</span>`;
+  return `<span class="badge badge-error">${t('typeError')}</span>`;
+}
+
+function typeLabel(type) {
+  if (type === 'road') return t('typeRoad');
+  if (type === 'jibun') return t('typeJibun');
+  return t('typeError');
+}
+
+function colLetter(i) {
+  let s = '';
+  i++;
+  while (i > 0) { s = String.fromCharCode(64 + (i % 26 || 26)) + s; i = Math.floor((i - 1) / 26); }
+  return s;
+}
+
+function formatBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+  return (b / 1048576).toFixed(1) + ' MB';
+}
+
+// ══════════════════════════════════════════════
+//  Init
+// ══════════════════════════════════════════════
+(function init() {
+  const savedKey = localStorage.getItem('kakao_api_key');
+  if (savedKey) document.getElementById('apiKey').value = savedKey;
+  document.getElementById('apiKey').addEventListener('input', e => {
+    localStorage.setItem('kakao_api_key', e.target.value.trim());
+  });
+
+  const savedLang = localStorage.getItem('lang') || 'vi';
+  setLang(savedLang);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đăng nhập – Việt Hàn Logistics</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%231e40af'/><text x='12' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='%23d42126'>V</text><text x='54' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='white'>H</text></svg>" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', 'Noto Sans KR', Arial, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(150deg, #1e40af 0%, #1e3a8a 45%, #1a1a2e 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* decorative circles */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -120px; right: -120px;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(212,33,38,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -100px; left: -80px;
+      width: 320px; height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(212,33,38,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 36px 34px 32px;
+      width: 100%;
+      max-width: 390px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.12);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Brand ── */
+    .brand {
+      text-align: center;
+      margin-bottom: 26px;
+    }
+
+    .brand-logo {
+      height: 72px;
+      width: auto;
+      display: block;
+      margin: 0 auto 10px;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.12));
+    }
+
+    .brand-tagline {
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    /* divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e2e8f0;
+    }
+    .divider span {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      white-space: nowrap;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Lang switcher ── */
+    .lang-row {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 22px;
+    }
+    .lang-btn {
+      padding: 4px 13px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 99px;
+      background: white;
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #64748b;
+      transition: all 0.15s;
+    }
+    .lang-btn.active, .lang-btn:hover {
+      border-color: #d42126;
+      color: #d42126;
+      background: #fff1f1;
+    }
+
+    /* ── Form ── */
+    h2 { font-size: 1.2rem; color: #0f172a; font-weight: 700; margin-bottom: 3px; }
+    .form-subtitle { font-size: 0.8rem; color: #64748b; margin-bottom: 20px; }
+
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 0.78rem; font-weight: 700; color: #475569; margin-bottom: 5px; }
+
+    .input-wrap { position: relative; }
+    .input-wrap input {
+      width: 100%;
+      padding: 10px 40px 10px 13px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: #0f172a;
+      background: #f8fafc;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .input-wrap input:focus {
+      outline: none;
+      border-color: #d42126;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(212,33,38,0.1);
+    }
+    .input-icon {
+      position: absolute; right: 12px; top: 50%;
+      transform: translateY(-50%); font-size: 0.95rem; pointer-events: none;
+    }
+    .toggle-pass {
+      position: absolute; right: 11px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      font-size: 0.95rem; color: #94a3b8; padding: 0;
+    }
+    .toggle-pass:hover { color: #475569; }
+
+    .remember-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
+    }
+    .remember-row input[type="checkbox"] { width: 15px; height: 15px; accent-color: #d42126; cursor: pointer; }
+    .remember-row label { font-size: 0.8rem; color: #475569; cursor: pointer; }
+
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #d42126 0%, #b91c22 100%);
+      color: white;
+      border: none; border-radius: 8px;
+      font-size: 0.95rem; font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      letter-spacing: 0.3px;
+      box-shadow: 0 3px 10px rgba(212,33,38,0.3);
+    }
+    .btn-login:hover  { opacity: 0.92; }
+    .btn-login:active { transform: scale(0.98); }
+    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .error-msg {
+      display: none; margin-top: 13px;
+      padding: 9px 13px;
+      background: #fff1f1; border: 1px solid #fecaca; border-radius: 8px;
+      font-size: 0.8rem; color: #b91c1c; text-align: center;
+    }
+
+    .loading-dots::after {
+      content: '';
+      animation: dots 1s steps(4, end) infinite;
+    }
+    @keyframes dots {
+      0%,20%{content:''} 40%{content:'.'} 60%{content:'..'} 80%,100%{content:'...'}
+    }
+
+    .footer-note { text-align: center; margin-top: 18px; font-size: 0.72rem; color: #94a3b8; }
+    .footer-note strong { color: #64748b; }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <div class="brand">
+    <img src="/logo.png" alt="Việt Hàn Logistics" class="brand-logo" />
+    <div class="brand-tagline" id="brandTagline">Tra Mã Bưu Điện Hàn Quốc</div>
+  </div>
+
+  <div class="lang-row">
+    <button class="lang-btn active" onclick="setLang('vi')">Tiếng Việt</button>
+    <button class="lang-btn" onclick="setLang('en')">English</button>
+    <button class="lang-btn" onclick="setLang('ko')">한국어</button>
+  </div>
+
+  <h2 id="heading">Đăng nhập</h2>
+  <p class="form-subtitle" id="subheading">Vui lòng đăng nhập để tiếp tục</p>
+
+  <form id="loginForm" onsubmit="handleLogin(event)">
+    <div class="field">
+      <label id="labelUser">Tên đăng nhập</label>
+      <div class="input-wrap">
+        <input type="text" id="username" autocomplete="username" required />
+        <span class="input-icon">👤</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label id="labelPass">Mật khẩu</label>
+      <div class="input-wrap">
+        <input type="password" id="password" autocomplete="current-password" required />
+        <button type="button" class="toggle-pass" id="togglePass" onclick="togglePassword()">👁</button>
+      </div>
+    </div>
+
+    <div class="remember-row">
+      <input type="checkbox" id="remember" />
+      <label for="remember" id="labelRemember">Ghi nhớ đăng nhập (30 ngày)</label>
+    </div>
+
+    <button type="submit" class="btn-login" id="submitBtn">
+      <span id="btnText">Đăng nhập</span>
+    </button>
+  </form>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="footer-note"><strong>postcode.transflash.app</strong></div>
+</div>
+
+<script>
+const T = {
+  vi: {
+    tagline: 'Tra Mã Bưu Điện Hàn Quốc',
+    heading: 'Đăng nhập', subheading: 'Vui lòng đăng nhập để tiếp tục',
+    labelUser: 'Tên đăng nhập', labelPass: 'Mật khẩu',
+    labelRemember: 'Ghi nhớ đăng nhập (30 ngày)',
+    btnText: 'Đăng nhập', btnLoading: 'Đang đăng nhập',
+    errWrong: 'Tên đăng nhập hoặc mật khẩu không đúng.',
+    errNetwork: 'Lỗi kết nối. Vui lòng thử lại.',
+  },
+  en: {
+    tagline: 'Korean Postal Code Lookup',
+    heading: 'Sign In', subheading: 'Please sign in to continue',
+    labelUser: 'Username', labelPass: 'Password',
+    labelRemember: 'Remember me (30 days)',
+    btnText: 'Sign In', btnLoading: 'Signing in',
+    errWrong: 'Incorrect username or password.',
+    errNetwork: 'Connection error. Please try again.',
+  },
+  ko: {
+    tagline: '한국 우편번호 조회',
+    heading: '로그인', subheading: '계속하려면 로그인하세요',
+    labelUser: '사용자 이름', labelPass: '비밀번호',
+    labelRemember: '로그인 유지 (30일)',
+    btnText: '로그인', btnLoading: '로그인 중',
+    errWrong: '사용자 이름 또는 비밀번호가 올바르지 않습니다.',
+    errNetwork: '연결 오류. 다시 시도해주세요.',
+  }
+};
+
+let lang = localStorage.getItem('lang') || 'vi';
+
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('lang', l);
+  document.querySelectorAll('.lang-btn').forEach(b =>
+    b.classList.toggle('active', b.getAttribute('onclick').includes(`'${l}'`))
+  );
+  const d = T[l];
+  document.getElementById('brandTagline').textContent  = d.tagline;
+  document.getElementById('heading').textContent       = d.heading;
+  document.getElementById('subheading').textContent    = d.subheading;
+  document.getElementById('labelUser').textContent     = d.labelUser;
+  document.getElementById('labelPass').textContent     = d.labelPass;
+  document.getElementById('labelRemember').textContent = d.labelRemember;
+  document.getElementById('btnText').textContent       = d.btnText;
+  document.getElementById('errorMsg').style.display    = 'none';
+  document.title = `${d.heading} – Việt Hàn Logistics`;
+}
+
+function togglePassword() {
+  const inp = document.getElementById('password');
+  const btn = document.getElementById('togglePass');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const btn   = document.getElementById('submitBtn');
+  const errEl = document.getElementById('errorMsg');
+  const d     = T[lang];
+
+  btn.disabled = true;
+  document.getElementById('btnText').className = 'loading-dots';
+  document.getElementById('btnText').textContent = d.btnLoading;
+  errEl.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: document.getElementById('username').value.trim(),
+        password: document.getElementById('password').value,
+        remember: String(document.getElementById('remember').checked),
+      }),
+    });
+    if (res.ok) {
+      window.location.href = '/';
+    } else {
+      errEl.textContent = d.errWrong;
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      document.getElementById('btnText').className = '';
+      document.getElementById('btnText').textContent = d.btnText;
+      document.getElementById('password').value = '';
+      document.getElementById('password').focus();
+    }
+  } catch {
+    errEl.textContent = d.errNetwork;
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    document.getElementById('btnText').className = '';
+    document.getElementById('btnText').textContent = d.btnText;
+  }
+}
+
+setLang(lang);
+</script>
+</body>
+</html>

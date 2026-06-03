@@ -3,14 +3,11 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const path = require('path');
-
-// Node 18+ có fetch sẵn, Node 16 cần node-fetch
-const fetch = globalThis.fetch ?? require('node-fetch');
+const https = require('https');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Trust Vercel / Railway reverse proxy for secure cookies
 app.set('trust proxy', 1);
 
 // Parse USERS env: "admin:pass123,user2:secret"
@@ -28,7 +25,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ── Auth middleware (JWT — stateless, works on Vercel serverless) ────────────
+// ── Helper: gọi HTTPS và trả về JSON (không cần fetch/node-fetch) ────────────
+function getJson(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, (res) => {
+      let raw = '';
+      res.on('data', chunk => { raw += chunk; });
+      res.on('end', () => {
+        try { resolve(JSON.parse(raw)); }
+        catch (e) { reject(new Error('Invalid JSON: ' + raw.slice(0, 200))); }
+      });
+    }).on('error', reject);
+  });
+}
+
+// ── Auth middleware ───────────────────────────────────────────────────────────
 function requireAuth(req, res, next) {
   const token = req.cookies?.[COOKIE];
   if (token) {
@@ -41,10 +52,10 @@ function requireAuth(req, res, next) {
   res.redirect('/login');
 }
 
-// ── Public assets ────────────────────────────────────────────────────────────
+// ── Public assets ─────────────────────────────────────────────────────────────
 app.get('/logo.png', (req, res) => res.sendFile(path.join(__dirname, 'logo.png')));
 
-// ── Public routes ────────────────────────────────────────────────────────────
+// ── Public routes ─────────────────────────────────────────────────────────────
 app.get('/login', (req, res) => {
   const token = req.cookies?.[COOKIE];
   try { if (token && jwt.verify(token, JWT_SECRET)) return res.redirect('/'); } catch { /* ok */ }
@@ -82,25 +93,24 @@ app.get('/api/juso', requireAuth, async (req, res) => {
   if (!confmKey) return res.status(400).json({ error: 'NO_KEY' });
 
   try {
-    const url = `https://www.juso.go.kr/addrlink/addrLinkApi.do`
-      + `?currentPage=1&countPerPage=1`
-      + `&keyword=${encodeURIComponent(q)}`
-      + `&confmKey=${encodeURIComponent(confmKey)}`
-      + `&resultType=json`;
-    const r = await fetch(url);
-    const data = await r.json();
+    const url = 'https://www.juso.go.kr/addrlink/addrLinkApi.do'
+      + '?currentPage=1&countPerPage=1'
+      + '&keyword=' + encodeURIComponent(q)
+      + '&confmKey=' + encodeURIComponent(confmKey)
+      + '&resultType=json';
+    const data = await getJson(url);
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// ── Protected routes ─────────────────────────────────────────────────────────
+// ── Protected routes ──────────────────────────────────────────────────────────
 app.get('/', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'app.html'));
 });
 
-// ── Start (skipped when imported by Vercel) ──────────────────────────────────
+// ── Start (bỏ qua khi Vercel import) ─────────────────────────────────────────
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

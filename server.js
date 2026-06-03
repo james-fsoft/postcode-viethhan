@@ -236,6 +236,29 @@ app.post('/api/use', requireAuth, async (req, res) => {
   }
 });
 
+// ── Trang giới thiệu / landing (PUBLIC, chuẩn SEO) ───────────────────────────
+app.get('/about', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'landing.html'));
+});
+
+// ── robots.txt + sitemap.xml (cho Google index) ──────────────────────────────
+const SITE = process.env.SITE_URL || 'https://postcode-viethhan.vercel.app';
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain').send(
+    `User-agent: *\nAllow: /\nAllow: /about\nDisallow: /api/\nDisallow: /shipping\nDisallow: /login\n\nSitemap: ${SITE}/sitemap.xml\n`
+  );
+});
+app.get('/sitemap.xml', (req, res) => {
+  const today = new Date().toISOString().slice(0, 10);
+  res.type('application/xml').send(
+    `<?xml version="1.0" encoding="UTF-8"?>\n` +
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+    `  <url><loc>${SITE}/about</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>\n` +
+    `  <url><loc>${SITE}/</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
+    `</urlset>\n`
+  );
+});
+
 // ── Trang chính — PUBLIC: ai cũng vào được (khách hoặc đã login) ─────────────
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'app.html'));

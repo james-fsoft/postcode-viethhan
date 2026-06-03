@@ -619,6 +619,8 @@
     <span class="tf-dot">•</span>
     <span data-i18n="footerText">Giải pháp logistics Việt - Hàn</span>
     <span class="tf-dot">•</span>
+    <a href="/about" class="footer-support" data-i18n="footerAbout">Giới thiệu</a>
+    <span class="tf-dot">•</span>
     <a href="#" class="footer-support" onclick="openPlanModal('upgrade'); return false;" data-i18n="footerSupport">Liên hệ hỗ trợ</a>
     <span class="tf-dot">•</span>
     <span>© 2026</span>
@@ -664,10 +666,12 @@ const LANGS = {
     limitContact: (c) => `Liên hệ nâng cấp: ${c}`,
     btnUnderstand: 'Đã hiểu',
     btnUpgrade: 'Nâng cấp gói', btnContactSupport: 'Liên hệ hỗ trợ', btnClose: 'Đóng',
-    footerSupport: 'Liên hệ hỗ trợ',
+    footerSupport: 'Liên hệ hỗ trợ', footerAbout: 'Giới thiệu',
     upgradeTitle: 'Nâng cấp gói dịch vụ',
     upgradeBody: 'Nâng cấp lên gói Pro hoặc Enterprise để tra cứu không giới hạn số lượt và xử lý hàng nghìn địa chỉ mỗi lần.',
     planLookups: 'lượt', planUnlimited: 'Không giới hạn',
+    priceTrial: 'Miễn phí', pricePro: 'từ 18tr/năm', priceEnterprise: 'Liên hệ',
+    viewPricing: 'Xem chi tiết bảng giá →',
     mailSubject: 'Yêu cầu nâng cấp gói - Postcode Transflash',
     mailBody: (user, plan) => `Xin chào,\n\nTôi muốn nâng cấp gói dịch vụ tra mã bưu điện.\n\nTài khoản: ${user}\nGói hiện tại: ${plan}\n\nVui lòng tư vấn giúp tôi. Cảm ơn!`,
     errNetwork: 'Lỗi kết nối. Vui lòng thử lại.',
@@ -723,10 +727,12 @@ const LANGS = {
     limitContact: (c) => `Contact to upgrade: ${c}`,
     btnUnderstand: 'Got it',
     btnUpgrade: 'Upgrade plan', btnContactSupport: 'Contact Support', btnClose: 'Close',
-    footerSupport: 'Contact Support',
+    footerSupport: 'Contact Support', footerAbout: 'About',
     upgradeTitle: 'Upgrade your plan',
     upgradeBody: 'Upgrade to Pro or Enterprise for unlimited lookups and thousands of addresses per batch.',
     planLookups: 'lookups', planUnlimited: 'Unlimited',
+    priceTrial: 'Free', pricePro: 'from 18M₫/yr', priceEnterprise: 'Contact',
+    viewPricing: 'View full pricing →',
     mailSubject: 'Plan upgrade request - Postcode Transflash',
     mailBody: (user, plan) => `Hello,\n\nI would like to upgrade my postal code lookup plan.\n\nAccount: ${user}\nCurrent plan: ${plan}\n\nPlease advise. Thank you!`,
     errNetwork: 'Connection error. Please try again.',
@@ -782,10 +788,12 @@ const LANGS = {
     limitContact: (c) => `업그레이드 문의: ${c}`,
     btnUnderstand: '확인',
     btnUpgrade: '업그레이드', btnContactSupport: '고객지원 문의', btnClose: '닫기',
-    footerSupport: '고객지원 문의',
+    footerSupport: '고객지원 문의', footerAbout: '서비스 소개',
     upgradeTitle: '요금제 업그레이드',
     upgradeBody: '프로 또는 엔터프라이즈로 업그레이드하면 무제한 조회와 1회당 수천 개 주소 처리가 가능합니다.',
     planLookups: '회', planUnlimited: '무제한',
+    priceTrial: '무료', pricePro: '연 1,800만동~', priceEnterprise: '문의',
+    viewPricing: '전체 요금 보기 →',
     mailSubject: '요금제 업그레이드 요청 - Postcode Transflash',
     mailBody: (user, plan) => `안녕하세요,\n\n우편번호 조회 요금제를 업그레이드하고 싶습니다.\n\n계정: ${user}\n현재 요금제: ${plan}\n\n안내 부탁드립니다. 감사합니다!`,
     errNetwork: '연결 오류. 다시 시도해주세요.',
@@ -1348,13 +1356,14 @@ function openPlanModal(reason) {
   document.getElementById('planTitle').textContent = isLimit ? t('limitTitle') : t('upgradeTitle');
   document.getElementById('planBody').textContent  = isLimit ? t('limitBody', MAX_LOOKUPS) : t('upgradeBody');
 
-  // Bảng so sánh gói
+  // Bảng so sánh gói + giá
   document.getElementById('planCompare').innerHTML = `
-    <div class="plan-row"><span>${t('planTrial')}</span><span>15 ${t('planLookups')} × 30</span></div>
-    <div class="plan-row hl"><span>${t('planPro')}</span><span>${t('planUnlimited')} × 2.000</span></div>
-    <div class="plan-row"><span>${t('planEnterprise')}</span><span>${t('planUnlimited')} × 10.000</span></div>`;
+    <div class="plan-row"><span>${t('planTrial')}</span><span>15×30 · ${t('priceTrial')}</span></div>
+    <div class="plan-row hl"><span>${t('planPro')}</span><span>∞×2.000 · ${t('pricePro')}</span></div>
+    <div class="plan-row"><span>${t('planEnterprise')}</span><span>∞×10.000 · ${t('priceEnterprise')}</span></div>`;
 
-  document.getElementById('planContactLine').textContent = t('limitContact', CONTACT);
+  document.getElementById('planContactLine').innerHTML =
+    `${esc(t('limitContact', CONTACT))}<br><a href="/about#bang-gia" target="_blank" style="color:var(--blue)">${t('viewPricing')}</a>`;
 
   const subject = encodeURIComponent(t('mailSubject'));
   const mailBody = encodeURIComponent(t('mailBody', USERNAME, t(planKey(USER_PLAN))));

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Việt Hàn Logistics – Tra Mã Bưu Điện</title>
+  <title>Vietnam - Korea Logistics – Tra Mã Bưu Điện</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%231e40af'/><text x='12' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='%23d42126'>V</text><text x='54' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='white'>H</text></svg>" />
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
@@ -67,11 +67,9 @@
     .brand-text .brand-name {
       font-size: 1rem;
       font-weight: 800;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.2px;
+      color: var(--blue);
     }
-
-    .brand-text .brand-name .vh-red  { color: var(--red); }
-    .brand-text .brand-name .vh-blue { color: var(--blue); }
 
     .brand-text .brand-sub {
       font-size: 0.72rem;
@@ -279,7 +277,18 @@
     .inline-num  { font-size: 0.75rem; color: var(--gray-400); min-width: 22px; text-align: right; flex-shrink: 0; }
     .inline-addr { flex: 1; font-size: 0.9rem; color: var(--gray-700); word-break: break-all; }
     .inline-zip  { font-weight: 700; color: var(--blue); font-family: monospace; font-size: 1.05rem; flex-shrink: 0; min-width: 62px; text-align: right; }
-    .inline-zip.err { color: var(--red); font-size: 0.78rem; font-family: inherit; font-weight: 400; }
+    .inline-zip.err { color: var(--red); font-size: 0.78rem; font-family: inherit; font-weight: 400; cursor: pointer; }
+    .inline-addr { cursor: default; }
+    .inline-row:has(.inline-zip.err) .inline-addr { cursor: pointer; }
+    .inline-edit {
+      flex: 1; padding: 6px 10px; border: 1.5px solid var(--blue);
+      border-radius: 6px; font-size: 0.9rem; font-family: inherit; outline: none;
+    }
+    .inline-retry { padding: 6px 16px; font-size: 0.82rem; flex-shrink: 0; }
+    .edit-hint {
+      display: none; font-size: 0.78rem; color: var(--gray-400);
+      padding: 8px 16px 0; font-style: italic;
+    }
 
     .error-banner {
       padding: 9px 13px; background: var(--red-light);
@@ -294,20 +303,18 @@
   <!-- Top bar -->
   <div class="topbar">
     <div class="brand-area">
-      <img src="/logo.png" alt="Việt Hàn Logistics" />
+      <img src="/logo.png" alt="Vietnam - Korea Logistics" />
       <div class="brand-text">
-        <div class="brand-name">
-          <span class="vh-red">VIỆT HÀN</span>&nbsp;<span class="vh-blue">LOGISTICS</span>
-        </div>
+        <div class="brand-name" data-i18n="brandName">Vietnam - Korea Logistics</div>
         <div class="brand-sub" data-i18n="brandSub">Tra Mã Bưu Điện Hàn Quốc</div>
       </div>
     </div>
 
     <div class="topbar-right">
       <div class="lang-switcher">
-        <button class="lang-btn active" onclick="setLang('vi')">Tiếng Việt</button>
-        <button class="lang-btn" onclick="setLang('en')">English</button>
-        <button class="lang-btn" onclick="setLang('ko')">한국어</button>
+        <button class="lang-btn active" onclick="setLang('vi')" data-i18n="langVI">Tiếng Việt</button>
+        <button class="lang-btn" onclick="setLang('en')" data-i18n="langEN">Tiếng Anh</button>
+        <button class="lang-btn" onclick="setLang('ko')" data-i18n="langKO">Tiếng Hàn</button>
       </div>
       <button class="btn-logout" onclick="logout()" data-i18n="btnLogout">Đăng xuất</button>
     </div>
@@ -349,6 +356,7 @@
           <button class="btn btn-green" onclick="downloadManualExcel()" data-i18n="btnDownloadResult">Tải .xlsx</button>
         </div>
       </div>
+      <p class="edit-hint" id="editHint" data-i18n="editHint">Nhấp đúp vào địa chỉ chưa tìm thấy để sửa rồi tra lại.</p>
       <div class="inline-results" id="manualBody"></div>
     </div>
   </div>
@@ -417,8 +425,11 @@
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const LANGS = {
   vi: {
-    brandSub: 'Tra Mã Bưu Điện Hàn Quốc',
+    brandName: 'Vietnam - Korea Logistics', brandSub: 'Tra Mã Bưu Điện Hàn Quốc',
+    langVI: 'Tiếng Việt', langEN: 'Tiếng Anh', langKO: 'Tiếng Hàn',
     apiKeyLabel: 'Juso API Key (도로명주소)', getKey: 'Lấy key miễn phí →',
+    editHint: 'Nhấp đúp vào địa chỉ chưa tìm thấy để sửa rồi tra lại.',
+    btnRetry: 'Tra lại',
     tabManual: 'Tìm kiếm thủ công', tabExcel: 'Upload Excel',
     manualLabel: 'Danh sách địa chỉ (mỗi dòng 1 địa chỉ)',
     manualPlaceholder: 'Ví dụ:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -444,8 +455,11 @@ const LANGS = {
     colZipResult: 'Mã bưu điện', copied: 'Đã sao chép!',
   },
   en: {
-    brandSub: 'Korean Postal Code Lookup',
+    brandName: 'Vietnam - Korea Logistics', brandSub: 'Korean Postal Code Lookup',
+    langVI: 'Vietnamese', langEN: 'English', langKO: 'Korean',
     apiKeyLabel: 'Juso API Key (도로명주소)', getKey: 'Get free key →',
+    editHint: 'Double-click an unmatched address to edit and retry.',
+    btnRetry: 'Retry',
     tabManual: 'Manual Search', tabExcel: 'Upload Excel',
     manualLabel: 'Address list (one per line)',
     manualPlaceholder: 'Example:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -471,8 +485,11 @@ const LANGS = {
     colZipResult: 'Postal Code', copied: 'Copied!',
   },
   ko: {
-    brandSub: '한국 우편번호 조회',
+    brandName: 'Vietnam - Korea Logistics', brandSub: '한국 우편번호 조회',
+    langVI: '베트남어', langEN: '영어', langKO: '한국어',
     apiKeyLabel: 'Juso API Key (도로명주소)', getKey: '무료 키 발급 →',
+    editHint: '찾지 못한 주소를 더블클릭하여 수정 후 다시 조회하세요.',
+    btnRetry: '다시 조회',
     tabManual: '수동 검색', tabExcel: '엑셀 업로드',
     manualLabel: '주소 목록 (한 줄에 하나씩)',
     manualPlaceholder: '예시:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -521,7 +538,9 @@ function setLang(lang) {
   });
   const nh = document.querySelector('[data-i18n-option="noHeader"]');
   if (nh) nh.textContent = t('noHeader');
-  document.title = `Việt Hàn Logistics – ${t('brandSub')}`;
+  document.title = `Vietnam - Korea Logistics – ${t('brandSub')}`;
+  // Render lại kết quả thủ công để cập nhật ngôn ngữ (nút Tra lại, Không tìm thấy...)
+  if (manualRows.length) renderManualResults(manualRows);
   updatePreview();
 }
 
@@ -652,18 +671,64 @@ async function runManualSearch() {
 function renderManualResults(rows) {
   const body = document.getElementById('manualBody');
   body.innerHTML = '';
+
+  // Hint: double-click để sửa (chỉ hiện nếu có dòng chưa tìm thấy)
+  const hasNotFound = rows.some(r => !r.zip);
+  const hintEl = document.getElementById('editHint');
+  if (hintEl) hintEl.style.display = hasNotFound ? 'block' : 'none';
+
   rows.forEach((r, i) => {
     const div = document.createElement('div');
     div.className = 'inline-row';
-    div.innerHTML = `
-      <span class="inline-num">${i + 1}</span>
-      <span class="inline-addr">${esc(r.original)}</span>
-      <span class="inline-zip${r.zip ? '' : ' err'}">${r.zip || t('errNotFound')}</span>`;
+    div.dataset.idx = i;
+
+    const addrCell = `<span class="inline-addr" ondblclick="editRow(${i})" title="${hasNotFound ? esc(t('editHint')) : ''}">${esc(r.original)}</span>`;
+    const zipCell  = r.zip
+      ? `<span class="inline-zip">${r.zip}</span>`
+      : `<span class="inline-zip err">${t('errNotFound')}</span>`;
+
+    div.innerHTML = `<span class="inline-num">${i + 1}</span>${addrCell}${zipCell}`;
     body.appendChild(div);
   });
+
   const found = rows.filter(r => r.zip).length;
   document.getElementById('manualSummary').textContent = t('summaryFound', found, rows.length);
   document.getElementById('manualResults').style.display = 'block';
+}
+
+// Sửa inline 1 dòng → tra lại ngay
+function editRow(idx) {
+  const row = document.querySelector(`.inline-row[data-idx="${idx}"]`);
+  if (!row || row.querySelector('input')) return;
+  const cur = manualRows[idx].original;
+
+  row.innerHTML = `
+    <span class="inline-num">${idx + 1}</span>
+    <input class="inline-edit" value="${esc(cur)}" />
+    <button class="btn btn-primary inline-retry">${t('btnRetry')}</button>`;
+
+  const input = row.querySelector('input');
+  const btn   = row.querySelector('button');
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
+
+  const doRetry = async () => {
+    const newAddr = input.value.trim();
+    if (!newAddr) return;
+    const apiKey = document.getElementById('apiKey').value.trim();
+    btn.disabled = true;
+    btn.textContent = '...';
+    try {
+      const res = await kakaoLookup(newAddr, apiKey);
+      manualRows[idx] = { original: newAddr, ...res };
+    } catch (e) {
+      manualRows[idx] = { original: newAddr, zip: null, display: null, type: 'error' };
+    }
+    renderManualResults(manualRows);
+  };
+
+  btn.onclick = doRetry;
+  input.onkeydown = (e) => { if (e.key === 'Enter') doRetry(); };
 }
 
 function downloadSampleExcel() {

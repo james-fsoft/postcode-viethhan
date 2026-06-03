@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Đăng nhập – Việt Hàn Logistics</title>
+  <title>Đăng nhập – Vietnam - Korea Logistics</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%231e40af'/><text x='12' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='%23d42126'>V</text><text x='54' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='white'>H</text></svg>" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -63,12 +63,19 @@
       filter: drop-shadow(0 2px 6px rgba(0,0,0,0.12));
     }
 
+    .brand-name-login {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #1e3a8a;
+      letter-spacing: -0.2px;
+    }
+
     .brand-tagline {
       font-size: 0.7rem;
       letter-spacing: 2px;
       text-transform: uppercase;
       color: #94a3b8;
-      margin-top: 2px;
+      margin-top: 3px;
     }
 
     /* divider */
@@ -197,14 +204,15 @@
 <div class="card">
 
   <div class="brand">
-    <img src="/logo.png" alt="Việt Hàn Logistics" class="brand-logo" />
+    <img src="/logo.png" alt="Vietnam - Korea Logistics" class="brand-logo" />
+    <div class="brand-name-login" id="brandNameLogin">Vietnam - Korea Logistics</div>
     <div class="brand-tagline" id="brandTagline">Tra Mã Bưu Điện Hàn Quốc</div>
   </div>
 
   <div class="lang-row">
-    <button class="lang-btn active" onclick="setLang('vi')">Tiếng Việt</button>
-    <button class="lang-btn" onclick="setLang('en')">English</button>
-    <button class="lang-btn" onclick="setLang('ko')">한국어</button>
+    <button class="lang-btn active" onclick="setLang('vi')" id="lgVI">Tiếng Việt</button>
+    <button class="lang-btn" onclick="setLang('en')" id="lgEN">Tiếng Anh</button>
+    <button class="lang-btn" onclick="setLang('ko')" id="lgKO">Tiếng Hàn</button>
   </div>
 
   <h2 id="heading">Đăng nhập</h2>
@@ -246,6 +254,7 @@
 const T = {
   vi: {
     tagline: 'Tra Mã Bưu Điện Hàn Quốc',
+    langVI: 'Tiếng Việt', langEN: 'Tiếng Anh', langKO: 'Tiếng Hàn',
     heading: 'Đăng nhập', subheading: 'Vui lòng đăng nhập để tiếp tục',
     labelUser: 'Tên đăng nhập', labelPass: 'Mật khẩu',
     labelRemember: 'Ghi nhớ đăng nhập (30 ngày)',
@@ -255,6 +264,7 @@ const T = {
   },
   en: {
     tagline: 'Korean Postal Code Lookup',
+    langVI: 'Vietnamese', langEN: 'English', langKO: 'Korean',
     heading: 'Sign In', subheading: 'Please sign in to continue',
     labelUser: 'Username', labelPass: 'Password',
     labelRemember: 'Remember me (30 days)',
@@ -264,6 +274,7 @@ const T = {
   },
   ko: {
     tagline: '한국 우편번호 조회',
+    langVI: '베트남어', langEN: '영어', langKO: '한국어',
     heading: '로그인', subheading: '계속하려면 로그인하세요',
     labelUser: '사용자 이름', labelPass: '비밀번호',
     labelRemember: '로그인 유지 (30일)',
@@ -283,6 +294,9 @@ function setLang(l) {
   );
   const d = T[l];
   document.getElementById('brandTagline').textContent  = d.tagline;
+  document.getElementById('lgVI').textContent          = d.langVI;
+  document.getElementById('lgEN').textContent          = d.langEN;
+  document.getElementById('lgKO').textContent          = d.langKO;
   document.getElementById('heading').textContent       = d.heading;
   document.getElementById('subheading').textContent    = d.subheading;
   document.getElementById('labelUser').textContent     = d.labelUser;
@@ -290,7 +304,7 @@ function setLang(l) {
   document.getElementById('labelRemember').textContent = d.labelRemember;
   document.getElementById('btnText').textContent       = d.btnText;
   document.getElementById('errorMsg').style.display    = 'none';
-  document.title = `${d.heading} – Việt Hàn Logistics`;
+  document.title = `${d.heading} – Vietnam - Korea Logistics`;
 }
 
 function togglePassword() {

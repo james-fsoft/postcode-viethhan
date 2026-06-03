@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const https = require('https');
+const http  = require('http');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,31 +26,47 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ── Helper: gọi HTTPS và trả về JSON ────────────────────────────────────────
-function getJson(url) {
+// ── Helper: gọi HTTP/HTTPS, tự follow redirect, trả về JSON ─────────────────
+function getJson(url, depth = 0) {
   return new Promise((resolve, reject) => {
-    const urlObj = new URL(url);
+    if (depth > 4) return reject(new Error('Too many redirects'));
+
+    const parsed  = new URL(url);
+    const lib     = parsed.protocol === 'https:' ? https : http;
     const options = {
-      hostname: urlObj.hostname,
-      path: urlObj.pathname + urlObj.search,
+      hostname: parsed.hostname,
+      port:     parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
+      path:     parsed.pathname + parsed.search,
+      method:   'GET',
       headers: {
-        'Referer': 'https://postcode-viethhan.vercel.app/',
-        'User-Agent': 'Mozilla/5.0',
-        'Accept': 'application/json, text/plain, */*',
+        'Referer':    'https://postcode-viethhan.vercel.app/',
+        'User-Agent': 'Mozilla/5.0 (compatible)',
+        'Accept':     'application/json',
       },
     };
-    https.get(options, (res) => {
+
+    const req = lib.request(options, (res) => {
+      // Follow redirect
+      if ([301, 302, 303, 307, 308].includes(res.statusCode)) {
+        res.resume();
+        const loc     = res.headers.location || '';
+        const nextUrl = loc.startsWith('http') ? loc : `${parsed.protocol}//${parsed.hostname}${loc}`;
+        return getJson(nextUrl, depth + 1).then(resolve).catch(reject);
+      }
+
       let raw = '';
-      res.on('data', chunk => { raw += chunk; });
+      res.on('data', d => { raw += d; });
       res.on('end', () => {
         try {
           resolve(JSON.parse(raw));
-        } catch (e) {
-          // Trả về raw để debug
-          reject(new Error(`HTTP ${res.statusCode} – ${raw.slice(0, 400)}`));
+        } catch {
+          reject(new Error(`[HTTP ${res.statusCode}] ${raw.slice(0, 500)}`));
         }
       });
-    }).on('error', reject);
+    });
+
+    req.on('error', reject);
+    req.end();
   });
 }
 

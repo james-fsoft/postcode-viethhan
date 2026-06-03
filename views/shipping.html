@@ -16,7 +16,7 @@
     }
     * { box-sizing:border-box; margin:0; padding:0; }
     body { font-family:'Segoe UI','Noto Sans KR',Arial,sans-serif; background:#f1f5f9; min-height:100vh; padding:20px 16px 48px; color:var(--gray-700); }
-    .container { max-width:980px; margin:0 auto; }
+    .container { max-width:1240px; margin:0 auto; }
 
     /* Nav */
     .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px; }
@@ -36,10 +36,13 @@
     .nav-tab:hover { border-color:var(--blue); color:var(--blue); }
     .nav-tab.active { background:var(--blue); color:white; border-color:var(--blue); }
 
-    .card { background:white; border-radius:var(--radius); padding:22px; box-shadow:var(--shadow); margin-bottom:16px; }
-    .card h2 { font-size:1.1rem; color:var(--gray-900); margin-bottom:4px; }
-    .card .desc { font-size:0.85rem; color:var(--gray-500); margin-bottom:16px; line-height:1.6; }
+    .card { background:white; border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); margin-bottom:14px; }
+    .card.compact { padding:12px 16px; }
+    .card h2 { font-size:1.05rem; color:var(--gray-900); margin-bottom:4px; }
+    .card.compact h2 { display:none; }
+    .card .desc { font-size:0.84rem; color:var(--gray-500); margin-bottom:14px; line-height:1.6; }
     .card .desc b { color:var(--blue); }
+    .card.compact .desc { display:none; }
 
     .btn { padding:9px 20px; border:none; border-radius:6px; font-size:0.88rem; font-weight:600; cursor:pointer; transition:all 0.15s; white-space:nowrap; font-family:inherit; }
     .btn-primary { background:var(--red); color:white; }
@@ -53,11 +56,12 @@
     .btn-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:14px; }
     .ml-auto { margin-left:auto; }
 
-    .upload-area { border:2px dashed var(--gray-300); border-radius:var(--radius); padding:32px 20px; text-align:center; cursor:pointer; transition:all 0.15s; background:var(--gray-50); }
+    .upload-area { border:2px dashed var(--gray-300); border-radius:var(--radius); padding:18px 20px; text-align:center; cursor:pointer; transition:all 0.15s; background:var(--gray-50); display:flex; align-items:center; justify-content:center; gap:12px; }
     .upload-area:hover, .upload-area.drag-over { border-color:var(--red); background:var(--red-light); }
-    .upload-icon { font-size:2.2rem; margin-bottom:8px; }
-    .upload-area p { font-size:0.88rem; color:var(--gray-500); }
+    .upload-icon { font-size:1.6rem; }
+    .upload-area p { font-size:0.86rem; color:var(--gray-500); }
     .upload-area strong { color:var(--red); }
+    .card.compact .upload-area { display:none; }
     #fileInput { display:none; }
 
     .file-info { display:none; align-items:center; gap:10px; padding:10px 14px; background:#f0fdf4; border:1px solid #86efac; border-radius:6px; margin-top:12px; font-size:0.88rem; }
@@ -75,9 +79,17 @@
     .progress-label { display:none; font-size:0.8rem; color:var(--gray-500); margin-top:5px; text-align:right; }
 
     .results { display:none; }
-    .results-head { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+    .results-head { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:8px; }
     .results-head .sum { font-size:0.88rem; font-weight:600; color:var(--gray-600); }
-    .table-wrap { overflow-x:auto; border-radius:var(--radius); box-shadow:var(--shadow); max-height:520px; overflow-y:auto; }
+    .results-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .chk { display:flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--gray-600); cursor:pointer; }
+    .chk input { width:15px; height:15px; accent-color:var(--blue); cursor:pointer; }
+    .edit-hint { font-size:0.78rem; color:var(--gray-400); font-style:italic; margin-bottom:8px; }
+    .table-wrap { overflow:auto; border-radius:var(--radius); box-shadow:var(--shadow); max-height:72vh; }
+    .row-edit { flex:1; padding:6px 10px; border:1.5px solid var(--blue); border-radius:6px; font-size:0.86rem; font-family:inherit; outline:none; width:100%; }
+    .addr-line { display:flex; align-items:center; gap:8px; }
+    .retry-btn { padding:5px 12px; font-size:0.78rem; flex-shrink:0; }
+    .addr-edit-wrap { display:flex; align-items:center; gap:8px; }
     table { width:100%; border-collapse:collapse; background:white; font-size:0.86rem; }
     th { position:sticky; top:0; background:var(--gray-50); padding:9px 14px; text-align:left; font-size:0.76rem; color:var(--gray-500); font-weight:700; border-bottom:1.5px solid var(--gray-200); white-space:nowrap; }
     td { padding:9px 14px; border-bottom:1px solid var(--gray-100); vertical-align:top; }
@@ -120,7 +132,7 @@
   </div>
 
   <!-- Hướng dẫn + upload -->
-  <div class="card">
+  <div class="card" id="uploadCard">
     <h2 data-i18n="title">Điền mã bưu điện vào file vận đơn</h2>
     <p class="desc" data-i18n="desc">Tải lên file vận đơn — hệ thống đọc địa chỉ ở cột <b>O (수하인주소(한글)1)</b>, tra mã bưu điện và điền vào cột <b>N (수하인 우편번호)</b>. Các cột khác giữ nguyên không đổi.</p>
 
@@ -164,15 +176,20 @@
   <div class="results" id="results">
     <div class="results-head">
       <span class="sum" id="summary"></span>
-      <button class="btn btn-green" onclick="downloadResult()" data-i18n="btnDownload">Tải file kết quả</button>
+      <div class="results-actions">
+        <label class="chk"><input type="checkbox" id="updateOCheck" /> <span data-i18n="updateOLabel">Cập nhật cả cột O (địa chỉ đã sửa)</span></label>
+        <button class="btn btn-ghost" onclick="downloadOriginal()" data-i18n="btnDownloadOriginal">Tải file gốc</button>
+        <button class="btn btn-green" onclick="downloadResult()" data-i18n="btnDownload">Tải file kết quả</button>
+      </div>
     </div>
+    <p class="edit-hint" data-i18n="editHint">Mẹo: nhấp đúp vào địa chỉ để sửa và tra lại mã.</p>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>#</th>
+            <th style="width:46px">#</th>
             <th id="thAddr">O — 수하인주소(한글)1</th>
-            <th id="thZip">N — 수하인 우편번호</th>
+            <th id="thZip" style="width:170px">N — 수하인 우편번호</th>
           </tr>
         </thead>
         <tbody id="previewBody"></tbody>
@@ -193,6 +210,9 @@ const LANGS = {
     uploadClick:'Nhấp để chọn file', uploadDrag:'hoặc kéo thả vào đây', uploadFormats:'Hỗ trợ: .xlsx, .xls, .csv',
     btnRemove:'Xóa file', pickAddr:'Cột địa chỉ:', pickZip:'Cột điền mã:',
     btnProcess:'Tra cứu & điền mã', btnClear:'Xóa', btnTemplate:'Tải file mẫu', btnDownload:'Tải file kết quả',
+    btnDownloadOriginal:'Tải file gốc', btnRetry:'Tra lại',
+    editHint:'Mẹo: nhấp đúp vào địa chỉ để sửa và tra lại mã. Mặc định chỉ điền cột N.',
+    updateOLabel:'Cập nhật cả cột O (địa chỉ đã sửa)',
     thAddr:'O — Địa chỉ (수하인주소)', thZip:'N — Mã bưu điện (우편번호)',
     detectOk:(a,z)=>`Đã nhận diện: địa chỉ ở cột ${a}, điền mã vào cột ${z}.`,
     detectWarn:'Không tự nhận diện được cột. Vui lòng chọn thủ công bên dưới.',
@@ -210,6 +230,9 @@ const LANGS = {
     uploadClick:'Click to select a file', uploadDrag:'or drag & drop here', uploadFormats:'Supported: .xlsx, .xls, .csv',
     btnRemove:'Remove', pickAddr:'Address column:', pickZip:'Fill code into:',
     btnProcess:'Look up & fill codes', btnClear:'Clear', btnTemplate:'Download template', btnDownload:'Download result',
+    btnDownloadOriginal:'Download original', btnRetry:'Retry',
+    editHint:'Tip: double-click an address to edit and re-search. By default only column N is filled.',
+    updateOLabel:'Also update column O (edited addresses)',
     thAddr:'O — Address (수하인주소)', thZip:'N — Postal code (우편번호)',
     detectOk:(a,z)=>`Detected: address in column ${a}, fill codes into column ${z}.`,
     detectWarn:'Could not auto-detect columns. Please select manually below.',
@@ -227,6 +250,9 @@ const LANGS = {
     uploadClick:'파일 선택', uploadDrag:'또는 드래그 앤 드롭', uploadFormats:'지원: .xlsx, .xls, .csv',
     btnRemove:'파일 제거', pickAddr:'주소 열:', pickZip:'우편번호 채울 열:',
     btnProcess:'조회 후 채우기', btnClear:'초기화', btnTemplate:'샘플 파일 다운로드', btnDownload:'결과 파일 다운로드',
+    btnDownloadOriginal:'원본 파일 다운로드', btnRetry:'다시 조회',
+    editHint:'팁: 주소를 더블클릭하여 수정 후 다시 조회하세요. 기본적으로 N열만 채웁니다.',
+    updateOLabel:'O열도 업데이트 (수정한 주소)',
     thAddr:'O — 수하인주소(한글)1', thZip:'N — 수하인 우편번호',
     detectOk:(a,z)=>`인식됨: 주소 ${a}열, 우편번호 ${z}열에 입력.`,
     detectWarn:'열을 자동 인식하지 못했습니다. 아래에서 직접 선택하세요.',
@@ -248,7 +274,7 @@ function setLang(l){
   });
   document.getElementById('thAddr').textContent = t('thAddr');
   document.getElementById('thZip').textContent  = t('thZip');
-  if (rows.length) renderPreview();
+  if (processed.length) renderPreview();
 }
 
 async function logout(){ await fetch('/api/logout',{method:'POST'}); location.href='/login'; }
@@ -266,7 +292,7 @@ function onDragLeave(e){ document.getElementById('uploadArea').classList.remove(
 function onDrop(e){ e.preventDefault(); document.getElementById('uploadArea').classList.remove('drag-over'); if(e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]); }
 function onFileSelected(e){ if(e.target.files[0]) readFile(e.target.files[0]); }
 
-let uploadedFile = null;
+let uploadedFile = null, rawBytes = null;
 function readFile(file){
   uploadedFile = file;
   document.getElementById('fileName').textContent = file.name;
@@ -278,6 +304,7 @@ function readFile(file){
   const reader = new FileReader();
   reader.onload = (e)=>{
     try {
+      rawBytes = new Uint8Array(e.target.result.slice(0)); // giữ bản gốc để tải lại / dựng kết quả
       workbook = XLSX.read(e.target.result, { type:'array' });
       sheet = workbook.Sheets[workbook.SheetNames[0]];
       rows = XLSX.utils.sheet_to_json(sheet, { header:1, defval:'' });
@@ -310,6 +337,9 @@ function detectColumns(){
   det.style.display = 'block';
   det.className = 'col-detect' + (auto ? '' : ' warn');
   det.textContent = auto ? t('detectOk', colLetter(addrIdx), colLetter(zipIdx)) : t('detectWarn');
+
+  // Thu gọn khu upload để dành chỗ làm việc
+  document.getElementById('uploadCard').classList.add('compact');
 }
 
 function fillColSelect(id, sel){
@@ -362,15 +392,13 @@ async function runProcess(){
   processed = [];
   const total = rows.length - 1; // trừ header
   for (let i=1; i<rows.length; i++){
-    const addr = rows[i][addrIdx] || '';
+    const addr = String(rows[i][addrIdx] || '');
     let zip = null;
-    if (String(addr).trim()){
-      try { zip = await lookupZip(addr); }
-      catch { zip = null; }
+    if (addr.trim()){
+      try { zip = await lookupZip(addr); } catch { zip = null; }
     }
-    // ghi vào ô cột N trong sheet gốc (giữ nguyên các cột khác)
-    if (zip) setCell(zipIdx, i, zip);
-    processed.push({ addr: String(addr), zip });
+    // origAddr: địa chỉ gốc (không đổi) · addr: địa chỉ hiện tại (có thể sửa)
+    processed.push({ row: i, origAddr: addr, addr, zip });
     pf.style.width = `${Math.round(i/total*100)}%`;
     pl.textContent = t('progress', i, total);
     if (i < rows.length-1) await new Promise(r=>setTimeout(r,110));
@@ -380,25 +408,19 @@ async function runProcess(){
   renderPreview();
 }
 
-function setCell(col, row, val){
-  const addr = XLSX.utils.encode_cell({ r: row, c: col });
-  sheet[addr] = { t:'s', v: String(val) };
-  // mở rộng vùng !ref nếu cần
-  const range = XLSX.utils.decode_range(sheet['!ref']);
-  if (col > range.e.c) { range.e.c = col; sheet['!ref'] = XLSX.utils.encode_range(range); }
-  if (row > range.e.r) { range.e.r = row; sheet['!ref'] = XLSX.utils.encode_range(range); }
-}
-
 function renderPreview(){
   const body = document.getElementById('previewBody');
   body.innerHTML = '';
   processed.forEach((p, i)=>{
     const tr = document.createElement('tr');
+    tr.dataset.idx = i;
+    const edited = p.addr !== p.origAddr;
     const zipCell = p.zip
       ? `<span class="zip-ok">${p.zip}</span>`
       : `<span class="zip-no">${t('notFound')}</span>`;
+    const addrTxt = esc(p.addr) || `<span class="num">${t('empty')}</span>`;
     tr.innerHTML = `<td class="num">${i+1}</td>
-      <td class="addr">${esc(p.addr) || '<span class="num">'+t('empty')+'</span>'}</td>
+      <td class="addr" ondblclick="editRow(${i})" title="${esc(t('editHint'))}">${addrTxt}${edited?' <span class="num">✎</span>':''}</td>
       <td>${zipCell}</td>`;
     body.appendChild(tr);
   });
@@ -407,10 +429,66 @@ function renderPreview(){
   document.getElementById('results').style.display = 'block';
 }
 
+// Sửa địa chỉ inline → tra lại mã cho dòng đó
+function editRow(i){
+  const tr = document.querySelector(`#previewBody tr[data-idx="${i}"]`);
+  if (!tr || tr.querySelector('input')) return;
+  const cell = tr.children[1];
+  cell.innerHTML = `<div class="addr-edit-wrap">
+      <input class="row-edit" value="${esc(processed[i].addr)}" />
+      <button class="btn btn-primary retry-btn">${t('btnRetry')}</button>
+    </div>`;
+  const input = cell.querySelector('input');
+  const btn = cell.querySelector('button');
+  input.focus(); input.setSelectionRange(input.value.length, input.value.length);
+
+  const doRetry = async ()=>{
+    const v = input.value.trim();
+    btn.disabled = true; btn.textContent = '...';
+    let zip = null;
+    try { zip = v ? await lookupZip(v) : null; } catch { zip = null; }
+    processed[i].addr = v;
+    processed[i].zip = zip;
+    renderPreview();
+    document.getElementById('summary').textContent =
+      t('summary', processed.filter(p=>p.zip).length, processed.length);
+  };
+  btn.onclick = doRetry;
+  input.onkeydown = (e)=>{ if (e.key === 'Enter') doRetry(); };
+}
+
+// Ghi 1 ô vào worksheet, mở rộng !ref nếu cần
+function setCellWS(ws, col, row, val){
+  ws[XLSX.utils.encode_cell({ r: row, c: col })] = { t:'s', v: String(val) };
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  if (col > range.e.c) range.e.c = col;
+  if (row > range.e.r) range.e.r = row;
+  ws['!ref'] = XLSX.utils.encode_range(range);
+}
+
+// Tải file gốc (nguyên bản chưa chỉnh)
+function downloadOriginal(){
+  if (!uploadedFile) return;
+  const url = URL.createObjectURL(uploadedFile);
+  const a = document.createElement('a');
+  a.href = url; a.download = uploadedFile.name; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Tải file kết quả: chỉ điền cột N; cột O chỉ điền nếu tick checkbox
 function downloadResult(){
-  if (!workbook) return;
+  if (!rawBytes) return;
+  const wb = XLSX.read(rawBytes, { type:'array' });   // đọc lại bản gốc → chắc chắn cột khác không đổi
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const updateO = document.getElementById('updateOCheck').checked;
+
+  processed.forEach(p=>{
+    if (p.zip) setCellWS(ws, zipIdx, p.row, p.zip);
+    if (updateO && p.addr !== p.origAddr) setCellWS(ws, addrIdx, p.row, p.addr);
+  });
+
   const name = (uploadedFile?.name.replace(/\.[^.]+$/,'') || 'shipping') + '_우편번호.xlsx';
-  XLSX.writeFile(workbook, name);
+  XLSX.writeFile(wb, name);
 }
 
 // ── File mẫu ───────────────────────────────────────────────────────────────────
@@ -435,7 +513,7 @@ function downloadTemplate(){
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function resetAll(){
-  workbook=null; sheet=null; rows=[]; processed=[]; uploadedFile=null;
+  workbook=null; sheet=null; rows=[]; processed=[]; uploadedFile=null; rawBytes=null;
   document.getElementById('fileInfo').style.display='none';
   document.getElementById('colDetect').style.display='none';
   document.getElementById('colPick').style.display='none';
@@ -443,6 +521,7 @@ function resetAll(){
   document.getElementById('errBanner').style.display='none';
   document.getElementById('processBtn').disabled=true;
   document.getElementById('fileInput').value='';
+  document.getElementById('uploadCard').classList.remove('compact');
 }
 function showErr(m){ const el=document.getElementById('errBanner'); el.textContent=m; el.style.display='block'; }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }

@@ -897,38 +897,65 @@ const SAMPLE = `대구시 중구 삼덕동2가 112-1번지(태경빌) 101호
 전라남도 목포시 동명들목로 33, 그린오피스텔 310호`;
 
 function cleanAddress(addr) {
-  return addr
+  return String(addr)
     .replace(/^\(\d{5}\)\s*/, '')
-    .replace(/\s*(빌라?|오피스텔|아파트|빌딩|타워|카이저빌|태경빌|율곡원룸|드림오피스텔|시티\d*|파레스|조은마을|그린오피스텔|국제교육원\s*기숙사)\s*/g, ' ')
-    .replace(/\s*\d+[동층]\s*\d*호?\s*/g, ' ')
-    .replace(/\s*\d+호\s*/g, ' ')
     .replace(/\s*\([^)]*\)\s*/g, ' ')
     .replace(/,\s*/g, ' ')
     .replace(/\s+/g, ' ').trim();
 }
 
-async function kakaoLookup(rawAddr, apiKey) {
-  const cleaned = cleanAddress(rawAddr);
-  const key = SERVER_JUSO_KEY || apiKey;
-  if (!key) throw new Error('NO_KEY');
-  apiKey = key;
+// Tạo nhiều biến thể địa chỉ, thử từ cụ thể → tổng quát để tăng tỉ lệ tìm thấy
+function buildCandidates(raw) {
+  const s = cleanAddress(raw);
+  const out = [];
+  const push = v => { v = (v || '').trim(); if (v && !out.includes(v)) out.push(v); };
 
+  push(s); // 1. nguyên bản đã làm sạch
+
+  // 2. Cắt tới hết số nhà trên đường (bỏ tên tòa nhà / số phòng phía sau)
+  const road = s.match(/^(.*(?:로|길)\s*\d+(?:-\d+)?)/);
+  if (road) push(road[1]);
+
+  // 3. Địa chỉ kiểu số lô (지번): cắt tới ...동 280-1
+  const jibun = s.match(/^(.*[가-힣]동\s*\d+(?:-\d+)?)/);
+  if (jibun) push(jibun[1]);
+
+  // 4. Lõi: [구/군] + đường + số  và  chỉ đường + số (bỏ tỉnh/thành)
+  const core = s.match(/([가-힣]+[구군]\s+)?(\S*(?:로|길))\s+(\d+(?:-\d+)?)/);
+  if (core) {
+    push((core[1] || '') + core[2] + ' ' + core[3]);
+    push(core[2] + ' ' + core[3]);
+  }
+
+  // 5. Bỏ tỉnh/thành ở đầu (도/광역시/특별시/특별자치도/특별자치시)
+  const prov = s.match(/^\S+(?:특별자치도|특별자치시|특별시|광역시|도)\s+(.*)$/);
+  if (prov) push(prov[1]);
+
+  return out;
+}
+
+async function jusoQuery(q, key) {
   const url = 'https://www.juso.go.kr/addrlink/addrLinkApi.do'
     + '?currentPage=1&countPerPage=1'
-    + '&keyword='  + encodeURIComponent(cleaned)
-    + '&confmKey=' + encodeURIComponent(apiKey)
+    + '&keyword='  + encodeURIComponent(q)
+    + '&confmKey=' + encodeURIComponent(key)
     + '&resultType=json';
-
   const r = await fetch(url);
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   const data = await r.json();
-
   const code = data.results?.common?.errorCode;
   if (code === 'E0001' || code === 'E0005') throw new Error('INVALID_KEY');
-
   const list = data.results?.juso;
-  if (list?.length > 0) {
-    return { zip: list[0].zipNo, display: list[0].roadAddr, type: 'road' };
+  return (list && list.length) ? { zip: list[0].zipNo, road: list[0].roadAddr } : null;
+}
+
+async function kakaoLookup(rawAddr, apiKey) {
+  const key = SERVER_JUSO_KEY || apiKey;
+  if (!key) throw new Error('NO_KEY');
+
+  for (const cand of buildCandidates(rawAddr)) {
+    const res = await jusoQuery(cand, key);
+    if (res) return { zip: res.zip, display: res.road, type: 'road' };
   }
   return { zip: null, display: null, type: 'not_found' };
 }

@@ -365,18 +365,43 @@ function cleanAddress(addr){
     .replace(/\s+/g,' ').trim();
 }
 
-async function lookupZip(addr){
-  const cleaned = cleanAddress(addr);
-  if (!cleaned) return null;
+// Tạo nhiều biến thể địa chỉ: cụ thể → tổng quát để tăng tỉ lệ tìm thấy
+function buildCandidates(raw){
+  const s = cleanAddress(raw);
+  const out = [];
+  const push = v => { v = (v||'').trim(); if (v && !out.includes(v)) out.push(v); };
+
+  push(s);
+  const road = s.match(/^(.*(?:로|길)\s*\d+(?:-\d+)?)/);
+  if (road) push(road[1]);
+  const jibun = s.match(/^(.*[가-힣]동\s*\d+(?:-\d+)?)/);
+  if (jibun) push(jibun[1]);
+  const core = s.match(/([가-힣]+[구군]\s+)?(\S*(?:로|길))\s+(\d+(?:-\d+)?)/);
+  if (core){ push((core[1]||'') + core[2] + ' ' + core[3]); push(core[2] + ' ' + core[3]); }
+  const prov = s.match(/^\S+(?:특별자치도|특별자치시|특별시|광역시|도)\s+(.*)$/);
+  if (prov) push(prov[1]);
+  return out;
+}
+
+async function jusoQuery(q){
   const url = 'https://www.juso.go.kr/addrlink/addrLinkApi.do'
     + '?currentPage=1&countPerPage=1'
-    + '&keyword='  + encodeURIComponent(cleaned)
+    + '&keyword='  + encodeURIComponent(q)
     + '&confmKey=' + encodeURIComponent(JUSO_KEY)
     + '&resultType=json';
   const r = await fetch(url);
   const data = await r.json();
   const list = data.results?.juso;
   return (list && list.length) ? list[0].zipNo : null;
+}
+
+async function lookupZip(addr){
+  if (!cleanAddress(addr)) return null;
+  for (const cand of buildCandidates(addr)){
+    const zip = await jusoQuery(cand);
+    if (zip) return zip;
+  }
+  return null;
 }
 
 async function runProcess(){

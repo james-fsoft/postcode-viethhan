@@ -188,12 +188,12 @@ app.get('/api/config', async (req, res) => {
   const contact = process.env.CONTACT_INFO || 'support@transflash.app';
   const jusoKey = process.env.JUSO_API_KEY || null;
 
-  // Khách: vào thẳng, tối đa 5 địa chỉ/lần, không upload Excel
+  // Khách: vào thẳng — tra tay tối đa 5, upload Excel tối đa 15 địa chỉ
   if (!username) {
     return res.json({
       jusoKey, username: null, plan: 'guest',
-      maxLookups: 0, maxPerLookup: 5,
-      canUpload: false, isGuest: true, used: 0,
+      maxLookups: 0, maxPerLookup: 5, maxUpload: 15,
+      canUpload: true, isGuest: true, used: 0,
       redis: useRedis, contact,
     });
   }
@@ -206,6 +206,7 @@ app.get('/api/config', async (req, res) => {
     plan: plan.name,
     maxLookups: plan.maxLookups,
     maxPerLookup: plan.maxPerLookup,
+    maxUpload: plan.maxPerLookup,
     canUpload: true, isGuest: false, used,
     redis: useRedis,
     contact,

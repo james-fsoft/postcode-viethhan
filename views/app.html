@@ -677,7 +677,7 @@ const LANGS = {
     errNetwork: 'Lỗi kết nối. Vui lòng thử lại.',
     navLookup: 'Tra mã bưu điện', navShipping: 'Xử lý file vận đơn',
     guestTag: 'Khách', btnLogin: 'Đăng nhập',
-    guestNote: 'Chế độ khách: tối đa 5 địa chỉ mỗi lần. Đăng nhập để tra nhiều hơn & upload Excel.',
+    guestNote: 'Chế độ khách: tra tay tối đa 5 địa chỉ, hoặc upload Excel tối đa 15 địa chỉ. Đăng nhập để dùng không giới hạn.',
     excelLockTitle: 'Tính năng dành cho thành viên',
     excelLockBody: 'Đăng nhập để tải lên file Excel và tra cứu hàng loạt hàng nghìn địa chỉ.',
     errGuestMax: (n) => `Chế độ khách chỉ tra tối đa ${n} địa chỉ mỗi lần. Đăng nhập để tra nhiều hơn.`,
@@ -738,7 +738,7 @@ const LANGS = {
     errNetwork: 'Connection error. Please try again.',
     navLookup: 'Postal Code Lookup', navShipping: 'Shipping File',
     guestTag: 'Guest', btnLogin: 'Sign in',
-    guestNote: 'Guest mode: max 5 addresses per search. Sign in for more & Excel upload.',
+    guestNote: 'Guest mode: max 5 addresses by manual search, or up to 15 via Excel upload. Sign in for unlimited.',
     excelLockTitle: 'Members-only feature',
     excelLockBody: 'Sign in to upload Excel files and look up thousands of addresses in bulk.',
     errGuestMax: (n) => `Guest mode allows max ${n} addresses per search. Sign in for more.`,
@@ -799,7 +799,7 @@ const LANGS = {
     errNetwork: '연결 오류. 다시 시도해주세요.',
     navLookup: '우편번호 조회', navShipping: '배송 파일 처리',
     guestTag: '게스트', btnLogin: '로그인',
-    guestNote: '게스트 모드: 1회당 최대 5개 주소. 더 많은 조회와 엑셀 업로드는 로그인하세요.',
+    guestNote: '게스트 모드: 수동 검색 최대 5개, 엑셀 업로드 최대 15개. 무제한 이용은 로그인하세요.',
     excelLockTitle: '회원 전용 기능',
     excelLockBody: '엑셀 파일을 업로드하고 수천 개의 주소를 일괄 조회하려면 로그인하세요.',
     errGuestMax: (n) => `게스트 모드는 1회당 최대 ${n}개 주소까지 조회할 수 있습니다. 더 많은 조회는 로그인하세요.`,
@@ -1207,7 +1207,7 @@ async function runExcelSearch() {
   const dataRows = workbookData.slice(hasH?1:0);
   const addresses = dataRows.map(row => String(row[col]||'').trim()).filter(Boolean);
   if (!addresses.length) { alert(t('errNoAddress')); return; }
-  if (!(await useQuota(addresses.length))) return;
+  if (!(await useQuota(addresses.length, MAX_UPLOAD))) return;
   const btn=document.getElementById('excelSearchBtn'), wrap=document.getElementById('excelProgressWrap'),
         fill=document.getElementById('excelProgressFill'), lbl=document.getElementById('excelProgressLabel');
   btn.disabled=true; wrap.style.display='block'; lbl.style.display='block';
@@ -1282,6 +1282,7 @@ let USER_PLAN = 'trial', MAX_LOOKUPS = 15, MAX_PER_LOOKUP = 30, USERNAME = 'user
 let USED = 0;           // số lượt đã dùng, lấy từ server
 let IS_GUEST = false;   // khách chưa đăng nhập
 let CAN_UPLOAD = true;  // được upload Excel hay không
+let MAX_UPLOAD = 30;    // số địa chỉ tối đa mỗi lần upload Excel
 
 function lookupsLeft() { return MAX_LOOKUPS > 0 ? Math.max(0, MAX_LOOKUPS - USED) : Infinity; }
 
@@ -1314,12 +1315,13 @@ function updateUsageBadge() {
   }
 }
 
-// Đăng ký 1 lượt với server. Trả về true nếu được phép tra cứu.
-async function useQuota(count) {
+// Đăng ký 1 lượt với server. limit = số địa chỉ tối đa cho lần này. Trả về true nếu được phép.
+async function useQuota(count, limit) {
+  const cap = limit ?? MAX_PER_LOOKUP;
   // Khách: chỉ giới hạn số địa chỉ/lần, không đếm tổng (không gọi server)
   if (IS_GUEST) {
-    if (MAX_PER_LOOKUP > 0 && count > MAX_PER_LOOKUP) {
-      alert(t('errGuestMax', MAX_PER_LOOKUP));
+    if (cap > 0 && count > cap) {
+      alert(t('errGuestMax', cap));
       return false;
     }
     return true;
@@ -1429,6 +1431,7 @@ function applyAccessUI() {
     USED           = cfg.used        ?? 0;
     IS_GUEST       = cfg.isGuest     === true;
     CAN_UPLOAD     = cfg.canUpload   !== false;
+    MAX_UPLOAD     = cfg.maxUpload   ?? MAX_PER_LOOKUP;
     CONFIG_LOADED  = true;
     applyAccessUI();
     updateUsageBadge();

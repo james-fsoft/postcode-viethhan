@@ -137,9 +137,37 @@ app.get('/api/juso', requireAuth, async (req, res) => {
   }
 });
 
-// ── Config endpoint — trả key cho browser đã login ───────────────────────────
+// ── Gói dịch vụ ───────────────────────────────────────────────────────────────
+const PLANS = {
+  trial:      { maxLookups: 15, maxPerLookup: 30 },
+  pro:        { maxLookups: 0,  maxPerLookup: 2000 },   // 0 = không giới hạn lượt
+  enterprise: { maxLookups: 0,  maxPerLookup: 10000 },
+};
+
+// USER_PLANS env: "admin:trial,company1:pro" — mặc định trial
+function getPlan(username) {
+  const map = {};
+  (process.env.USER_PLANS || '').split(',').forEach(p => {
+    const i = p.indexOf(':');
+    if (i > 0) map[p.slice(0, i).trim()] = p.slice(i + 1).trim();
+  });
+  const name = map[username] || 'trial';
+  return { name, ...(PLANS[name] || PLANS.trial) };
+}
+
+// ── Config endpoint — trả key + thông tin gói cho browser đã login ───────────
 app.get('/api/config', requireAuth, (req, res) => {
-  res.json({ jusoKey: process.env.JUSO_API_KEY || null });
+  let username = null;
+  try { username = jwt.verify(req.cookies[COOKIE], JWT_SECRET).username; } catch { /* ok */ }
+  const plan = getPlan(username);
+  res.json({
+    jusoKey: process.env.JUSO_API_KEY || null,
+    username,
+    plan: plan.name,
+    maxLookups: plan.maxLookups,
+    maxPerLookup: plan.maxPerLookup,
+    contact: process.env.CONTACT_INFO || 'admin@transflash.app',
+  });
 });
 
 // ── Protected routes ──────────────────────────────────────────────────────────

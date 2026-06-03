@@ -417,7 +417,7 @@
 const LANGS = {
   vi: {
     brandSub: 'Tra Mã Bưu Điện Hàn Quốc',
-    apiKeyLabel: 'Naver API (ClientID|Secret)', getKey: 'Lấy key miễn phí →',
+    apiKeyLabel: 'Juso API Key (도로명주소)', getKey: 'Lấy key miễn phí →',
     tabManual: 'Tìm kiếm thủ công', tabExcel: 'Upload Excel',
     manualLabel: 'Danh sách địa chỉ (mỗi dòng 1 địa chỉ)',
     manualPlaceholder: 'Ví dụ:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -444,7 +444,7 @@ const LANGS = {
   },
   en: {
     brandSub: 'Korean Postal Code Lookup',
-    apiKeyLabel: 'Naver API (ClientID|Secret)', getKey: 'Get free key →',
+    apiKeyLabel: 'Juso API Key (도로명주소)', getKey: 'Get free key →',
     tabManual: 'Manual Search', tabExcel: 'Upload Excel',
     manualLabel: 'Address list (one per line)',
     manualPlaceholder: 'Example:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -471,7 +471,7 @@ const LANGS = {
   },
   ko: {
     brandSub: '한국 우편번호 조회',
-    apiKeyLabel: 'Naver API (ClientID|Secret)', getKey: '무료 키 발급 →',
+    apiKeyLabel: 'Juso API Key (도로명주소)', getKey: '무료 키 발급 →',
     tabManual: '수동 검색', tabExcel: '엑셀 업로드',
     manualLabel: '주소 목록 (한 줄에 하나씩)',
     manualPlaceholder: '예시:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -573,23 +573,24 @@ function cleanAddress(addr) {
 
 async function kakaoLookup(rawAddr, apiKey) {
   const cleaned = cleanAddress(rawAddr);
-  // apiKey format: "clientId|clientSecret"
-  const [clientId, clientSecret] = (apiKey || '').split('|');
-  const headers = {};
-  if (clientId)     headers['x-naver-id']     = clientId.trim();
-  if (clientSecret) headers['x-naver-secret']  = clientSecret.trim();
+  if (!apiKey) throw new Error('NO_KEY');
 
-  const r = await fetch(`/api/geocode?q=${encodeURIComponent(cleaned)}`, { headers });
-  if (r.status === 401) throw new Error('AUTH');
+  const url = 'https://www.juso.go.kr/addrlink/addrLinkApi.do'
+    + '?currentPage=1&countPerPage=1'
+    + '&keyword='  + encodeURIComponent(cleaned)
+    + '&confmKey=' + encodeURIComponent(apiKey)
+    + '&resultType=json';
+
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
   const data = await r.json();
 
-  if (data.status === 'OK' && data.addresses?.length > 0) {
-    const addr = data.addresses[0];
-    return {
-      zip:     addr.zipCode || null,
-      display: addr.roadAddress || addr.jibunAddress || null,
-      type:    addr.roadAddress ? 'road' : 'jibun',
-    };
+  const code = data.results?.common?.errorCode;
+  if (code === 'E0001' || code === 'E0005') throw new Error('INVALID_KEY');
+
+  const list = data.results?.juso;
+  if (list?.length > 0) {
+    return { zip: list[0].zipNo, display: list[0].roadAddr, type: 'road' };
   }
   return { zip: null, display: null, type: 'not_found' };
 }

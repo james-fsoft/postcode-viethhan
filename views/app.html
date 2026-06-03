@@ -906,7 +906,10 @@ function cleanAddress(addr) {
 
 // Tạo nhiều biến thể địa chỉ, thử từ cụ thể → tổng quát để tăng tỉ lệ tìm thấy
 function buildCandidates(raw) {
-  const s = cleanAddress(raw);
+  let s = cleanAddress(raw);
+  // Nối lại âm tiết 동/리/가/로/길 bị tách dấu cách (vd "비아 동 714" → "비아동 714")
+  s = s.replace(/([가-힣])\s+(동|리|가|로|길)(\s*\d)/g, '$1$2$3');
+
   const out = [];
   const push = v => { v = (v || '').trim(); if (v && !out.includes(v)) out.push(v); };
 
@@ -920,14 +923,21 @@ function buildCandidates(raw) {
   const jibun = s.match(/^(.*[가-힣]+(?:동|리|가)\s*\d+(?:-\d+)?)/);
   if (jibun) push(jibun[1]);
 
-  // 4. Lõi: [구/군] + đường + số  và  chỉ đường + số (bỏ tỉnh/thành)
+  // 4. Lõi đường: [구/군] + đường + số  và  chỉ đường + số (bỏ tỉnh/thành)
   const core = s.match(/([가-힣]+[구군]\s+)?(\S*(?:로|길))\s+(\d+(?:-\d+)?)/);
   if (core) {
     push((core[1] || '') + core[2] + ' ' + core[3]);
     push(core[2] + ' ' + core[3]);
   }
 
-  // 5. Bỏ tỉnh/thành ở đầu (도/광역시/특별시/특별자치도/특별자치시)
+  // 5. Lõi số lô: [구/군] + động/리/가 + số  và  chỉ động + số (vd: 광산구 비아동 714-2)
+  const jcore = s.match(/([가-힣]+[구군]\s+)?(\S*(?:동|리|가))\s*(\d+(?:-\d+)?)/);
+  if (jcore) {
+    push((jcore[1] || '') + jcore[2] + ' ' + jcore[3]);
+    push(jcore[2] + ' ' + jcore[3]);
+  }
+
+  // 6. Bỏ tỉnh/thành ở đầu (도/광역시/특별시/특별자치도/특별자치시)
   const prov = s.match(/^\S+(?:특별자치도|특별자치시|특별시|광역시|도)\s+(.*)$/);
   if (prov) push(prov[1]);
 

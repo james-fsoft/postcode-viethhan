@@ -80,6 +80,30 @@
 
     .topbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
+    /* ── User chip ── */
+    .user-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: white; border: 1px solid var(--gray-200);
+      border-radius: 99px; padding: 4px 12px 4px 5px;
+      box-shadow: var(--shadow);
+    }
+    .user-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--red), var(--blue));
+      color: white; font-weight: 700; font-size: 0.8rem;
+      display: flex; align-items: center; justify-content: center;
+      text-transform: uppercase; flex-shrink: 0;
+    }
+    .user-meta { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-name { font-size: 0.82rem; font-weight: 700; color: var(--gray-700); }
+    .user-plan {
+      font-size: 0.68rem; font-weight: 600; letter-spacing: 0.3px;
+      color: var(--gray-400); text-transform: uppercase;
+    }
+    .user-plan.trial { color: #b45309; }
+    .user-plan.pro   { color: var(--green); }
+    .user-plan.enterprise { color: var(--blue); }
+
     .lang-switcher { display: flex; gap: 5px; }
 
     .lang-btn {
@@ -389,6 +413,13 @@
     </div>
 
     <div class="topbar-right">
+      <div class="user-chip" id="userChip" style="display:none">
+        <span class="user-avatar" id="userAvatar">U</span>
+        <span class="user-meta">
+          <span class="user-name" id="userName"></span>
+          <span class="user-plan" id="userPlan"></span>
+        </span>
+      </div>
       <div class="lang-switcher">
         <button class="lang-btn active" onclick="setLang('vi')" data-i18n="langVI">Tiếng Việt</button>
         <button class="lang-btn" onclick="setLang('en')" data-i18n="langEN">Tiếng Anh</button>
@@ -557,6 +588,7 @@ const LANGS = {
     introF4: 'Hỗ trợ 3 ngôn ngữ: Tiếng Việt, Tiếng Anh, Tiếng Hàn.',
     footerText: 'Giải pháp logistics Việt - Hàn',
     trialTag: 'Dùng thử',
+    planTrial: 'Gói dùng thử', planPro: 'Gói Pro', planEnterprise: 'Gói Enterprise',
     usageLeft: (left, max, per) => `Còn ${left}/${max} lượt tra cứu (mỗi lượt tối đa ${per} địa chỉ)`,
     errTooMany: (n) => `Gói dùng thử: mỗi lượt tối đa ${n} địa chỉ. Vui lòng giảm bớt rồi thử lại.`,
     limitTitle: 'Đã hết lượt dùng thử',
@@ -601,6 +633,7 @@ const LANGS = {
     introF4: 'Supports 3 languages: Vietnamese, English, Korean.',
     footerText: 'Vietnam - Korea Logistics Solution',
     trialTag: 'Trial',
+    planTrial: 'Trial plan', planPro: 'Pro plan', planEnterprise: 'Enterprise plan',
     usageLeft: (left, max, per) => `${left}/${max} lookups left (max ${per} addresses each)`,
     errTooMany: (n) => `Trial plan: max ${n} addresses per lookup. Please reduce and try again.`,
     limitTitle: 'Trial limit reached',
@@ -645,6 +678,7 @@ const LANGS = {
     introF4: '3개 언어 지원: 베트남어, 영어, 한국어.',
     footerText: '베트남-한국 물류 솔루션',
     trialTag: '체험판',
+    planTrial: '체험판', planPro: '프로 요금제', planEnterprise: '엔터프라이즈',
     usageLeft: (left, max, per) => `남은 조회 ${left}/${max}회 (1회당 최대 ${per}개 주소)`,
     errTooMany: (n) => `체험판: 1회당 최대 ${n}개 주소까지. 줄인 후 다시 시도하세요.`,
     limitTitle: '체험 횟수 소진',
@@ -703,6 +737,7 @@ function setLang(lang) {
   // Render lại kết quả thủ công để cập nhật ngôn ngữ (nút Tra lại, Không tìm thấy...)
   if (manualRows.length) renderManualResults(manualRows);
   if (typeof updateUsageBadge === 'function') updateUsageBadge();
+  if (typeof updateUserChip === 'function') updateUserChip();
   updatePreview();
 }
 
@@ -1094,6 +1129,20 @@ function getUsed()     { return parseInt(localStorage.getItem(usageKey()) || '0'
 function incUsed()     { localStorage.setItem(usageKey(), getUsed() + 1); updateUsageBadge(); }
 function lookupsLeft() { return MAX_LOOKUPS > 0 ? Math.max(0, MAX_LOOKUPS - getUsed()) : Infinity; }
 
+function updateUserChip() {
+  const chip = document.getElementById('userChip');
+  if (!chip || !USERNAME) return;
+  chip.style.display = 'flex';
+  document.getElementById('userAvatar').textContent = USERNAME.charAt(0);
+  document.getElementById('userName').textContent   = USERNAME;
+  const planEl = document.getElementById('userPlan');
+  const planKey = USER_PLAN === 'pro' ? 'planPro'
+               : USER_PLAN === 'enterprise' ? 'planEnterprise'
+               : 'planTrial';
+  planEl.textContent = t(planKey);
+  planEl.className = 'user-plan ' + USER_PLAN;
+}
+
 function updateUsageBadge() {
   const el = document.getElementById('usageBanner');
   if (!el) return;
@@ -1144,6 +1193,7 @@ function closeLimitModal() { document.getElementById('limitModal').style.display
     MAX_PER_LOOKUP = cfg.maxPerLookup ?? 30;
     USERNAME       = cfg.username    || 'user';
     CONTACT        = cfg.contact     || '';
+    updateUserChip();
     updateUsageBadge();
   } catch { /* bỏ qua nếu lỗi */ }
 

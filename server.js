@@ -166,7 +166,7 @@ app.get('/api/config', requireAuth, (req, res) => {
     plan: plan.name,
     maxLookups: plan.maxLookups,
     maxPerLookup: plan.maxPerLookup,
-    contact: process.env.CONTACT_INFO || 'admin@transflash.app',
+    contact: process.env.CONTACT_INFO || 'support@transflash.app',
   });
 });
 

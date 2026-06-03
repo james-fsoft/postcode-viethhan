@@ -417,7 +417,7 @@
     }
     .plan-row:last-child { border-bottom: none; }
     .plan-row.hl { background: #eff6ff; font-weight: 700; color: var(--blue); }
-    .plan-row span:last-child { font-family: monospace; color: var(--gray-500); }
+    .plan-row span:last-child { color: var(--gray-500); font-weight: 600; }
     .plan-row.hl span:last-child { color: var(--blue); }
 
     /* ── Footer ── */
@@ -471,8 +471,8 @@
         <option value="en" data-i18n="langEN">Tiếng Anh</option>
         <option value="ko" data-i18n="langKO">Tiếng Hàn</option>
       </select>
-      <button class="btn-login-top" id="loginBtn" onclick="location.href='/login'" style="display:none"><span class="lo-icon">→]</span><span data-i18n="btnLogin">Đăng nhập</span></button>
-      <button class="btn-logout" id="logoutBtn" onclick="logout()"><span class="lo-icon">⎋</span><span data-i18n="btnLogout">Đăng xuất</span></button>
+      <button class="btn-login-top" id="loginBtn" onclick="location.href='/login'" style="display:none"><span data-i18n="btnLogin">Đăng nhập</span></button>
+      <button class="btn-logout" id="logoutBtn" onclick="logout()"><span data-i18n="btnLogout">Đăng xuất</span></button>
     </div>
   </div>
 

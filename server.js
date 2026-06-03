@@ -70,25 +70,23 @@ app.post('/api/logout', (req, res) => {
   res.json({ ok: true });
 });
 
-// ── Kakao proxy — gọi từ server để tránh CORS ───────────────────────────────
-app.get('/api/kakao', requireAuth, async (req, res) => {
-  const { q, type } = req.query;
+// ── Juso proxy (행정안전부 도로명주소 API) ────────────────────────────────────
+app.get('/api/juso', requireAuth, async (req, res) => {
+  const { q } = req.query;
   if (!q) return res.status(400).json({ error: 'Missing query' });
 
-  // Ưu tiên: key người dùng nhập → key server (env)
-  const apiKey = req.headers['x-kakao-key'] || process.env.KAKAO_API_KEY;
-  if (!apiKey) return res.status(400).json({ error: 'NO_KEY' });
-
-  const base = type === 'keyword'
-    ? 'https://dapi.kakao.com/v2/local/search/keyword.json'
-    : 'https://dapi.kakao.com/v2/local/search/address.json';
+  const confmKey = req.headers['x-juso-key'] || process.env.JUSO_API_KEY;
+  if (!confmKey) return res.status(400).json({ error: 'NO_KEY' });
 
   try {
-    const r = await fetch(`${base}?query=${encodeURIComponent(q)}&size=1`, {
-      headers: { Authorization: `KakaoAK ${apiKey}` },
-    });
+    const url = `https://www.juso.go.kr/addrlink/addrLinkApi.do`
+      + `?currentPage=1&countPerPage=1`
+      + `&keyword=${encodeURIComponent(q)}`
+      + `&confmKey=${encodeURIComponent(confmKey)}`
+      + `&resultType=json`;
+    const r = await fetch(url);
     const data = await r.json();
-    res.status(r.status).json(data);
+    res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

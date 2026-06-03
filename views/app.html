@@ -304,7 +304,7 @@
   <div class="api-box">
     <label data-i18n="apiKeyLabel">Kakao REST API Key</label>
     <input type="text" id="apiKey" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
-    <a href="https://developers.kakao.com/console/app" target="_blank" data-i18n="getKey">Lấy API Key miễn phí →</a>
+    <a href="https://www.juso.go.kr/addrlink/devAddrLinkRequestWrite.do" target="_blank" data-i18n="getKey">Lấy key miễn phí →</a>
   </div>
 
   <!-- Tabs -->
@@ -417,7 +417,7 @@
 const LANGS = {
   vi: {
     brandSub: 'Tra Mã Bưu Điện Hàn Quốc',
-    apiKeyLabel: 'Kakao REST API Key', getKey: 'Lấy API Key miễn phí →',
+    apiKeyLabel: 'Juso API Key (도로명주소)', getKey: 'Lấy key miễn phí →',
     tabManual: 'Tìm kiếm thủ công', tabExcel: 'Upload Excel',
     manualLabel: 'Danh sách địa chỉ (mỗi dòng 1 địa chỉ)',
     manualPlaceholder: 'Ví dụ:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -434,17 +434,17 @@ const LANGS = {
     colSelectLabel: 'Cột địa chỉ:', headerRowLabel: 'Tiêu đề:', noHeader: 'Không có',
     summaryFound: (f,t) => `Kết quả: ${f}/${t} địa chỉ tìm thấy mã`,
     progressText: (i,t) => `Đang tra cứu... ${i}/${t}`,
-    errNoApiKey: 'Vui lòng nhập Kakao REST API Key.',
+    errNoApiKey: 'Vui lòng nhập Juso API Key.',
     errNoAddress: 'Vui lòng nhập ít nhất 1 địa chỉ.',
     errNoFile: 'Chưa chọn file.',
-    errInvalidKey: 'API Key không hợp lệ (lỗi 401). Kiểm tra lại key.',
+    errInvalidKey: 'Juso API Key không hợp lệ. Kiểm tra lại key tại juso.go.kr.',
     errNotFound: 'Không tìm thấy',
     typeRoad: 'Tên đường', typeJibun: 'Số lô', typeError: 'Lỗi',
     colZipResult: 'Mã bưu điện', copied: 'Đã sao chép!',
   },
   en: {
     brandSub: 'Korean Postal Code Lookup',
-    apiKeyLabel: 'Kakao REST API Key', getKey: 'Get free API Key →',
+    apiKeyLabel: 'Juso API Key (도로명주소)', getKey: 'Get free key →',
     tabManual: 'Manual Search', tabExcel: 'Upload Excel',
     manualLabel: 'Address list (one per line)',
     manualPlaceholder: 'Example:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -461,17 +461,17 @@ const LANGS = {
     colSelectLabel: 'Address column:', headerRowLabel: 'Header:', noHeader: 'None',
     summaryFound: (f,t) => `Results: ${f}/${t} addresses found`,
     progressText: (i,t) => `Looking up... ${i}/${t}`,
-    errNoApiKey: 'Please enter your Kakao REST API Key.',
+    errNoApiKey: 'Please enter your Juso API Key.',
     errNoAddress: 'Please enter at least one address.',
     errNoFile: 'No file selected.',
-    errInvalidKey: 'Invalid API Key (401). Please check your key.',
+    errInvalidKey: 'Invalid Juso API Key. Check your key at juso.go.kr.',
     errNotFound: 'Not found',
     typeRoad: 'Road', typeJibun: 'Jibun', typeError: 'Error',
     colZipResult: 'Postal Code', copied: 'Copied!',
   },
   ko: {
     brandSub: '한국 우편번호 조회',
-    apiKeyLabel: 'Kakao REST API 키', getKey: '무료 API 키 발급 →',
+    apiKeyLabel: 'Juso API 키 (도로명주소)', getKey: '무료 키 발급 →',
     tabManual: '수동 검색', tabExcel: '엑셀 업로드',
     manualLabel: '주소 목록 (한 줄에 하나씩)',
     manualPlaceholder: '예시:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -488,10 +488,10 @@ const LANGS = {
     colSelectLabel: '주소 열:', headerRowLabel: '헤더:', noHeader: '없음',
     summaryFound: (f,t) => `결과: ${t}건 중 ${f}건 확인`,
     progressText: (i,t) => `조회 중... (${i}/${t})`,
-    errNoApiKey: 'Kakao REST API 키를 입력하세요.',
+    errNoApiKey: 'Juso API 키를 입력하세요.',
     errNoAddress: '주소를 하나 이상 입력하세요.',
     errNoFile: '파일을 선택하세요.',
-    errInvalidKey: 'API 키가 올바르지 않습니다 (401).',
+    errInvalidKey: 'Juso API 키가 올바르지 않습니다. juso.go.kr에서 확인하세요.',
     errNotFound: '찾을 수 없음',
     typeRoad: '도로명', typeJibun: '지번', typeError: '오류',
     colZipResult: '우편번호', copied: '복사 완료!',
@@ -573,30 +573,20 @@ function cleanAddress(addr) {
 
 async function kakaoLookup(rawAddr, apiKey) {
   const cleaned = cleanAddress(rawAddr);
+  const headers = {};
+  if (apiKey) headers['x-juso-key'] = apiKey;
 
-  // Gọi qua server proxy /api/kakao để tránh CORS
-  const call = async (q, type = 'address') => {
-    const headers = {};
-    if (apiKey) headers['x-kakao-key'] = apiKey;
-    const r = await fetch(`/api/kakao?q=${encodeURIComponent(q)}&type=${type}`, { headers });
-    if (r.status === 401) throw new Error('AUTH');
-    if (r.status === 400) {
-      const d = await r.json();
-      if (d.error === 'NO_KEY') throw new Error('NO_KEY');
-    }
-    return r.json();
-  };
+  const r = await fetch(`/api/juso?q=${encodeURIComponent(cleaned)}`, { headers });
+  if (r.status === 401) throw new Error('AUTH');
 
-  let data = await call(cleaned);
-  if (!data.documents?.length) {
-    const kw = await call(cleaned, 'keyword');
-    if (kw.documents?.[0]?.road_address_name)
-      data = await call(kw.documents[0].road_address_name);
-  }
-  if (data.documents?.length) {
-    const { road_address: road, address: jibun } = data.documents[0];
-    if (road?.zone_no) return { zip: road.zone_no, display: road.address_name, type: 'road' };
-    if (jibun)         return { zip: null, display: jibun.address_name, type: 'jibun' };
+  const data = await r.json();
+  const code = data.results?.common?.errorCode;
+
+  if (code === 'E0001' || code === 'E0005') throw new Error('INVALID_KEY');
+
+  const list = data.results?.juso;
+  if (list?.length > 0) {
+    return { zip: list[0].zipNo, display: list[0].roadAddr, type: 'road' };
   }
   return { zip: null, display: null, type: 'not_found' };
 }
@@ -608,7 +598,7 @@ async function batchLookup(addresses, apiKey, onProgress) {
     try {
       results.push({ original: addresses[i], ...await kakaoLookup(addresses[i], apiKey) });
     } catch (e) {
-      if (e.message === 'AUTH') {
+      if (e.message === 'AUTH' || e.message === 'INVALID_KEY') {
         results.push({ original: addresses[i], zip: null, display: null, type: 'auth_error' });
         for (let j = i + 1; j < addresses.length; j++)
           results.push({ original: addresses[j], zip: null, display: null, type: 'auth_error' });

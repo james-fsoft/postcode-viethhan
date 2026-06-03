@@ -268,6 +268,19 @@
     .preview-table-wrap td { padding: 5px 9px; }
     .preview-table-wrap th.hl, .preview-table-wrap td.hl { background: #eff6ff; color: var(--blue); font-weight: 600; }
 
+    /* ── Inline manual results ── */
+    .inline-results { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .inline-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 10px 16px; border-bottom: 1px solid var(--gray-100);
+    }
+    .inline-row:last-child { border-bottom: none; }
+    .inline-row:hover { background: var(--gray-50); }
+    .inline-num  { font-size: 0.75rem; color: var(--gray-400); min-width: 22px; text-align: right; flex-shrink: 0; }
+    .inline-addr { flex: 1; font-size: 0.9rem; color: var(--gray-700); word-break: break-all; }
+    .inline-zip  { font-weight: 700; color: var(--blue); font-family: monospace; font-size: 1.05rem; flex-shrink: 0; min-width: 62px; text-align: right; }
+    .inline-zip.err { color: var(--red); font-size: 0.78rem; font-family: inherit; font-weight: 400; }
+
     .error-banner {
       padding: 9px 13px; background: var(--red-light);
       border: 1px solid #fecaca; border-radius: 6px;
@@ -336,20 +349,7 @@
           <button class="btn btn-green" onclick="downloadManualExcel()" data-i18n="btnDownloadResult">Tải .xlsx</button>
         </div>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th data-i18n="colZip">Mã bưu điện</th>
-              <th data-i18n="colInput">Địa chỉ nhập</th>
-              <th data-i18n="colNormalized">Địa chỉ chuẩn hóa</th>
-              <th data-i18n="colType">Loại</th>
-            </tr>
-          </thead>
-          <tbody id="manualBody"></tbody>
-        </table>
-      </div>
+      <div class="inline-results" id="manualBody"></div>
     </div>
   </div>
 
@@ -389,6 +389,7 @@
       <div class="btn-row" style="margin-top:12px;">
         <button class="btn btn-primary" id="excelSearchBtn" onclick="runExcelSearch()" disabled data-i18n="btnProcess">Tra cứu mã bưu điện</button>
         <button class="btn btn-ghost" onclick="resetFile()" data-i18n="btnClear">Xóa</button>
+        <button class="btn btn-ghost ml-auto" onclick="downloadSampleExcel()" data-i18n="btnSampleFile">Tải file mẫu</button>
       </div>
       <div class="progress-bar-wrap" id="excelProgressWrap"><div class="progress-bar-fill" id="excelProgressFill"></div></div>
       <div class="progress-label" id="excelProgressLabel"></div>
@@ -424,7 +425,7 @@ const LANGS = {
     manualHint: 'Gợi ý: bỏ số phòng / tên tòa nhà sẽ cho kết quả chính xác hơn.',
     btnSearch: 'Tra cứu', btnClear: 'Xóa', btnSample: 'Tải địa chỉ mẫu',
     btnCopy: 'Sao chép', btnDownloadResult: 'Tải .xlsx',
-    btnDownloadOriginal: 'Tải file gốc', btnProcess: 'Tra cứu mã bưu điện',
+    btnDownloadOriginal: 'Tải file gốc', btnProcess: 'Tra cứu mã bưu điện', btnSampleFile: 'Tải file mẫu',
     btnRemove: 'Xóa file', btnLogout: 'Đăng xuất',
     colZip: 'Mã bưu điện', colInput: 'Địa chỉ nhập',
     colNormalized: 'Địa chỉ chuẩn hóa', colType: 'Loại',
@@ -451,7 +452,7 @@ const LANGS = {
     manualHint: 'Tip: removing room numbers / building names improves accuracy.',
     btnSearch: 'Search', btnClear: 'Clear', btnSample: 'Load sample addresses',
     btnCopy: 'Copy', btnDownloadResult: 'Download .xlsx',
-    btnDownloadOriginal: 'Download original', btnProcess: 'Look up postal codes',
+    btnDownloadOriginal: 'Download original', btnProcess: 'Look up postal codes', btnSampleFile: 'Download template',
     btnRemove: 'Remove', btnLogout: 'Sign out',
     colZip: 'Postal Code', colInput: 'Input Address',
     colNormalized: 'Normalized Address', colType: 'Type',
@@ -478,7 +479,7 @@ const LANGS = {
     manualHint: '팁: 호수/동호 정보를 제거하면 더 정확한 결과를 얻을 수 있습니다.',
     btnSearch: '우편번호 조회', btnClear: '초기화', btnSample: '예시 주소 불러오기',
     btnCopy: '복사', btnDownloadResult: '.xlsx 다운로드',
-    btnDownloadOriginal: '원본 파일', btnProcess: '우편번호 조회 시작',
+    btnDownloadOriginal: '원본 파일', btnProcess: '우편번호 조회 시작', btnSampleFile: '샘플 파일 다운로드',
     btnRemove: '파일 제거', btnLogout: '로그아웃',
     colZip: '우편번호', colInput: '입력 주소',
     colNormalized: '정규화 주소', colType: '유형',
@@ -649,19 +650,37 @@ async function runManualSearch() {
 }
 
 function renderManualResults(rows) {
-  const tbody = document.getElementById('manualBody');
-  tbody.innerHTML = '';
+  const body = document.getElementById('manualBody');
+  body.innerHTML = '';
   rows.forEach((r, i) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${i+1}</td>
-      <td>${r.zip ? `<span class="zip-found">${r.zip}</span>` : `<span class="zip-error">${t('errNotFound')}</span>`}</td>
-      <td>${esc(r.original)}</td><td>${r.display ? esc(r.display) : '—'}</td>
-      <td>${typeBadge(r.type)}</td>`;
-    tbody.appendChild(tr);
+    const div = document.createElement('div');
+    div.className = 'inline-row';
+    div.innerHTML = `
+      <span class="inline-num">${i + 1}</span>
+      <span class="inline-addr">${esc(r.original)}</span>
+      <span class="inline-zip${r.zip ? '' : ' err'}">${r.zip || t('errNotFound')}</span>`;
+    body.appendChild(div);
   });
   const found = rows.filter(r => r.zip).length;
   document.getElementById('manualSummary').textContent = t('summaryFound', found, rows.length);
   document.getElementById('manualResults').style.display = 'block';
+}
+
+function downloadSampleExcel() {
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['주소 (Address)'],
+    ['경기 수원시 팔달구 향교로 122'],
+    ['부산 동래구 미남로116번길 79-4'],
+    ['대구광역시 북구 태암로6길 37'],
+    ['전라남도 목포시 동명들목로 33'],
+    ['경상북도 포항시 북구 학산동 149-1'],
+    ['강원특별자치도 강릉시 관대길 42'],
+    ['충청남도 당진시 천변1길 80'],
+  ]);
+  ws['!cols'] = [{ wch: 45 }];
+  XLSX.utils.book_append_sheet(wb, ws, '주소목록');
+  XLSX.writeFile(wb, '주소_샘플.xlsx');
 }
 
 function copyManualResults() {

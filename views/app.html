@@ -114,15 +114,17 @@
     .lang-select:focus { outline: none; border-color: var(--blue); }
     .lang-select:hover { border-color: var(--gray-300); }
 
-    /* Logout icon */
-    .btn-logout-icon {
-      width: 32px; height: 32px; border-radius: 8px;
+    /* Logout button */
+    .btn-logout {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 8px;
       border: 1.5px solid #fecaca; background: white;
-      color: var(--red); font-size: 1.05rem; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.15s; flex-shrink: 0;
+      color: var(--red); font-size: 0.8rem; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+      font-family: inherit;
     }
-    .btn-logout-icon:hover { background: var(--red-light); }
+    .btn-logout:hover { background: var(--red-light); }
+    .btn-logout .lo-icon { font-size: 0.95rem; }
 
     /* ── API Key ── */
     .api-box {
@@ -436,7 +438,7 @@
         <option value="en" data-i18n="langEN">Tiếng Anh</option>
         <option value="ko" data-i18n="langKO">Tiếng Hàn</option>
       </select>
-      <button class="btn-logout-icon" onclick="logout()" title="Logout" data-i18n-title="btnLogout">⎋</button>
+      <button class="btn-logout" onclick="logout()"><span class="lo-icon">⎋</span><span data-i18n="btnLogout">Đăng xuất</span></button>
     </div>
   </div>
 
@@ -618,6 +620,7 @@ const LANGS = {
     planLookups: 'lượt', planUnlimited: 'Không giới hạn',
     mailSubject: 'Yêu cầu nâng cấp gói - Postcode Transflash',
     mailBody: (user, plan) => `Xin chào,\n\nTôi muốn nâng cấp gói dịch vụ tra mã bưu điện.\n\nTài khoản: ${user}\nGói hiện tại: ${plan}\n\nVui lòng tư vấn giúp tôi. Cảm ơn!`,
+    errNetwork: 'Lỗi kết nối. Vui lòng thử lại.',
     tabManual: 'Tìm kiếm thủ công', tabExcel: 'Upload Excel',
     manualLabel: 'Danh sách địa chỉ (mỗi dòng 1 địa chỉ)',
     manualPlaceholder: 'Ví dụ:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -670,6 +673,7 @@ const LANGS = {
     planLookups: 'lookups', planUnlimited: 'Unlimited',
     mailSubject: 'Plan upgrade request - Postcode Transflash',
     mailBody: (user, plan) => `Hello,\n\nI would like to upgrade my postal code lookup plan.\n\nAccount: ${user}\nCurrent plan: ${plan}\n\nPlease advise. Thank you!`,
+    errNetwork: 'Connection error. Please try again.',
     tabManual: 'Manual Search', tabExcel: 'Upload Excel',
     manualLabel: 'Address list (one per line)',
     manualPlaceholder: 'Example:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -722,6 +726,7 @@ const LANGS = {
     planLookups: '회', planUnlimited: '무제한',
     mailSubject: '요금제 업그레이드 요청 - Postcode Transflash',
     mailBody: (user, plan) => `안녕하세요,\n\n우편번호 조회 요금제를 업그레이드하고 싶습니다.\n\n계정: ${user}\n현재 요금제: ${plan}\n\n안내 부탁드립니다. 감사합니다!`,
+    errNetwork: '연결 오류. 다시 시도해주세요.',
     tabManual: '수동 검색', tabExcel: '엑셀 업로드',
     manualLabel: '주소 목록 (한 줄에 하나씩)',
     manualPlaceholder: '예시:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -889,8 +894,7 @@ async function runManualSearch() {
   if (!apiKey && !SERVER_JUSO_KEY) { alert(t('errNoApiKey')); return; }
   if (!raw)    { alert(t('errNoAddress')); return; }
   const addresses = raw.split('\n').map(l => l.trim()).filter(Boolean);
-  if (!checkQuota(addresses.length)) return;
-  incUsed();
+  if (!(await useQuota(addresses.length))) return;
   const btn  = document.getElementById('searchBtn');
   const wrap = document.getElementById('manualProgressWrap');
   const fill = document.getElementById('manualProgressFill');
@@ -1090,8 +1094,7 @@ async function runExcelSearch() {
   const dataRows = workbookData.slice(hasH?1:0);
   const addresses = dataRows.map(row => String(row[col]||'').trim()).filter(Boolean);
   if (!addresses.length) { alert(t('errNoAddress')); return; }
-  if (!checkQuota(addresses.length)) return;
-  incUsed();
+  if (!(await useQuota(addresses.length))) return;
   const btn=document.getElementById('excelSearchBtn'), wrap=document.getElementById('excelProgressWrap'),
         fill=document.getElementById('excelProgressFill'), lbl=document.getElementById('excelProgressLabel');
   btn.disabled=true; wrap.style.display='block'; lbl.style.display='block';
@@ -1160,14 +1163,12 @@ function typeLabel(t2) { return t2==='road'?t('typeRoad'):t2==='jibun'?t('typeJi
 function colLetter(i) { let s=''; i++; while(i>0){s=String.fromCharCode(64+(i%26||26))+s; i=Math.floor((i-1)/26);} return s; }
 function formatBytes(b) { return b<1024?b+' B':b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(1)+' MB'; }
 
-// ── Quản lý gói / giới hạn dùng thử ──────────────────────────────────────────
+// ── Quản lý gói / giới hạn dùng thử (đếm phía server) ────────────────────────
 let SERVER_JUSO_KEY = null;
 let USER_PLAN = 'trial', MAX_LOOKUPS = 15, MAX_PER_LOOKUP = 30, USERNAME = 'user', CONTACT = '';
+let USED = 0; // số lượt đã dùng, lấy từ server
 
-function usageKey()    { return `lookups_used_${USERNAME}`; }
-function getUsed()     { return parseInt(localStorage.getItem(usageKey()) || '0', 10); }
-function incUsed()     { localStorage.setItem(usageKey(), getUsed() + 1); updateUsageBadge(); }
-function lookupsLeft() { return MAX_LOOKUPS > 0 ? Math.max(0, MAX_LOOKUPS - getUsed()) : Infinity; }
+function lookupsLeft() { return MAX_LOOKUPS > 0 ? Math.max(0, MAX_LOOKUPS - USED) : Infinity; }
 
 function updateUserChip() {
   const chip = document.getElementById('userChip');
@@ -1196,17 +1197,31 @@ function updateUsageBadge() {
   }
 }
 
-// Kiểm tra trước khi tra cứu. Trả về true nếu được phép.
-function checkQuota(count) {
-  if (MAX_PER_LOOKUP > 0 && count > MAX_PER_LOOKUP) {
-    alert(t('errTooMany', MAX_PER_LOOKUP));
+// Đăng ký 1 lượt với server. Trả về true nếu được phép tra cứu.
+async function useQuota(count) {
+  try {
+    const r = await fetch('/api/use', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ count }),
+    }).then(res => res.json());
+
+    if (r.unlimited) return true;
+    if (!r.ok) {
+      if (r.reason === 'tooMany') { alert(t('errTooMany', r.max)); return false; }
+      // hết lượt
+      USED = r.used ?? MAX_LOOKUPS;
+      updateUsageBadge();
+      openPlanModal('limit');
+      return false;
+    }
+    USED = r.used;
+    updateUsageBadge();
+    return true;
+  } catch {
+    alert(t('errNetwork'));
     return false;
   }
-  if (lookupsLeft() <= 0) {
-    openPlanModal('limit');
-    return false;
-  }
-  return true;
 }
 
 // reason: 'limit' (hết lượt) | 'upgrade' (chủ động nâng cấp)
@@ -1251,6 +1266,7 @@ function planKey(p) { return p === 'pro' ? 'planPro' : p === 'enterprise' ? 'pla
     MAX_PER_LOOKUP = cfg.maxPerLookup ?? 30;
     USERNAME       = cfg.username    || 'user';
     CONTACT        = cfg.contact     || '';
+    USED           = cfg.used        ?? 0;
     updateUserChip();
     updateUsageBadge();
   } catch { /* bỏ qua nếu lỗi */ }

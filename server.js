@@ -155,19 +155,72 @@ function getPlan(username) {
   return { name, ...(PLANS[name] || PLANS.trial) };
 }
 
-// ── Config endpoint — trả key + thông tin gói cho browser đã login ───────────
-app.get('/api/config', requireAuth, (req, res) => {
-  let username = null;
-  try { username = jwt.verify(req.cookies[COOKIE], JWT_SECRET).username; } catch { /* ok */ }
+// ── Bộ đếm lượt phía server (chống bypass) ───────────────────────────────────
+// Dùng Upstash Redis nếu có env, nếu không fallback bộ nhớ tạm (reset khi cold start)
+const UPSTASH_URL   = process.env.UPSTASH_REDIS_REST_URL;
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+const useRedis = !!(UPSTASH_URL && UPSTASH_TOKEN);
+const memUsage = new Map();
+
+async function redisCmd(...parts) {
+  const url = `${UPSTASH_URL}/${parts.map(encodeURIComponent).join('/')}`;
+  const data = await getJson(url, { Authorization: `Bearer ${UPSTASH_TOKEN}` });
+  return data.result;
+}
+async function getUsage(user) {
+  if (useRedis) return parseInt(await redisCmd('get', `usage:${user}`) || '0', 10);
+  return memUsage.get(user) || 0;
+}
+async function incUsage(user) {
+  if (useRedis) return parseInt(await redisCmd('incr', `usage:${user}`), 10);
+  const n = (memUsage.get(user) || 0) + 1;
+  memUsage.set(user, n);
+  return n;
+}
+
+function userFromReq(req) {
+  try { return jwt.verify(req.cookies[COOKIE], JWT_SECRET).username; } catch { return null; }
+}
+
+// ── Config endpoint — trả key + thông tin gói + lượt đã dùng ─────────────────
+app.get('/api/config', requireAuth, async (req, res) => {
+  const username = userFromReq(req);
   const plan = getPlan(username);
+  let used = 0;
+  try { used = await getUsage(username); } catch { /* ok */ }
   res.json({
     jusoKey: process.env.JUSO_API_KEY || null,
     username,
     plan: plan.name,
     maxLookups: plan.maxLookups,
     maxPerLookup: plan.maxPerLookup,
+    used,
     contact: process.env.CONTACT_INFO || 'support@transflash.app',
   });
+});
+
+// ── Đăng ký 1 lượt tra cứu (kiểm tra + tăng đếm phía server) ─────────────────
+app.post('/api/use', requireAuth, async (req, res) => {
+  const username = userFromReq(req);
+  if (!username) return res.status(401).json({ ok: false });
+  const plan = getPlan(username);
+  const count = parseInt(req.body.count || 0, 10);
+
+  if (plan.maxPerLookup > 0 && count > plan.maxPerLookup)
+    return res.json({ ok: false, reason: 'tooMany', max: plan.maxPerLookup });
+
+  if (plan.maxLookups === 0)
+    return res.json({ ok: true, unlimited: true });
+
+  try {
+    const used = await getUsage(username);
+    if (used >= plan.maxLookups)
+      return res.json({ ok: false, reason: 'limit', used, max: plan.maxLookups });
+    const newUsed = await incUsage(username);
+    return res.json({ ok: true, used: newUsed, left: Math.max(0, plan.maxLookups - newUsed), max: plan.maxLookups });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 // ── Protected routes ──────────────────────────────────────────────────────────

@@ -573,19 +573,25 @@ function cleanAddress(addr) {
 
 async function kakaoLookup(rawAddr, apiKey) {
   const cleaned = cleanAddress(rawAddr);
-  const hdrs = { Authorization: `KakaoAK ${apiKey}` };
-  const search = async q => {
-    const r = await fetch(`https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(q)}&size=1`, { headers: hdrs });
+
+  // Gọi qua server proxy /api/kakao để tránh CORS
+  const call = async (q, type = 'address') => {
+    const headers = {};
+    if (apiKey) headers['x-kakao-key'] = apiKey;
+    const r = await fetch(`/api/kakao?q=${encodeURIComponent(q)}&type=${type}`, { headers });
     if (r.status === 401) throw new Error('AUTH');
+    if (r.status === 400) {
+      const d = await r.json();
+      if (d.error === 'NO_KEY') throw new Error('NO_KEY');
+    }
     return r.json();
   };
-  let data = await search(cleaned);
+
+  let data = await call(cleaned);
   if (!data.documents?.length) {
-    const r2 = await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(cleaned)}&size=1`, { headers: hdrs });
-    if (r2.ok) {
-      const d2 = await r2.json();
-      if (d2.documents?.[0]?.road_address_name) data = await search(d2.documents[0].road_address_name);
-    }
+    const kw = await call(cleaned, 'keyword');
+    if (kw.documents?.[0]?.road_address_name)
+      data = await call(kw.documents[0].road_address_name);
   }
   if (data.documents?.length) {
     const { road_address: road, address: jibun } = data.documents[0];

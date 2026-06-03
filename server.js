@@ -70,6 +70,30 @@ app.post('/api/logout', (req, res) => {
   res.json({ ok: true });
 });
 
+// ── Kakao proxy — gọi từ server để tránh CORS ───────────────────────────────
+app.get('/api/kakao', requireAuth, async (req, res) => {
+  const { q, type } = req.query;
+  if (!q) return res.status(400).json({ error: 'Missing query' });
+
+  // Ưu tiên: key người dùng nhập → key server (env)
+  const apiKey = req.headers['x-kakao-key'] || process.env.KAKAO_API_KEY;
+  if (!apiKey) return res.status(400).json({ error: 'NO_KEY' });
+
+  const base = type === 'keyword'
+    ? 'https://dapi.kakao.com/v2/local/search/keyword.json'
+    : 'https://dapi.kakao.com/v2/local/search/address.json';
+
+  try {
+    const r = await fetch(`${base}?query=${encodeURIComponent(q)}&size=1`, {
+      headers: { Authorization: `KakaoAK ${apiKey}` },
+    });
+    const data = await r.json();
+    res.status(r.status).json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Protected routes ─────────────────────────────────────────────────────────
 app.get('/', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'app.html'));

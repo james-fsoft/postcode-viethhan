@@ -698,7 +698,9 @@ function downloadManualExcel() {
   const ws_data = [[t('colInput'), t('colZipResult'), t('colNormalized'), t('colType')]];
   manualRows.forEach(r => ws_data.push([r.original, r.zip||'', r.display||'', typeLabel(r.type)]));
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ws_data), '우편번호');
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols'] = [{ wch: 50 }, { wch: 10 }, { wch: 60 }, { wch: 12 }];
+  XLSX.utils.book_append_sheet(wb, ws, '우편번호');
   XLSX.writeFile(wb, 'VietHan_postal_codes.xlsx');
 }
 
@@ -826,12 +828,16 @@ function downloadOriginal() {
 
 function downloadExcelResult() {
   if (!excelRows.length) return;
-  const hasH=parseInt(document.getElementById('headerRowSelect').value)>0;
-  const ws_data=[];
+  const hasH = parseInt(document.getElementById('headerRowSelect').value) > 0;
+  const ws_data = [];
   if (hasH && workbookData[0]) ws_data.push([...workbookData[0], t('colZipResult'), t('colNormalized'), t('colType')]);
   excelRows.forEach(r => ws_data.push([...r.rowData, r.zip||'', r.display||'', typeLabel(r.type)]));
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ws_data), '우편번호_결과');
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  // Cột gốc giữ nguyên độ rộng, thêm 3 cột mới ở cuối
+  const origCols = (workbookData[0] || []).map(() => ({ wch: 30 }));
+  ws['!cols'] = [...origCols, { wch: 10 }, { wch: 60 }, { wch: 12 }];
+  XLSX.utils.book_append_sheet(wb, ws, '우편번호_결과');
   XLSX.writeFile(wb, `${(uploadedFile?.name.replace(/\.[^.]+$/,'')||'result')}_우편번호.xlsx`);
 }
 

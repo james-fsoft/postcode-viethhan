@@ -629,7 +629,7 @@ function clearManual() {
 async function runManualSearch() {
   const apiKey = document.getElementById('apiKey').value.trim();
   const raw    = document.getElementById('addressInput').value.trim();
-  if (!apiKey) { alert(t('errNoApiKey')); return; }
+  if (!apiKey && !SERVER_JUSO_KEY) { alert(t('errNoApiKey')); return; }
   if (!raw)    { alert(t('errNoAddress')); return; }
   const addresses = raw.split('\n').map(l => l.trim()).filter(Boolean);
   const btn  = document.getElementById('searchBtn');
@@ -758,7 +758,7 @@ function updatePreview() {
 
 async function runExcelSearch() {
   const apiKey = document.getElementById('apiKey').value.trim();
-  if (!apiKey) { alert(t('errNoApiKey')); return; }
+  if (!apiKey && !SERVER_JUSO_KEY) { alert(t('errNoApiKey')); return; }
   if (!workbookData.length) { alert(t('errNoFile')); return; }
   const col     = parseInt(document.getElementById('colSelect').value)||0;
   const hasH    = parseInt(document.getElementById('headerRowSelect').value)>0;

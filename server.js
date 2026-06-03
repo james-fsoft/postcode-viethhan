@@ -27,7 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // ── Helper: gọi HTTP/HTTPS, tự follow redirect, trả về JSON ─────────────────
-function getJson(url, depth = 0) {
+function getJson(url, extraHeaders = {}, depth = 0) {
   return new Promise((resolve, reject) => {
     if (depth > 4) return reject(new Error('Too many redirects'));
 
@@ -39,9 +39,9 @@ function getJson(url, depth = 0) {
       path:     parsed.pathname + parsed.search,
       method:   'GET',
       headers: {
-        'Referer':    'https://postcode-viethhan.vercel.app/',
         'User-Agent': 'Mozilla/5.0 (compatible)',
         'Accept':     'application/json',
+        ...extraHeaders,
       },
     };
 
@@ -51,7 +51,7 @@ function getJson(url, depth = 0) {
         res.resume();
         const loc     = res.headers.location || '';
         const nextUrl = loc.startsWith('http') ? loc : `${parsed.protocol}//${parsed.hostname}${loc}`;
-        return getJson(nextUrl, depth + 1).then(resolve).catch(reject);
+        return getJson(nextUrl, extraHeaders, depth + 1).then(resolve).catch(reject);
       }
 
       let raw = '';
@@ -115,21 +115,23 @@ app.post('/api/logout', (req, res) => {
   res.json({ ok: true });
 });
 
-// ── Juso proxy (행정안전부 도로명주소 API) ────────────────────────────────────
-app.get('/api/juso', requireAuth, async (req, res) => {
-  const { q } = req.query;
+// ── Kakao Local API proxy ────────────────────────────────────────────────────
+app.get('/api/kakao', requireAuth, async (req, res) => {
+  const { q, type } = req.query;
   if (!q) return res.status(400).json({ error: 'Missing query' });
 
-  const confmKey = req.headers['x-juso-key'] || process.env.JUSO_API_KEY;
-  if (!confmKey) return res.status(400).json({ error: 'NO_KEY' });
+  const apiKey = req.headers['x-kakao-key'] || process.env.KAKAO_API_KEY;
+  if (!apiKey) return res.status(400).json({ error: 'NO_KEY' });
+
+  const host = type === 'keyword'
+    ? 'dapi.kakao.com/v2/local/search/keyword.json'
+    : 'dapi.kakao.com/v2/local/search/address.json';
 
   try {
-    const url = 'https://www.juso.go.kr/addrlink/addrLinkApi.do'
-      + '?currentPage=1&countPerPage=1'
-      + '&keyword=' + encodeURIComponent(q)
-      + '&confmKey=' + encodeURIComponent(confmKey)
-      + '&resultType=json';
-    const data = await getJson(url);
+    const data = await getJson(
+      `https://${host}?query=${encodeURIComponent(q)}&size=1`,
+      { Authorization: `KakaoAK ${apiKey}` }
+    );
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });

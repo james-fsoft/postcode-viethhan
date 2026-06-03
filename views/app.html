@@ -304,7 +304,7 @@
   <div class="api-box">
     <label data-i18n="apiKeyLabel">Kakao REST API Key</label>
     <input type="text" id="apiKey" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
-    <a href="https://www.juso.go.kr/addrlink/devAddrLinkRequestWrite.do" target="_blank" data-i18n="getKey">Lấy key miễn phí →</a>
+    <a href="https://developers.kakao.com/console/app" target="_blank" data-i18n="getKey">Lấy API Key →</a>
   </div>
 
   <!-- Tabs -->
@@ -417,7 +417,7 @@
 const LANGS = {
   vi: {
     brandSub: 'Tra Mã Bưu Điện Hàn Quốc',
-    apiKeyLabel: 'Juso API Key (도로명주소)', getKey: 'Lấy key miễn phí →',
+    apiKeyLabel: 'Kakao REST API Key', getKey: 'Lấy API Key →',
     tabManual: 'Tìm kiếm thủ công', tabExcel: 'Upload Excel',
     manualLabel: 'Danh sách địa chỉ (mỗi dòng 1 địa chỉ)',
     manualPlaceholder: 'Ví dụ:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -444,7 +444,7 @@ const LANGS = {
   },
   en: {
     brandSub: 'Korean Postal Code Lookup',
-    apiKeyLabel: 'Juso API Key (도로명주소)', getKey: 'Get free key →',
+    apiKeyLabel: 'Kakao REST API Key', getKey: 'Get API Key →',
     tabManual: 'Manual Search', tabExcel: 'Upload Excel',
     manualLabel: 'Address list (one per line)',
     manualPlaceholder: 'Example:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -471,7 +471,7 @@ const LANGS = {
   },
   ko: {
     brandSub: '한국 우편번호 조회',
-    apiKeyLabel: 'Juso API 키 (도로명주소)', getKey: '무료 키 발급 →',
+    apiKeyLabel: 'Kakao REST API 키', getKey: 'API 키 발급 →',
     tabManual: '수동 검색', tabExcel: '엑셀 업로드',
     manualLabel: '주소 목록 (한 줄에 하나씩)',
     manualPlaceholder: '예시:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -574,19 +574,24 @@ function cleanAddress(addr) {
 async function kakaoLookup(rawAddr, apiKey) {
   const cleaned = cleanAddress(rawAddr);
   const headers = {};
-  if (apiKey) headers['x-juso-key'] = apiKey;
+  if (apiKey) headers['x-kakao-key'] = apiKey;
 
-  const r = await fetch(`/api/juso?q=${encodeURIComponent(cleaned)}`, { headers });
-  if (r.status === 401) throw new Error('AUTH');
+  const call = async (q, type = 'address') => {
+    const r = await fetch(`/api/kakao?q=${encodeURIComponent(q)}&type=${type}`, { headers });
+    if (r.status === 401) throw new Error('AUTH');
+    return r.json();
+  };
 
-  const data = await r.json();
-  const code = data.results?.common?.errorCode;
-
-  if (code === 'E0001' || code === 'E0005') throw new Error('INVALID_KEY');
-
-  const list = data.results?.juso;
-  if (list?.length > 0) {
-    return { zip: list[0].zipNo, display: list[0].roadAddr, type: 'road' };
+  let data = await call(cleaned);
+  if (!data.documents?.length) {
+    const kw = await call(cleaned, 'keyword');
+    if (kw.documents?.[0]?.road_address_name)
+      data = await call(kw.documents[0].road_address_name);
+  }
+  if (data.documents?.length) {
+    const { road_address: road, address: jibun } = data.documents[0];
+    if (road?.zone_no) return { zip: road.zone_no, display: road.address_name, type: 'road' };
+    if (jibun)         return { zip: null, display: jibun.address_name, type: 'jibun' };
   }
   return { zip: null, display: null, type: 'not_found' };
 }

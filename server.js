@@ -115,27 +115,31 @@ app.post('/api/logout', (req, res) => {
   res.json({ ok: true });
 });
 
-// ── Naver Maps Geocoding proxy ────────────────────────────────────────────────
-app.get('/api/geocode', requireAuth, async (req, res) => {
+// ── Juso proxy (행정안전부 도로명주소 API) ────────────────────────────────────
+app.get('/api/juso', requireAuth, async (req, res) => {
   const { q } = req.query;
   if (!q) return res.status(400).json({ error: 'Missing query' });
 
-  const clientId     = req.headers['x-naver-id']     || process.env.NAVER_CLIENT_ID;
-  const clientSecret = req.headers['x-naver-secret']  || process.env.NAVER_CLIENT_SECRET;
-  if (!clientId || !clientSecret) return res.status(400).json({ error: 'NO_KEY' });
+  const confmKey = req.headers['x-juso-key'] || process.env.JUSO_API_KEY;
+  if (!confmKey) return res.status(400).json({ error: 'NO_KEY' });
 
   try {
     const data = await getJson(
-      `https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=${encodeURIComponent(q)}`,
-      {
-        'X-NCP-APIGW-API-KEY-ID': clientId,
-        'X-NCP-APIGW-API-KEY':    clientSecret,
-      }
+      `https://www.juso.go.kr/addrlink/addrLinkApi.do`
+      + `?currentPage=1&countPerPage=1`
+      + `&keyword=${encodeURIComponent(q)}`
+      + `&confmKey=${encodeURIComponent(confmKey)}`
+      + `&resultType=json`
     );
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// ── Config endpoint — trả key cho browser đã login ───────────────────────────
+app.get('/api/config', requireAuth, (req, res) => {
+  res.json({ jusoKey: process.env.JUSO_API_KEY || null });
 });
 
 // ── Protected routes ──────────────────────────────────────────────────────────

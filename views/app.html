@@ -300,11 +300,11 @@
     </div>
   </div>
 
-  <!-- API Key -->
-  <div class="api-box">
-    <label data-i18n="apiKeyLabel">Kakao REST API Key</label>
+  <!-- API Key — ẩn khi server đã có key sẵn -->
+  <div class="api-box" id="apiBox">
+    <label data-i18n="apiKeyLabel">Juso API Key (도로명주소)</label>
     <input type="text" id="apiKey" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
-    <a href="https://www.ncloud.com/product/applicationService/maps" target="_blank" data-i18n="getKey">Lấy key miễn phí →</a>
+    <a href="https://www.juso.go.kr/addrlink/devAddrLinkRequestWrite.do" target="_blank" data-i18n="getKey">Lấy key miễn phí →</a>
   </div>
 
   <!-- Tabs -->
@@ -434,7 +434,7 @@ const LANGS = {
     colSelectLabel: 'Cột địa chỉ:', headerRowLabel: 'Tiêu đề:', noHeader: 'Không có',
     summaryFound: (f,t) => `Kết quả: ${f}/${t} địa chỉ tìm thấy mã`,
     progressText: (i,t) => `Đang tra cứu... ${i}/${t}`,
-    errNoApiKey: 'Nhập Naver API key theo format: ClientID|ClientSecret',
+    errNoApiKey: 'Vui lòng nhập Juso API Key.',
     errNoAddress: 'Vui lòng nhập ít nhất 1 địa chỉ.',
     errNoFile: 'Chưa chọn file.',
     errInvalidKey: 'Juso API Key không hợp lệ. Kiểm tra lại key tại juso.go.kr.',
@@ -461,7 +461,7 @@ const LANGS = {
     colSelectLabel: 'Address column:', headerRowLabel: 'Header:', noHeader: 'None',
     summaryFound: (f,t) => `Results: ${f}/${t} addresses found`,
     progressText: (i,t) => `Looking up... ${i}/${t}`,
-    errNoApiKey: 'Enter Naver API key: ClientID|ClientSecret',
+    errNoApiKey: 'Please enter your Juso API Key.',
     errNoAddress: 'Please enter at least one address.',
     errNoFile: 'No file selected.',
     errInvalidKey: 'Invalid Juso API Key. Check your key at juso.go.kr.',
@@ -488,7 +488,7 @@ const LANGS = {
     colSelectLabel: '주소 열:', headerRowLabel: '헤더:', noHeader: '없음',
     summaryFound: (f,t) => `결과: ${t}건 중 ${f}건 확인`,
     progressText: (i,t) => `조회 중... (${i}/${t})`,
-    errNoApiKey: 'Naver API 키 입력: ClientID|ClientSecret',
+    errNoApiKey: 'Juso API 키를 입력하세요.',
     errNoAddress: '주소를 하나 이상 입력하세요.',
     errNoFile: '파일을 선택하세요.',
     errInvalidKey: 'Juso API 키가 올바르지 않습니다. juso.go.kr에서 확인하세요.',
@@ -573,7 +573,9 @@ function cleanAddress(addr) {
 
 async function kakaoLookup(rawAddr, apiKey) {
   const cleaned = cleanAddress(rawAddr);
-  if (!apiKey) throw new Error('NO_KEY');
+  const key = SERVER_JUSO_KEY || apiKey;
+  if (!key) throw new Error('NO_KEY');
+  apiKey = key;
 
   const url = 'https://www.juso.go.kr/addrlink/addrLinkApi.do'
     + '?currentPage=1&countPerPage=1'
@@ -828,11 +830,29 @@ function colLetter(i) { let s=''; i++; while(i>0){s=String.fromCharCode(64+(i%26
 function formatBytes(b) { return b<1024?b+' B':b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(1)+' MB'; }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-(function() {
-  const k = localStorage.getItem('juso_api_key');
-  if (k) document.getElementById('apiKey').value = k;
-  document.getElementById('apiKey').addEventListener('input', e => localStorage.setItem('juso_api_key', e.target.value.trim()));
+let SERVER_JUSO_KEY = null; // key từ server (admin set)
+
+(async function() {
   setLang(localStorage.getItem('lang') || 'vi');
+
+  // Thử lấy key từ server
+  try {
+    const cfg = await fetch('/api/config').then(r => r.json());
+    if (cfg.jusoKey) {
+      SERVER_JUSO_KEY = cfg.jusoKey;
+      // Ẩn ô nhập key vì server đã có sẵn
+      document.getElementById('apiBox').style.display = 'none';
+    }
+  } catch { /* bỏ qua nếu lỗi */ }
+
+  // Nếu không có server key thì dùng key đã lưu trong localStorage
+  if (!SERVER_JUSO_KEY) {
+    const k = localStorage.getItem('juso_api_key');
+    if (k) document.getElementById('apiKey').value = k;
+    document.getElementById('apiKey').addEventListener('input', e =>
+      localStorage.setItem('juso_api_key', e.target.value.trim())
+    );
+  }
 })();
 </script>
 </body>

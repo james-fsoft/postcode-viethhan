@@ -126,6 +126,29 @@
     .btn-logout:hover { background: var(--red-light); }
     .btn-logout .lo-icon { font-size: 0.95rem; }
 
+    /* Login button (guest) */
+    .btn-login-top {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 16px; border-radius: 8px; border: none;
+      background: linear-gradient(135deg, var(--red), var(--blue));
+      color: white; font-size: 0.8rem; font-weight: 700;
+      cursor: pointer; transition: opacity 0.15s; flex-shrink: 0;
+      font-family: inherit;
+    }
+    .btn-login-top:hover { opacity: 0.9; }
+
+    /* Guest banner + tab lock */
+    .usage-banner.guest { background: #eff6ff; border-color: #bfdbfe; color: var(--blue); }
+    .usage-tag.guest-tag { background: var(--blue); }
+    .tab-lock { font-size: 0.78rem; margin-left: 5px; }
+    .excel-lock {
+      text-align: center; padding: 36px 20px;
+    }
+    .excel-lock .lock-icon { font-size: 2.6rem; margin-bottom: 12px; }
+    .excel-lock h3 { font-size: 1.1rem; color: var(--gray-900); margin-bottom: 8px; }
+    .excel-lock p { font-size: 0.88rem; color: var(--gray-500); line-height: 1.6; margin-bottom: 18px; max-width: 380px; margin-left: auto; margin-right: auto; }
+    .excel-lock .btn { padding: 10px 28px; }
+
     /* ── API Key ── */
     .api-box {
       background: white;
@@ -438,7 +461,8 @@
         <option value="en" data-i18n="langEN">Tiếng Anh</option>
         <option value="ko" data-i18n="langKO">Tiếng Hàn</option>
       </select>
-      <button class="btn-logout" onclick="logout()"><span class="lo-icon">⎋</span><span data-i18n="btnLogout">Đăng xuất</span></button>
+      <button class="btn-login-top" id="loginBtn" onclick="location.href='/login'" style="display:none"><span class="lo-icon">→]</span><span data-i18n="btnLogin">Đăng nhập</span></button>
+      <button class="btn-logout" id="logoutBtn" onclick="logout()"><span class="lo-icon">⎋</span><span data-i18n="btnLogout">Đăng xuất</span></button>
     </div>
   </div>
 
@@ -470,10 +494,17 @@
     <button class="usage-upgrade-btn" onclick="openPlanModal('upgrade')" data-i18n="btnUpgrade">Nâng cấp gói</button>
   </div>
 
+  <!-- Banner chế độ khách -->
+  <div class="usage-banner guest" id="guestBanner" style="display:none">
+    <span class="usage-tag guest-tag" data-i18n="guestTag">Khách</span>
+    <span data-i18n="guestNote">Chế độ khách: tối đa 5 địa chỉ mỗi lần. Đăng nhập để tra nhiều hơn & upload Excel.</span>
+    <button class="usage-upgrade-btn" onclick="location.href='/login'" data-i18n="btnLogin">Đăng nhập</button>
+  </div>
+
   <!-- Tabs -->
   <div class="tabs">
     <button class="tab-btn active" data-tab="manual" data-i18n="tabManual" onclick="switchTab('manual')">Tìm kiếm thủ công</button>
-    <button class="tab-btn" data-tab="excel" data-i18n="tabExcel" onclick="switchTab('excel')">Upload Excel</button>
+    <button class="tab-btn" data-tab="excel" onclick="switchTab('excel')"><span data-i18n="tabExcel">Upload Excel</span><span class="tab-lock" id="excelTabLock" style="display:none">🔒</span></button>
   </div>
 
   <!-- ══ TAB 1: Manual ══ -->
@@ -507,6 +538,14 @@
   <!-- ══ TAB 2: Excel ══ -->
   <div class="tab-panel" id="tab-excel">
     <div class="card">
+      <!-- Khóa cho khách chưa đăng nhập -->
+      <div class="excel-lock" id="excelLock" style="display:none">
+        <div class="lock-icon">🔒</div>
+        <h3 data-i18n="excelLockTitle">Tính năng dành cho thành viên</h3>
+        <p data-i18n="excelLockBody">Đăng nhập để tải lên file Excel và tra cứu hàng loạt hàng nghìn địa chỉ.</p>
+        <button class="btn btn-primary" onclick="location.href='/login'" data-i18n="btnLogin">Đăng nhập</button>
+      </div>
+      <div id="excelContent">
       <label data-i18n="excelUploadLabel">Tải lên file Excel</label>
       <div class="upload-area" id="uploadArea"
            onclick="document.getElementById('fileInput').click()"
@@ -544,6 +583,7 @@
       </div>
       <div class="progress-bar-wrap" id="excelProgressWrap"><div class="progress-bar-fill" id="excelProgressFill"></div></div>
       <div class="progress-label" id="excelProgressLabel"></div>
+      </div><!-- /excelContent -->
     </div>
 
     <div class="results-box" id="excelResults">
@@ -621,6 +661,11 @@ const LANGS = {
     mailSubject: 'Yêu cầu nâng cấp gói - Postcode Transflash',
     mailBody: (user, plan) => `Xin chào,\n\nTôi muốn nâng cấp gói dịch vụ tra mã bưu điện.\n\nTài khoản: ${user}\nGói hiện tại: ${plan}\n\nVui lòng tư vấn giúp tôi. Cảm ơn!`,
     errNetwork: 'Lỗi kết nối. Vui lòng thử lại.',
+    guestTag: 'Khách', btnLogin: 'Đăng nhập',
+    guestNote: 'Chế độ khách: tối đa 5 địa chỉ mỗi lần. Đăng nhập để tra nhiều hơn & upload Excel.',
+    excelLockTitle: 'Tính năng dành cho thành viên',
+    excelLockBody: 'Đăng nhập để tải lên file Excel và tra cứu hàng loạt hàng nghìn địa chỉ.',
+    errGuestMax: (n) => `Chế độ khách chỉ tra tối đa ${n} địa chỉ mỗi lần. Đăng nhập để tra nhiều hơn.`,
     tabManual: 'Tìm kiếm thủ công', tabExcel: 'Upload Excel',
     manualLabel: 'Danh sách địa chỉ (mỗi dòng 1 địa chỉ)',
     manualPlaceholder: 'Ví dụ:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -674,6 +719,11 @@ const LANGS = {
     mailSubject: 'Plan upgrade request - Postcode Transflash',
     mailBody: (user, plan) => `Hello,\n\nI would like to upgrade my postal code lookup plan.\n\nAccount: ${user}\nCurrent plan: ${plan}\n\nPlease advise. Thank you!`,
     errNetwork: 'Connection error. Please try again.',
+    guestTag: 'Guest', btnLogin: 'Sign in',
+    guestNote: 'Guest mode: max 5 addresses per search. Sign in for more & Excel upload.',
+    excelLockTitle: 'Members-only feature',
+    excelLockBody: 'Sign in to upload Excel files and look up thousands of addresses in bulk.',
+    errGuestMax: (n) => `Guest mode allows max ${n} addresses per search. Sign in for more.`,
     tabManual: 'Manual Search', tabExcel: 'Upload Excel',
     manualLabel: 'Address list (one per line)',
     manualPlaceholder: 'Example:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -727,6 +777,11 @@ const LANGS = {
     mailSubject: '요금제 업그레이드 요청 - Postcode Transflash',
     mailBody: (user, plan) => `안녕하세요,\n\n우편번호 조회 요금제를 업그레이드하고 싶습니다.\n\n계정: ${user}\n현재 요금제: ${plan}\n\n안내 부탁드립니다. 감사합니다!`,
     errNetwork: '연결 오류. 다시 시도해주세요.',
+    guestTag: '게스트', btnLogin: '로그인',
+    guestNote: '게스트 모드: 1회당 최대 5개 주소. 더 많은 조회와 엑셀 업로드는 로그인하세요.',
+    excelLockTitle: '회원 전용 기능',
+    excelLockBody: '엑셀 파일을 업로드하고 수천 개의 주소를 일괄 조회하려면 로그인하세요.',
+    errGuestMax: (n) => `게스트 모드는 1회당 최대 ${n}개 주소까지 조회할 수 있습니다. 더 많은 조회는 로그인하세요.`,
     tabManual: '수동 검색', tabExcel: '엑셀 업로드',
     manualLabel: '주소 목록 (한 줄에 하나씩)',
     manualPlaceholder: '예시:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -1166,13 +1221,17 @@ function formatBytes(b) { return b<1024?b+' B':b<1048576?(b/1024).toFixed(1)+' K
 // ── Quản lý gói / giới hạn dùng thử (đếm phía server) ────────────────────────
 let SERVER_JUSO_KEY = null;
 let USER_PLAN = 'trial', MAX_LOOKUPS = 15, MAX_PER_LOOKUP = 30, USERNAME = 'user', CONTACT = '';
-let USED = 0; // số lượt đã dùng, lấy từ server
+let USED = 0;           // số lượt đã dùng, lấy từ server
+let IS_GUEST = false;   // khách chưa đăng nhập
+let CAN_UPLOAD = true;  // được upload Excel hay không
 
 function lookupsLeft() { return MAX_LOOKUPS > 0 ? Math.max(0, MAX_LOOKUPS - USED) : Infinity; }
 
+let CONFIG_LOADED = false;
 function updateUserChip() {
   const chip = document.getElementById('userChip');
-  if (!chip || !USERNAME) return;
+  if (!chip || !CONFIG_LOADED) return;
+  if (IS_GUEST || !USERNAME) { chip.style.display = 'none'; return; }
   chip.style.display = 'flex';
   document.getElementById('userAvatar').textContent = USERNAME.charAt(0);
   document.getElementById('userName').textContent   = USERNAME;
@@ -1199,6 +1258,14 @@ function updateUsageBadge() {
 
 // Đăng ký 1 lượt với server. Trả về true nếu được phép tra cứu.
 async function useQuota(count) {
+  // Khách: chỉ giới hạn số địa chỉ/lần, không đếm tổng (không gọi server)
+  if (IS_GUEST) {
+    if (MAX_PER_LOOKUP > 0 && count > MAX_PER_LOOKUP) {
+      alert(t('errGuestMax', MAX_PER_LOOKUP));
+      return false;
+    }
+    return true;
+  }
   try {
     const r = await fetch('/api/use', {
       method: 'POST',
@@ -1251,6 +1318,40 @@ function openPlanModal(reason) {
 function closePlanModal() { document.getElementById('planModal').style.display = 'none'; }
 function planKey(p) { return p === 'pro' ? 'planPro' : p === 'enterprise' ? 'planEnterprise' : 'planTrial'; }
 
+// Áp dụng UI theo quyền truy cập (khách vs đã đăng nhập)
+function applyAccessUI() {
+  const guestBanner = document.getElementById('guestBanner');
+  const loginBtn    = document.getElementById('loginBtn');
+  const logoutBtn   = document.getElementById('logoutBtn');
+  const tabLock     = document.getElementById('excelTabLock');
+  const excelLock   = document.getElementById('excelLock');
+  const excelContent= document.getElementById('excelContent');
+
+  if (IS_GUEST) {
+    guestBanner.style.display = 'flex';
+    loginBtn.style.display = 'inline-flex';
+    logoutBtn.style.display = 'none';
+    // ẩn chip user
+    const chip = document.getElementById('userChip'); if (chip) chip.style.display = 'none';
+  } else {
+    guestBanner.style.display = 'none';
+    loginBtn.style.display = 'none';
+    logoutBtn.style.display = 'inline-flex';
+    updateUserChip();
+  }
+
+  // Tab Excel: khóa nếu không được upload
+  if (!CAN_UPLOAD) {
+    tabLock.style.display = 'inline';
+    excelLock.style.display = 'block';
+    excelContent.style.display = 'none';
+  } else {
+    tabLock.style.display = 'none';
+    excelLock.style.display = 'none';
+    excelContent.style.display = 'block';
+  }
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 (async function() {
   setLang(localStorage.getItem('lang') || 'vi');
@@ -1267,7 +1368,10 @@ function planKey(p) { return p === 'pro' ? 'planPro' : p === 'enterprise' ? 'pla
     USERNAME       = cfg.username    || 'user';
     CONTACT        = cfg.contact     || '';
     USED           = cfg.used        ?? 0;
-    updateUserChip();
+    IS_GUEST       = cfg.isGuest     === true;
+    CAN_UPLOAD     = cfg.canUpload   !== false;
+    CONFIG_LOADED  = true;
+    applyAccessUI();
     updateUsageBadge();
   } catch { /* bỏ qua nếu lỗi */ }
 

@@ -182,21 +182,33 @@ function userFromReq(req) {
   try { return jwt.verify(req.cookies[COOKIE], JWT_SECRET).username; } catch { return null; }
 }
 
-// ── Config endpoint — trả key + thông tin gói + lượt đã dùng ─────────────────
-app.get('/api/config', requireAuth, async (req, res) => {
+// ── Config endpoint — PUBLIC: khách (chưa login) cũng dùng được ──────────────
+app.get('/api/config', async (req, res) => {
   const username = userFromReq(req);
+  const contact = process.env.CONTACT_INFO || 'support@transflash.app';
+  const jusoKey = process.env.JUSO_API_KEY || null;
+
+  // Khách: vào thẳng, tối đa 5 địa chỉ/lần, không upload Excel
+  if (!username) {
+    return res.json({
+      jusoKey, username: null, plan: 'guest',
+      maxLookups: 0, maxPerLookup: 5,
+      canUpload: false, isGuest: true, used: 0,
+      redis: useRedis, contact,
+    });
+  }
+
   const plan = getPlan(username);
   let used = 0;
   try { used = await getUsage(username); } catch { /* ok */ }
   res.json({
-    jusoKey: process.env.JUSO_API_KEY || null,
-    username,
+    jusoKey, username,
     plan: plan.name,
     maxLookups: plan.maxLookups,
     maxPerLookup: plan.maxPerLookup,
-    used,
-    redis: useRedis,   // debug: server có đọc được Redis env không
-    contact: process.env.CONTACT_INFO || 'support@transflash.app',
+    canUpload: true, isGuest: false, used,
+    redis: useRedis,
+    contact,
   });
 });
 
@@ -224,8 +236,8 @@ app.post('/api/use', requireAuth, async (req, res) => {
   }
 });
 
-// ── Protected routes ──────────────────────────────────────────────────────────
-app.get('/', requireAuth, (req, res) => {
+// ── Trang chính — PUBLIC: ai cũng vào được (khách hoặc đã login) ─────────────
+app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'app.html'));
 });
 

@@ -290,6 +290,50 @@
       padding: 8px 16px 0; font-style: italic;
     }
 
+    /* ── Intro (collapsible) ── */
+    .intro {
+      background: white; border-radius: var(--radius);
+      box-shadow: var(--shadow); margin-bottom: 14px;
+      border-left: 3px solid var(--blue);
+    }
+    .intro summary {
+      cursor: pointer; padding: 11px 16px;
+      font-size: 0.85rem; font-weight: 600; color: var(--gray-600);
+      list-style: none; display: flex; align-items: center; gap: 8px;
+      user-select: none;
+    }
+    .intro summary::-webkit-details-marker { display: none; }
+    .intro summary::after {
+      content: '▾'; margin-left: auto; color: var(--gray-400);
+      transition: transform 0.15s;
+    }
+    .intro[open] summary::after { transform: rotate(180deg); }
+    .intro summary:hover { color: var(--blue); }
+    .intro-icon { font-size: 0.95rem; }
+    .intro-body {
+      padding: 0 18px 14px 18px; font-size: 0.84rem;
+      color: var(--gray-600); line-height: 1.6;
+    }
+    .intro-body p { margin-bottom: 8px; }
+    .intro-body ul { margin: 0; padding-left: 20px; }
+    .intro-body li { margin-bottom: 4px; }
+
+    /* ── Footer ── */
+    .app-footer {
+      margin-top: 28px; text-align: center;
+      font-size: 0.78rem; color: var(--gray-400);
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; flex-wrap: wrap;
+    }
+    .app-footer .tf-brand {
+      font-weight: 800; letter-spacing: 0.5px;
+      background: linear-gradient(135deg, var(--red), var(--blue));
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 0.85rem;
+    }
+    .app-footer .tf-dot { color: var(--gray-300); }
+
     .error-banner {
       padding: 9px 13px; background: var(--red-light);
       border: 1px solid #fecaca; border-radius: 6px;
@@ -319,6 +363,20 @@
       <button class="btn-logout" onclick="logout()" data-i18n="btnLogout">Đăng xuất</button>
     </div>
   </div>
+
+  <!-- Giới thiệu (thu gọn, không chiếm chỗ) -->
+  <details class="intro">
+    <summary><span class="intro-icon">ℹ️</span><span data-i18n="introTitle">Phần mềm này dùng để làm gì?</span></summary>
+    <div class="intro-body">
+      <p data-i18n="introDesc">Công cụ tra cứu mã bưu điện Hàn Quốc (우편번호) từ địa chỉ, dành cho nghiệp vụ logistics Việt - Hàn.</p>
+      <ul>
+        <li data-i18n="introF1">Nhập danh sách địa chỉ → tự động trả về mã bưu điện 5 chữ số.</li>
+        <li data-i18n="introF2">Tải lên file Excel để tra cứu hàng loạt, xuất kết quả ra Excel.</li>
+        <li data-i18n="introF3">Nhấp đúp địa chỉ chưa khớp để sửa và tra lại ngay.</li>
+        <li data-i18n="introF4">Hỗ trợ 3 ngôn ngữ: Tiếng Việt, Tiếng Anh, Tiếng Hàn.</li>
+      </ul>
+    </div>
+  </details>
 
   <!-- API Key — ẩn khi server đã có key sẵn -->
   <div class="api-box" id="apiBox">
@@ -420,6 +478,15 @@
     </div>
   </div>
 
+  <!-- Footer -->
+  <footer class="app-footer">
+    <span class="tf-brand">Transflash</span>
+    <span class="tf-dot">•</span>
+    <span data-i18n="footerText">Giải pháp logistics Việt - Hàn</span>
+    <span class="tf-dot">•</span>
+    <span>© 2026</span>
+  </footer>
+
 </div>
 <script>
 // ── i18n ──────────────────────────────────────────────────────────────────────
@@ -430,6 +497,13 @@ const LANGS = {
     apiKeyLabel: 'Juso API Key (도로명주소)', getKey: 'Lấy key miễn phí →',
     editHint: 'Nhấp đúp vào địa chỉ chưa tìm thấy để sửa rồi tra lại.',
     btnRetry: 'Tra lại',
+    introTitle: 'Phần mềm này dùng để làm gì?',
+    introDesc: 'Công cụ tra cứu mã bưu điện Hàn Quốc (우편번호) từ địa chỉ, dành cho nghiệp vụ logistics Việt - Hàn.',
+    introF1: 'Nhập danh sách địa chỉ → tự động trả về mã bưu điện 5 chữ số.',
+    introF2: 'Tải lên file Excel để tra cứu hàng loạt, xuất kết quả ra Excel.',
+    introF3: 'Nhấp đúp địa chỉ chưa khớp để sửa và tra lại ngay.',
+    introF4: 'Hỗ trợ 3 ngôn ngữ: Tiếng Việt, Tiếng Anh, Tiếng Hàn.',
+    footerText: 'Giải pháp logistics Việt - Hàn',
     tabManual: 'Tìm kiếm thủ công', tabExcel: 'Upload Excel',
     manualLabel: 'Danh sách địa chỉ (mỗi dòng 1 địa chỉ)',
     manualPlaceholder: 'Ví dụ:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -460,6 +534,13 @@ const LANGS = {
     apiKeyLabel: 'Juso API Key (도로명주소)', getKey: 'Get free key →',
     editHint: 'Double-click an unmatched address to edit and retry.',
     btnRetry: 'Retry',
+    introTitle: 'What does this app do?',
+    introDesc: 'A Korean postal code (우편번호) lookup tool from addresses, built for Vietnam - Korea logistics operations.',
+    introF1: 'Enter a list of addresses → get 5-digit postal codes automatically.',
+    introF2: 'Upload an Excel file for bulk lookup, export results to Excel.',
+    introF3: 'Double-click an unmatched address to edit and retry instantly.',
+    introF4: 'Supports 3 languages: Vietnamese, English, Korean.',
+    footerText: 'Vietnam - Korea Logistics Solution',
     tabManual: 'Manual Search', tabExcel: 'Upload Excel',
     manualLabel: 'Address list (one per line)',
     manualPlaceholder: 'Example:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
@@ -490,6 +571,13 @@ const LANGS = {
     apiKeyLabel: 'Juso API Key (도로명주소)', getKey: '무료 키 발급 →',
     editHint: '찾지 못한 주소를 더블클릭하여 수정 후 다시 조회하세요.',
     btnRetry: '다시 조회',
+    introTitle: '이 소프트웨어는 무엇을 하나요?',
+    introDesc: '주소로 한국 우편번호를 조회하는 도구로, 베트남-한국 물류 업무를 위해 제작되었습니다.',
+    introF1: '주소 목록 입력 → 5자리 우편번호 자동 조회.',
+    introF2: '엑셀 파일 업로드로 일괄 조회, 결과를 엑셀로 내보내기.',
+    introF3: '일치하지 않는 주소를 더블클릭하여 수정 후 즉시 재조회.',
+    introF4: '3개 언어 지원: 베트남어, 영어, 한국어.',
+    footerText: '베트남-한국 물류 솔루션',
     tabManual: '수동 검색', tabExcel: '엑셀 업로드',
     manualLabel: '주소 목록 (한 줄에 하나씩)',
     manualPlaceholder: '예시:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',

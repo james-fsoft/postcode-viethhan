@@ -196,7 +196,13 @@
       0%,20%{content:''} 40%{content:'.'} 60%{content:'..'} 80%,100%{content:'...'}
     }
 
-    .footer-note { text-align: center; margin-top: 18px; font-size: 0.72rem; color: #94a3b8; }
+    .footer-note { text-align: center; margin-top: 18px; font-size: 0.72rem; color: #94a3b8; line-height: 1.8; }
+    .tf-brand-login {
+      font-weight: 800; letter-spacing: 0.5px; font-size: 0.82rem;
+      background: linear-gradient(135deg, #d42126, #1e40af);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
     .footer-note strong { color: #64748b; }
   </style>
 </head>
@@ -247,7 +253,10 @@
 
   <div class="error-msg" id="errorMsg"></div>
 
-  <div class="footer-note"><strong>postcode.transflash.app</strong></div>
+  <div class="footer-note">
+    <span class="tf-brand-login">Transflash</span><br>
+    <strong>postcode.transflash.app</strong>
+  </div>
 </div>
 
 <script>

@@ -203,6 +203,45 @@
       -webkit-background-clip: text; background-clip: text;
       -webkit-text-fill-color: transparent;
     }
+
+    /* Đăng ký / dùng thử */
+    .reg-line { text-align:center; margin-top:16px; font-size:0.85rem; color:#64748b; }
+    .reg-line a { color:#d42126; font-weight:700; text-decoration:none; }
+    .reg-line a:hover { text-decoration:underline; }
+    .try-line { text-align:center; margin-top:6px; font-size:0.83rem; }
+    .try-line a { color:#1e40af; font-weight:600; text-decoration:none; }
+    .try-line a:hover { text-decoration:underline; }
+
+    /* Modal đăng ký */
+    .reg-modal {
+      position:fixed; inset:0; background:rgba(15,23,42,0.6);
+      display:flex; align-items:center; justify-content:center; padding:20px; z-index:1000;
+    }
+    .reg-card {
+      position:relative; background:#fff; border-radius:16px; padding:30px 28px 26px;
+      max-width:440px; width:100%; box-shadow:0 24px 64px rgba(0,0,0,0.3);
+      max-height:92vh; overflow-y:auto;
+    }
+    .reg-x { position:absolute; top:12px; right:14px; background:none; border:none; font-size:1.6rem; color:#94a3b8; cursor:pointer; line-height:1; }
+    .reg-x:hover { color:#475569; }
+    .reg-ic { font-size:2.2rem; text-align:center; margin-bottom:8px; }
+    .reg-card h3 { font-size:1.25rem; color:#0f172a; text-align:center; margin-bottom:8px; font-weight:800; }
+    .reg-pitch { font-size:0.92rem; color:#475569; text-align:center; line-height:1.6; margin-bottom:16px; }
+    .reg-benefits { list-style:none; margin:0 0 16px; padding:0; }
+    .reg-benefits li { font-size:0.9rem; color:#334155; padding:7px 0 7px 26px; position:relative; line-height:1.5; border-bottom:1px solid #f1f5f9; }
+    .reg-benefits li:last-child { border-bottom:none; }
+    .reg-benefits li::before { content:'✓'; position:absolute; left:0; top:7px; color:#059669; font-weight:800; }
+    .reg-how-box { background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:12px 14px; margin-bottom:16px; }
+    .reg-how { font-size:0.86rem; color:#1e40af; line-height:1.6; margin:0; }
+    .reg-mail-btn {
+      display:block; text-align:center; padding:13px; border-radius:10px;
+      background:linear-gradient(135deg,#d42126,#1e40af); color:#fff;
+      font-weight:700; font-size:0.95rem; text-decoration:none; box-shadow:0 4px 12px rgba(212,33,38,0.25);
+    }
+    .reg-mail-btn:hover { opacity:0.92; }
+    .reg-actions { display:flex; gap:8px; margin-top:10px; }
+    .reg-ghost { flex:1; text-align:center; padding:10px; border-radius:10px; border:1.5px solid #e2e8f0; background:#fff; color:#475569; font-weight:600; font-size:0.84rem; text-decoration:none; }
+    .reg-ghost:hover { border-color:#cbd5e1; background:#f8fafc; }
     .footer-note strong { color: #64748b; }
   </style>
 </head>
@@ -253,9 +292,32 @@
 
   <div class="error-msg" id="errorMsg"></div>
 
+  <p class="reg-line">
+    <span id="regQ">Chưa có tài khoản?</span>
+    <a href="#" id="regLink" onclick="openRegister(); return false;">Đăng ký</a>
+  </p>
+  <p class="try-line"><a href="/" id="tryFreeLink">Hoặc dùng thử miễn phí ngay →</a></p>
+
   <div class="footer-note">
     <span class="tf-brand-login">Transflash</span><br>
     <strong>postcode.transflash.app</strong>
+  </div>
+</div>
+
+<!-- Modal đăng ký -->
+<div class="reg-modal" id="regModal" style="display:none">
+  <div class="reg-card">
+    <button class="reg-x" onclick="closeRegister()" aria-label="close">×</button>
+    <div class="reg-ic">🚀</div>
+    <h3 id="regTitle">Đăng ký sử dụng</h3>
+    <p class="reg-pitch" id="regPitch"></p>
+    <ul class="reg-benefits" id="regBenefits"></ul>
+    <div class="reg-how-box"><p class="reg-how" id="regHow"></p></div>
+    <a class="reg-mail-btn" id="regMailBtn" href="#"></a>
+    <div class="reg-actions">
+      <a class="reg-ghost" id="regTryBtn" href="/"></a>
+      <a class="reg-ghost" id="regMoreBtn" href="/about"></a>
+    </div>
   </div>
 </div>
 
@@ -270,6 +332,22 @@ const T = {
     btnText: 'Đăng nhập', btnLoading: 'Đang đăng nhập',
     errWrong: 'Tên đăng nhập hoặc mật khẩu không đúng.',
     errNetwork: 'Lỗi kết nối. Vui lòng thử lại.',
+    regQ: 'Chưa có tài khoản?', regLink: 'Đăng ký',
+    tryFree: 'Hoặc dùng thử miễn phí ngay →',
+    regTitle: 'Đăng ký sử dụng',
+    regPitch: 'Tự động tra mã bưu điện Hàn Quốc cho hàng nghìn địa chỉ — thay vì tra tay hàng giờ mỗi ngày.',
+    regBenefits: [
+      'Điền mã bưu điện hàng loạt qua Excel chỉ trong vài phút',
+      'Dữ liệu chính phủ Hàn Quốc (도로명주소) — chính xác 5 chữ số',
+      'Tự bóc tên tòa nhà, số phòng, tên công ty',
+      'Tiết kiệm ~100 triệu₫/năm so với thuê nhân viên nhập liệu',
+    ],
+    regHow: 'Để đăng ký, gửi email tới support@transflash.app kèm: tên công ty, người liên hệ, số điện thoại và số địa chỉ cần tra mỗi ngày. Chúng tôi sẽ tạo tài khoản và phản hồi trong vòng 24 giờ.',
+    regMailSubject: 'Đăng ký tài khoản - Postcode Transflash',
+    regMailBody: 'Xin chào Transflash,\n\nTôi muốn đăng ký sử dụng phần mềm tra mã bưu điện Hàn Quốc.\n\nTên công ty: \nNgười liên hệ: \nSố điện thoại: \nSố địa chỉ cần tra mỗi ngày: \n\nVui lòng tư vấn giúp tôi. Cảm ơn!',
+    regMailBtn: 'Gửi email đăng ký',
+    regTryBtn: 'Dùng thử miễn phí',
+    regMoreBtn: 'Tìm hiểu thêm',
   },
   en: {
     tagline: 'Korean Postal Code Lookup',
@@ -280,6 +358,22 @@ const T = {
     btnText: 'Sign In', btnLoading: 'Signing in',
     errWrong: 'Incorrect username or password.',
     errNetwork: 'Connection error. Please try again.',
+    regQ: "Don't have an account?", regLink: 'Register',
+    tryFree: 'Or try it free now →',
+    regTitle: 'Register to use',
+    regPitch: 'Automatically look up Korean postal codes for thousands of addresses — instead of hours of manual work every day.',
+    regBenefits: [
+      'Bulk-fill postal codes via Excel in just minutes',
+      'Official Korean government data (도로명주소) — accurate 5-digit codes',
+      'Auto-strips building names, room numbers, company names',
+      'Save ~100M₫/year vs. hiring a data-entry staff',
+    ],
+    regHow: 'To register, email support@transflash.app with: company name, contact person, phone number, and how many addresses you process daily. We will create your account and reply within 24 hours.',
+    regMailSubject: 'Account registration - Postcode Transflash',
+    regMailBody: 'Hello Transflash,\n\nI would like to register for the Korean postal code lookup software.\n\nCompany name: \nContact person: \nPhone number: \nAddresses processed per day: \n\nPlease advise. Thank you!',
+    regMailBtn: 'Send registration email',
+    regTryBtn: 'Try it free',
+    regMoreBtn: 'Learn more',
   },
   ko: {
     tagline: '한국 우편번호 조회',
@@ -290,6 +384,22 @@ const T = {
     btnText: '로그인', btnLoading: '로그인 중',
     errWrong: '사용자 이름 또는 비밀번호가 올바르지 않습니다.',
     errNetwork: '연결 오류. 다시 시도해주세요.',
+    regQ: '계정이 없으신가요?', regLink: '가입 신청',
+    tryFree: '또는 무료로 바로 체험하기 →',
+    regTitle: '이용 신청',
+    regPitch: '수천 개의 주소에 대한 한국 우편번호를 자동 조회 — 매일 몇 시간씩 수작업하는 대신.',
+    regBenefits: [
+      '엑셀로 우편번호 일괄 입력 — 단 몇 분',
+      '한국 정부 공식 데이터(도로명주소) — 정확한 5자리',
+      '건물명·호수·회사명 자동 제거',
+      '데이터 입력 직원 대비 연 약 1억동 절약',
+    ],
+    regHow: '신청하려면 support@transflash.app 으로 회사명, 담당자, 전화번호, 하루 처리 주소 수를 보내주세요. 24시간 이내에 계정을 생성하여 회신드립니다.',
+    regMailSubject: '계정 신청 - Postcode Transflash',
+    regMailBody: '안녕하세요 Transflash,\n\n한국 우편번호 조회 소프트웨어 이용을 신청합니다.\n\n회사명: \n담당자: \n전화번호: \n하루 처리 주소 수: \n\n안내 부탁드립니다. 감사합니다!',
+    regMailBtn: '신청 이메일 보내기',
+    regTryBtn: '무료 체험',
+    regMoreBtn: '더 알아보기',
   }
 };
 
@@ -312,9 +422,28 @@ function setLang(l) {
   document.getElementById('labelPass').textContent     = d.labelPass;
   document.getElementById('labelRemember').textContent = d.labelRemember;
   document.getElementById('btnText').textContent       = d.btnText;
+  document.getElementById('regQ').textContent          = d.regQ;
+  document.getElementById('regLink').textContent       = d.regLink;
+  document.getElementById('tryFreeLink').textContent   = d.tryFree;
   document.getElementById('errorMsg').style.display    = 'none';
   document.title = `${d.heading} – Vietnam - Korea Logistics`;
 }
+
+function openRegister() {
+  const d = T[lang];
+  document.getElementById('regTitle').textContent   = d.regTitle;
+  document.getElementById('regPitch').textContent   = d.regPitch;
+  document.getElementById('regBenefits').innerHTML  = d.regBenefits.map(b => `<li>${b}</li>`).join('');
+  document.getElementById('regHow').textContent     = d.regHow;
+  const mail = `mailto:support@transflash.app?subject=${encodeURIComponent(d.regMailSubject)}&body=${encodeURIComponent(d.regMailBody)}`;
+  const btn = document.getElementById('regMailBtn');
+  btn.href = mail;
+  btn.textContent = '📧 ' + d.regMailBtn;
+  document.getElementById('regTryBtn').textContent  = d.regTryBtn;
+  document.getElementById('regMoreBtn').textContent = d.regMoreBtn;
+  document.getElementById('regModal').style.display = 'flex';
+}
+function closeRegister() { document.getElementById('regModal').style.display = 'none'; }
 
 function togglePassword() {
   const inp = document.getElementById('password');

@@ -374,7 +374,7 @@ function buildCandidates(raw){
   push(s);
   const road = s.match(/^(.*(?:로|길)\s*\d+(?:-\d+)?)/);
   if (road) push(road[1]);
-  const jibun = s.match(/^(.*[가-힣]동\s*\d+(?:-\d+)?)/);
+  const jibun = s.match(/^(.*[가-힣]+(?:동|리|가)\s*\d+(?:-\d+)?)/);
   if (jibun) push(jibun[1]);
   const core = s.match(/([가-힣]+[구군]\s+)?(\S*(?:로|길))\s+(\d+(?:-\d+)?)/);
   if (core){ push((core[1]||'') + core[2] + ' ' + core[3]); push(core[2] + ' ' + core[3]); }

@@ -4,6 +4,9 @@ const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 
+// Node 18+ có fetch sẵn, Node 16 cần node-fetch
+const fetch = globalThis.fetch ?? require('node-fetch');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 

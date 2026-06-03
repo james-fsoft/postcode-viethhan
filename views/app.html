@@ -176,6 +176,16 @@
     .api-box a { font-size: 0.78rem; color: var(--blue); text-decoration: none; white-space: nowrap; }
     .api-box a:hover { text-decoration: underline; }
 
+    /* ── Nav giữa 2 công cụ ── */
+    .nav-tabs { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+    .nav-tab {
+      padding:9px 18px; border-radius:99px; border:1.5px solid var(--gray-200);
+      background:white; color:var(--gray-600); font-size:0.85rem; font-weight:600;
+      text-decoration:none; transition:all 0.15s;
+    }
+    .nav-tab:hover { border-color:var(--blue); color:var(--blue); }
+    .nav-tab.active { background:var(--blue); color:white; border-color:var(--blue); }
+
     /* ── Tabs ── */
     .tabs { display: flex; border-bottom: 2px solid var(--gray-200); }
 
@@ -466,6 +476,12 @@
     </div>
   </div>
 
+  <!-- Nav giữa 2 công cụ -->
+  <div class="nav-tabs">
+    <a class="nav-tab active" href="/" data-i18n="navLookup">Tra mã bưu điện</a>
+    <a class="nav-tab" href="/shipping" data-i18n="navShipping">Xử lý file vận đơn</a>
+  </div>
+
   <!-- Giới thiệu (thu gọn, không chiếm chỗ) -->
   <details class="intro">
     <summary><span class="intro-icon">ℹ️</span><span data-i18n="introTitle">Phần mềm này dùng để làm gì?</span></summary>
@@ -661,6 +677,7 @@ const LANGS = {
     mailSubject: 'Yêu cầu nâng cấp gói - Postcode Transflash',
     mailBody: (user, plan) => `Xin chào,\n\nTôi muốn nâng cấp gói dịch vụ tra mã bưu điện.\n\nTài khoản: ${user}\nGói hiện tại: ${plan}\n\nVui lòng tư vấn giúp tôi. Cảm ơn!`,
     errNetwork: 'Lỗi kết nối. Vui lòng thử lại.',
+    navLookup: 'Tra mã bưu điện', navShipping: 'Xử lý file vận đơn',
     guestTag: 'Khách', btnLogin: 'Đăng nhập',
     guestNote: 'Chế độ khách: tối đa 5 địa chỉ mỗi lần. Đăng nhập để tra nhiều hơn & upload Excel.',
     excelLockTitle: 'Tính năng dành cho thành viên',
@@ -719,6 +736,7 @@ const LANGS = {
     mailSubject: 'Plan upgrade request - Postcode Transflash',
     mailBody: (user, plan) => `Hello,\n\nI would like to upgrade my postal code lookup plan.\n\nAccount: ${user}\nCurrent plan: ${plan}\n\nPlease advise. Thank you!`,
     errNetwork: 'Connection error. Please try again.',
+    navLookup: 'Postal Code Lookup', navShipping: 'Shipping File',
     guestTag: 'Guest', btnLogin: 'Sign in',
     guestNote: 'Guest mode: max 5 addresses per search. Sign in for more & Excel upload.',
     excelLockTitle: 'Members-only feature',
@@ -777,6 +795,7 @@ const LANGS = {
     mailSubject: '요금제 업그레이드 요청 - Postcode Transflash',
     mailBody: (user, plan) => `안녕하세요,\n\n우편번호 조회 요금제를 업그레이드하고 싶습니다.\n\n계정: ${user}\n현재 요금제: ${plan}\n\n안내 부탁드립니다. 감사합니다!`,
     errNetwork: '연결 오류. 다시 시도해주세요.',
+    navLookup: '우편번호 조회', navShipping: '배송 파일 처리',
     guestTag: '게스트', btnLogin: '로그인',
     guestNote: '게스트 모드: 1회당 최대 5개 주소. 더 많은 조회와 엑셀 업로드는 로그인하세요.',
     excelLockTitle: '회원 전용 기능',

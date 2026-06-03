@@ -241,6 +241,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'app.html'));
 });
 
+// ── Trang xử lý file vận đơn (điền cột N) — yêu cầu đăng nhập ─────────────────
+app.get('/shipping', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'shipping.html'));
+});
+
 // ── Start (bỏ qua khi Vercel import) ─────────────────────────────────────────
 if (require.main === module) {
   app.listen(PORT, () => {

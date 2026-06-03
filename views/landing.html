@@ -38,7 +38,7 @@
     "inLanguage": ["vi", "ko", "en"],
     "offers": [
       { "@type": "Offer", "name": "Gói Dùng thử", "price": "0", "priceCurrency": "VND", "description": "15 lượt tra cứu, mỗi lượt tối đa 30 địa chỉ." },
-      { "@type": "Offer", "name": "Gói Pro", "price": "18000000", "priceCurrency": "VND", "description": "Không giới hạn lượt, tối đa 2.000 địa chỉ mỗi lần, upload Excel & xử lý file vận đơn." },
+      { "@type": "Offer", "name": "Gói Pro", "price": "29000000", "priceCurrency": "VND", "description": "Giá ưu đãi 29.000.000₫/năm (giá gốc 35.000.000₫). Không giới hạn lượt, tối đa 2.000 địa chỉ mỗi lần, upload Excel & xử lý file vận đơn." },
       { "@type": "Offer", "name": "Gói Enterprise", "priceCurrency": "VND", "description": "Không giới hạn, tối đa 10.000 địa chỉ mỗi lần, nhiều tài khoản, hỗ trợ ưu tiên. Liên hệ báo giá." }
     ],
     "publisher": { "@type": "Organization", "name": "Transflash", "url": "https://transflash.app" }
@@ -58,7 +58,9 @@
       { "@type": "Question", "name": "Có xử lý được địa chỉ có tên tòa nhà, số phòng không?",
         "acceptedAnswer": { "@type": "Answer", "text": "Có. Hệ thống tự động bóc tách tên tòa nhà, số phòng, tên công ty và ghi chú để tìm đúng mã bưu điện cho cả địa chỉ đường (도로명) và địa chỉ số lô (지번)." } },
       { "@type": "Question", "name": "Chi phí sử dụng là bao nhiêu?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Có gói dùng thử miễn phí. Gói Pro từ 18.000.000₫/năm với lượt tra cứu không giới hạn và xử lý file Excel. Gói Enterprise liên hệ báo giá theo nhu cầu." } }
+        "acceptedAnswer": { "@type": "Answer", "text": "Có gói dùng thử miễn phí. Gói Pro giá ưu đãi 29.000.000₫/năm (giá gốc 35.000.000₫) với lượt tra cứu không giới hạn và xử lý file Excel — rẻ hơn khoảng 75% so với thuê một nhân viên nhập liệu (120–144 triệu₫/năm). Gói Enterprise liên hệ báo giá theo nhu cầu." } },
+      { "@type": "Question", "name": "Vì sao phần mềm rẻ hơn thuê nhân viên tra mã thủ công?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Một nhân viên nhập liệu chi phí 120–144 triệu₫/năm chỉ xử lý được khoảng 2.000 địa chỉ/ngày trong 8–13 giờ. Phần mềm xử lý cùng khối lượng trong vài phút với chi phí 29 triệu₫/năm, tiết kiệm khoảng 100 triệu₫/năm và hoàn vốn chỉ sau 1–2 tháng." } }
     ]
   }
   </script>
@@ -125,6 +127,20 @@
     .price .name{font-size:1.05rem;font-weight:800;color:var(--g900);}
     .price .amt{font-size:1.5rem;font-weight:800;color:var(--blue);margin:8px 0;}
     .price .amt small{font-size:0.78rem;color:var(--g400);font-weight:600;}
+    .price .amt .old{text-decoration:line-through;color:var(--g400);font-size:0.95rem;font-weight:600;margin-right:6px;}
+    .price .save{font-size:0.8rem;color:var(--green);font-weight:700;margin-bottom:6px;}
+
+    /* Bảng so sánh chi phí */
+    .cmp{width:100%;border-collapse:collapse;margin-top:18px;font-size:0.92rem;border:1px solid var(--g200);border-radius:10px;overflow:hidden;}
+    .cmp th,.cmp td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--g100);}
+    .cmp thead th{background:var(--g50);font-size:0.82rem;color:var(--g500);font-weight:700;}
+    .cmp thead th.hl{color:var(--blue);}
+    .cmp td.man{color:var(--g600);}
+    .cmp td.sw{color:var(--g900);font-weight:600;background:var(--blue-light);}
+    .cmp tr:last-child td{border-bottom:none;}
+    .savings-box{margin-top:18px;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:12px;padding:18px 20px;text-align:center;}
+    .savings-box .big{font-size:1.7rem;font-weight:800;color:var(--green);}
+    .savings-box p{margin:6px 0 0;color:#065f46;font-size:0.92rem;}
     .price ul{margin:8px 0 18px 18px;}
     .price li{font-size:0.88rem;color:var(--g600);}
     .price .btn{margin-top:auto;text-align:center;}
@@ -209,6 +225,39 @@
   </div>
 </section>
 
+<!-- SO SÁNH CHI PHÍ -->
+<section id="so-sanh">
+  <div class="wrap">
+    <h2>Rẻ hơn hẳn so với thuê người tra mã thủ công</h2>
+    <p class="lead">Hãy thử làm một phép tính đơn giản. Một nhân viên nhập liệu tra mã bưu điện thủ công tốn của bạn bao nhiêu mỗi năm — và làm được bao nhiêu?</p>
+
+    <table class="cmp">
+      <thead>
+        <tr>
+          <th>Tiêu chí</th>
+          <th>Nhân viên tra thủ công</th>
+          <th class="hl">Phần mềm (gói Pro)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Chi phí mỗi năm</td><td class="man">120 – 144 triệu₫ (lương + phụ cấp)</td><td class="sw">29 triệu₫</td></tr>
+        <tr><td>Xử lý 2.000 địa chỉ</td><td class="man">8 – 13 giờ / ngày</td><td class="sw">Vài phút</td></tr>
+        <tr><td>Tỉ lệ sai sót</td><td class="man">Cao — mỏi mắt, gõ nhầm, sót dòng</td><td class="sw">Thấp — dùng dữ liệu chính phủ Hàn</td></tr>
+        <tr><td>Khi đơn tăng gấp đôi</td><td class="man">Phải thuê thêm người</td><td class="sw">Không giới hạn lượt, không phát sinh</td></tr>
+        <tr><td>Nghỉ phép / nghỉ việc</td><td class="man">Gián đoạn công việc</td><td class="sw">Chạy 24/7, không gián đoạn</td></tr>
+      </tbody>
+    </table>
+
+    <div class="savings-box">
+      <div class="big">Tiết kiệm ~100 triệu₫ mỗi năm</div>
+      <p>Chỉ trả <strong>29 triệu₫/năm</strong> thay cho <strong>120–144 triệu₫</strong> chi phí nhân sự — tương đương <strong>tiết kiệm ~75%</strong>. Phần mềm <strong>hoàn vốn chỉ sau 1–2 tháng</strong>, phần còn lại là lợi nhuận và tốc độ.</p>
+    </div>
+
+    <h3>Vì sao vẫn rẻ dù giá 29 triệu/năm?</h3>
+    <p>Vì bạn không chỉ mua một công cụ — bạn thay thế gần như <strong>trọn công việc của một nhân sự full-time</strong>. Thay vì 8–13 giờ mỗi ngày, đội của bạn xử lý xong cùng khối lượng trong vài phút, rồi dành thời gian cho việc tạo ra giá trị cao hơn: chăm sóc khách hàng, mở rộng tuyến hàng, xử lý sự cố. Chi phí 29 triệu₫/năm chia ra chỉ khoảng <strong>2,4 triệu₫/tháng</strong> — thấp hơn nhiều so với một ngày công của cả một quy trình thủ công kéo dài.</p>
+  </div>
+</section>
+
 <!-- BẢNG GIÁ -->
 <section id="bang-gia">
   <div class="wrap">
@@ -227,7 +276,8 @@
       </div>
       <div class="price hl">
         <div class="name">Pro</div>
-        <div class="amt">từ 18.000.000₫ <small>/năm</small></div>
+        <div class="amt"><span class="old">35.000.000₫</span>29.000.000₫ <small>/năm</small></div>
+        <div class="save">Tiết kiệm ~100 triệu₫/năm so với thuê nhân sự</div>
         <ul>
           <li><strong>Không giới hạn</strong> lượt tra cứu</li>
           <li>Tối đa 2.000 địa chỉ/lần</li>

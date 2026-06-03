@@ -156,9 +156,9 @@ function getPlan(username) {
 }
 
 // ── Bộ đếm lượt phía server (chống bypass) ───────────────────────────────────
-// Dùng Upstash Redis nếu có env, nếu không fallback bộ nhớ tạm (reset khi cold start)
-const UPSTASH_URL   = process.env.UPSTASH_REDIS_REST_URL;
-const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+// Dùng Redis REST (Vercel Storage / Upstash). Nhận nhiều tên biến môi trường.
+const UPSTASH_URL   = process.env.UPSTASH_REDIS_REST_URL   || process.env.KV_REST_API_URL;
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 const useRedis = !!(UPSTASH_URL && UPSTASH_TOKEN);
 const memUsage = new Map();
 

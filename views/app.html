@@ -829,9 +829,9 @@ function formatBytes(b) { return b<1024?b+' B':b<1048576?(b/1024).toFixed(1)+' K
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 (function() {
-  const k = localStorage.getItem('kakao_api_key');
+  const k = localStorage.getItem('juso_api_key');
   if (k) document.getElementById('apiKey').value = k;
-  document.getElementById('apiKey').addEventListener('input', e => localStorage.setItem('kakao_api_key', e.target.value.trim()));
+  document.getElementById('apiKey').addEventListener('input', e => localStorage.setItem('juso_api_key', e.target.value.trim()));
   setLang(localStorage.getItem('lang') || 'vi');
 })();
 </script>

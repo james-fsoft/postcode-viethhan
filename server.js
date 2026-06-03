@@ -195,6 +195,7 @@ app.get('/api/config', requireAuth, async (req, res) => {
     maxLookups: plan.maxLookups,
     maxPerLookup: plan.maxPerLookup,
     used,
+    redis: useRedis,   // debug: server có đọc được Redis env không
     contact: process.env.CONTACT_INFO || 'support@transflash.app',
   });
 });

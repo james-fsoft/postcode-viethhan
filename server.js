@@ -241,8 +241,13 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'app.html'));
 });
 
-// ── Trang xử lý file vận đơn (điền cột N) — yêu cầu đăng nhập ─────────────────
+// ── Trang xử lý file vận đơn — chỉ gói Pro / Enterprise ──────────────────────
 app.get('/shipping', requireAuth, (req, res) => {
+  const username = userFromReq(req);
+  const plan = getPlan(username);
+  if (plan.name !== 'pro' && plan.name !== 'enterprise') {
+    return res.redirect('/');   // không đủ quyền → về trang chính
+  }
   res.sendFile(path.join(__dirname, 'views', 'shipping.html'));
 });
 

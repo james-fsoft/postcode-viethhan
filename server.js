@@ -115,22 +115,22 @@ app.post('/api/logout', (req, res) => {
   res.json({ ok: true });
 });
 
-// ── Kakao Local API proxy ────────────────────────────────────────────────────
-app.get('/api/kakao', requireAuth, async (req, res) => {
-  const { q, type } = req.query;
+// ── Naver Maps Geocoding proxy ────────────────────────────────────────────────
+app.get('/api/geocode', requireAuth, async (req, res) => {
+  const { q } = req.query;
   if (!q) return res.status(400).json({ error: 'Missing query' });
 
-  const apiKey = req.headers['x-kakao-key'] || process.env.KAKAO_API_KEY;
-  if (!apiKey) return res.status(400).json({ error: 'NO_KEY' });
-
-  const host = type === 'keyword'
-    ? 'dapi.kakao.com/v2/local/search/keyword.json'
-    : 'dapi.kakao.com/v2/local/search/address.json';
+  const clientId     = req.headers['x-naver-id']     || process.env.NAVER_CLIENT_ID;
+  const clientSecret = req.headers['x-naver-secret']  || process.env.NAVER_CLIENT_SECRET;
+  if (!clientId || !clientSecret) return res.status(400).json({ error: 'NO_KEY' });
 
   try {
     const data = await getJson(
-      `https://${host}?query=${encodeURIComponent(q)}&size=1`,
-      { Authorization: `KakaoAK ${apiKey}` }
+      `https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=${encodeURIComponent(q)}`,
+      {
+        'X-NCP-APIGW-API-KEY-ID': clientId,
+        'X-NCP-APIGW-API-KEY':    clientSecret,
+      }
     );
     res.json(data);
   } catch (err) {

@@ -25,15 +25,29 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ── Helper: gọi HTTPS và trả về JSON (không cần fetch/node-fetch) ────────────
+// ── Helper: gọi HTTPS và trả về JSON ────────────────────────────────────────
 function getJson(url) {
   return new Promise((resolve, reject) => {
-    https.get(url, (res) => {
+    const urlObj = new URL(url);
+    const options = {
+      hostname: urlObj.hostname,
+      path: urlObj.pathname + urlObj.search,
+      headers: {
+        'Referer': 'https://postcode-viethhan.vercel.app/',
+        'User-Agent': 'Mozilla/5.0',
+        'Accept': 'application/json, text/plain, */*',
+      },
+    };
+    https.get(options, (res) => {
       let raw = '';
       res.on('data', chunk => { raw += chunk; });
       res.on('end', () => {
-        try { resolve(JSON.parse(raw)); }
-        catch (e) { reject(new Error('Invalid JSON: ' + raw.slice(0, 200))); }
+        try {
+          resolve(JSON.parse(raw));
+        } catch (e) {
+          // Trả về raw để debug
+          reject(new Error(`HTTP ${res.statusCode} – ${raw.slice(0, 400)}`));
+        }
       });
     }).on('error', reject);
   });

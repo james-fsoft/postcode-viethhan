@@ -385,23 +385,40 @@ function buildCandidates(raw){
   return out;
 }
 
+// Lấy các token vùng (시/군/구) để kiểm tra khớp đúng khu vực
+function regionTokens(s){
+  return (String(s).match(/[가-힣]+(?:시|군|구)/g)) || [];
+}
+
 async function jusoQuery(q){
   const url = 'https://www.juso.go.kr/addrlink/addrLinkApi.do'
-    + '?currentPage=1&countPerPage=1'
+    + '?currentPage=1&countPerPage=10'
     + '&keyword='  + encodeURIComponent(q)
     + '&confmKey=' + encodeURIComponent(JUSO_KEY)
     + '&resultType=json';
   const r = await fetch(url);
   const data = await r.json();
-  const list = data.results?.juso;
-  return (list && list.length) ? list[0].zipNo : null;
+  return (data.results?.juso || []).map(x => ({ zip: x.zipNo, road: x.roadAddr || '', jibun: x.jibunAddr || '' }));
 }
 
 async function lookupZip(addr){
-  if (!cleanAddress(addr)) return null;
+  const cleaned = cleanAddress(addr);
+  if (!cleaned) return null;
+  const toks = regionTokens(cleaned);   // vùng của địa chỉ gốc (vd 공주시)
+
   for (const cand of buildCandidates(addr)){
-    const zip = await jusoQuery(cand);
-    if (zip) return zip;
+    const list = await jusoQuery(cand);
+    if (!list.length) continue;
+
+    // Ưu tiên kết quả khớp đúng 시/군/구 với địa chỉ gốc
+    let pick = toks.length ? list.find(r => toks.some(tk => (r.road + r.jibun).includes(tk))) : null;
+
+    // Nếu không có kết quả khớp vùng: chỉ chấp nhận khi biến thể còn giữ vùng (tránh nhầm tỉnh)
+    if (!pick){
+      const candHasRegion = toks.length === 0 || toks.some(tk => cand.includes(tk));
+      if (candHasRegion) pick = list[0];
+    }
+    if (pick) return pick.zip;
   }
   return null;
 }

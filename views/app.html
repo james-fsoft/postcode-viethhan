@@ -946,9 +946,13 @@ function buildCandidates(raw) {
   return out;
 }
 
+function regionTokens(s) {
+  return (String(s).match(/[가-힣]+(?:시|군|구)/g)) || [];
+}
+
 async function jusoQuery(q, key) {
   const url = 'https://www.juso.go.kr/addrlink/addrLinkApi.do'
-    + '?currentPage=1&countPerPage=1'
+    + '?currentPage=1&countPerPage=10'
     + '&keyword='  + encodeURIComponent(q)
     + '&confmKey=' + encodeURIComponent(key)
     + '&resultType=json';
@@ -957,17 +961,27 @@ async function jusoQuery(q, key) {
   const data = await r.json();
   const code = data.results?.common?.errorCode;
   if (code === 'E0001' || code === 'E0005') throw new Error('INVALID_KEY');
-  const list = data.results?.juso;
-  return (list && list.length) ? { zip: list[0].zipNo, road: list[0].roadAddr } : null;
+  return (data.results?.juso || []).map(x => ({ zip: x.zipNo, road: x.roadAddr || '', jibun: x.jibunAddr || '' }));
 }
 
 async function kakaoLookup(rawAddr, apiKey) {
   const key = SERVER_JUSO_KEY || apiKey;
   if (!key) throw new Error('NO_KEY');
 
+  const cleaned = cleanAddress(rawAddr);
+  const toks = regionTokens(cleaned);   // vùng của địa chỉ gốc (vd 공주시)
+
   for (const cand of buildCandidates(rawAddr)) {
-    const res = await jusoQuery(cand, key);
-    if (res) return { zip: res.zip, display: res.road, type: 'road' };
+    const list = await jusoQuery(cand, key);
+    if (!list.length) continue;
+
+    // Ưu tiên kết quả khớp đúng 시/군/구 với địa chỉ gốc (tránh nhầm tỉnh khi bỏ bớt)
+    let pick = toks.length ? list.find(r => toks.some(tk => (r.road + r.jibun).includes(tk))) : null;
+    if (!pick) {
+      const candHasRegion = toks.length === 0 || toks.some(tk => cand.includes(tk));
+      if (candHasRegion) pick = list[0];
+    }
+    if (pick) return { zip: pick.zip, display: pick.road, type: 'road' };
   }
   return { zip: null, display: null, type: 'not_found' };
 }

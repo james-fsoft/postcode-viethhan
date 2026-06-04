@@ -70,6 +70,42 @@ function getJson(url, extraHeaders = {}, depth = 0) {
   });
 }
 
+// ── Helper: gọi HTTP/HTTPS, tự follow redirect, trả về text thô (cho XML) ─────
+function getText(url, extraHeaders = {}, depth = 0) {
+  return new Promise((resolve, reject) => {
+    if (depth > 4) return reject(new Error('Too many redirects'));
+
+    const parsed  = new URL(url);
+    const lib     = parsed.protocol === 'https:' ? https : http;
+    const options = {
+      hostname: parsed.hostname,
+      port:     parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
+      path:     parsed.pathname + parsed.search,
+      method:   'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible)',
+        'Accept':     'application/xml, text/xml, */*',
+        ...extraHeaders,
+      },
+    };
+
+    const req = lib.request(options, (res) => {
+      if ([301, 302, 303, 307, 308].includes(res.statusCode)) {
+        res.resume();
+        const loc     = res.headers.location || '';
+        const nextUrl = loc.startsWith('http') ? loc : `${parsed.protocol}//${parsed.hostname}${loc}`;
+        return getText(nextUrl, extraHeaders, depth + 1).then(resolve).catch(reject);
+      }
+      let raw = '';
+      res.on('data', d => { raw += d; });
+      res.on('end', () => resolve(raw));
+    });
+
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 // Gửi file HTML kèm header chống cache (tránh trình duyệt giữ bản cũ sau khi deploy)
 function sendPage(res, ...parts) {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
@@ -143,6 +179,35 @@ app.get('/api/juso', requireAuth, async (req, res) => {
   }
 });
 
+// ── UNI-PASS proxy (관세청 화물통관진행정보 조회) ──────────────────────────────
+// Tra trạng thái thông quan hàng nhập theo 화물관리번호 (cargMtNo) hoặc B/L (mblNo/hblNo + blYy)
+app.get('/api/cargo', requireAuth, async (req, res) => {
+  let { cargMtNo, mblNo, hblNo, blYy } = req.query;
+  if (!cargMtNo && !mblNo && !hblNo)
+    return res.status(400).json({ error: 'Missing query' });
+
+  const key = req.headers['x-unipass-key'] || process.env.UNIPASS_API_KEY;
+  if (!key) return res.status(400).json({ error: 'NO_KEY' });
+
+  let qs = `crkyCn=${encodeURIComponent(key)}`;
+  if (cargMtNo) {
+    qs += `&cargMtNo=${encodeURIComponent(String(cargMtNo).replace(/-/g, '').trim())}`;
+  } else if (mblNo) {
+    qs += `&mblNo=${encodeURIComponent(String(mblNo).trim())}&blYy=${encodeURIComponent(blYy || '')}`;
+  } else if (hblNo) {
+    qs += `&hblNo=${encodeURIComponent(String(hblNo).trim())}&blYy=${encodeURIComponent(blYy || '')}`;
+  }
+
+  try {
+    const xml = await getText(
+      `https://unipass.customs.go.kr:38010/ext/rest/cargCsclPrgsInfoQry/retrieveCargCsclPrgsInfo?${qs}`
+    );
+    res.type('application/xml').send(xml);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Gói dịch vụ ───────────────────────────────────────────────────────────────
 const PLANS = {
   trial:      { maxLookups: 15, maxPerLookup: 30 },
@@ -193,11 +258,12 @@ app.get('/api/config', async (req, res) => {
   const username = userFromReq(req);
   const contact = process.env.CONTACT_INFO || 'support@transflash.app';
   const jusoKey = process.env.JUSO_API_KEY || null;
+  const unipassKey = !!process.env.UNIPASS_API_KEY;   // chỉ báo có/không, không lộ key
 
   // Khách: vào thẳng — tra tay tối đa 5, upload Excel tối đa 15 địa chỉ
   if (!username) {
     return res.json({
-      jusoKey, username: null, plan: 'guest',
+      jusoKey, unipassKey, username: null, plan: 'guest',
       maxLookups: 0, maxPerLookup: 5, maxUpload: 15,
       canUpload: true, isGuest: true, used: 0,
       redis: useRedis, contact,
@@ -208,7 +274,7 @@ app.get('/api/config', async (req, res) => {
   let used = 0;
   try { used = await getUsage(username); } catch { /* ok */ }
   res.json({
-    jusoKey, username,
+    jusoKey, unipassKey, username,
     plan: plan.name,
     maxLookups: plan.maxLookups,
     maxPerLookup: plan.maxPerLookup,

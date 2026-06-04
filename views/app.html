@@ -339,6 +339,40 @@
     }
     .inline-copy:hover { border-color: var(--blue); color: var(--blue); }
     .inline-copy.ok { color: #16a34a; border-color: #16a34a; }
+
+    /* ── Tra cứu thông quan (UNI-PASS) ── */
+    .cargo-form { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+    .cargo-form select, .cargo-form input {
+      padding: 10px 12px; border: 1.5px solid var(--gray-200); border-radius: 8px;
+      font-size: 0.92rem; font-family: inherit; background: #fff;
+    }
+    .cargo-form select { flex-shrink: 0; }
+    .cargo-form #cargoNo { flex: 1; min-width: 240px; }
+    .cargo-form .cargo-yy { width: 130px; flex-shrink: 0; }
+    .cargo-form select:focus, .cargo-form input:focus { outline: none; border-color: var(--blue); }
+    .cargo-info {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 8px 18px; padding: 8px 16px 16px;
+    }
+    .cargo-info .ci-row { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--gray-100); }
+    .cargo-info .ci-label { color: var(--gray-500); font-size: 0.82rem; min-width: 130px; flex-shrink: 0; }
+    .cargo-info .ci-value { color: var(--gray-800); font-size: 0.9rem; font-weight: 600; word-break: break-all; }
+    .cargo-info .ci-value.hl { color: var(--red); }
+    .cargo-tl-title { margin: 8px 16px 4px; font-size: 0.95rem; color: var(--gray-700); }
+    .cargo-timeline { padding: 4px 16px 18px; }
+    .cargo-step {
+      position: relative; padding: 0 0 16px 26px; border-left: 2px solid var(--gray-200);
+    }
+    .cargo-step:last-child { border-left-color: transparent; padding-bottom: 0; }
+    .cargo-step::before {
+      content: ''; position: absolute; left: -7px; top: 2px; width: 12px; height: 12px;
+      border-radius: 50%; background: var(--blue); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--blue);
+    }
+    .cargo-step.done::before { background: #16a34a; box-shadow: 0 0 0 1px #16a34a; }
+    .cargo-step .cs-name { font-weight: 700; color: var(--gray-800); font-size: 0.9rem; }
+    .cargo-step .cs-time { color: var(--gray-500); font-size: 0.8rem; margin-left: 8px; }
+    .cargo-step .cs-meta { color: var(--gray-600); font-size: 0.82rem; margin-top: 2px; }
+    .cargo-error { padding: 16px; color: var(--red); font-size: 0.9rem; }
     .inline-addr { cursor: default; }
     .inline-row:has(.inline-zip.err) .inline-addr { cursor: pointer; }
     .inline-edit {
@@ -529,6 +563,7 @@
   <div class="tabs">
     <button class="tab-btn active" data-tab="manual" data-i18n="tabManual" onclick="switchTab('manual')">Tìm kiếm thủ công</button>
     <button class="tab-btn" data-tab="excel" onclick="switchTab('excel')"><span data-i18n="tabExcel">Upload Excel</span><span class="tab-lock" id="excelTabLock" style="display:none">🔒</span></button>
+    <button class="tab-btn" data-tab="cargo" data-i18n="tabCargo" onclick="switchTab('cargo')">Tra cứu thông quan</button>
   </div>
 
   <!-- ══ TAB 1: Manual ══ -->
@@ -627,6 +662,44 @@
     </div>
   </div>
 
+  <!-- ══ TAB 3: Tra cứu thông quan (UNI-PASS) ══ -->
+  <div class="tab-panel" id="tab-cargo">
+    <!-- Ô nhập key UNI-PASS — ẩn khi server đã có key sẵn -->
+    <div class="api-box" id="cargoApiBox">
+      <label data-i18n="cargoKeyLabel">UNI-PASS Open API Key (관세청)</label>
+      <input type="text" id="cargoApiKey" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
+      <a href="https://unipass.customs.go.kr/csp/index.do" target="_blank" data-i18n="cargoGetKey">Đăng ký key UNI-PASS →</a>
+    </div>
+
+    <div class="card">
+      <label data-i18n="cargoLabel">Tra cứu trạng thái thông quan hàng nhập</label>
+      <div class="cargo-form">
+        <select id="cargoType" onchange="onCargoTypeChange()">
+          <option value="cargMtNo" data-i18n="cargoTypeCarg">Số quản lý hàng hóa (화물관리번호)</option>
+          <option value="mblNo" data-i18n="cargoTypeMbl">Master B/L (M B/L)</option>
+          <option value="hblNo" data-i18n="cargoTypeHbl">House B/L (H B/L)</option>
+        </select>
+        <input type="text" id="cargoNo" data-i18n-placeholder="cargoNoPlaceholder" placeholder="VD: 26KE0CS5Cii-0003-0019" onkeydown="if(event.key==='Enter')runCargoSearch()" />
+        <input type="text" id="cargoYy" class="cargo-yy" style="display:none" maxlength="4" data-i18n-placeholder="cargoYyPlaceholder" placeholder="Năm B/L (VD 2026)" onkeydown="if(event.key==='Enter')runCargoSearch()" />
+      </div>
+      <p class="hint" data-i18n="cargoHint">Nhập số quản lý hàng hóa (bỏ dấu gạch cũng được). Tra theo B/L cần kèm năm.</p>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="cargoSearchBtn" onclick="runCargoSearch()" data-i18n="btnSearch">Tra cứu</button>
+        <button class="btn btn-ghost" onclick="clearCargo()" data-i18n="btnClear">Xóa</button>
+      </div>
+      <div class="progress-label" id="cargoProgressLabel" style="display:none"></div>
+    </div>
+
+    <div class="results-box" id="cargoResults" style="display:none">
+      <div class="results-header">
+        <span class="summary" id="cargoSummary"></span>
+      </div>
+      <div id="cargoInfo" class="cargo-info"></div>
+      <h4 class="cargo-tl-title" id="cargoTimelineTitle" style="display:none" data-i18n="cargoTimeline">Tiến trình thông quan</h4>
+      <div id="cargoTimeline" class="cargo-timeline"></div>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="app-footer">
     <span class="tf-brand">Transflash</span>
@@ -718,6 +791,17 @@ const LANGS = {
     errNotFound: 'Không tìm thấy',
     errAmbiguous: 'Thiếu thông tin (nhiều mã)',
     typeRoad: 'Tên đường', typeJibun: 'Số lô', typeError: 'Lỗi', typeAmbiguous: 'Thiếu thông tin',
+    tabCargo: 'Tra cứu thông quan',
+    cargoKeyLabel: 'UNI-PASS Open API Key (관세청)', cargoGetKey: 'Đăng ký key UNI-PASS →',
+    cargoLabel: 'Tra cứu trạng thái thông quan hàng nhập',
+    cargoTypeCarg: 'Số quản lý hàng hóa (화물관리번호)', cargoTypeMbl: 'Master B/L (M B/L)', cargoTypeHbl: 'House B/L (H B/L)',
+    cargoNoPlaceholder: 'VD: 26KE0CS5Cii-0003-0019', cargoYyPlaceholder: 'Năm B/L (VD 2026)',
+    cargoHint: 'Nhập số quản lý hàng hóa (bỏ dấu gạch cũng được). Tra theo B/L cần kèm năm.',
+    cargoTimeline: 'Tiến trình thông quan', cargoLoading: 'Đang tra cứu...',
+    cargoStatus: 'Trạng thái', cargoDone: 'Kết quả tra cứu',
+    cargoErrNoInput: 'Vui lòng nhập số cần tra.', cargoErrNoYear: 'Tra theo B/L cần nhập năm (4 chữ số).',
+    cargoErrAuth: 'Vui lòng đăng nhập để dùng chức năng này.', cargoErrNoKey: 'Chưa có UNI-PASS API Key. Nhập key hoặc cấu hình trên server.',
+    cargoErrNotFound: 'Không tìm thấy thông tin cho số này.', cargoErrParse: 'Không đọc được dữ liệu trả về.',
     colZipResult: 'Mã bưu điện', copied: 'Đã sao chép!',
   },
   en: {
@@ -780,6 +864,17 @@ const LANGS = {
     errNotFound: 'Not found',
     errAmbiguous: 'Missing info (multiple codes)',
     typeRoad: 'Road', typeJibun: 'Jibun', typeError: 'Error', typeAmbiguous: 'Missing info',
+    tabCargo: 'Customs Tracking',
+    cargoKeyLabel: 'UNI-PASS Open API Key (Korea Customs)', cargoGetKey: 'Register UNI-PASS key →',
+    cargoLabel: 'Track import cargo clearance status',
+    cargoTypeCarg: 'Cargo mgmt no. (화물관리번호)', cargoTypeMbl: 'Master B/L (M B/L)', cargoTypeHbl: 'House B/L (H B/L)',
+    cargoNoPlaceholder: 'e.g. 26KE0CS5Cii-0003-0019', cargoYyPlaceholder: 'B/L year (e.g. 2026)',
+    cargoHint: 'Enter the cargo management number (dashes optional). B/L lookups need the year.',
+    cargoTimeline: 'Clearance progress', cargoLoading: 'Looking up...',
+    cargoStatus: 'Status', cargoDone: 'Lookup result',
+    cargoErrNoInput: 'Please enter a number to look up.', cargoErrNoYear: 'B/L lookups need a 4-digit year.',
+    cargoErrAuth: 'Please log in to use this feature.', cargoErrNoKey: 'No UNI-PASS API Key. Enter a key or configure it on the server.',
+    cargoErrNotFound: 'No information found for this number.', cargoErrParse: 'Could not read the returned data.',
     colZipResult: 'Postal Code', copied: 'Copied!',
   },
   ko: {
@@ -842,6 +937,17 @@ const LANGS = {
     errNotFound: '찾을 수 없음',
     errAmbiguous: '정보 부족 (여러 우편번호)',
     typeRoad: '도로명', typeJibun: '지번', typeError: '오류', typeAmbiguous: '정보 부족',
+    tabCargo: '통관조회',
+    cargoKeyLabel: 'UNI-PASS Open API 키 (관세청)', cargoGetKey: 'UNI-PASS 키 신청 →',
+    cargoLabel: '수입화물 통관진행정보 조회',
+    cargoTypeCarg: '화물관리번호', cargoTypeMbl: 'Master B/L (M B/L)', cargoTypeHbl: 'House B/L (H B/L)',
+    cargoNoPlaceholder: '예: 26KE0CS5Cii-0003-0019', cargoYyPlaceholder: 'B/L 연도 (예: 2026)',
+    cargoHint: '화물관리번호 입력 (하이픈 생략 가능). B/L 조회는 연도가 필요합니다.',
+    cargoTimeline: '통관진행 단계', cargoLoading: '조회 중...',
+    cargoStatus: '상태', cargoDone: '조회 결과',
+    cargoErrNoInput: '조회할 번호를 입력하세요.', cargoErrNoYear: 'B/L 조회는 4자리 연도가 필요합니다.',
+    cargoErrAuth: '이 기능은 로그인 후 사용 가능합니다.', cargoErrNoKey: 'UNI-PASS API 키가 없습니다. 키를 입력하거나 서버에 설정하세요.',
+    cargoErrNotFound: '해당 번호의 정보를 찾을 수 없습니다.', cargoErrParse: '응답 데이터를 읽을 수 없습니다.',
     colZipResult: '우편번호', copied: '복사 완료!',
   }
 };
@@ -891,6 +997,175 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
   document.getElementById(`tab-${tab}`).classList.add('active');
+}
+
+// ── Tra cứu thông quan UNI-PASS (관세청 화물통관진행정보) ─────────────────────
+// Nhãn field XML (Hàn → đa ngữ). Field chưa biết sẽ hiện tên gốc, không mất dữ liệu.
+const CARGO_LABELS = {
+  cargMtNo:     { vi:'Số quản lý hàng hóa', en:'Cargo mgmt no.', ko:'화물관리번호' },
+  mblNo:        { vi:'Master B/L', en:'Master B/L', ko:'MBL번호' },
+  hblNo:        { vi:'House B/L', en:'House B/L', ko:'HBL번호' },
+  cargTp:       { vi:'Loại hàng', en:'Cargo type', ko:'화물구분' },
+  blPtClcd:     { vi:'Loại B/L', en:'B/L type', ko:'B/L유형' },
+  prgsStts:     { vi:'Trạng thái tiến trình', en:'Progress status', ko:'진행상태' },
+  csclPrgsStts: { vi:'Trạng thái thông quan', en:'Clearance status', ko:'통관진행상태' },
+  prnm:         { vi:'Tên hàng', en:'Product', ko:'품명' },
+  pckGcnt:      { vi:'Số kiện', en:'Packages', ko:'포장개수' },
+  pckUt:        { vi:'Đơn vị kiện', en:'Pkg unit', ko:'포장단위' },
+  ttwg:         { vi:'Tổng trọng lượng', en:'Total weight', ko:'총중량' },
+  wghtUt:       { vi:'Đơn vị KL', en:'Weight unit', ko:'중량단위' },
+  shipNm:       { vi:'Tàu / Chuyến bay', en:'Vessel / Flight', ko:'선박/항공편' },
+  sanm:         { vi:'Hãng vận chuyển', en:'Carrier', ko:'선사/항공사' },
+  vydf:         { vi:'Số chuyến', en:'Voyage / Flight', ko:'항차' },
+  etprDt:       { vi:'Ngày nhập cảng', en:'Arrival date', ko:'입항일' },
+  etprCstm:     { vi:'Hải quan nhập', en:'Entry customs', ko:'입항세관' },
+  ldprCd:       { vi:'Cảng xếp', en:'Loading port', ko:'적재항' },
+  dsprCd:       { vi:'Cảng dỡ', en:'Discharge port', ko:'양륙항' },
+  lodCntyCd:    { vi:'Nước xuất', en:'Origin country', ko:'적출국' },
+  agnc:         { vi:'Đại lý', en:'Agent', ko:'대리점' },
+  cntrGcnt:     { vi:'Số container', en:'Containers', ko:'컨테이너수' },
+  spcnCmptNm:   { vi:'Đơn vị chuyển phát', en:'Express co.', ko:'특송업체' },
+  frwrEntsConm: { vi:'Forwarder', en:'Forwarder', ko:'포워더' },
+  // timeline
+  cargTrcnRelaBsopTpcd: { vi:'Bước xử lý', en:'Step', ko:'처리단계' },
+  prcsDttm:     { vi:'Thời gian', en:'Time', ko:'처리일시' },
+  rlbrDttm:     { vi:'Thời gian', en:'Time', ko:'반출입일시' },
+  shedNm:       { vi:'Kho / Bãi', en:'Warehouse', ko:'장치장' },
+  rlbrCn:       { vi:'Nội dung', en:'Detail', ko:'반출입내용' },
+  dclrNo:       { vi:'Số tờ khai', en:'Declaration no.', ko:'신고번호' },
+  wght:         { vi:'Trọng lượng', en:'Weight', ko:'중량' },
+};
+
+function cargoFieldLabel(tag) {
+  const e = CARGO_LABELS[tag];
+  return e ? (e[currentLang] || e.vi) : tag;
+}
+function isDateTag(tag) { return /Dt$|Dttm$/.test(tag); }
+function fmtCargoDt(s) {
+  const d = String(s).replace(/\D/g, '');
+  if (d.length >= 12) return `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)} ${d.slice(8,10)}:${d.slice(10,12)}`;
+  if (d.length === 8) return `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;
+  return s;
+}
+function nodeText(parent, tag) {
+  const e = parent.getElementsByTagName(tag);
+  return e.length ? (e[0].textContent || '').trim() : '';
+}
+
+function onCargoTypeChange() {
+  const type = document.getElementById('cargoType').value;
+  document.getElementById('cargoYy').style.display = (type === 'cargMtNo') ? 'none' : 'block';
+}
+
+function clearCargo() {
+  document.getElementById('cargoNo').value = '';
+  document.getElementById('cargoYy').value = '';
+  document.getElementById('cargoResults').style.display = 'none';
+}
+
+async function runCargoSearch() {
+  const type = document.getElementById('cargoType').value;
+  const no   = document.getElementById('cargoNo').value.trim();
+  const yy   = document.getElementById('cargoYy').value.trim();
+  if (!no) { alert(t('cargoErrNoInput')); return; }
+  if (type !== 'cargMtNo' && !/^\d{4}$/.test(yy)) { alert(t('cargoErrNoYear')); return; }
+
+  const key = document.getElementById('cargoApiKey').value.trim();
+  const params = new URLSearchParams();
+  params.set(type, no);
+  if (type !== 'cargMtNo') params.set('blYy', yy);
+
+  const btn = document.getElementById('cargoSearchBtn');
+  const lbl = document.getElementById('cargoProgressLabel');
+  btn.disabled = true; lbl.style.display = 'block'; lbl.textContent = t('cargoLoading');
+  try {
+    const headers = { 'Accept': 'application/json' };
+    if (key) headers['x-unipass-key'] = key;
+    const r = await fetch('/api/cargo?' + params.toString(), { headers });
+    if (r.status === 401) { alert(t('cargoErrAuth')); return; }
+    const ct = r.headers.get('content-type') || '';
+    if (ct.includes('application/json')) {
+      const j = await r.json().catch(() => ({}));
+      if (j.error === 'NO_KEY') { alert(t('cargoErrNoKey')); return; }
+      renderCargoError(j.error || t('cargoErrNotFound'));
+      return;
+    }
+    renderCargo(await r.text());
+  } catch (e) {
+    renderCargoError(e.message);
+  } finally {
+    btn.disabled = false; lbl.style.display = 'none';
+  }
+}
+
+function renderCargoError(msg) {
+  document.getElementById('cargoSummary').textContent = '';
+  document.getElementById('cargoTimelineTitle').style.display = 'none';
+  document.getElementById('cargoTimeline').innerHTML = '';
+  document.getElementById('cargoInfo').innerHTML = `<div class="cargo-error">⚠️ ${esc(msg || t('cargoErrNotFound'))}</div>`;
+  document.getElementById('cargoResults').style.display = 'block';
+}
+
+function renderCargo(xmlText) {
+  const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
+  if (doc.getElementsByTagName('parsererror').length) { renderCargoError(t('cargoErrParse')); return; }
+
+  const sumNodes = doc.getElementsByTagName('cargCsclPrgsInfoQryVo');
+  const summary  = sumNodes.length ? sumNodes[0] : null;
+  const details  = Array.from(doc.getElementsByTagName('cargCsclPrgsInfoDtlQryVo'));
+
+  if (!summary && !details.length) {
+    const ntce = nodeText(doc, 'ntceInfo') || nodeText(doc, 'resultMsg') || nodeText(doc, 'tCnt');
+    renderCargoError(ntce && ntce !== '0' ? ntce : t('cargoErrNotFound'));
+    return;
+  }
+
+  // Trạng thái nổi bật
+  const status = summary ? (nodeText(summary, 'prgsStts') || nodeText(summary, 'csclPrgsStts')) : '';
+  document.getElementById('cargoSummary').textContent = status ? `${t('cargoStatus')}: ${status}` : t('cargoDone');
+
+  // Bảng thông tin chung — hiện mọi field không rỗng, theo thứ tự API trả về
+  const infoEl = document.getElementById('cargoInfo');
+  infoEl.innerHTML = '';
+  if (summary) {
+    Array.from(summary.children).forEach(ch => {
+      const val = (ch.textContent || '').trim();
+      if (!val) return;
+      const hl  = (ch.tagName === 'prgsStts' || ch.tagName === 'csclPrgsStts') ? ' hl' : '';
+      const v   = isDateTag(ch.tagName) ? fmtCargoDt(val) : val;
+      infoEl.innerHTML += `<div class="ci-row"><span class="ci-label">${esc(cargoFieldLabel(ch.tagName))}</span><span class="ci-value${hl}">${esc(v)}</span></div>`;
+    });
+  }
+
+  // Timeline tiến trình — sắp theo thời gian tăng dần
+  const tl = document.getElementById('cargoTimeline');
+  tl.innerHTML = '';
+  if (details.length) {
+    document.getElementById('cargoTimelineTitle').style.display = 'block';
+    const getTime = n => nodeText(n, 'prcsDttm') || nodeText(n, 'rlbrDttm') || '';
+    details.sort((a, b) => getTime(a).localeCompare(getTime(b)));
+
+    details.forEach((node, idx) => {
+      const fields = {};
+      Array.from(node.children).forEach(c => { const v = (c.textContent || '').trim(); if (v) fields[c.tagName] = v; });
+      const name = fields.cargTrcnRelaBsopTpcd || fields.rlbrCn || fields.csclPrgsStts || Object.values(fields)[0] || '—';
+      const timeRaw = fields.prcsDttm || fields.rlbrDttm || '';
+      const time = timeRaw ? fmtCargoDt(timeRaw) : '';
+      const meta = [];
+      ['shedNm', 'dclrNo', 'wght', 'pckGcnt', 'rlbrCn'].forEach(k => {
+        if (fields[k] && fields[k] !== name) meta.push(`${cargoFieldLabel(k)}: ${fields[k]}`);
+      });
+      const done = idx === details.length - 1;
+      tl.innerHTML += `<div class="cargo-step${done ? ' done' : ''}">`
+        + `<div><span class="cs-name">${esc(name)}</span>${time ? `<span class="cs-time">${esc(time)}</span>` : ''}</div>`
+        + `${meta.length ? `<div class="cs-meta">${esc(meta.join('   ·   '))}</div>` : ''}`
+        + `</div>`;
+    });
+  } else {
+    document.getElementById('cargoTimelineTitle').style.display = 'none';
+  }
+
+  document.getElementById('cargoResults').style.display = 'block';
 }
 
 // ── Kakao API ─────────────────────────────────────────────────────────────────
@@ -1389,6 +1664,7 @@ function formatBytes(b) { return b<1024?b+' B':b<1048576?(b/1024).toFixed(1)+' K
 
 // ── Quản lý gói / giới hạn dùng thử (đếm phía server) ────────────────────────
 let SERVER_JUSO_KEY = null;
+let SERVER_HAS_UNIPASS = false;
 let USER_PLAN = 'trial', MAX_LOOKUPS = 15, MAX_PER_LOOKUP = 30, USERNAME = 'user', CONTACT = '';
 let USED = 0;           // số lượt đã dùng, lấy từ server
 let IS_GUEST = false;   // khách chưa đăng nhập
@@ -1534,6 +1810,10 @@ function applyAccessUI() {
       SERVER_JUSO_KEY = cfg.jusoKey;
       document.getElementById('apiBox').style.display = 'none';
     }
+    if (cfg.unipassKey) {
+      SERVER_HAS_UNIPASS = true;
+      document.getElementById('cargoApiBox').style.display = 'none';
+    }
     USER_PLAN      = cfg.plan        || 'trial';
     MAX_LOOKUPS    = cfg.maxLookups  ?? 15;
     MAX_PER_LOOKUP = cfg.maxPerLookup ?? 30;
@@ -1553,6 +1833,14 @@ function applyAccessUI() {
     if (k) document.getElementById('apiKey').value = k;
     document.getElementById('apiKey').addEventListener('input', e =>
       localStorage.setItem('juso_api_key', e.target.value.trim())
+    );
+  }
+
+  if (!SERVER_HAS_UNIPASS) {
+    const uk = localStorage.getItem('unipass_api_key');
+    if (uk) document.getElementById('cargoApiKey').value = uk;
+    document.getElementById('cargoApiKey').addEventListener('input', e =>
+      localStorage.setItem('unipass_api_key', e.target.value.trim())
     );
   }
 })();

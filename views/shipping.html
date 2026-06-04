@@ -318,25 +318,22 @@ function readFile(file){
 }
 
 function detectColumns(){
-  // Tìm cột theo tên tiêu đề
-  let a = headerRow.findIndex(h => h.includes('수하인주소'));
+  // Địa chỉ gốc LUÔN ở cột O (index 14)
+  addrIdx = 14;
+  // Mã bưu điện điền vào cột N (우편번호) — mặc định index 13
   let z = headerRow.findIndex(h => h.includes('우편번호'));
-  if (a < 0) a = headerRow.findIndex(h => /주소|address/i.test(h));
-  // fallback vị trí cố định O/N
-  if (a < 0) a = 14;
   if (z < 0) z = 13;
-  addrIdx = a; zipIdx = z;
+  zipIdx = z;
 
-  // Dropdown chọn lại
+  // Dropdown chọn lại (vẫn cho phép đổi nếu cần)
   fillColSelect('addrCol', addrIdx);
   fillColSelect('zipCol', zipIdx);
   document.getElementById('colPick').style.display = 'flex';
 
   const det = document.getElementById('colDetect');
-  const auto = headerRow.some(h => h.includes('수하인주소')) && headerRow.some(h => h.includes('우편번호'));
   det.style.display = 'block';
-  det.className = 'col-detect' + (auto ? '' : ' warn');
-  det.textContent = auto ? t('detectOk', colLetter(addrIdx), colLetter(zipIdx)) : t('detectWarn');
+  det.className = 'col-detect';
+  det.textContent = t('detectOk', colLetter(addrIdx), colLetter(zipIdx));
 
   // Thu gọn khu upload để dành chỗ làm việc
   document.getElementById('uploadCard').classList.add('compact');

@@ -216,7 +216,7 @@ const LANGS = {
     thAddr:'O — Địa chỉ (수하인주소)', thZip:'N — Mã bưu điện (우편번호)',
     detectOk:(a,z)=>`Đã nhận diện: địa chỉ ở cột ${a}, điền mã vào cột ${z}.`,
     detectWarn:'Không tự nhận diện được cột. Vui lòng chọn thủ công bên dưới.',
-    summary:(f,t)=>`Đã điền ${f}/${t} dòng có mã bưu điện. Xem trước trước khi tải.`,
+    summary:(f,t,u)=>`Đã điền ${f}/${t} dòng có mã bưu điện (${u} địa chỉ duy nhất). Xem trước trước khi tải.`,
     progress:(i,t)=>`Đang tra cứu... ${i}/${t}`,
     notFound:'Không tìm thấy', empty:'(trống)',
     errNoFile:'Chưa chọn file.', errRead:'Không đọc được file: ', errNoAddrCol:'Không tìm thấy cột địa chỉ.',
@@ -236,7 +236,7 @@ const LANGS = {
     thAddr:'O — Address (수하인주소)', thZip:'N — Postal code (우편번호)',
     detectOk:(a,z)=>`Detected: address in column ${a}, fill codes into column ${z}.`,
     detectWarn:'Could not auto-detect columns. Please select manually below.',
-    summary:(f,t)=>`Filled ${f}/${t} rows with postal codes. Preview before downloading.`,
+    summary:(f,t,u)=>`Filled ${f}/${t} rows with postal codes (${u} unique addresses). Preview before downloading.`,
     progress:(i,t)=>`Looking up... ${i}/${t}`,
     notFound:'Not found', empty:'(empty)',
     errNoFile:'No file selected.', errRead:'Cannot read file: ', errNoAddrCol:'Address column not found.',
@@ -256,7 +256,7 @@ const LANGS = {
     thAddr:'O — 수하인주소(한글)1', thZip:'N — 수하인 우편번호',
     detectOk:(a,z)=>`인식됨: 주소 ${a}열, 우편번호 ${z}열에 입력.`,
     detectWarn:'열을 자동 인식하지 못했습니다. 아래에서 직접 선택하세요.',
-    summary:(f,t)=>`${t}건 중 ${f}건 우편번호 입력 완료. 다운로드 전 미리보기.`,
+    summary:(f,t,u)=>`${t}건 중 ${f}건 우편번호 입력 완료 (고유 주소 ${u}개). 다운로드 전 미리보기.`,
     progress:(i,t)=>`조회 중... (${i}/${t})`,
     notFound:'찾을 수 없음', empty:'(빈칸)',
     errNoFile:'파일을 선택하세요.', errRead:'파일을 읽을 수 없습니다: ', errNoAddrCol:'주소 열을 찾을 수 없습니다.',
@@ -285,6 +285,7 @@ let workbook = null, sheet = null, rows = [];   // rows = array of arrays (heade
 let headerRow = [];
 let addrIdx = 14, zipIdx = 13;                  // mặc định O=14, N=13
 let processed = [];                              // [{addr, zip}]
+let uniqueCount = 0;                             // số địa chỉ duy nhất đã tra
 
 // ── Upload ─────────────────────────────────────────────────────────────────────
 function onDragOver(e){ e.preventDefault(); document.getElementById('uploadArea').classList.add('drag-over'); }
@@ -427,18 +428,22 @@ async function runProcess(){
     return;
   }
 
-  processed = [];
-  const total = tasks.length;
-  for (let k = 0; k < total; k++){
-    const { row, addr } = tasks[k];
+  // Chỉ tra MỖI ĐỊA CHỈ DUY NHẤT 1 lần (nhiều đơn cùng địa chỉ → tái sử dụng kết quả)
+  const uniq = [...new Set(tasks.map(t => t.addr))];
+  const cache = {};
+  for (let k = 0; k < uniq.length; k++){
+    const a = uniq[k];
     let zip = null;
-    try { zip = await lookupZip(addr); } catch { zip = null; }
-    if (zip) setCellWS(sheet, zipIdx, row, zip);   // ghi mã vào cột N của sheet gốc
-    processed.push({ row, origAddr: addr, addr, zip });
-    pf.style.width = `${Math.round((k+1)/total*100)}%`;
-    pl.textContent = t('progress', k+1, total);
-    if (k < total - 1) await new Promise(r => setTimeout(r, 110));
+    try { zip = await lookupZip(a); } catch { zip = null; }
+    cache[a] = zip;
+    pf.style.width = `${Math.round((k+1)/uniq.length*100)}%`;
+    pl.textContent = t('progress', k+1, uniq.length);
+    if (k < uniq.length - 1) await new Promise(r => setTimeout(r, 110));
   }
+
+  // Điền kết quả cho TẤT CẢ các dòng (kể cả dòng trùng địa chỉ)
+  processed = tasks.map(t => ({ row: t.row, origAddr: t.addr, addr: t.addr, zip: cache[t.addr] ?? null }));
+  uniqueCount = uniq.length;
 
   btn.disabled = false; pw.style.display='none'; pl.style.display='none';
   renderPreview();
@@ -461,7 +466,7 @@ function renderPreview(){
     body.appendChild(tr);
   });
   const found = processed.filter(p=>p.zip).length;
-  document.getElementById('summary').textContent = t('summary', found, processed.length);
+  document.getElementById('summary').textContent = t('summary', found, processed.length, uniqueCount);
   document.getElementById('results').style.display = 'block';
 }
 

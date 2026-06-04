@@ -414,19 +414,28 @@ async function runProcess(){
   btn.disabled = true; pw.style.display='block'; pl.style.display='block';
   document.getElementById('results').style.display='none';
 
+  // Chỉ lấy các dòng THỰC SỰ có địa chỉ ở cột O (bỏ qua dòng trống/định dạng thừa)
+  const tasks = [];
+  for (let i = 1; i < rows.length; i++){
+    const addr = String(rows[i][addrIdx] || '').trim();
+    if (addr) tasks.push({ row: i, addr });
+  }
+  if (!tasks.length){
+    btn.disabled = false; pw.style.display='none'; pl.style.display='none';
+    alert(t('errNoAddress'));
+    return;
+  }
+
   processed = [];
-  const total = rows.length - 1; // trừ header
-  for (let i=1; i<rows.length; i++){
-    const addr = String(rows[i][addrIdx] || '');
+  const total = tasks.length;
+  for (let k = 0; k < total; k++){
+    const { row, addr } = tasks[k];
     let zip = null;
-    if (addr.trim()){
-      try { zip = await lookupZip(addr); } catch { zip = null; }
-    }
-    // origAddr: địa chỉ gốc (không đổi) · addr: địa chỉ hiện tại (có thể sửa)
-    processed.push({ row: i, origAddr: addr, addr, zip });
-    pf.style.width = `${Math.round(i/total*100)}%`;
-    pl.textContent = t('progress', i, total);
-    if (i < rows.length-1) await new Promise(r=>setTimeout(r,110));
+    try { zip = await lookupZip(addr); } catch { zip = null; }
+    processed.push({ row, origAddr: addr, addr, zip });
+    pf.style.width = `${Math.round((k+1)/total*100)}%`;
+    pl.textContent = t('progress', k+1, total);
+    if (k < total - 1) await new Promise(r => setTimeout(r, 110));
   }
 
   btn.disabled = false; pw.style.display='none'; pl.style.display='none';

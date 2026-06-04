@@ -479,7 +479,7 @@ function renderPreview(){
       ? `<span class="zip-ok">${p.zip}</span>`
       : `<span class="zip-no">${t('notFound')}</span>`;
     const addrTxt = esc(p.addr) || `<span class="num">${t('empty')}</span>`;
-    tr.innerHTML = `<td class="num">${i+1}</td>
+    tr.innerHTML = `<td class="num" title="Dòng Excel">${p.row + 1}</td>
       <td class="addr" ondblclick="editRow(${i})" title="${esc(t('editHint'))}">${addrTxt}${edited?' <span class="num">✎</span>':''}</td>
       <td>${zipCell}</td>`;
     body.appendChild(tr);

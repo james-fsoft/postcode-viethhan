@@ -314,6 +314,11 @@ app.get('/about', (req, res) => {
   sendPage(res, 'views', 'landing.html');
 });
 
+// ── Trang tra cứu thông quan (UNI-PASS) — bản thử nghiệm độc lập ──────────────
+app.get('/tracking', (req, res) => {
+  sendPage(res, 'views', 'tracking.html');
+});
+
 // ── robots.txt + sitemap.xml (cho Google index) ──────────────────────────────
 const SITE = process.env.SITE_URL || 'https://postcode-viethhan.vercel.app';
 app.get('/robots.txt', (req, res) => {

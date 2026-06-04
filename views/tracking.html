@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tra cứu thông quan — Vietnam · Korea Logistics</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg:#0a0d13; --card:#10151d; --card2:#141b24; --line:#1e2733; --line2:#2a3543;
+    --green:#2ed47f; --green-d:#27c06f; --blue:#5b93f6; --blue-soft:#6ea8fe;
+    --text:#eef2f7; --muted:#8591a0; --muted2:#5c6675;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(46,212,127,.06), transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%, rgba(91,147,246,.05), transparent 55%),
+      var(--bg);
+    color:var(--text); font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    min-height:100vh; line-height:1.5; padding:48px 20px 80px;
+  }
+  .wrap { max-width:1180px; margin:0 auto; }
+  .eyebrow { color:var(--green); font-size:.78rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; margin-bottom:14px; }
+  h1 { font-size:2.7rem; font-weight:800; letter-spacing:-.02em; margin-bottom:16px; }
+  h1 .dot { color:var(--green); }
+  .lead { color:var(--muted); font-size:1.05rem; max-width:640px; margin-bottom:34px; }
+  .lead .k { color:var(--muted2); }
+
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:20px; padding:26px; }
+  .section { margin-bottom:70px; }
+
+  /* search */
+  .search-row { display:flex; gap:14px; }
+  .search-row input {
+    flex:1; background:var(--card2); border:1px solid var(--line2); border-radius:14px;
+    color:var(--text); font-size:1rem; padding:18px 22px; outline:none; transition:border-color .15s;
+  }
+  .search-row input::placeholder { color:var(--muted2); }
+  .search-row input:focus { border-color:var(--green); }
+  .btn-go {
+    background:linear-gradient(180deg,var(--green),var(--green-d)); color:#05291a; border:none;
+    border-radius:14px; padding:0 40px; font-size:1.05rem; font-weight:800; cursor:pointer;
+    box-shadow:0 6px 20px rgba(46,212,127,.25); transition:transform .1s, box-shadow .15s;
+  }
+  .btn-go:hover { box-shadow:0 8px 26px rgba(46,212,127,.4); }
+  .btn-go:active { transform:translateY(1px); }
+  .btn-go:disabled { opacity:.6; cursor:default; box-shadow:none; }
+
+  .quick { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:20px; }
+  .quick .q-label { color:var(--muted2); font-size:.86rem; }
+  .chip {
+    background:var(--card2); border:1px solid var(--line2); color:var(--blue-soft);
+    border-radius:10px; padding:9px 16px; font-size:.9rem; cursor:pointer; transition:all .12s; font-family:inherit;
+  }
+  .chip:hover { border-color:var(--blue); background:rgba(91,147,246,.1); }
+
+  /* result card */
+  .result { margin-top:24px; background:var(--card2); border:1px solid var(--line); border-radius:16px; padding:26px 28px; display:none; }
+  .result.show { display:block; }
+  .res-top { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .res-no { font-size:1.7rem; font-weight:800; letter-spacing:.01em; }
+  .res-sub { color:var(--muted); font-size:.9rem; margin-top:2px; }
+  .demo-tag { display:inline-block; margin-left:10px; font-size:.64rem; font-weight:800; letter-spacing:.1em;
+    color:#d9a441; background:rgba(217,164,65,.13); border:1px solid rgba(217,164,65,.3); border-radius:6px; padding:2px 7px; vertical-align:middle; }
+  .status-pill { display:inline-flex; align-items:center; gap:9px; background:rgba(91,147,246,.13);
+    border:1px solid rgba(91,147,246,.3); border-radius:30px; padding:11px 20px; font-weight:700; color:var(--blue-soft); }
+  .status-pill.green { background:rgba(46,212,127,.13); border-color:rgba(46,212,127,.3); color:var(--green); }
+  .status-pill .ko { color:var(--muted2); font-weight:500; font-size:.82rem; }
+  .status-pill .led { width:9px; height:9px; border-radius:50%; background:currentColor; }
+
+  .info-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:var(--line); border:1px solid var(--line);
+    border-radius:12px; overflow:hidden; margin-top:26px; }
+  .info-cell { background:var(--card2); padding:18px 20px; }
+  .info-cell .lab { color:var(--muted2); font-size:.78rem; margin-bottom:8px; }
+  .info-cell .lab .ko { opacity:.7; }
+  .info-cell .val { font-size:1rem; font-weight:700; }
+  .info-cell .val .code { color:var(--muted); font-weight:600; font-size:.85rem; }
+  @media (max-width:900px){ .info-grid{ grid-template-columns:repeat(2,1fr);} h1{font-size:2rem;} }
+
+  /* timeline */
+  .tl-title { margin:30px 0 16px; font-size:1rem; font-weight:700; }
+  .tl-title .ko { color:var(--muted2); font-weight:500; font-size:.82rem; margin-left:6px; }
+  .timeline { display:flex; gap:10px; }
+  .tl-step { flex:1; min-width:0; }
+  .tl-bar { height:6px; border-radius:4px; background:var(--line2); }
+  .tl-step.done .tl-bar { background:var(--green); }
+  .tl-step.current .tl-bar { background:var(--blue); }
+  .tl-lab { margin-top:12px; font-size:.9rem; font-weight:700; color:var(--muted); }
+  .tl-step.done .tl-lab, .tl-step.current .tl-lab { color:var(--text); }
+  .tl-ko { font-size:.76rem; color:var(--muted2); margin-top:2px; }
+
+  /* batch */
+  .batch-head { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
+  .batch-title { font-size:1.15rem; font-weight:800; }
+  .batch-title .muted { color:var(--muted2); font-weight:500; font-size:.95rem; }
+  .batch-tools { display:flex; gap:10px; flex-wrap:wrap; }
+  .sel, .btn-ghost, .btn-up {
+    background:var(--card2); border:1px solid var(--line2); color:var(--text); border-radius:10px;
+    padding:11px 16px; font-size:.9rem; cursor:pointer; font-family:inherit; outline:none;
+  }
+  .sel:focus { border-color:var(--blue); }
+  .btn-ghost:hover, .btn-up:hover { border-color:var(--blue); }
+  .btn-up { color:var(--green); border-color:rgba(46,212,127,.35); }
+
+  .tbl-wrap { border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  table { width:100%; border-collapse:collapse; }
+  thead th { text-align:left; color:var(--muted2); font-size:.8rem; font-weight:700; letter-spacing:.03em;
+    padding:16px 22px; border-bottom:1px solid var(--line); }
+  thead th .ko { opacity:.7; font-weight:500; }
+  tbody td { padding:15px 22px; border-bottom:1px solid var(--line); font-size:.94rem; }
+  tbody tr:last-child td { border-bottom:none; }
+  tbody tr:hover { background:rgba(255,255,255,.015); }
+  .hawb { font-weight:700; letter-spacing:.01em; }
+  .badge { display:inline-block; padding:7px 14px; border-radius:9px; font-size:.85rem; font-weight:700; }
+  .badge.blue { color:var(--blue-soft); background:rgba(91,147,246,.12); }
+  .badge.green { color:var(--green); background:rgba(46,212,127,.12); }
+  .batch-empty { padding:40px; text-align:center; color:var(--muted2); }
+  .progress-mini { color:var(--muted); font-size:.88rem; padding:14px 22px; display:none; }
+  .hidden { display:none; }
+  .keybar { display:flex; justify-content:flex-end; margin-bottom:22px; }
+  .key-toggle { color:var(--muted2); font-size:.84rem; cursor:pointer; background:none; border:none; font-family:inherit; }
+  .key-toggle:hover { color:var(--text); }
+  .key-box { display:none; gap:10px; margin-top:12px; }
+  .key-box.show { display:flex; }
+  .key-box input { flex:1; max-width:520px; background:var(--card2); border:1px solid var(--line2); color:var(--text);
+    border-radius:10px; padding:11px 14px; font-size:.88rem; outline:none; }
+  .key-box input:focus { border-color:var(--green); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="keybar">
+    <button class="key-toggle" onclick="toggleKey()">⚙ UNI-PASS API Key</button>
+  </div>
+  <div class="key-box" id="keyBox">
+    <input type="text" id="apiKey" placeholder="Dán UNI-PASS Open API key vào đây (lưu trên trình duyệt)..." />
+  </div>
+
+  <!-- ══ Section 1: Đơn lẻ ══ -->
+  <div class="section">
+    <div class="eyebrow">Tra cứu đơn lẻ</div>
+    <h1>Tra cứu tức thì bằng số vận đơn</h1>
+    <p class="lead">Nhập số vận đơn nhánh <span class="k">(HAWB / H B/L)</span>. Hệ thống truy vấn trực tiếp Hải quan và hiển thị đầy đủ tiến trình thông quan.</p>
+
+    <div class="panel">
+      <div class="search-row">
+        <input type="text" id="searchInput" placeholder="Nhập số vận đơn / mã quản lý hàng (vd: 304433643476)"
+               onkeydown="if(event.key==='Enter')doSearch()" />
+        <button class="btn-go" id="searchBtn" onclick="doSearch()">Tra cứu</button>
+      </div>
+      <div class="quick">
+        <span class="q-label">Thử nhanh:</span>
+        <button class="chip" onclick="quickFill('304433643476')">304433643476</button>
+        <button class="chip" onclick="quickFill('304433645834')">304433645834</button>
+        <button class="chip" onclick="quickFill('304433650723')">304433650723</button>
+        <button class="chip" onclick="quickFill('304434690901')">304434690901</button>
+      </div>
+
+      <div class="result" id="result"></div>
+    </div>
+  </div>
+
+  <!-- ══ Section 2: Hàng loạt ══ -->
+  <div class="section">
+    <div class="eyebrow">Tra cứu hàng loạt</div>
+    <h1>Quét toàn bộ danh sách kho một lần</h1>
+    <p class="lead">Tải lên danh sách Excel (như file kho lạnh Yongma) và quét toàn bộ vận đơn cùng lúc — thay vì tra từng số trên website.</p>
+
+    <div class="panel">
+      <div class="batch-head">
+        <div class="batch-title" id="batchTitle">Kho lạnh Yongma · Danh sách tháng 5 <span class="muted" id="batchCount"></span></div>
+        <div class="batch-tools">
+          <select class="sel" id="filterDate" onchange="renderBatch()"><option value="">Tất cả ngày</option></select>
+          <select class="sel" id="filterStatus" onchange="renderBatch()"><option value="">Tất cả trạng thái</option></select>
+          <input type="file" id="fileInput" class="hidden" accept=".xlsx,.xls,.csv" onchange="onFile(event)" />
+          <button class="btn-up" onclick="document.getElementById('fileInput').click()">⬆ Upload Excel</button>
+          <button class="btn-ghost" onclick="rescan()">↻ Quét lại</button>
+        </div>
+      </div>
+      <div class="progress-mini" id="batchProgress"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Vận đơn <span class="ko">HAWB</span></th>
+            <th>Ngày đến</th>
+            <th>Trọng lượng</th>
+            <th>Trạng thái thông quan</th>
+          </tr></thead>
+          <tbody id="batchBody"></tbody>
+        </table>
+        <div class="batch-empty hidden" id="batchEmpty">Không có vận đơn nào khớp bộ lọc.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Cấu hình giai đoạn thông quan ────────────────────────────────────────────
+const STAGES = [
+  { vi:'Nộp manifest',   ko:'적재화물목록제출' },
+  { vi:'Khai dỡ hàng',   ko:'하선/하기신고' },
+  { vi:'Nhập kho',       ko:'물품반입' },
+  { vi:'Khai nhập khẩu', ko:'수입신고' },
+  { vi:'Thông quan',     ko:'수입신고수리' },
+  { vi:'Xuất kho',       ko:'물품반출' },
+];
+const PORTS = { DAD:'Đà Nẵng', ICN:'Incheon', HAN:'Hà Nội', SGN:'TP.HCM', PUS:'Busan', GMP:'Gimpo', HPH:'Hải Phòng', TAE:'Daegu', CJU:'Jeju' };
+
+// Khớp text Hàn → chỉ số giai đoạn (0..5). Thứ tự kiểm tra quan trọng.
+function stageFromKo(txt) {
+  txt = String(txt || '');
+  if (txt.includes('반출')) return 5;
+  if (txt.includes('수리')) return 4;
+  if (txt.includes('수입신고')) return 3;
+  if (txt.includes('반입')) return 2;
+  if (txt.includes('하선') || txt.includes('하기')) return 1;
+  return 0;
+}
+function fmtDate(s) {
+  const d = String(s || '').replace(/\D/g, '');
+  if (d.length >= 8) return `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;
+  return s || '';
+}
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── DEMO data (xem giao diện khi chưa có API key) ────────────────────────────
+const DEMO = {
+  '304433643476': { hawb:'304433643476', blType:'H B/L', cargoType:'Hàng nhập khẩu thường', productName:'Hàng đông lạnh',
+    packages:'1 CT', weight:'15.7 kg', carrier:'Korean Air', flight:'KE460', from:'DAD', to:'ICN', date:'20260512', stage:1 },
+  '304433645834': { hawb:'304433645834', blType:'H B/L', cargoType:'Hàng nhập khẩu thường', productName:'Linh kiện điện tử',
+    packages:'3 CT', weight:'42.0 kg', carrier:'Asiana', flight:'OZ752', from:'SGN', to:'ICN', date:'20260512', stage:4 },
+  '304433650723': { hawb:'304433650723', blType:'H B/L', cargoType:'Hàng nhập khẩu thường', productName:'Hàng may mặc',
+    packages:'5 CT', weight:'88.3 kg', carrier:'Vietnam Airlines', flight:'VN416', from:'HAN', to:'ICN', date:'20260511', stage:5 },
+  '304434690901': { hawb:'304434690901', blType:'H B/L', cargoType:'Hàng nhập khẩu thường', productName:'Thực phẩm khô',
+    packages:'2 CT', weight:'9.4 kg', carrier:'Korean Air', flight:'KE468', from:'DAD', to:'ICN', date:'20260512', stage:2 },
+};
+
+// Sinh dữ liệu demo cho danh sách hàng loạt (giống ảnh kho Yongma)
+function genDemoBatch() {
+  const rows = [];
+  let n = 304433643163;
+  for (let i = 0; i < 144; i++) {
+    n += [11, 13, 15, 9, 16, 59, 103, 22, 11, 4][i % 10];
+    const h = String(n);
+    const seed = [...h].reduce((a, c) => a + c.charCodeAt(0), 0);
+    const weight = (((seed * 7) % 190) / 10 + 2).toFixed(1);
+    const stage = seed % 6;
+    rows.push({ hawb:h, date:'20260512', weight:`${weight} kg`, stage });
+  }
+  return rows;
+}
+
+// ── API thật ────────────────────────────────────────────────────────────────
+function apiKey() { return document.getElementById('apiKey').value.trim(); }
+
+async function fetchReal(num) {
+  // Trả về model hiển thị, hoặc null nếu không gọi được (để fallback demo)
+  try {
+    const isCarg = /[A-Za-z]/.test(num);   // mã quản lý hàng thường có chữ cái
+    const params = new URLSearchParams();
+    if (isCarg) params.set('cargMtNo', num);
+    else { params.set('hblNo', num); params.set('blYy', new Date().getFullYear()); }
+    const headers = { Accept: 'application/json' };
+    const k = apiKey();
+    if (k) headers['x-unipass-key'] = k;
+    const r = await fetch('/api/cargo?' + params.toString(), { headers });
+    if (!r.ok) return null;
+    const ct = r.headers.get('content-type') || '';
+    if (ct.includes('application/json')) return null;   // NO_KEY / lỗi
+    return mapXml(await r.text(), num);
+  } catch { return null; }
+}
+
+function nt(parent, tag) { const e = parent.getElementsByTagName(tag); return e.length ? (e[0].textContent || '').trim() : ''; }
+
+function mapXml(xml, num) {
+  const doc = new DOMParser().parseFromString(xml, 'text/xml');
+  const s = doc.getElementsByTagName('cargCsclPrgsInfoQryVo')[0];
+  if (!s) return null;
+  const statusKo = nt(s, 'prgsStts') || nt(s, 'csclPrgsStts');
+  return {
+    hawb: nt(s, 'hblNo') || nt(s, 'mblNo') || nt(s, 'cargMtNo') || num,
+    blType: nt(s, 'hblNo') ? 'H B/L' : (nt(s, 'mblNo') ? 'M B/L' : 'Mã quản lý'),
+    cargoType: nt(s, 'cargTp') || '—',
+    productName: nt(s, 'prnm') || '—',
+    packages: `${nt(s, 'pckGcnt') || '—'} ${nt(s, 'pckUt') || ''}`.trim(),
+    weight: `${nt(s, 'ttwg') || '—'} ${nt(s, 'wghtUt') || 'kg'}`.trim(),
+    carrier: nt(s, 'sanm') || nt(s, 'shipNm') || '—',
+    flight: nt(s, 'vydf') || '',
+    from: nt(s, 'ldprCd') || '', to: nt(s, 'dsprCd') || '',
+    date: nt(s, 'etprDt'), statusKo, stage: stageFromKo(statusKo), real: true,
+  };
+}
+
+// ── Tra đơn lẻ ───────────────────────────────────────────────────────────────
+function quickFill(n) { document.getElementById('searchInput').value = n; doSearch(); }
+
+async function doSearch() {
+  const num = document.getElementById('searchInput').value.trim();
+  if (!num) return;
+  const btn = document.getElementById('searchBtn');
+  btn.disabled = true; btn.textContent = '...';
+  let data = await fetchReal(num);
+  let demo = false;
+  if (!data) { data = DEMO[num]; demo = !!data; }
+  btn.disabled = false; btn.textContent = 'Tra cứu';
+
+  if (!data) { renderNotFound(num); return; }
+  renderResult(data, demo);
+}
+
+function portLabel(code) {
+  if (!code) return '';
+  const nm = PORTS[code];
+  return nm ? `${nm} <span class="code">${esc(code)}</span>` : esc(code);
+}
+
+function renderResult(d, demo) {
+  const stage = d.stage ?? stageFromKo(d.statusKo);
+  const st = STAGES[stage] || STAGES[0];
+  const isOut = stage === 5;
+  const statusVi = isOut ? 'Đã xuất kho' : st.vi;
+
+  const cells = [
+    ['Loại hàng', '화물구분', esc(d.cargoType || '—')],
+    ['Tên hàng', '품명', esc(d.productName || '—')],
+    ['Kiện / Trọng lượng', '', `${esc(d.packages || '—')} · ${esc(d.weight || '')}`],
+    ['Hãng / Chuyến bay', '', `${esc(d.carrier || '—')} ${esc(d.flight || '')}`.trim()],
+    ['Cảng xếp → Cảng dỡ', '', `${portLabel(d.from)} → ${portLabel(d.to)}`],
+    ['Ngày đến', '입항일', esc(fmtDate(d.date))],
+  ].map(([lab, ko, val]) =>
+    `<div class="info-cell"><div class="lab">${lab}${ko ? ` <span class="ko">${ko}</span>` : ''}</div><div class="val">${val}</div></div>`
+  ).join('');
+
+  const tl = STAGES.map((s, i) => {
+    const cls = i < stage ? 'done' : (i === stage ? (isOut ? 'done' : 'current') : '');
+    return `<div class="tl-step ${cls}"><div class="tl-bar"></div><div class="tl-lab">${s.vi}</div><div class="tl-ko">${s.ko}</div></div>`;
+  }).join('');
+
+  document.getElementById('result').innerHTML = `
+    <div class="res-top">
+      <div>
+        <div class="res-no">${esc(d.hawb)}${demo ? '<span class="demo-tag">DEMO</span>' : ''}</div>
+        <div class="res-sub">Vận đơn nhánh · ${esc(d.blType || 'H B/L')}</div>
+      </div>
+      <div class="status-pill ${isOut ? 'green' : ''}"><span class="led"></span>${statusVi}<span class="ko">${st.ko}</span></div>
+    </div>
+    <div class="info-grid">${cells}</div>
+    <div class="tl-title">Tiến trình thông quan<span class="ko">진행단계</span></div>
+    <div class="timeline">${tl}</div>`;
+  document.getElementById('result').classList.add('show');
+}
+
+function renderNotFound(num) {
+  document.getElementById('result').innerHTML =
+    `<div class="res-sub" style="padding:6px 0">Không tìm thấy thông tin cho <b>${esc(num)}</b>. ` +
+    `Cần nhập UNI-PASS API key (nút ⚙ ở trên) để tra dữ liệu thật.</div>`;
+  document.getElementById('result').classList.add('show');
+}
+
+// ── Tra hàng loạt ────────────────────────────────────────────────────────────
+let batchRows = [];        // {hawb, date, weight, stage}
+let batchSource = 'demo';  // 'demo' | tên file
+
+function setBatch(rows, sourceTitle) {
+  batchRows = rows;
+  if (sourceTitle) document.getElementById('batchTitle').innerHTML = `${esc(sourceTitle)}`;
+  document.getElementById('batchCount').textContent = `(${rows.length} vận đơn)`;
+  // populate filter trạng thái
+  const fs = document.getElementById('filterStatus');
+  fs.innerHTML = '<option value="">Tất cả trạng thái</option>' +
+    STAGES.map((s, i) => `<option value="${i}">${i === 5 ? 'Đã xuất kho' : s.vi}</option>`).join('');
+  // populate filter ngày
+  const dates = [...new Set(rows.map(r => fmtDate(r.date)))].sort();
+  document.getElementById('filterDate').innerHTML = '<option value="">Tất cả ngày</option>' +
+    dates.map(d => `<option value="${d}">${d}</option>`).join('');
+  renderBatch();
+}
+
+function renderBatch() {
+  const fd = document.getElementById('filterDate').value;
+  const fsv = document.getElementById('filterStatus').value;
+  const rows = batchRows.filter(r =>
+    (!fd || fmtDate(r.date) === fd) && (fsv === '' || String(r.stage) === fsv)
+  );
+  const body = document.getElementById('batchBody');
+  const empty = document.getElementById('batchEmpty');
+  if (!rows.length) { body.innerHTML = ''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  body.innerHTML = rows.map(r => {
+    const isOut = r.stage === 5;
+    const label = isOut ? 'Đã xuất kho' : STAGES[r.stage].vi;
+    return `<tr>
+      <td class="hawb">${esc(r.hawb)}</td>
+      <td>${esc(fmtDate(r.date))}</td>
+      <td>${esc(r.weight)}</td>
+      <td><span class="badge ${isOut ? 'green' : 'blue'}">${label}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+async function onFile(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const wb = XLSX.read(e.target.result, { type:'array' });
+    const aoa = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, defval:'' });
+    // Tìm cột chứa số vận đơn (chuỗi 9-13 chữ số)
+    const hawbs = [];
+    aoa.forEach(row => {
+      row.forEach(cell => {
+        const v = String(cell).replace(/\s/g, '');
+        if (/^\d{9,13}$/.test(v) && !hawbs.includes(v)) hawbs.push(v);
+      });
+    });
+    if (!hawbs.length) { alert('Không tìm thấy cột số vận đơn (HAWB) trong file.'); return; }
+    await scanList(hawbs, file.name);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+async function scanList(hawbs, sourceName) {
+  const prog = document.getElementById('batchProgress');
+  prog.style.display = 'block';
+  const hasKey = !!apiKey();
+  const rows = [];
+  for (let i = 0; i < hawbs.length; i++) {
+    prog.textContent = `Đang quét... ${i + 1}/${hawbs.length}`;
+    const h = hawbs[i];
+    let d = hasKey ? await fetchReal(h) : null;
+    if (d) {
+      rows.push({ hawb:h, date:d.date, weight:d.weight, stage:d.stage });
+      await new Promise(r => setTimeout(r, 120));   // tránh quá tải API
+    } else {
+      // demo / không có key: sinh trạng thái giả định tạm để xem giao diện
+      const seed = [...h].reduce((a, c) => a + c.charCodeAt(0), 0);
+      rows.push({ hawb:h, date:'20260512', weight:`${(((seed * 7) % 190) / 10 + 2).toFixed(1)} kg`, stage:seed % 6 });
+    }
+  }
+  prog.style.display = 'none';
+  setBatch(rows, `${sourceName} · ${hawbs.length} vận đơn`);
+}
+
+function rescan() { setBatch(genDemoBatch(), 'Kho lạnh Yongma · Danh sách tháng 5'); }
+
+// ── Key ──────────────────────────────────────────────────────────────────────
+function toggleKey() { document.getElementById('keyBox').classList.toggle('show'); }
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+(function () {
+  const k = localStorage.getItem('unipass_api_key');
+  if (k) document.getElementById('apiKey').value = k;
+  document.getElementById('apiKey').addEventListener('input', e =>
+    localStorage.setItem('unipass_api_key', e.target.value.trim()));
+  setBatch(genDemoBatch(), 'Kho lạnh Yongma · Danh sách tháng 5');
+})();
+</script>
+</body>
+</html>

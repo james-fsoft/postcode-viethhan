@@ -331,6 +331,14 @@
       font-family: inherit; font-size: 0.88rem; cursor: pointer;
     }
     .inline-zip-select:hover { border-color: var(--blue); }
+    .inline-copy {
+      flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; padding: 0; border: 1px solid var(--gray-200);
+      border-radius: 6px; background: #fff; color: var(--gray-500); cursor: pointer;
+      transition: all .12s;
+    }
+    .inline-copy:hover { border-color: var(--blue); color: var(--blue); }
+    .inline-copy.ok { color: #16a34a; border-color: #16a34a; }
     .inline-addr { cursor: default; }
     .inline-row:has(.inline-zip.err) .inline-addr { cursor: pointer; }
     .inline-edit {
@@ -1091,6 +1099,8 @@ function renderManualResults(rows) {
 
     const addrCell = `<span class="inline-addr" ondblclick="editRow(${i})" title="${hasNotFound ? esc(t('editHint')) : ''}">${esc(r.original)}</span>`;
 
+    const copyBtn = `<button class="inline-copy" onclick="copyZip(${i}, this)" title="${esc(t('btnCopy'))}">${COPY_ICON}</button>`;
+
     let zipCell;
     if (r.options && r.options.length > 1) {
       // Địa chỉ mơ hồ → dropdown chọn ĐỊA CHỈ, mã hiển thị riêng bên phải (copy được riêng)
@@ -1098,9 +1108,9 @@ function renderManualResults(rows) {
         `<option value="${oi}"${oi === r.selected ? ' selected' : ''}>${esc(o.road || o.jibun)}</option>`
       ).join('');
       zipCell = `<select class="inline-zip-select" onchange="pickOption(${i}, this.value)">${opts}</select>`
-              + `<span class="inline-zip" id="zip-${i}">${r.zip}</span>`;
+              + `<span class="inline-zip" id="zip-${i}">${r.zip}</span>` + copyBtn;
     } else if (r.zip) {
-      zipCell = `<span class="inline-zip">${r.zip}</span>`;
+      zipCell = `<span class="inline-zip">${r.zip}</span>` + copyBtn;
     } else {
       zipCell = `<span class="inline-zip err">${t('errNotFound')}</span>`;
     }
@@ -1112,6 +1122,21 @@ function renderManualResults(rows) {
   const found = rows.filter(r => r.zip).length;
   document.getElementById('manualSummary').textContent = t('summaryFound', found, rows.length);
   document.getElementById('manualResults').style.display = 'block';
+}
+
+// Icon copy (clipboard) + dấu check khi sao chép xong
+const COPY_ICON  = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+const CHECK_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+
+// Sao chép riêng 1 mã bưu điện cạnh dòng kết quả
+function copyZip(idx, el) {
+  const zip = manualRows[idx]?.zip;
+  if (!zip) return;
+  navigator.clipboard.writeText(zip).then(() => {
+    el.innerHTML = CHECK_ICON;
+    el.classList.add('ok');
+    setTimeout(() => { el.innerHTML = COPY_ICON; el.classList.remove('ok'); }, 1200);
+  });
 }
 
 // Người dùng chọn 1 mã trong số nhiều lựa chọn (địa chỉ mơ hồ) → cập nhật copy/export

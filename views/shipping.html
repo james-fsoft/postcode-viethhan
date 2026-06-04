@@ -521,19 +521,36 @@ function downloadOriginal(){
 // Tải file kết quả: mã đã ghi vào cột N của workbook gốc khi xử lý;
 // cột O chỉ ghi đè nếu người dùng tick checkbox.
 function downloadResult(){
-  if (!workbook || !processed.length) return;
+  if (!rows.length || !processed.length) return;
   const updateO = document.getElementById('updateOCheck').checked;
 
-  // Đảm bảo ghi lại toàn bộ mã vào cột N ngay tại bước tải (phòng trường hợp sót)
+  // Dựng lại bảng từ chính dữ liệu đã đọc (rows) rồi điền mã vào cột N → không thể lệch dòng
+  const out = rows.map(r => Array.isArray(r) ? r.slice() : []);
   let written = 0;
   processed.forEach(p=>{
-    if (p.zip) { setCellWS(sheet, zipIdx, p.row, p.zip); written++; }
-    if (updateO && p.addr !== p.origAddr) setCellWS(sheet, addrIdx, p.row, p.addr);
+    if (!out[p.row]) out[p.row] = [];
+    if (p.zip) {
+      // đảm bảo mảng đủ dài tới cột N
+      while (out[p.row].length <= zipIdx) out[p.row].push('');
+      out[p.row][zipIdx] = p.zip;
+      written++;
+    }
+    if (updateO && p.addr !== p.origAddr) {
+      while (out[p.row].length <= addrIdx) out[p.row].push('');
+      out[p.row][addrIdx] = p.addr;
+    }
   });
-  console.log(`[shipping] Ghi ${written} mã vào cột ${colLetter(zipIdx)} (index ${zipIdx})`);
+  console.log(`[shipping] Đã điền ${written} mã vào cột ${colLetter(zipIdx)}`);
+
+  const ws = XLSX.utils.aoa_to_sheet(out);
+  if (sheet && sheet['!cols'])   ws['!cols']   = sheet['!cols'];   // giữ độ rộng cột
+  if (sheet && sheet['!merges']) ws['!merges'] = sheet['!merges']; // giữ ô gộp
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, (workbook && workbook.SheetNames[0]) || 'Sheet1');
 
   const name = (uploadedFile?.name.replace(/\.[^.]+$/,'') || 'shipping') + '_우편번호.xlsx';
-  XLSX.writeFile(workbook, name);
+  XLSX.writeFile(wb, name);
+  alert(`✓ ${written} mã bưu điện đã được điền vào cột N.`);
 }
 
 // ── File mẫu ───────────────────────────────────────────────────────────────────

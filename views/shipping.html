@@ -294,12 +294,16 @@ function onFileSelected(e){ if(e.target.files[0]) readFile(e.target.files[0]); }
 
 let uploadedFile = null, rawBytes = null;
 function readFile(file){
+  // XÓA SẠCH state của file cũ để không lẫn dữ liệu
+  workbook = null; sheet = null; rows = []; headerRow = []; processed = [];
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('previewBody').innerHTML = '';
+
   uploadedFile = file;
   document.getElementById('fileName').textContent = file.name;
   document.getElementById('fileSize').textContent = fmtBytes(file.size);
   document.getElementById('fileInfo').style.display = 'flex';
   document.getElementById('errBanner').style.display = 'none';
-  document.getElementById('results').style.display = 'none';
 
   const reader = new FileReader();
   reader.onload = (e)=>{

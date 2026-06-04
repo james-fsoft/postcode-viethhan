@@ -132,7 +132,7 @@ app.get('/api/juso', requireAuth, async (req, res) => {
   try {
     const data = await getJson(
       `https://www.juso.go.kr/addrlink/addrLinkApi.do`
-      + `?currentPage=1&countPerPage=1`
+      + `?currentPage=1&countPerPage=10`
       + `&keyword=${encodeURIComponent(q)}`
       + `&confmKey=${encodeURIComponent(confmKey)}`
       + `&resultType=json`

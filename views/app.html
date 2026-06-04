@@ -325,6 +325,11 @@
     .inline-addr { flex: 1; font-size: 0.9rem; color: var(--gray-700); word-break: break-all; }
     .inline-zip  { font-weight: 700; color: var(--blue); font-family: monospace; font-size: 1.05rem; flex-shrink: 0; min-width: 62px; text-align: right; }
     .inline-zip.err { color: var(--red); font-size: 0.78rem; font-family: inherit; font-weight: 400; cursor: pointer; }
+    .inline-zip-select {
+      flex-shrink: 0; max-width: 320px; padding: 5px 8px; border: 1.5px solid var(--blue);
+      border-radius: 6px; background: #fff; color: var(--blue); font-weight: 700;
+      font-family: monospace; font-size: 0.9rem; cursor: pointer;
+    }
     .inline-addr { cursor: default; }
     .inline-row:has(.inline-zip.err) .inline-addr { cursor: pointer; }
     .inline-edit {
@@ -702,7 +707,8 @@ const LANGS = {
     errNoFile: 'Chưa chọn file.',
     errInvalidKey: 'Juso API Key không hợp lệ. Kiểm tra lại key tại juso.go.kr.',
     errNotFound: 'Không tìm thấy',
-    typeRoad: 'Tên đường', typeJibun: 'Số lô', typeError: 'Lỗi',
+    errAmbiguous: 'Thiếu thông tin (nhiều mã)',
+    typeRoad: 'Tên đường', typeJibun: 'Số lô', typeError: 'Lỗi', typeAmbiguous: 'Thiếu thông tin',
     colZipResult: 'Mã bưu điện', copied: 'Đã sao chép!',
   },
   en: {
@@ -763,7 +769,8 @@ const LANGS = {
     errNoFile: 'No file selected.',
     errInvalidKey: 'Invalid Juso API Key. Check your key at juso.go.kr.',
     errNotFound: 'Not found',
-    typeRoad: 'Road', typeJibun: 'Jibun', typeError: 'Error',
+    errAmbiguous: 'Missing info (multiple codes)',
+    typeRoad: 'Road', typeJibun: 'Jibun', typeError: 'Error', typeAmbiguous: 'Missing info',
     colZipResult: 'Postal Code', copied: 'Copied!',
   },
   ko: {
@@ -824,7 +831,8 @@ const LANGS = {
     errNoFile: '파일을 선택하세요.',
     errInvalidKey: 'Juso API 키가 올바르지 않습니다. juso.go.kr에서 확인하세요.',
     errNotFound: '찾을 수 없음',
-    typeRoad: '도로명', typeJibun: '지번', typeError: '오류',
+    errAmbiguous: '정보 부족 (여러 우편번호)',
+    typeRoad: '도로명', typeJibun: '지번', typeError: '오류', typeAmbiguous: '정보 부족',
     colZipResult: '우편번호', copied: '복사 완료!',
   }
 };
@@ -981,7 +989,20 @@ async function kakaoLookup(rawAddr, apiKey) {
       const candHasRegion = toks.length === 0 || toks.some(tk => cand.includes(tk));
       if (candHasRegion) pick = list[0];
     }
-    if (pick) return { zip: pick.zip, display: pick.road, type: 'road' };
+    if (pick) {
+      // Gom các lựa chọn KHÁC MÃ để người dùng tự chọn khi địa chỉ mơ hồ
+      // (vd "성산4길11" trùng tên ở nhiều tỉnh → nhiều mã khác nhau)
+      const seen = new Set();
+      const options = [];
+      for (const r of list) {
+        if (seen.has(r.zip)) continue;
+        seen.add(r.zip);
+        options.push(r);
+      }
+      let selected = options.findIndex(o => o.zip === pick.zip && o.road === pick.road);
+      if (selected < 0) selected = 0;
+      return { zip: pick.zip, display: pick.road, type: 'road', options, selected };
+    }
   }
   return { zip: null, display: null, type: 'not_found' };
 }
@@ -1053,9 +1074,19 @@ function renderManualResults(rows) {
     div.dataset.idx = i;
 
     const addrCell = `<span class="inline-addr" ondblclick="editRow(${i})" title="${hasNotFound ? esc(t('editHint')) : ''}">${esc(r.original)}</span>`;
-    const zipCell  = r.zip
-      ? `<span class="inline-zip">${r.zip}</span>`
-      : `<span class="inline-zip err">${t('errNotFound')}</span>`;
+
+    let zipCell;
+    if (r.options && r.options.length > 1) {
+      // Địa chỉ mơ hồ → cho người dùng chọn mã đúng (kèm tỉnh/quận)
+      const opts = r.options.map((o, oi) =>
+        `<option value="${oi}"${oi === r.selected ? ' selected' : ''}>${o.zip} — ${esc(o.road || o.jibun)}</option>`
+      ).join('');
+      zipCell = `<select class="inline-zip-select" onchange="pickOption(${i}, this.value)">${opts}</select>`;
+    } else if (r.zip) {
+      zipCell = `<span class="inline-zip">${r.zip}</span>`;
+    } else {
+      zipCell = `<span class="inline-zip err">${t('errNotFound')}</span>`;
+    }
 
     div.innerHTML = `<span class="inline-num">${i + 1}</span>${addrCell}${zipCell}`;
     body.appendChild(div);
@@ -1064,6 +1095,17 @@ function renderManualResults(rows) {
   const found = rows.filter(r => r.zip).length;
   document.getElementById('manualSummary').textContent = t('summaryFound', found, rows.length);
   document.getElementById('manualResults').style.display = 'block';
+}
+
+// Người dùng chọn 1 mã trong số nhiều lựa chọn (địa chỉ mơ hồ) → cập nhật copy/export
+function pickOption(idx, optIdx) {
+  const row = manualRows[idx];
+  if (!row || !row.options) return;
+  const o = row.options[+optIdx];
+  if (!o) return;
+  row.zip = o.zip;
+  row.display = o.road || o.jibun;
+  row.selected = +optIdx;
 }
 
 // Sửa inline 1 dòng → tra lại ngay
@@ -1245,13 +1287,19 @@ function renderExcelResults(rows, headerRow) {
   thead.innerHTML=hHtml;
   tbody.innerHTML='';
   rows.forEach(r => {
+    const ambiguous = r.options && r.options.length > 1;
     let tr='<tr>';
     r.rowData.forEach(cell => { tr+=`<td>${esc(String(cell))}</td>`; });
-    tr+=`<td>${r.zip?`<span class="zip-found">${r.zip}</span>`:`<span class="zip-error">${t('errNotFound')}</span>`}</td>`;
-    tr+=`<td>${r.display?esc(r.display):'—'}</td><td>${typeBadge(r.type)}</td></tr>`;
+    let zipHtml;
+    if (ambiguous)      zipHtml = `<span class="zip-error">${t('errAmbiguous')}</span>`;
+    else if (r.zip)     zipHtml = `<span class="zip-found">${r.zip}</span>`;
+    else                zipHtml = `<span class="zip-error">${t('errNotFound')}</span>`;
+    tr+=`<td>${zipHtml}</td>`;
+    const dispHtml = ambiguous ? '—' : (r.display ? esc(r.display) : '—');
+    tr+=`<td>${dispHtml}</td><td>${ambiguous ? typeBadge('ambiguous') : typeBadge(r.type)}</td></tr>`;
     tbody.innerHTML+=tr;
   });
-  const found=rows.filter(r=>r.zip).length;
+  const found=rows.filter(r=>r.zip && !(r.options && r.options.length > 1)).length;
   document.getElementById('excelSummary').textContent=t('summaryFound',found,rows.length);
   document.getElementById('excelResults').style.display='block';
 }
@@ -1267,7 +1315,11 @@ function downloadExcelResult() {
   const hasH = parseInt(document.getElementById('headerRowSelect').value) > 0;
   const ws_data = [];
   if (hasH && workbookData[0]) ws_data.push([...workbookData[0], t('colZipResult'), t('colNormalized'), t('colType')]);
-  excelRows.forEach(r => ws_data.push([...r.rowData, r.zip||'', r.display||'', typeLabel(r.type)]));
+  excelRows.forEach(r => {
+    const ambiguous = r.options && r.options.length > 1;
+    if (ambiguous) ws_data.push([...r.rowData, t('errAmbiguous'), '', typeLabel('ambiguous')]);
+    else           ws_data.push([...r.rowData, r.zip||'', r.display||'', typeLabel(r.type)]);
+  });
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
   // Cột gốc giữ nguyên độ rộng, thêm 3 cột mới ở cuối
@@ -1284,9 +1336,10 @@ function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 function typeBadge(t2) {
   return t2==='road'?`<span class="badge badge-road">${t('typeRoad')}</span>`:
          t2==='jibun'?`<span class="badge badge-jibun">${t('typeJibun')}</span>`:
+         t2==='ambiguous'?`<span class="badge badge-error">${t('typeAmbiguous')}</span>`:
          `<span class="badge badge-error">${t('typeError')}</span>`;
 }
-function typeLabel(t2) { return t2==='road'?t('typeRoad'):t2==='jibun'?t('typeJibun'):t('typeError'); }
+function typeLabel(t2) { return t2==='road'?t('typeRoad'):t2==='jibun'?t('typeJibun'):t2==='ambiguous'?t('typeAmbiguous'):t('typeError'); }
 function colLetter(i) { let s=''; i++; while(i>0){s=String.fromCharCode(64+(i%26||26))+s; i=Math.floor((i-1)/26);} return s; }
 function formatBytes(b) { return b<1024?b+' B':b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(1)+' MB'; }
 

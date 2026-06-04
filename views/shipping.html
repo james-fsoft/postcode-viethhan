@@ -318,12 +318,9 @@ function readFile(file){
 }
 
 function detectColumns(){
-  // Địa chỉ gốc LUÔN ở cột O (index 14)
+  // Địa chỉ gốc LUÔN ở cột O (index 14), mã bưu điện LUÔN điền vào cột N (index 13)
   addrIdx = 14;
-  // Mã bưu điện điền vào cột N (우편번호) — mặc định index 13
-  let z = headerRow.findIndex(h => h.includes('우편번호'));
-  if (z < 0) z = 13;
-  zipIdx = z;
+  zipIdx = 13;
 
   // Dropdown chọn lại (vẫn cho phép đổi nếu cần)
   fillColSelect('addrCol', addrIdx);
@@ -500,10 +497,15 @@ function setCellWS(ws, col, row, val){
   for (const m of merges){
     if (row >= m.s.r && row <= m.e.r && col >= m.s.c && col <= m.e.c){ row = m.s.r; col = m.s.c; break; }
   }
-  ws[XLSX.utils.encode_cell({ r: row, c: col })] = { t:'s', v: String(val) };
-  const range = XLSX.utils.decode_range(ws['!ref']);
+  const addr = XLSX.utils.encode_cell({ r: row, c: col });
+  ws[addr] = { t: 's', v: String(val), w: String(val) };  // v + w để chắc chắn hiển thị
+  let range;
+  try { range = XLSX.utils.decode_range(ws['!ref'] || addr); }
+  catch { range = { s:{r:0,c:0}, e:{r:row,c:col} }; }
   if (col > range.e.c) range.e.c = col;
   if (row > range.e.r) range.e.r = row;
+  if (range.s.r > row) range.s.r = row;
+  if (range.s.c > col) range.s.c = col;
   ws['!ref'] = XLSX.utils.encode_range(range);
 }
 
@@ -521,9 +523,15 @@ function downloadOriginal(){
 function downloadResult(){
   if (!workbook || !processed.length) return;
   const updateO = document.getElementById('updateOCheck').checked;
-  if (updateO){
-    processed.forEach(p=>{ if (p.addr !== p.origAddr) setCellWS(sheet, addrIdx, p.row, p.addr); });
-  }
+
+  // Đảm bảo ghi lại toàn bộ mã vào cột N ngay tại bước tải (phòng trường hợp sót)
+  let written = 0;
+  processed.forEach(p=>{
+    if (p.zip) { setCellWS(sheet, zipIdx, p.row, p.zip); written++; }
+    if (updateO && p.addr !== p.origAddr) setCellWS(sheet, addrIdx, p.row, p.addr);
+  });
+  console.log(`[shipping] Ghi ${written} mã vào cột ${colLetter(zipIdx)} (index ${zipIdx})`);
+
   const name = (uploadedFile?.name.replace(/\.[^.]+$/,'') || 'shipping') + '_우편번호.xlsx';
   XLSX.writeFile(workbook, name);
 }

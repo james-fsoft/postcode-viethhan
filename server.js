@@ -70,6 +70,12 @@ function getJson(url, extraHeaders = {}, depth = 0) {
   });
 }
 
+// Gửi file HTML kèm header chống cache (tránh trình duyệt giữ bản cũ sau khi deploy)
+function sendPage(res, ...parts) {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.sendFile(path.join(__dirname, ...parts));
+}
+
 // ── Auth middleware ───────────────────────────────────────────────────────────
 function requireAuth(req, res, next) {
   const token = req.cookies?.[COOKIE];
@@ -90,7 +96,7 @@ app.get('/logo.png', (req, res) => res.sendFile(path.join(__dirname, 'logo.png')
 app.get('/login', (req, res) => {
   const token = req.cookies?.[COOKIE];
   try { if (token && jwt.verify(token, JWT_SECRET)) return res.redirect('/'); } catch { /* ok */ }
-  res.sendFile(path.join(__dirname, 'login.html'));
+  sendPage(res, 'login.html');
 });
 
 app.post('/api/login', (req, res) => {
@@ -239,7 +245,7 @@ app.post('/api/use', requireAuth, async (req, res) => {
 
 // ── Trang giới thiệu / landing (PUBLIC, chuẩn SEO) ───────────────────────────
 app.get('/about', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'landing.html'));
+  sendPage(res, 'views', 'landing.html');
 });
 
 // ── robots.txt + sitemap.xml (cho Google index) ──────────────────────────────
@@ -262,7 +268,7 @@ app.get('/sitemap.xml', (req, res) => {
 
 // ── Trang chính — PUBLIC: ai cũng vào được (khách hoặc đã login) ─────────────
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'app.html'));
+  sendPage(res, 'views', 'app.html');
 });
 
 // ── Trang xử lý file vận đơn — chỉ gói Pro / Enterprise ──────────────────────
@@ -272,7 +278,7 @@ app.get('/shipping', requireAuth, (req, res) => {
   if (plan.name !== 'pro' && plan.name !== 'enterprise') {
     return res.redirect('/');   // không đủ quyền → về trang chính
   }
-  res.sendFile(path.join(__dirname, 'views', 'shipping.html'));
+  sendPage(res, 'views', 'shipping.html');
 });
 
 // ── Start (bỏ qua khi Vercel import) ─────────────────────────────────────────

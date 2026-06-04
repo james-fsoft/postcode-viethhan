@@ -432,6 +432,7 @@ async function runProcess(){
     const { row, addr } = tasks[k];
     let zip = null;
     try { zip = await lookupZip(addr); } catch { zip = null; }
+    if (zip) setCellWS(sheet, zipIdx, row, zip);   // ghi mã vào cột N của sheet gốc
     processed.push({ row, origAddr: addr, addr, zip });
     pf.style.width = `${Math.round((k+1)/total*100)}%`;
     pl.textContent = t('progress', k+1, total);
@@ -483,6 +484,7 @@ function editRow(i){
     try { zip = v ? await lookupZip(v) : null; } catch { zip = null; }
     processed[i].addr = v;
     processed[i].zip = zip;
+    if (zip) setCellWS(sheet, zipIdx, processed[i].row, zip); // cập nhật mã vào sheet gốc
     renderPreview();
     document.getElementById('summary').textContent =
       t('summary', processed.filter(p=>p.zip).length, processed.length);
@@ -491,8 +493,13 @@ function editRow(i){
   input.onkeydown = (e)=>{ if (e.key === 'Enter') doRetry(); };
 }
 
-// Ghi 1 ô vào worksheet, mở rộng !ref nếu cần
+// Ghi 1 ô vào worksheet (xử lý ô gộp: ghi vào ô góc trên-trái), mở rộng !ref nếu cần
 function setCellWS(ws, col, row, val){
+  // Nếu ô nằm trong vùng gộp (merge), ghi vào ô anchor để Excel hiển thị được
+  const merges = ws['!merges'] || [];
+  for (const m of merges){
+    if (row >= m.s.r && row <= m.e.r && col >= m.s.c && col <= m.e.c){ row = m.s.r; col = m.s.c; break; }
+  }
   ws[XLSX.utils.encode_cell({ r: row, c: col })] = { t:'s', v: String(val) };
   const range = XLSX.utils.decode_range(ws['!ref']);
   if (col > range.e.c) range.e.c = col;
@@ -509,20 +516,16 @@ function downloadOriginal(){
   URL.revokeObjectURL(url);
 }
 
-// Tải file kết quả: chỉ điền cột N; cột O chỉ điền nếu tick checkbox
+// Tải file kết quả: mã đã ghi vào cột N của workbook gốc khi xử lý;
+// cột O chỉ ghi đè nếu người dùng tick checkbox.
 function downloadResult(){
-  if (!rawBytes) return;
-  const wb = XLSX.read(rawBytes, { type:'array' });   // đọc lại bản gốc → chắc chắn cột khác không đổi
-  const ws = wb.Sheets[wb.SheetNames[0]];
+  if (!workbook || !processed.length) return;
   const updateO = document.getElementById('updateOCheck').checked;
-
-  processed.forEach(p=>{
-    if (p.zip) setCellWS(ws, zipIdx, p.row, p.zip);
-    if (updateO && p.addr !== p.origAddr) setCellWS(ws, addrIdx, p.row, p.addr);
-  });
-
+  if (updateO){
+    processed.forEach(p=>{ if (p.addr !== p.origAddr) setCellWS(sheet, addrIdx, p.row, p.addr); });
+  }
   const name = (uploadedFile?.name.replace(/\.[^.]+$/,'') || 'shipping') + '_우편번호.xlsx';
-  XLSX.writeFile(wb, name);
+  XLSX.writeFile(workbook, name);
 }
 
 // ── File mẫu ───────────────────────────────────────────────────────────────────

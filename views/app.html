@@ -326,10 +326,11 @@
     .inline-zip  { font-weight: 700; color: var(--blue); font-family: monospace; font-size: 1.05rem; flex-shrink: 0; min-width: 62px; text-align: right; }
     .inline-zip.err { color: var(--red); font-size: 0.78rem; font-family: inherit; font-weight: 400; cursor: pointer; }
     .inline-zip-select {
-      flex-shrink: 0; max-width: 320px; padding: 5px 8px; border: 1.5px solid var(--blue);
-      border-radius: 6px; background: #fff; color: var(--blue); font-weight: 700;
-      font-family: monospace; font-size: 0.9rem; cursor: pointer;
+      flex-shrink: 1; max-width: 340px; padding: 5px 10px; border: 1px solid var(--gray-200);
+      border-radius: 6px; background: #fff; color: var(--gray-700);
+      font-family: inherit; font-size: 0.88rem; cursor: pointer;
     }
+    .inline-zip-select:hover { border-color: var(--blue); }
     .inline-addr { cursor: default; }
     .inline-row:has(.inline-zip.err) .inline-addr { cursor: pointer; }
     .inline-edit {
@@ -1092,11 +1093,12 @@ function renderManualResults(rows) {
 
     let zipCell;
     if (r.options && r.options.length > 1) {
-      // Địa chỉ mơ hồ → cho người dùng chọn mã đúng (kèm tỉnh/quận)
+      // Địa chỉ mơ hồ → dropdown chọn ĐỊA CHỈ, mã hiển thị riêng bên phải (copy được riêng)
       const opts = r.options.map((o, oi) =>
-        `<option value="${oi}"${oi === r.selected ? ' selected' : ''}>${o.zip} — ${esc(o.road || o.jibun)}</option>`
+        `<option value="${oi}"${oi === r.selected ? ' selected' : ''}>${esc(o.road || o.jibun)}</option>`
       ).join('');
-      zipCell = `<select class="inline-zip-select" onchange="pickOption(${i}, this.value)">${opts}</select>`;
+      zipCell = `<select class="inline-zip-select" onchange="pickOption(${i}, this.value)">${opts}</select>`
+              + `<span class="inline-zip" id="zip-${i}">${r.zip}</span>`;
     } else if (r.zip) {
       zipCell = `<span class="inline-zip">${r.zip}</span>`;
     } else {
@@ -1121,6 +1123,8 @@ function pickOption(idx, optIdx) {
   row.zip = o.zip;
   row.display = o.road || o.jibun;
   row.selected = +optIdx;
+  const zipEl = document.getElementById('zip-' + idx);
+  if (zipEl) zipEl.textContent = o.zip;
 }
 
 // Sửa inline 1 dòng → tra lại ngay

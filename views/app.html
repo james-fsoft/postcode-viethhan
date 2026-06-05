@@ -186,6 +186,39 @@
     .nav-tab:hover { border-color:var(--blue); color:var(--blue); }
     .nav-tab.active { background:var(--blue); color:white; border-color:var(--blue); }
 
+    /* ── 2 công cụ: thẻ trực quan ── */
+    .tool-nav { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px; }
+    .tool-card {
+      display:flex; align-items:flex-start; gap:14px; position:relative;
+      background:white; border:1.5px solid var(--gray-200); border-radius:14px;
+      padding:18px 18px 18px 16px; text-decoration:none; transition:all .15s; overflow:hidden;
+    }
+    .tool-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:5px; }
+    .tool-card.postal::before { background:linear-gradient(180deg,var(--red),var(--blue)); }
+    .tool-card.customs::before { background:linear-gradient(180deg,#22c55e,#15803d); }
+    .tool-card.customs:hover { border-color:#86efac; box-shadow:0 6px 18px rgba(22,163,74,.15); transform:translateY(-1px); }
+    .tool-card.postal.active { border-color:#bfdbfe; background:linear-gradient(180deg,#fafcff,#fff); }
+    .tool-ic {
+      flex-shrink:0; width:46px; height:46px; border-radius:12px;
+      display:flex; align-items:center; justify-content:center; margin-left:6px;
+    }
+    .tool-ic svg { width:26px; height:26px; }
+    .tool-card.postal .tool-ic { background:var(--blue-light); color:var(--blue); }
+    .tool-card.customs .tool-ic { background:#ecfdf5; color:#15803d; }
+    .tool-body { flex:1; min-width:0; }
+    .tool-title { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+    .tool-title > span:first-child { font-size:1.02rem; font-weight:800; color:var(--gray-900); }
+    .tool-sub { font-size:.74rem; color:var(--gray-400); font-weight:600; }
+    .tool-desc { font-size:.82rem; color:var(--gray-500); line-height:1.5; margin-top:4px; }
+    .tool-badge {
+      position:absolute; top:12px; right:12px; font-size:.66rem; font-weight:700;
+      padding:3px 9px; border-radius:99px; letter-spacing:.3px;
+    }
+    .tool-badge.cur { background:var(--blue-light); color:var(--blue); }
+    .tool-badge.go  { background:#ecfdf5; color:#15803d; }
+    .tool-card.customs:hover .tool-badge.go { background:#15803d; color:#fff; }
+    @media (max-width:640px){ .tool-nav{ grid-template-columns:1fr; } }
+
     /* ── Tabs ── */
     .tabs { display: flex; border-bottom: 2px solid var(--gray-200); }
 
@@ -524,6 +557,37 @@
     </div>
   </div>
 
+  <!-- 2 công cụ: Mã bưu điện & Mã thông quan -->
+  <div class="tool-nav">
+    <div class="tool-card postal active">
+      <div class="tool-ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+      </div>
+      <div class="tool-body">
+        <div class="tool-title">
+          <span data-i18n="toolPostalTitle">Mã bưu điện</span>
+          <span class="tool-sub">우편번호</span>
+        </div>
+        <p class="tool-desc" data-i18n="toolPostalDesc">Tìm mã bưu điện 5 số từ địa chỉ Hàn Quốc — để điền vận đơn, giao hàng.</p>
+      </div>
+      <span class="tool-badge cur" data-i18n="toolActive">Đang dùng</span>
+    </div>
+
+    <a class="tool-card customs" href="/tracking">
+      <div class="tool-ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05"/><path d="M12 22.08V12"/></svg>
+      </div>
+      <div class="tool-body">
+        <div class="tool-title">
+          <span data-i18n="toolCustomsTitle">Mã thông quan</span>
+          <span class="tool-sub">통관조회</span>
+        </div>
+        <p class="tool-desc" data-i18n="toolCustomsDesc">Tra tiến trình thông quan hàng nhập theo số vận đơn (HAWB) từ Hải quan Hàn Quốc.</p>
+      </div>
+      <span class="tool-badge go" data-i18n="toolOpen">Mở →</span>
+    </a>
+  </div>
+
   <!-- Giới thiệu (thu gọn, không chiếm chỗ) -->
   <details class="intro">
     <summary><span class="intro-icon">ℹ️</span><span data-i18n="introTitle">Phần mềm này dùng để làm gì?</span></summary>
@@ -563,7 +627,6 @@
   <div class="tabs">
     <button class="tab-btn active" data-tab="manual" data-i18n="tabManual" onclick="switchTab('manual')">Tìm kiếm thủ công</button>
     <button class="tab-btn" data-tab="excel" onclick="switchTab('excel')"><span data-i18n="tabExcel">Upload Excel</span><span class="tab-lock" id="excelTabLock" style="display:none">🔒</span></button>
-    <button class="tab-btn" data-tab="cargo" data-i18n="tabCargo" onclick="switchTab('cargo')">Tra cứu thông quan</button>
   </div>
 
   <!-- ══ TAB 1: Manual ══ -->
@@ -662,44 +725,6 @@
     </div>
   </div>
 
-  <!-- ══ TAB 3: Tra cứu thông quan (UNI-PASS) ══ -->
-  <div class="tab-panel" id="tab-cargo">
-    <!-- Ô nhập key UNI-PASS — ẩn khi server đã có key sẵn -->
-    <div class="api-box" id="cargoApiBox">
-      <label data-i18n="cargoKeyLabel">UNI-PASS Open API Key (관세청)</label>
-      <input type="text" id="cargoApiKey" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
-      <a href="https://unipass.customs.go.kr/csp/index.do" target="_blank" data-i18n="cargoGetKey">Đăng ký key UNI-PASS →</a>
-    </div>
-
-    <div class="card">
-      <label data-i18n="cargoLabel">Tra cứu trạng thái thông quan hàng nhập</label>
-      <div class="cargo-form">
-        <select id="cargoType" onchange="onCargoTypeChange()">
-          <option value="cargMtNo" data-i18n="cargoTypeCarg">Số quản lý hàng hóa (화물관리번호)</option>
-          <option value="mblNo" data-i18n="cargoTypeMbl">Master B/L (M B/L)</option>
-          <option value="hblNo" data-i18n="cargoTypeHbl">House B/L (H B/L)</option>
-        </select>
-        <input type="text" id="cargoNo" data-i18n-placeholder="cargoNoPlaceholder" placeholder="VD: 26KE0CS5Cii-0003-0019" onkeydown="if(event.key==='Enter')runCargoSearch()" />
-        <input type="text" id="cargoYy" class="cargo-yy" style="display:none" maxlength="4" data-i18n-placeholder="cargoYyPlaceholder" placeholder="Năm B/L (VD 2026)" onkeydown="if(event.key==='Enter')runCargoSearch()" />
-      </div>
-      <p class="hint" data-i18n="cargoHint">Nhập số quản lý hàng hóa (bỏ dấu gạch cũng được). Tra theo B/L cần kèm năm.</p>
-      <div class="btn-row">
-        <button class="btn btn-primary" id="cargoSearchBtn" onclick="runCargoSearch()" data-i18n="btnSearch">Tra cứu</button>
-        <button class="btn btn-ghost" onclick="clearCargo()" data-i18n="btnClear">Xóa</button>
-      </div>
-      <div class="progress-label" id="cargoProgressLabel" style="display:none"></div>
-    </div>
-
-    <div class="results-box" id="cargoResults" style="display:none">
-      <div class="results-header">
-        <span class="summary" id="cargoSummary"></span>
-      </div>
-      <div id="cargoInfo" class="cargo-info"></div>
-      <h4 class="cargo-tl-title" id="cargoTimelineTitle" style="display:none" data-i18n="cargoTimeline">Tiến trình thông quan</h4>
-      <div id="cargoTimeline" class="cargo-timeline"></div>
-    </div>
-  </div>
-
   <!-- Footer -->
   <footer class="app-footer">
     <span class="tf-brand">Transflash</span>
@@ -792,6 +817,10 @@ const LANGS = {
     errAmbiguous: 'Thiếu thông tin (nhiều mã)',
     typeRoad: 'Tên đường', typeJibun: 'Số lô', typeError: 'Lỗi', typeAmbiguous: 'Thiếu thông tin',
     tabCargo: 'Tra cứu thông quan',
+    toolPostalTitle: 'Mã bưu điện', toolCustomsTitle: 'Mã thông quan',
+    toolPostalDesc: 'Tìm mã bưu điện 5 số từ địa chỉ Hàn Quốc — để điền vận đơn, giao hàng.',
+    toolCustomsDesc: 'Tra tiến trình thông quan hàng nhập theo số vận đơn (HAWB) từ Hải quan Hàn Quốc.',
+    toolActive: 'Đang dùng', toolOpen: 'Mở →',
     cargoKeyLabel: 'UNI-PASS Open API Key (관세청)', cargoGetKey: 'Đăng ký key UNI-PASS →',
     cargoLabel: 'Tra cứu trạng thái thông quan hàng nhập',
     cargoTypeCarg: 'Số quản lý hàng hóa (화물관리번호)', cargoTypeMbl: 'Master B/L (M B/L)', cargoTypeHbl: 'House B/L (H B/L)',
@@ -865,6 +894,10 @@ const LANGS = {
     errAmbiguous: 'Missing info (multiple codes)',
     typeRoad: 'Road', typeJibun: 'Jibun', typeError: 'Error', typeAmbiguous: 'Missing info',
     tabCargo: 'Customs Tracking',
+    toolPostalTitle: 'Postal code', toolCustomsTitle: 'Customs tracking',
+    toolPostalDesc: 'Find the 5-digit Korean postal code from an address — for shipping labels & delivery.',
+    toolCustomsDesc: 'Track import customs clearance progress by B/L number (HAWB) from Korea Customs.',
+    toolActive: 'In use', toolOpen: 'Open →',
     cargoKeyLabel: 'UNI-PASS Open API Key (Korea Customs)', cargoGetKey: 'Register UNI-PASS key →',
     cargoLabel: 'Track import cargo clearance status',
     cargoTypeCarg: 'Cargo mgmt no. (화물관리번호)', cargoTypeMbl: 'Master B/L (M B/L)', cargoTypeHbl: 'House B/L (H B/L)',
@@ -938,6 +971,10 @@ const LANGS = {
     errAmbiguous: '정보 부족 (여러 우편번호)',
     typeRoad: '도로명', typeJibun: '지번', typeError: '오류', typeAmbiguous: '정보 부족',
     tabCargo: '통관조회',
+    toolPostalTitle: '우편번호', toolCustomsTitle: '통관조회',
+    toolPostalDesc: '한국 주소로 5자리 우편번호를 찾습니다 — 운송장 작성·배송용.',
+    toolCustomsDesc: '운송장 번호(HAWB)로 한국 수입 통관 진행정보를 조회합니다.',
+    toolActive: '사용 중', toolOpen: '열기 →',
     cargoKeyLabel: 'UNI-PASS Open API 키 (관세청)', cargoGetKey: 'UNI-PASS 키 신청 →',
     cargoLabel: '수입화물 통관진행정보 조회',
     cargoTypeCarg: '화물관리번호', cargoTypeMbl: 'Master B/L (M B/L)', cargoTypeHbl: 'House B/L (H B/L)',
@@ -1814,10 +1851,6 @@ function applyAccessUI() {
       SERVER_JUSO_KEY = cfg.jusoKey;
       document.getElementById('apiBox').style.display = 'none';
     }
-    if (cfg.unipassKey) {
-      SERVER_HAS_UNIPASS = true;
-      document.getElementById('cargoApiBox').style.display = 'none';
-    }
     USER_PLAN      = cfg.plan        || 'trial';
     MAX_LOOKUPS    = cfg.maxLookups  ?? 15;
     MAX_PER_LOOKUP = cfg.maxPerLookup ?? 30;
@@ -1840,13 +1873,6 @@ function applyAccessUI() {
     );
   }
 
-  if (!SERVER_HAS_UNIPASS) {
-    const uk = localStorage.getItem('unipass_api_key');
-    if (uk) document.getElementById('cargoApiKey').value = uk;
-    document.getElementById('cargoApiKey').addEventListener('input', e =>
-      localStorage.setItem('unipass_api_key', e.target.value.trim())
-    );
-  }
 })();
 </script>
 </body>

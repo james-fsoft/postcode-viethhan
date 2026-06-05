@@ -172,6 +172,7 @@
       <div class="batch-head">
         <div class="batch-title" id="batchTitle">Kho lạnh Yongma · Danh sách tháng 5 <span class="muted" id="batchCount"></span></div>
         <div class="batch-tools">
+          <select class="sel hidden" id="sheetSelect" onchange="onSheetChange()" title="Chọn sheet (ngày)"></select>
           <select class="sel" id="filterDate" onchange="renderBatch()"><option value="">Tất cả ngày</option></select>
           <select class="sel" id="filterStatus" onchange="renderBatch()"><option value="">Tất cả trạng thái</option></select>
           <input type="file" id="fileInput" class="hidden" accept=".xlsx,.xls,.csv" onchange="onFile(event)" />
@@ -425,50 +426,122 @@ function renderBatch() {
   }).join('');
 }
 
-async function onFile(ev) {
+let workbook = null;       // file Excel đã đọc
+let currentFile = '';      // tên file
+
+function onFile(ev) {
   const file = ev.target.files[0];
   if (!file) return;
+  currentFile = file.name;
   const reader = new FileReader();
-  reader.onload = async e => {
-    const wb = XLSX.read(e.target.result, { type:'array' });
-    const aoa = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, defval:'' });
-    // Tìm cột chứa số vận đơn (chuỗi 9-13 chữ số)
-    const hawbs = [];
-    aoa.forEach(row => {
-      row.forEach(cell => {
-        const v = String(cell).replace(/\s/g, '');
-        if (/^\d{9,13}$/.test(v) && !hawbs.includes(v)) hawbs.push(v);
-      });
-    });
-    if (!hawbs.length) { alert('Không tìm thấy cột số vận đơn (HAWB) trong file.'); return; }
-    await scanList(hawbs, file.name);
+  reader.onload = e => {
+    workbook = XLSX.read(e.target.result, { type:'array' });
+    // Đổ danh sách sheet (ngày) vào dropdown
+    const sel = document.getElementById('sheetSelect');
+    sel.innerHTML = workbook.SheetNames.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+    sel.classList.toggle('hidden', workbook.SheetNames.length <= 1);
+    parseAndScan(workbook.SheetNames[0]);
   };
   reader.readAsArrayBuffer(file);
 }
 
-async function scanList(hawbs, sourceName) {
-  const prog = document.getElementById('batchProgress');
-  prog.style.display = 'block';
-  const hasKey = !!apiKey();
-  const rows = [];
-  for (let i = 0; i < hawbs.length; i++) {
-    prog.textContent = `Đang quét... ${i + 1}/${hawbs.length}`;
-    const h = hawbs[i];
-    let d = hasKey ? await fetchReal(h) : null;
-    if (d) {
-      rows.push({ hawb:h, date:d.date, weight:d.weight, stage:d.stage });
-      await new Promise(r => setTimeout(r, 120));   // tránh quá tải API
-    } else {
-      // demo / không có key: sinh trạng thái giả định tạm để xem giao diện
-      const seed = [...h].reduce((a, c) => a + c.charCodeAt(0), 0);
-      rows.push({ hawb:h, date:'20260512', weight:`${(((seed * 7) % 190) / 10 + 2).toFixed(1)} kg`, stage:seed % 6 });
-    }
-  }
-  prog.style.display = 'none';
-  setBatch(rows, `${sourceName} · ${hawbs.length} vận đơn`);
+function onSheetChange() {
+  if (workbook) parseAndScan(document.getElementById('sheetSelect').value);
 }
 
-function rescan() { setBatch(genDemoBatch(), 'Kho lạnh Yongma · Danh sách tháng 5'); }
+// Chuyển ô ngày ("5월 12일" / "2026-05-12" / số serial Excel / tên sheet "05.12") → yyyymmdd
+function parseDateCell(val, sheetName) {
+  const p2 = n => String(+n).padStart(2, '0');
+  const yr = () => new Date().getFullYear();
+  if (typeof val === 'number' && val > 30000 && XLSX.SSF) {
+    const d = XLSX.SSF.parse_date_code(val);
+    if (d) return `${d.y}${p2(d.m)}${p2(d.d)}`;
+  }
+  const s = String(val);
+  let m = s.match(/(\d{4})\D(\d{1,2})\D(\d{1,2})/);     // "2026-05-12"
+  if (m) return `${m[1]}${p2(m[2])}${p2(m[3])}`;
+  m = s.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);        // "5월 12일"
+  if (m) return `${yr()}${p2(m[1])}${p2(m[2])}`;
+  m = String(sheetName).match(/(\d{1,2})[.\-/](\d{1,2})/); // tên sheet "05.12"
+  if (m) return `${yr()}${p2(m[1])}${p2(m[2])}`;
+  return s;
+}
+
+// Đọc 1 sheet → danh sách bản ghi {hawb, date, weight, pcs}
+function parseSheet(sheetName) {
+  const aoa = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header:1, defval:'' });
+  let hi = -1; const col = {};
+  for (let i = 0; i < aoa.length; i++) {
+    const row = aoa[i].map(c => String(c).trim().toUpperCase());
+    const j = row.indexOf('HAWB');
+    if (j >= 0) {
+      hi = i; col.hawb = j;
+      col.date = row.indexOf('DATE');
+      col.pcs  = row.indexOf('PCS');
+      col.wt   = row.findIndex(c => c === 'WT' || c === 'WEIGHT');
+      break;
+    }
+  }
+  const recs = [];
+  if (hi < 0) {   // không thấy header HAWB → quét mọi ô là số 9-13 chữ số
+    aoa.forEach(r => r.forEach(c => {
+      const v = String(c).replace(/\s/g,'');
+      if (/^\d{9,13}$/.test(v)) recs.push({ hawb:v, date:parseDateCell('', sheetName), weight:'', pcs:'' });
+    }));
+    return recs;
+  }
+  for (let i = hi + 1; i < aoa.length; i++) {
+    const row = aoa[i];
+    const hawb = String(row[col.hawb] ?? '').replace(/\s/g,'');
+    if (!/^\d{9,13}$/.test(hawb)) continue;   // bỏ dòng TOTAL / trống
+    const wt  = col.wt  >= 0 ? String(row[col.wt]  ?? '').trim() : '';
+    const pcs = col.pcs >= 0 ? String(row[col.pcs] ?? '').trim() : '';
+    recs.push({
+      hawb,
+      date: parseDateCell(col.date >= 0 ? row[col.date] : '', sheetName),
+      weight: wt ? `${wt} kg` : '',
+      pcs,
+    });
+  }
+  return recs;
+}
+
+async function parseAndScan(sheetName) {
+  const recs = parseSheet(sheetName);
+  if (!recs.length) { alert('Không tìm thấy cột HAWB trong sheet "' + sheetName + '".'); return; }
+  await scanRecords(recs, `${currentFile} · ${sheetName}`);
+}
+
+// Tra trạng thái cho từng bản ghi, giữ nguyên ngày/trọng lượng lấy từ file
+async function scanRecords(recs, sourceName) {
+  const prog = document.getElementById('batchProgress');
+  prog.style.display = 'block';
+  const rows = [];
+  for (let i = 0; i < recs.length; i++) {
+    prog.textContent = `Đang quét... ${i + 1}/${recs.length}`;
+    const rec = recs[i];
+    const d = await fetchReal(rec.hawb);
+    let stage;
+    if (d) {
+      stage = d.stage;
+      if (!rec.weight) rec.weight = d.weight;
+      if (!rec.date)   rec.date = d.date;
+      await new Promise(r => setTimeout(r, 120));   // tránh quá tải API
+    } else {
+      const seed = [...rec.hawb].reduce((a, c) => a + c.charCodeAt(0), 0);
+      stage = seed % 6;   // demo trạng thái khi chưa có key
+      if (!rec.weight) rec.weight = `${(((seed * 7) % 190) / 10 + 2).toFixed(1)} kg`;
+    }
+    rows.push({ hawb:rec.hawb, date:rec.date, weight:rec.weight, stage });
+  }
+  prog.style.display = 'none';
+  setBatch(rows, sourceName);
+}
+
+function rescan() {
+  if (workbook) parseAndScan(document.getElementById('sheetSelect').value || workbook.SheetNames[0]);
+  else setBatch(genDemoBatch(), 'Kho lạnh Yongma · Danh sách tháng 5');
+}
 
 // ── Key ──────────────────────────────────────────────────────────────────────
 function toggleKey() { document.getElementById('keyBox').classList.toggle('show'); }

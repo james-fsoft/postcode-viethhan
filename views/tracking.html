@@ -3,144 +3,195 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Tra cứu thông quan — Vietnam · Korea Logistics</title>
+<title>Tra cứu thông quan Hàn Quốc theo số vận đơn (UNI-PASS) | Vietnam - Korea Logistics</title>
+<meta name="description" content="Tra cứu tiến trình thông quan hàng nhập khẩu Hàn Quốc theo số vận đơn HAWB hoặc mã quản lý hàng hóa — dữ liệu trực tiếp từ Hải quan Hàn Quốc (UNI-PASS). Hỗ trợ quét hàng loạt từ file Excel, dành cho nghiệp vụ logistics Việt - Hàn." />
+<meta name="keywords" content="tra cứu thông quan Hàn Quốc, UNI-PASS, 화물통관진행정보, tra cứu vận đơn Hàn Quốc, HAWB, thông quan hàng nhập khẩu, logistics Việt Hàn, mã quản lý hàng hóa, customs tracking Korea, tra cứu hàng nhập Hàn Quốc" />
+<meta name="author" content="Transflash · Vietnam - Korea Logistics" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#1e40af" />
+<link rel="canonical" href="https://postcode-viethhan.vercel.app/tracking" />
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Vietnam - Korea Logistics" />
+<meta property="og:title" content="Tra cứu thông quan Hàn Quốc theo số vận đơn (UNI-PASS)" />
+<meta property="og:description" content="Tra tiến trình thông quan hàng nhập Hàn Quốc theo HAWB / mã quản lý hàng, dữ liệu trực tiếp từ Hải quan (UNI-PASS). Quét hàng loạt từ Excel." />
+<meta property="og:url" content="https://postcode-viethhan.vercel.app/tracking" />
+<meta property="og:locale" content="vi_VN" />
+<!-- Twitter -->
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Tra cứu thông quan Hàn Quốc theo số vận đơn (UNI-PASS)" />
+<meta name="twitter:description" content="Tra tiến trình thông quan hàng nhập Hàn Quốc theo HAWB, dữ liệu từ Hải quan UNI-PASS. Quét hàng loạt từ Excel." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%231e40af'/><text x='12' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='%23d42126'>V</text><text x='54' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='white'>H</text></svg>" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Tra cứu thông quan Hàn Quốc (UNI-PASS)",
+  "url": "https://postcode-viethhan.vercel.app/tracking",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "inLanguage": "vi",
+  "description": "Tra cứu tiến trình thông quan hàng nhập khẩu Hàn Quốc theo số vận đơn HAWB hoặc mã quản lý hàng hóa, dữ liệu trực tiếp từ Hải quan Hàn Quốc (UNI-PASS). Hỗ trợ quét hàng loạt từ file Excel.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "VND" },
+  "provider": { "@type": "Organization", "name": "Vietnam - Korea Logistics", "url": "https://postcode-viethhan.vercel.app/" }
+}
+</script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <style>
   :root {
-    --bg:#0a0d13; --card:#10151d; --card2:#141b24; --line:#1e2733; --line2:#2a3543;
-    --green:#2ed47f; --green-d:#27c06f; --blue:#5b93f6; --blue-soft:#6ea8fe;
-    --text:#eef2f7; --muted:#8591a0; --muted2:#5c6675;
+    --red:#d42126; --blue:#1e40af; --blue-mid:#1d4ed8; --blue-light:#eff6ff;
+    --green:#16a34a; --green-d:#15803d; --green-light:#ecfdf5;
+    --text:#0f172a; --muted:#64748b; --muted2:#94a3b8;
+    --line:#e2e8f0; --line2:#cbd5e1; --card:#ffffff; --bg:#f1f5f9;
+    --shadow:0 1px 4px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   body {
-    background:
-      radial-gradient(1200px 600px at 15% -10%, rgba(46,212,127,.06), transparent 60%),
-      radial-gradient(1000px 500px at 100% 0%, rgba(91,147,246,.05), transparent 55%),
-      var(--bg);
-    color:var(--text); font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-    min-height:100vh; line-height:1.5; padding:48px 20px 80px;
+    background:var(--bg); color:var(--text);
+    font-family:'Segoe UI','Noto Sans KR',Arial,sans-serif;
+    min-height:100vh; line-height:1.5; padding:20px 16px 56px;
   }
-  .wrap { max-width:1180px; margin:0 auto; }
-  .eyebrow { color:var(--green); font-size:.78rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; margin-bottom:14px; }
-  h1 { font-size:2.7rem; font-weight:800; letter-spacing:-.02em; margin-bottom:16px; }
-  h1 .dot { color:var(--green); }
-  .lead { color:var(--muted); font-size:1.05rem; max-width:640px; margin-bottom:34px; }
+  .wrap { max-width:1080px; margin:0 auto; }
+
+  /* topbar */
+  .topbar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:28px; }
+  .brand-area { display:flex; align-items:center; gap:12px; }
+  .brand-area img { height:44px; width:auto; display:block; }
+  .brand-name { font-size:1rem; font-weight:800; color:var(--blue); letter-spacing:.2px; }
+  .brand-sub { font-size:.72rem; color:var(--muted2); letter-spacing:1.5px; text-transform:uppercase; }
+  .nav-home { font-size:.82rem; font-weight:600; color:var(--blue); text-decoration:none;
+    border:1.5px solid var(--line); background:#fff; padding:8px 16px; border-radius:99px; transition:all .15s; }
+  .nav-home:hover { border-color:var(--blue); }
+
+  .eyebrow { color:var(--green-d); font-size:.74rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-bottom:10px; }
+  h1 { font-size:1.9rem; font-weight:800; letter-spacing:-.01em; margin-bottom:12px; color:var(--text); }
+  .lead { color:var(--muted); font-size:1rem; max-width:660px; margin-bottom:22px; }
   .lead .k { color:var(--muted2); }
 
-  .panel { background:var(--card); border:1px solid var(--line); border-radius:20px; padding:26px; }
-  .section { margin-bottom:70px; }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:22px; box-shadow:var(--shadow); }
+  .section { margin-bottom:48px; }
 
   /* search */
-  .search-row { display:flex; gap:14px; }
+  .search-row { display:flex; gap:12px; flex-wrap:wrap; }
   .search-row input {
-    flex:1; background:var(--card2); border:1px solid var(--line2); border-radius:14px;
-    color:var(--text); font-size:1rem; padding:18px 22px; outline:none; transition:border-color .15s;
+    flex:1; min-width:220px; background:var(--bg); border:1.5px solid var(--line); border-radius:10px;
+    color:var(--text); font-size:1rem; padding:15px 18px; outline:none; transition:border-color .15s;
   }
   .search-row input::placeholder { color:var(--muted2); }
-  .search-row input:focus { border-color:var(--green); }
+  .search-row input:focus { border-color:var(--green); background:#fff; }
   .btn-go {
-    background:linear-gradient(180deg,var(--green),var(--green-d)); color:#05291a; border:none;
-    border-radius:14px; padding:0 40px; font-size:1.05rem; font-weight:800; cursor:pointer;
-    box-shadow:0 6px 20px rgba(46,212,127,.25); transition:transform .1s, box-shadow .15s;
+    background:linear-gradient(135deg,#22c55e,var(--green)); color:#fff; border:none;
+    border-radius:10px; padding:0 36px; font-size:1rem; font-weight:700; cursor:pointer;
+    box-shadow:0 4px 14px rgba(22,163,74,.25); transition:all .12s;
   }
-  .btn-go:hover { box-shadow:0 8px 26px rgba(46,212,127,.4); }
+  .btn-go:hover { box-shadow:0 6px 18px rgba(22,163,74,.35); }
   .btn-go:active { transform:translateY(1px); }
   .btn-go:disabled { opacity:.6; cursor:default; box-shadow:none; }
 
-  .quick { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:20px; }
-  .quick .q-label { color:var(--muted2); font-size:.86rem; }
-  .chip {
-    background:var(--card2); border:1px solid var(--line2); color:var(--blue-soft);
-    border-radius:10px; padding:9px 16px; font-size:.9rem; cursor:pointer; transition:all .12s; font-family:inherit;
-  }
-  .chip:hover { border-color:var(--blue); background:rgba(91,147,246,.1); }
-
   /* result card */
-  .result { margin-top:24px; background:var(--card2); border:1px solid var(--line); border-radius:16px; padding:26px 28px; display:none; }
+  .result { margin-top:20px; background:var(--bg); border:1px solid var(--line); border-radius:12px; padding:22px 24px; display:none; }
   .result.show { display:block; }
   .res-top { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
-  .res-no { font-size:1.7rem; font-weight:800; letter-spacing:.01em; }
+  .res-no { font-size:1.5rem; font-weight:800; letter-spacing:.01em; color:var(--text); }
   .res-sub { color:var(--muted); font-size:.9rem; margin-top:2px; }
-  .demo-tag { display:inline-block; margin-left:10px; font-size:.64rem; font-weight:800; letter-spacing:.1em;
-    color:#d9a441; background:rgba(217,164,65,.13); border:1px solid rgba(217,164,65,.3); border-radius:6px; padding:2px 7px; vertical-align:middle; }
-  .status-pill { display:inline-flex; align-items:center; gap:9px; background:rgba(91,147,246,.13);
-    border:1px solid rgba(91,147,246,.3); border-radius:30px; padding:11px 20px; font-weight:700; color:var(--blue-soft); }
-  .status-pill.green { background:rgba(46,212,127,.13); border-color:rgba(46,212,127,.3); color:var(--green); }
+  .demo-tag { display:inline-block; margin-left:10px; font-size:.62rem; font-weight:800; letter-spacing:.1em;
+    color:#b45309; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; padding:2px 7px; vertical-align:middle; }
+  .status-pill { display:inline-flex; align-items:center; gap:9px; background:var(--blue-light);
+    border:1px solid #bfdbfe; border-radius:30px; padding:10px 18px; font-weight:700; color:var(--blue); }
+  .status-pill.green { background:var(--green-light); border-color:#a7f3d0; color:var(--green); }
   .status-pill .ko { color:var(--muted2); font-weight:500; font-size:.82rem; }
   .status-pill .led { width:9px; height:9px; border-radius:50%; background:currentColor; }
 
   .info-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:var(--line); border:1px solid var(--line);
-    border-radius:12px; overflow:hidden; margin-top:26px; }
-  .info-cell { background:var(--card2); padding:18px 20px; }
-  .info-cell .lab { color:var(--muted2); font-size:.78rem; margin-bottom:8px; }
-  .info-cell .lab .ko { opacity:.7; }
-  .info-cell .val { font-size:1rem; font-weight:700; }
-  .info-cell .val .code { color:var(--muted); font-weight:600; font-size:.85rem; }
-  @media (max-width:900px){ .info-grid{ grid-template-columns:repeat(2,1fr);} h1{font-size:2rem;} }
+    border-radius:10px; overflow:hidden; margin-top:22px; }
+  .info-cell { background:#fff; padding:15px 18px; }
+  .info-cell .lab { color:var(--muted2); font-size:.76rem; margin-bottom:7px; }
+  .info-cell .lab .ko { opacity:.85; }
+  .info-cell .val { font-size:.98rem; font-weight:700; color:var(--text); }
+  .info-cell .val .code { color:var(--muted2); font-weight:600; font-size:.84rem; }
+  @media (max-width:880px){ .info-grid{ grid-template-columns:repeat(2,1fr);} h1{font-size:1.6rem;} }
 
   /* timeline */
-  .tl-title { margin:30px 0 16px; font-size:1rem; font-weight:700; }
+  .tl-title { margin:26px 0 14px; font-size:1rem; font-weight:700; color:var(--text); }
   .tl-title .ko { color:var(--muted2); font-weight:500; font-size:.82rem; margin-left:6px; }
   .timeline { display:flex; gap:10px; }
   .tl-step { flex:1; min-width:0; }
-  .tl-bar { height:6px; border-radius:4px; background:var(--line2); }
+  .tl-bar { height:6px; border-radius:4px; background:var(--line); }
   .tl-step.done .tl-bar { background:var(--green); }
-  .tl-step.current .tl-bar { background:var(--blue); }
-  .tl-lab { margin-top:12px; font-size:.9rem; font-weight:700; color:var(--muted); }
+  .tl-step.current .tl-bar { background:var(--blue-mid); }
+  .tl-lab { margin-top:11px; font-size:.88rem; font-weight:700; color:var(--muted2); }
   .tl-step.done .tl-lab, .tl-step.current .tl-lab { color:var(--text); }
-  .tl-ko { font-size:.76rem; color:var(--muted2); margin-top:2px; }
+  .tl-ko { font-size:.74rem; color:var(--muted2); margin-top:2px; }
 
   /* batch */
-  .batch-head { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
-  .batch-title { font-size:1.15rem; font-weight:800; }
-  .batch-title .muted { color:var(--muted2); font-weight:500; font-size:.95rem; }
+  .batch-head { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
+  .batch-title { font-size:1.1rem; font-weight:800; color:var(--text); }
+  .batch-title .muted { color:var(--muted2); font-weight:500; font-size:.92rem; }
   .batch-tools { display:flex; gap:10px; flex-wrap:wrap; }
   .sel, .btn-ghost, .btn-up {
-    background:var(--card2); border:1px solid var(--line2); color:var(--text); border-radius:10px;
-    padding:11px 16px; font-size:.9rem; cursor:pointer; font-family:inherit; outline:none;
+    background:#fff; border:1.5px solid var(--line); color:var(--text); border-radius:8px;
+    padding:10px 14px; font-size:.88rem; cursor:pointer; font-family:inherit; outline:none;
   }
   .sel:focus { border-color:var(--blue); }
   .btn-ghost:hover, .btn-up:hover { border-color:var(--blue); }
-  .btn-up { color:var(--green); border-color:rgba(46,212,127,.35); }
+  .btn-up { color:var(--green-d); border-color:#a7f3d0; }
+  .btn-up:hover { border-color:var(--green); }
 
-  .tbl-wrap { border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .tbl-wrap { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#fff; }
   table { width:100%; border-collapse:collapse; }
-  thead th { text-align:left; color:var(--muted2); font-size:.8rem; font-weight:700; letter-spacing:.03em;
-    padding:16px 22px; border-bottom:1px solid var(--line); }
-  thead th .ko { opacity:.7; font-weight:500; }
-  tbody td { padding:15px 22px; border-bottom:1px solid var(--line); font-size:.94rem; }
+  thead th { text-align:left; color:var(--muted2); font-size:.78rem; font-weight:700; letter-spacing:.02em;
+    padding:14px 20px; border-bottom:1px solid var(--line); background:var(--bg); }
+  thead th .ko { opacity:.85; font-weight:500; }
+  tbody td { padding:13px 20px; border-bottom:1px solid var(--line); font-size:.92rem; color:var(--text); }
   tbody tr:last-child td { border-bottom:none; }
-  tbody tr:hover { background:rgba(255,255,255,.015); }
+  tbody tr:hover { background:var(--bg); }
   .hawb { font-weight:700; letter-spacing:.01em; }
-  .badge { display:inline-block; padding:7px 14px; border-radius:9px; font-size:.85rem; font-weight:700; }
-  .badge.blue { color:var(--blue-soft); background:rgba(91,147,246,.12); }
-  .badge.green { color:var(--green); background:rgba(46,212,127,.12); }
-  .batch-empty { padding:40px; text-align:center; color:var(--muted2); }
-  .progress-mini { color:var(--muted); font-size:.88rem; padding:14px 22px; display:none; }
+  .badge { display:inline-block; padding:6px 13px; border-radius:8px; font-size:.83rem; font-weight:700; }
+  .badge.blue { color:var(--blue); background:var(--blue-light); }
+  .badge.green { color:var(--green); background:var(--green-light); }
+  .batch-empty { padding:36px; text-align:center; color:var(--muted2); }
+  .progress-mini { color:var(--muted); font-size:.86rem; padding:12px 20px; display:none; }
   .hidden { display:none; }
+
+  /* footer */
+  .app-footer { margin-top:44px; text-align:center; font-size:.78rem; color:var(--muted2);
+    display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; }
+  .app-footer .tf-brand { font-weight:800; letter-spacing:.5px;
+    background:linear-gradient(135deg,var(--red),var(--blue)); -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent; font-size:.85rem; }
+  .app-footer .tf-dot { color:var(--line2); }
+  .footer-support { color:var(--blue); text-decoration:none; font-weight:600; }
+  .footer-support:hover { text-decoration:underline; }
 </style>
 </head>
 <body>
 <div class="wrap">
 
+  <!-- Top bar (đồng bộ trang chính) -->
+  <div class="topbar">
+    <div class="brand-area">
+      <img src="/logo.png" alt="Vietnam - Korea Logistics" />
+      <div class="brand-text">
+        <div class="brand-name">Vietnam - Korea Logistics</div>
+        <div class="brand-sub">Tra Cứu Thông Quan Hàn Quốc</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <a class="nav-home" href="/">← Tra mã bưu điện</a>
+    </div>
+  </div>
+
   <!-- ══ Section 1: Đơn lẻ ══ -->
   <div class="section">
     <div class="eyebrow">Tra cứu đơn lẻ</div>
     <h1>Tra cứu tức thì bằng số vận đơn</h1>
-    <p class="lead">Nhập số vận đơn nhánh <span class="k">(HAWB / H B/L)</span>. Hệ thống truy vấn trực tiếp Hải quan và hiển thị đầy đủ tiến trình thông quan.</p>
+    <p class="lead">Nhập số vận đơn nhánh <span class="k">(HAWB / H B/L)</span> hoặc mã quản lý hàng hóa. Hệ thống truy vấn trực tiếp Hải quan Hàn Quốc (UNI-PASS) và hiển thị đầy đủ tiến trình thông quan.</p>
 
     <div class="panel">
       <div class="search-row">
         <input type="text" id="searchInput" placeholder="Nhập số vận đơn / mã quản lý hàng (vd: 304433643476)"
                onkeydown="if(event.key==='Enter')doSearch()" />
         <button class="btn-go" id="searchBtn" onclick="doSearch()">Tra cứu</button>
-      </div>
-      <div class="quick">
-        <span class="q-label">Thử nhanh:</span>
-        <button class="chip" onclick="quickFill('304433643476')">304433643476</button>
-        <button class="chip" onclick="quickFill('304433645834')">304433645834</button>
-        <button class="chip" onclick="quickFill('304433650723')">304433650723</button>
-        <button class="chip" onclick="quickFill('304434690901')">304434690901</button>
       </div>
 
       <div class="result" id="result"></div>
@@ -180,6 +231,18 @@
       </div>
     </div>
   </div>
+
+  <footer class="app-footer">
+    <span class="tf-brand">Transflash</span>
+    <span class="tf-dot">•</span>
+    <span>Giải pháp logistics Việt - Hàn</span>
+    <span class="tf-dot">•</span>
+    <a href="/about" class="footer-support">Giới thiệu</a>
+    <span class="tf-dot">•</span>
+    <a href="/" class="footer-support">Tra mã bưu điện</a>
+    <span class="tf-dot">•</span>
+    <span>© 2026</span>
+  </footer>
 
 </div>
 
@@ -302,8 +365,6 @@ function mapXml(xml, num) {
 }
 
 // ── Tra đơn lẻ ───────────────────────────────────────────────────────────────
-function quickFill(n) { document.getElementById('searchInput').value = n; doSearch(); }
-
 async function doSearch() {
   const num = document.getElementById('searchInput').value.trim();
   if (!num) return;
@@ -362,7 +423,7 @@ function renderResult(d, demo) {
 
 function renderNotFound(num) {
   const errLine = lastCargoError
-    ? `<div class="res-sub" style="padding:4px 0;color:#e0708a">⚠️ Lỗi gọi API: <b>${esc(lastCargoError)}</b></div>`
+    ? `<div class="res-sub" style="padding:4px 0;color:#dc2626">⚠️ Lỗi gọi API: <b>${esc(lastCargoError)}</b></div>`
     : '';
   document.getElementById('result').innerHTML =
     `<div class="res-sub" style="padding:6px 0">Không tìm thấy thông tin cho <b>${esc(num)}</b>. ` +
@@ -372,7 +433,6 @@ function renderNotFound(num) {
 
 // ── Tra hàng loạt ────────────────────────────────────────────────────────────
 let batchRows = [];        // {hawb, date, weight, stage}
-let batchSource = 'demo';  // 'demo' | tên file
 
 function setBatch(rows, sourceTitle) {
   batchRows = rows;

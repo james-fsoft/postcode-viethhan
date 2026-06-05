@@ -118,25 +118,10 @@
   .batch-empty { padding:40px; text-align:center; color:var(--muted2); }
   .progress-mini { color:var(--muted); font-size:.88rem; padding:14px 22px; display:none; }
   .hidden { display:none; }
-  .keybar { display:flex; justify-content:flex-end; margin-bottom:22px; }
-  .key-toggle { color:var(--muted2); font-size:.84rem; cursor:pointer; background:none; border:none; font-family:inherit; }
-  .key-toggle:hover { color:var(--text); }
-  .key-box { display:none; gap:10px; margin-top:12px; }
-  .key-box.show { display:flex; }
-  .key-box input { flex:1; max-width:520px; background:var(--card2); border:1px solid var(--line2); color:var(--text);
-    border-radius:10px; padding:11px 14px; font-size:.88rem; outline:none; }
-  .key-box input:focus { border-color:var(--green); }
 </style>
 </head>
 <body>
 <div class="wrap">
-
-  <div class="keybar">
-    <button class="key-toggle" onclick="toggleKey()">⚙ UNI-PASS API Key</button>
-  </div>
-  <div class="key-box" id="keyBox">
-    <input type="text" id="apiKey" placeholder="Dán UNI-PASS Open API key vào đây (lưu trên trình duyệt)..." />
-  </div>
 
   <!-- ══ Section 1: Đơn lẻ ══ -->
   <div class="section">
@@ -256,7 +241,8 @@ function genDemoBatch() {
 }
 
 // ── API thật ────────────────────────────────────────────────────────────────
-function apiKey() { return document.getElementById('apiKey').value.trim(); }
+// Key đặt ở env Vercel (UNIPASS_API_KEY) — server tự dùng, không cần nhập trên trang
+function apiKey() { return ''; }
 
 let lastCargoError = '';   // lý do gọi API thất bại gần nhất (để hiện cho người dùng)
 
@@ -380,7 +366,7 @@ function renderNotFound(num) {
     : '';
   document.getElementById('result').innerHTML =
     `<div class="res-sub" style="padding:6px 0">Không tìm thấy thông tin cho <b>${esc(num)}</b>. ` +
-    `Cần nhập UNI-PASS API key (nút ⚙ ở trên) để tra dữ liệu thật.</div>` + errLine;
+    `Kiểm tra lại số vận đơn (HAWB) hoặc thử số quản lý hàng hóa.</div>` + errLine;
   document.getElementById('result').classList.add('show');
 }
 
@@ -543,15 +529,8 @@ function rescan() {
   else setBatch(genDemoBatch(), 'Kho lạnh Yongma · Danh sách tháng 5');
 }
 
-// ── Key ──────────────────────────────────────────────────────────────────────
-function toggleKey() { document.getElementById('keyBox').classList.toggle('show'); }
-
 // ── Init ──────────────────────────────────────────────────────────────────────
 (function () {
-  const k = localStorage.getItem('unipass_api_key');
-  if (k) document.getElementById('apiKey').value = k;
-  document.getElementById('apiKey').addEventListener('input', e =>
-    localStorage.setItem('unipass_api_key', e.target.value.trim()));
   setBatch(genDemoBatch(), 'Kho lạnh Yongma · Danh sách tháng 5');
 })();
 </script>

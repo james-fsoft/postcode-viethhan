@@ -184,7 +184,8 @@ app.get('/api/juso', requireAuth, async (req, res) => {
 
 // ── UNI-PASS proxy (관세청 화물통관진행정보 조회) ──────────────────────────────
 // Tra trạng thái thông quan hàng nhập theo 화물관리번호 (cargMtNo) hoặc B/L (mblNo/hblNo + blYy)
-app.get('/api/cargo', requireAuth, async (req, res) => {
+// PUBLIC: khách (chưa login) cũng tra được đơn lẻ. Upload Excel hàng loạt do client chặn (cần login).
+app.get('/api/cargo', async (req, res) => {
   let { cargMtNo, mblNo, hblNo, blYy } = req.query;
   if (!cargMtNo && !mblNo && !hblNo)
     return res.status(400).json({ error: 'Missing query' });

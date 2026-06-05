@@ -189,6 +189,7 @@
         <option value="en">English</option>
         <option value="ko">한국어</option>
       </select>
+      <a class="nav-home" id="loginLink" href="/login" style="display:none" data-i18n="login">Đăng nhập</a>
       <a class="nav-home" href="/" data-i18n="navHome">← Tra mã bưu điện</a>
     </div>
   </div>
@@ -223,7 +224,7 @@
           <select class="sel" id="filterDate" onchange="renderBatch()"></select>
           <select class="sel" id="filterStatus" onchange="renderBatch()"></select>
           <input type="file" id="fileInput" class="hidden" accept=".xlsx,.xls,.csv" onchange="onFile(event)" />
-          <button class="btn-up" data-i18n="btnUpload" onclick="document.getElementById('fileInput').click()">⬆ Upload Excel</button>
+          <button class="btn-up" data-i18n="btnUpload" onclick="tryUpload()">⬆ Upload Excel</button>
           <button class="btn-ghost" data-i18n="btnRescan" onclick="rescan()">↻ Quét lại</button>
         </div>
       </div>
@@ -271,6 +272,7 @@ const LANGS = {
     colHawb:'Vận đơn', colArrival:'Ngày đến', colWeight:'Trọng lượng', colStatus:'Trạng thái thông quan',
     emptyFilter:'Không có vận đơn nào khớp bộ lọc.',
     footerTagline:'Giải pháp logistics Việt - Hàn', footerAbout:'Giới thiệu', footerPostal:'Tra mã bưu điện',
+    login:'Đăng nhập', needLogin:'Tra cứu đơn lẻ thì miễn phí. Upload Excel hàng loạt cần đăng nhập.',
     allDates:'Tất cả ngày', allStatus:'Tất cả trạng thái', countUnit:'vận đơn',
     demoTitle:'Kho lạnh Yongma · Danh sách tháng 5',
     subBranch:'Vận đơn nhánh', released:'Đã xuất kho',
@@ -293,6 +295,7 @@ const LANGS = {
     colHawb:'B/L', colArrival:'Arrival', colWeight:'Weight', colStatus:'Clearance status',
     emptyFilter:'No B/L matches the filter.',
     footerTagline:'Vietnam - Korea logistics solution', footerAbout:'About', footerPostal:'Postal code lookup',
+    login:'Log in', needLogin:'Single lookup is free. Batch Excel upload requires login.',
     allDates:'All dates', allStatus:'All statuses', countUnit:'B/Ls',
     demoTitle:'Yongma Cold Storage · May list',
     subBranch:'House B/L', released:'Released',
@@ -315,6 +318,7 @@ const LANGS = {
     colHawb:'운송장', colArrival:'입항일', colWeight:'중량', colStatus:'통관진행상태',
     emptyFilter:'필터에 맞는 운송장이 없습니다.',
     footerTagline:'베트남-한국 물류 솔루션', footerAbout:'소개', footerPostal:'우편번호 조회',
+    login:'로그인', needLogin:'단건 조회는 무료입니다. 엑셀 대량 조회는 로그인이 필요합니다.',
     allDates:'전체 날짜', allStatus:'전체 상태', countUnit:'건',
     demoTitle:'욜마 냉동창고 · 5월 목록',
     subBranch:'House B/L', released:'반출완료',
@@ -702,6 +706,19 @@ function rescan() {
   else setBatch(genDemoBatch(), { demo: true, label: '' });
 }
 
+// ── Đăng nhập (tra đơn lẻ miễn phí; upload Excel cần login) ───────────────────
+let IS_GUEST = true;
+async function loadAuth() {
+  try { const cfg = await fetch('/api/config').then(r => r.json()); IS_GUEST = cfg.isGuest === true; }
+  catch { IS_GUEST = true; }
+  const link = document.getElementById('loginLink');
+  if (link) link.style.display = IS_GUEST ? 'inline-flex' : 'none';
+}
+function tryUpload() {
+  if (IS_GUEST) { alert(t('needLogin')); location.href = '/login'; return; }
+  document.getElementById('fileInput').click();
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 (function () {
   const param = new URLSearchParams(location.search).get('lang');
@@ -709,6 +726,7 @@ function rescan() {
   batchRows = genDemoBatch();
   batchMeta = { demo: true, label: '' };
   setLang(lang);   // setLang gọi refreshBatchUI để dựng bảng demo
+  loadAuth();      // xác định khách / đã đăng nhập (gate upload Excel)
 })();
 </script>
 </body>

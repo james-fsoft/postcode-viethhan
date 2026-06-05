@@ -266,6 +266,10 @@
     .addr-search-row { display: flex; gap: 10px; align-items: stretch; }
     .addr-search-row .addr-input { flex: 1; min-width: 0; }
     .addr-go { flex-shrink: 0; padding: 0 32px; font-size: 0.95rem; white-space: nowrap; }
+    .bulk-note { margin-top: 12px; font-size: 0.8rem; color: var(--gray-500);
+      background: var(--blue-light); border: 1px solid #dbeafe; border-radius: 8px; padding: 9px 13px; }
+    .bulk-note a { color: var(--blue); font-weight: 700; text-decoration: none; }
+    .bulk-note a:hover { text-decoration: underline; }
     @media (max-width:560px){ .addr-search-row { flex-direction: column; } .addr-go { padding: 12px; } }
 
     .hint { font-size: 0.76rem; color: var(--gray-400); margin-top: 6px; line-height: 1.5; }
@@ -714,6 +718,10 @@
         <button class="btn btn-ghost" onclick="resetFile()" data-i18n="btnClear">Xóa</button>
         <button class="btn btn-ghost ml-auto" onclick="downloadSampleExcel()" data-i18n="btnSampleFile">Tải file mẫu</button>
       </div>
+      <p class="bulk-note">
+        <span data-i18n="bulkContactPre">Cần tra cứu số lượng lớn? Liên hệ:</span>
+        <a href="mailto:support@transflash.app">support@transflash.app</a>
+      </p>
       <div class="progress-bar-wrap" id="excelProgressWrap"><div class="progress-bar-fill" id="excelProgressFill"></div></div>
       <div class="progress-label" id="excelProgressLabel"></div>
       </div><!-- /excelContent -->
@@ -803,6 +811,8 @@ const LANGS = {
     guestNote: 'Chế độ khách: tra thủ công từng địa chỉ thoải mái, hoặc upload Excel tối đa 5 địa chỉ. Đăng nhập để tra hàng loạt không giới hạn.',
     excelLockTitle: 'Tính năng dành cho thành viên',
     excelLockBody: 'Đăng nhập để tải lên file Excel và tra cứu hàng loạt hàng nghìn địa chỉ.',
+    errBadFormat: 'File không đúng định dạng mẫu. Hãy bấm "Tải file mẫu", nhập địa chỉ vào cột 주소 (Address) rồi tải lên lại.',
+    bulkContactPre: 'Cần tra cứu số lượng lớn? Liên hệ:',
     errGuestMax: (n) => `Chế độ khách chỉ tra tối đa ${n} địa chỉ mỗi lần. Đăng nhập để tra nhiều hơn.`,
     tabManual: 'Tìm kiếm thủ công', tabExcel: 'Upload Excel',
     manualLabel: 'Địa chỉ Hàn Quốc',
@@ -882,6 +892,8 @@ const LANGS = {
     guestNote: 'Guest mode: unlimited single lookups, or Excel upload with up to 5 addresses. Sign in for unlimited batch lookup.',
     excelLockTitle: 'Members-only feature',
     excelLockBody: 'Sign in to upload Excel files and look up thousands of addresses in bulk.',
+    errBadFormat: 'File does not match the sample format. Click "Download sample", put addresses in the 주소 (Address) column, then upload again.',
+    bulkContactPre: 'Need large-volume lookups? Contact:',
     errGuestMax: (n) => `Guest mode allows max ${n} addresses per search. Sign in for more.`,
     tabManual: 'Manual Search', tabExcel: 'Upload Excel',
     manualLabel: 'Korean address',
@@ -961,6 +973,8 @@ const LANGS = {
     guestNote: '게스트 모드: 단건 조회 무제한, 엑셀 업로드는 최대 5개. 무제한 일괄 조회는 로그인하세요.',
     excelLockTitle: '회원 전용 기능',
     excelLockBody: '엑셀 파일을 업로드하고 수천 개의 주소를 일괄 조회하려면 로그인하세요.',
+    errBadFormat: '파일 형식이 샘플과 다릅니다. "샘플 다운로드"를 눌러 주소(Address) 열에 입력 후 다시 업로드하세요.',
+    bulkContactPre: '대량 조회가 필요하신가요? 문의:',
     errGuestMax: (n) => `게스트 모드는 1회당 최대 ${n}개 주소까지 조회할 수 있습니다. 더 많은 조회는 로그인하세요.`,
     tabManual: '수동 검색', tabExcel: '엑셀 업로드',
     manualLabel: '한국 주소',
@@ -1579,11 +1593,32 @@ function processFile(file) {
       const wb = XLSX.read(e.target.result, { type: 'array' });
       workbookData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' });
       if (!workbookData.length) throw new Error('Empty file');
+      // Kiểm tra định dạng: phải có cột địa chỉ giống file mẫu, nếu không thì chặn
+      if (!detectAddressFormat(workbookData)) {
+        workbookData = []; uploadedFile = null;
+        document.getElementById('fileInfo').style.display = 'none';
+        document.getElementById('colSelectRow').style.display = 'none';
+        document.getElementById('previewWrap').style.display = 'none';
+        document.getElementById('excelSearchBtn').disabled = true;
+        document.getElementById('fileInput').value = '';
+        showUploadError(t('errBadFormat'));
+        return;
+      }
       populateColSelect();
       document.getElementById('excelSearchBtn').disabled = false;
     } catch(err) { showUploadError('파일 읽기 오류: ' + err.message); }
   };
   reader.readAsArrayBuffer(file);
+}
+
+// Đúng định dạng mẫu khi có cột tiêu đề 주소/address/addr HOẶC có ô là địa chỉ Hàn Quốc
+function detectAddressFormat(aoa) {
+  if (!aoa || !aoa.length) return false;
+  const headerHit = (aoa[0] || []).some(h =>
+    ['주소', 'address', 'addr'].some(k => String(h).toLowerCase().includes(k)));
+  if (headerHit) return true;
+  return aoa.slice(0, 30).some(row => (row || []).some(c =>
+    typeof c === 'string' && /[가-힣]/.test(c) && /[시구동읍면로길가]/.test(c)));
 }
 
 function resetFile() {

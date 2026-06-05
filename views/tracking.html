@@ -239,7 +239,7 @@
           </tr></thead>
           <tbody id="batchBody"></tbody>
         </table>
-        <div class="batch-empty hidden" id="batchEmpty" data-i18n="emptyFilter">Không có vận đơn nào khớp bộ lọc.</div>
+        <div class="batch-empty hidden" id="batchEmpty"></div>
       </div>
     </div>
   </div>
@@ -274,7 +274,8 @@ const LANGS = {
     footerTagline:'Giải pháp logistics Việt - Hàn', footerAbout:'Giới thiệu', footerPostal:'Tra mã bưu điện',
     login:'Đăng nhập', needLogin:'Tra cứu đơn lẻ thì miễn phí. Upload Excel hàng loạt cần đăng nhập.',
     allDates:'Tất cả ngày', allStatus:'Tất cả trạng thái', countUnit:'vận đơn',
-    demoTitle:'Kho lạnh Yongma · Danh sách tháng 5',
+    batchEmptyTitle:'Danh sách vận đơn',
+    uploadPrompt:'📄 Chưa có dữ liệu — tải lên file Excel (cột HAWB) để quét toàn bộ vận đơn.',
     subBranch:'Vận đơn nhánh', released:'Đã xuất kho',
     labCargoType:'Loại hàng', labProduct:'Tên hàng', labPkgWeight:'Kiện / Trọng lượng',
     labCarrier:'Hãng / Chuyến bay', labRoute:'Cảng xếp → Cảng dỡ', labArrival:'Ngày đến',
@@ -297,7 +298,8 @@ const LANGS = {
     footerTagline:'Vietnam - Korea logistics solution', footerAbout:'About', footerPostal:'Postal code lookup',
     login:'Log in', needLogin:'Single lookup is free. Batch Excel upload requires login.',
     allDates:'All dates', allStatus:'All statuses', countUnit:'B/Ls',
-    demoTitle:'Yongma Cold Storage · May list',
+    batchEmptyTitle:'B/L list',
+    uploadPrompt:'📄 No data yet — upload an Excel file (HAWB column) to scan all B/Ls.',
     subBranch:'House B/L', released:'Released',
     labCargoType:'Cargo type', labProduct:'Product', labPkgWeight:'Packages / Weight',
     labCarrier:'Carrier / Flight', labRoute:'Origin → Destination', labArrival:'Arrival date',
@@ -320,7 +322,8 @@ const LANGS = {
     footerTagline:'베트남-한국 물류 솔루션', footerAbout:'소개', footerPostal:'우편번호 조회',
     login:'로그인', needLogin:'단건 조회는 무료입니다. 엑셀 대량 조회는 로그인이 필요합니다.',
     allDates:'전체 날짜', allStatus:'전체 상태', countUnit:'건',
-    demoTitle:'욜마 냉동창고 · 5월 목록',
+    batchEmptyTitle:'운송장 목록',
+    uploadPrompt:'📄 데이터 없음 — 엑셀 파일(HAWB 열)을 업로드하면 전체 운송장을 조회합니다.',
     subBranch:'House B/L', released:'반출완료',
     labCargoType:'화물구분', labProduct:'품명', labPkgWeight:'포장 / 중량',
     labCarrier:'선사 / 편명', labRoute:'적재항 → 양륙항', labArrival:'입항일',
@@ -408,19 +411,6 @@ const DEMO = {
   '304434690901': { hawb:'304434690901', cargoType:'수입 일반화물', productName:'Thực phẩm khô',
     packages:'2 CT', weight:'9.4 kg', carrier:'Korean Air', flight:'KE468', from:'DAD', to:'ICN', date:'20260512', stage:2 },
 };
-
-function genDemoBatch() {
-  const rows = [];
-  let n = 304433643163;
-  for (let i = 0; i < 144; i++) {
-    n += [11, 13, 15, 9, 16, 59, 103, 22, 11, 4][i % 10];
-    const h = String(n);
-    const seed = [...h].reduce((a, c) => a + c.charCodeAt(0), 0);
-    const weight = (((seed * 7) % 190) / 10 + 2).toFixed(1);
-    rows.push({ hawb:h, date:'20260512', weight:`${weight} kg`, stage:seed % 6 });
-  }
-  return rows;
-}
 
 // ── API thật ────────────────────────────────────────────────────────────────
 // Key đặt ở env Vercel (UNIPASS_API_KEY) — server tự dùng, không cần nhập trên trang
@@ -551,20 +541,20 @@ function renderNotFound(num) {
 
 // ── Tra hàng loạt ────────────────────────────────────────────────────────────
 let batchRows = [];
-let batchMeta = { demo: true, label: '' };   // demo=true → tiêu đề mặc định dịch theo ngôn ngữ
+let batchLabel = '';   // nhãn nguồn (tên file · sheet) sau khi upload
 
-function batchTitleText() { return batchMeta.demo ? t('demoTitle') : batchMeta.label; }
-
-function setBatch(rows, meta) {
-  if (meta) batchMeta = meta;
+function setBatch(rows, label) {
   batchRows = rows;
+  if (label != null) batchLabel = label;
   refreshBatchUI();
 }
 
 // Render lại tiêu đề + bộ lọc + bảng (giữ lựa chọn lọc khi đổi ngôn ngữ)
 function refreshBatchUI() {
-  document.getElementById('batchTitle').innerHTML =
-    `${esc(batchTitleText())} <span class="muted">(${batchRows.length} ${t('countUnit')})</span>`;
+  const isEmpty = !batchRows.length && !workbook;
+  document.getElementById('batchTitle').innerHTML = isEmpty
+    ? esc(t('batchEmptyTitle'))
+    : `${esc(batchLabel || t('batchEmptyTitle'))} <span class="muted">(${batchRows.length} ${t('countUnit')})</span>`;
   const fs = document.getElementById('filterStatus');
   const keepS = fs.value;
   fs.innerHTML = `<option value="">${t('allStatus')}</option>` +
@@ -579,14 +569,18 @@ function refreshBatchUI() {
 }
 
 function renderBatch() {
+  const body = document.getElementById('batchBody');
+  const empty = document.getElementById('batchEmpty');
+  // Chưa upload gì → mời tải file
+  if (!batchRows.length) {
+    body.innerHTML = ''; empty.textContent = t('uploadPrompt'); empty.classList.remove('hidden'); return;
+  }
   const fd = document.getElementById('filterDate').value;
   const fsv = document.getElementById('filterStatus').value;
   const rows = batchRows.filter(r =>
     (!fd || fmtDate(r.date) === fd) && (fsv === '' || String(r.stage) === fsv)
   );
-  const body = document.getElementById('batchBody');
-  const empty = document.getElementById('batchEmpty');
-  if (!rows.length) { body.innerHTML = ''; empty.classList.remove('hidden'); return; }
+  if (!rows.length) { body.innerHTML = ''; empty.textContent = t('emptyFilter'); empty.classList.remove('hidden'); return; }
   empty.classList.add('hidden');
   body.innerHTML = rows.map(r => {
     const isOut = r.stage === 5;
@@ -698,12 +692,11 @@ async function scanRecords(recs, label) {
     rows.push({ hawb:rec.hawb, date:rec.date, weight:rec.weight, stage });
   }
   prog.style.display = 'none';
-  setBatch(rows, { demo: false, label });
+  setBatch(rows, label);
 }
 
 function rescan() {
   if (workbook) parseAndScan(document.getElementById('sheetSelect').value || workbook.SheetNames[0]);
-  else setBatch(genDemoBatch(), { demo: true, label: '' });
 }
 
 // ── Đăng nhập (tra đơn lẻ miễn phí; upload Excel cần login) ───────────────────
@@ -723,10 +716,9 @@ function tryUpload() {
 (function () {
   const param = new URLSearchParams(location.search).get('lang');
   const lang = ['vi','en','ko'].includes(param) ? param : (localStorage.getItem('lang') || 'vi');
-  batchRows = genDemoBatch();
-  batchMeta = { demo: true, label: '' };
-  setLang(lang);   // setLang gọi refreshBatchUI để dựng bảng demo
-  loadAuth();      // xác định khách / đã đăng nhập (gate upload Excel)
+  batchRows = [];   // ban đầu trống — chờ upload Excel
+  setLang(lang);    // setLang gọi refreshBatchUI để dựng trạng thái trống
+  loadAuth();       // xác định khách / đã đăng nhập (gate upload Excel)
 })();
 </script>
 </body>

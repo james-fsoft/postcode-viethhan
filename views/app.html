@@ -219,6 +219,13 @@
     .tool-card.customs:hover .tool-badge.go { background:#15803d; color:#fff; }
     @media (max-width:640px){ .tool-nav{ grid-template-columns:1fr; } }
 
+    /* ── Tiêu đề công cụ (đồng bộ trang thông quan) ── */
+    .sec-head { margin:6px 0 16px; }
+    .sec-eyebrow { color:var(--blue); font-size:.74rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-bottom:8px; }
+    .sec-title { font-size:1.7rem; font-weight:800; letter-spacing:-.01em; color:var(--gray-900); margin-bottom:8px; line-height:1.2; }
+    .sec-lead { color:var(--gray-500); font-size:.98rem; max-width:660px; line-height:1.55; }
+    @media (max-width:640px){ .sec-title{ font-size:1.4rem; } }
+
     /* ── Tabs ── */
     .tabs { display: flex; border-bottom: 2px solid var(--gray-200); }
 
@@ -588,19 +595,12 @@
     </a>
   </div>
 
-  <!-- Giới thiệu (thu gọn, không chiếm chỗ) -->
-  <details class="intro">
-    <summary><span class="intro-icon">ℹ️</span><span data-i18n="introTitle">Phần mềm này dùng để làm gì?</span></summary>
-    <div class="intro-body">
-      <p data-i18n="introDesc">Công cụ tra cứu mã bưu điện Hàn Quốc (우편번호) từ địa chỉ, dành cho nghiệp vụ logistics Việt - Hàn.</p>
-      <ul>
-        <li data-i18n="introF1">Nhập danh sách địa chỉ → tự động trả về mã bưu điện 5 chữ số.</li>
-        <li data-i18n="introF2">Tải lên file Excel để tra cứu hàng loạt, xuất kết quả ra Excel.</li>
-        <li data-i18n="introF3">Nhấp đúp địa chỉ chưa khớp để sửa và tra lại ngay.</li>
-        <li data-i18n="introF4">Hỗ trợ 3 ngôn ngữ: Tiếng Việt, Tiếng Anh, Tiếng Hàn.</li>
-      </ul>
-    </div>
-  </details>
+  <!-- Tiêu đề công cụ (đồng bộ trang thông quan) -->
+  <div class="sec-head">
+    <div class="sec-eyebrow" data-i18n="postalEyebrow">Tra cứu mã bưu điện</div>
+    <h1 class="sec-title" data-i18n="postalTitle">Tìm mã bưu điện từ địa chỉ Hàn Quốc</h1>
+    <p class="sec-lead" data-i18n="postalLead">Nhập danh sách địa chỉ Hàn Quốc, hệ thống tự trả về mã bưu điện 5 số — tra thủ công hoặc upload Excel hàng loạt.</p>
+  </div>
 
   <!-- API Key — ẩn khi server đã có key sẵn -->
   <div class="api-box" id="apiBox">
@@ -821,6 +821,8 @@ const LANGS = {
     toolPostalDesc: 'Tìm mã bưu điện 5 số từ địa chỉ Hàn Quốc — để điền vận đơn, giao hàng.',
     toolCustomsDesc: 'Tra tiến trình thông quan hàng nhập theo số vận đơn (HAWB) từ Hải quan Hàn Quốc.',
     toolActive: 'Đang dùng', toolOpen: 'Mở →',
+    postalEyebrow: 'Tra cứu mã bưu điện', postalTitle: 'Tìm mã bưu điện từ địa chỉ Hàn Quốc',
+    postalLead: 'Nhập danh sách địa chỉ Hàn Quốc, hệ thống tự trả về mã bưu điện 5 số — tra thủ công hoặc upload Excel hàng loạt.',
     cargoKeyLabel: 'UNI-PASS Open API Key (관세청)', cargoGetKey: 'Đăng ký key UNI-PASS →',
     cargoLabel: 'Tra cứu trạng thái thông quan hàng nhập',
     cargoTypeCarg: 'Số quản lý hàng hóa (화물관리번호)', cargoTypeMbl: 'Master B/L (M B/L)', cargoTypeHbl: 'House B/L (H B/L)',
@@ -898,6 +900,8 @@ const LANGS = {
     toolPostalDesc: 'Find the 5-digit Korean postal code from an address — for shipping labels & delivery.',
     toolCustomsDesc: 'Track import customs clearance progress by B/L number (HAWB) from Korea Customs.',
     toolActive: 'In use', toolOpen: 'Open →',
+    postalEyebrow: 'Postal code lookup', postalTitle: 'Find Korean postal codes from an address',
+    postalLead: 'Enter a list of Korean addresses and get the 5-digit postal code — manual lookup or batch Excel upload.',
     cargoKeyLabel: 'UNI-PASS Open API Key (Korea Customs)', cargoGetKey: 'Register UNI-PASS key →',
     cargoLabel: 'Track import cargo clearance status',
     cargoTypeCarg: 'Cargo mgmt no. (화물관리번호)', cargoTypeMbl: 'Master B/L (M B/L)', cargoTypeHbl: 'House B/L (H B/L)',
@@ -975,6 +979,8 @@ const LANGS = {
     toolPostalDesc: '한국 주소로 5자리 우편번호를 찾습니다 — 운송장 작성·배송용.',
     toolCustomsDesc: '운송장 번호(HAWB)로 한국 수입 통관 진행정보를 조회합니다.',
     toolActive: '사용 중', toolOpen: '열기 →',
+    postalEyebrow: '우편번호 조회', postalTitle: '한국 주소로 우편번호 찾기',
+    postalLead: '한국 주소 목록을 입력하면 5자리 우편번호를 자동으로 반환합니다 — 수동 조회 또는 엑셀 대량 업로드.',
     cargoKeyLabel: 'UNI-PASS Open API 키 (관세청)', cargoGetKey: 'UNI-PASS 키 신청 →',
     cargoLabel: '수입화물 통관진행정보 조회',
     cargoTypeCarg: '화물관리번호', cargoTypeMbl: 'Master B/L (M B/L)', cargoTypeHbl: 'House B/L (H B/L)',

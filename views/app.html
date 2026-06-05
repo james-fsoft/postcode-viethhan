@@ -263,6 +263,10 @@
       border-radius: 8px; font-size: 0.95rem; font-family: inherit; background: var(--gray-50);
     }
     .addr-input:focus { outline: none; border-color: var(--blue); background: white; }
+    .addr-search-row { display: flex; gap: 10px; align-items: stretch; }
+    .addr-search-row .addr-input { flex: 1; min-width: 0; }
+    .addr-go { flex-shrink: 0; padding: 0 32px; font-size: 0.95rem; white-space: nowrap; }
+    @media (max-width:560px){ .addr-search-row { flex-direction: column; } .addr-go { padding: 12px; } }
 
     .hint { font-size: 0.76rem; color: var(--gray-400); margin-top: 6px; line-height: 1.5; }
 
@@ -624,7 +628,7 @@
   <!-- Banner chế độ khách -->
   <div class="usage-banner guest" id="guestBanner" style="display:none">
     <span class="usage-tag guest-tag" data-i18n="guestTag">Khách</span>
-    <span data-i18n="guestNote">Chế độ khách: tối đa 5 địa chỉ mỗi lần. Đăng nhập để tra nhiều hơn & upload Excel.</span>
+    <span data-i18n="guestNote">Chế độ khách: tra thủ công từng địa chỉ thoải mái, hoặc upload Excel tối đa 5 địa chỉ. Đăng nhập để tra hàng loạt không giới hạn.</span>
     <button class="usage-upgrade-btn" onclick="location.href='/login'" data-i18n="btnLogin">Đăng nhập</button>
   </div>
 
@@ -638,10 +642,12 @@
   <div class="tab-panel active" id="tab-manual">
     <div class="card">
       <label data-i18n="manualLabel">Địa chỉ Hàn Quốc</label>
-      <input type="text" id="addressInput" class="addr-input" data-i18n-placeholder="manualPlaceholder" placeholder="경기 수원시 팔달구 향교로 122" onkeydown="if(event.key==='Enter')runManualSearch()" />
+      <div class="addr-search-row">
+        <input type="text" id="addressInput" class="addr-input" data-i18n-placeholder="manualPlaceholder" placeholder="경기 수원시 팔달구 향교로 122" onkeydown="if(event.key==='Enter')runManualSearch()" />
+        <button class="btn btn-primary addr-go" id="searchBtn" onclick="runManualSearch()" data-i18n="btnSearch">Tra cứu</button>
+      </div>
       <p class="hint" data-i18n="manualHint">Gợi ý: bỏ số phòng / tên tòa nhà sẽ cho kết quả chính xác hơn.</p>
       <div class="btn-row">
-        <button class="btn btn-primary" id="searchBtn" onclick="runManualSearch()" data-i18n="btnSearch">Tra cứu</button>
         <button class="btn btn-ghost" onclick="clearManual()" data-i18n="btnClear">Xóa</button>
         <button class="btn btn-ghost ml-auto" onclick="loadSample()" data-i18n="btnSample">Ví dụ</button>
       </div>
@@ -794,7 +800,7 @@ const LANGS = {
     errNetwork: 'Lỗi kết nối. Vui lòng thử lại.',
     navLookup: 'Tra mã bưu điện', navShipping: 'Xử lý file vận đơn',
     guestTag: 'Khách', btnLogin: 'Đăng nhập',
-    guestNote: 'Chế độ khách: tra tay tối đa 5 địa chỉ, hoặc upload Excel tối đa 15 địa chỉ. Đăng nhập để dùng không giới hạn.',
+    guestNote: 'Chế độ khách: tra thủ công từng địa chỉ thoải mái, hoặc upload Excel tối đa 5 địa chỉ. Đăng nhập để tra hàng loạt không giới hạn.',
     excelLockTitle: 'Tính năng dành cho thành viên',
     excelLockBody: 'Đăng nhập để tải lên file Excel và tra cứu hàng loạt hàng nghìn địa chỉ.',
     errGuestMax: (n) => `Chế độ khách chỉ tra tối đa ${n} địa chỉ mỗi lần. Đăng nhập để tra nhiều hơn.`,
@@ -873,7 +879,7 @@ const LANGS = {
     errNetwork: 'Connection error. Please try again.',
     navLookup: 'Postal Code Lookup', navShipping: 'Shipping File',
     guestTag: 'Guest', btnLogin: 'Sign in',
-    guestNote: 'Guest mode: max 5 addresses by manual search, or up to 15 via Excel upload. Sign in for unlimited.',
+    guestNote: 'Guest mode: unlimited single lookups, or Excel upload with up to 5 addresses. Sign in for unlimited batch lookup.',
     excelLockTitle: 'Members-only feature',
     excelLockBody: 'Sign in to upload Excel files and look up thousands of addresses in bulk.',
     errGuestMax: (n) => `Guest mode allows max ${n} addresses per search. Sign in for more.`,
@@ -952,7 +958,7 @@ const LANGS = {
     errNetwork: '연결 오류. 다시 시도해주세요.',
     navLookup: '우편번호 조회', navShipping: '배송 파일 처리',
     guestTag: '게스트', btnLogin: '로그인',
-    guestNote: '게스트 모드: 수동 검색 최대 5개, 엑셀 업로드 최대 15개. 무제한 이용은 로그인하세요.',
+    guestNote: '게스트 모드: 단건 조회 무제한, 엑셀 업로드는 최대 5개. 무제한 일괄 조회는 로그인하세요.',
     excelLockTitle: '회원 전용 기능',
     excelLockBody: '엑셀 파일을 업로드하고 수천 개의 주소를 일괄 조회하려면 로그인하세요.',
     errGuestMax: (n) => `게스트 모드는 1회당 최대 ${n}개 주소까지 조회할 수 있습니다. 더 많은 조회는 로그인하세요.`,

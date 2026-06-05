@@ -264,11 +264,11 @@ app.get('/api/config', async (req, res) => {
   const jusoKey = process.env.JUSO_API_KEY || null;
   const unipassKey = !!process.env.UNIPASS_API_KEY;   // chỉ báo có/không, không lộ key
 
-  // Khách: vào thẳng — tra tay tối đa 5, upload Excel tối đa 15 địa chỉ
+  // Khách: vào thẳng — tra tay từng địa chỉ, upload Excel tối đa 5 địa chỉ
   if (!username) {
     return res.json({
       jusoKey, unipassKey, username: null, plan: 'guest',
-      maxLookups: 0, maxPerLookup: 5, maxUpload: 15,
+      maxLookups: 0, maxPerLookup: 5, maxUpload: 5,
       canUpload: true, isGuest: true, used: 0,
       redis: useRedis, contact,
     });

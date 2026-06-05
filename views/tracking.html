@@ -208,6 +208,7 @@ const STAGES = [
   { vi:'Xuất kho',       ko:'물품반출' },
 ];
 const PORTS = { DAD:'Đà Nẵng', ICN:'Incheon', HAN:'Hà Nội', SGN:'TP.HCM', PUS:'Busan', GMP:'Gimpo', HPH:'Hải Phòng', TAE:'Daegu', CJU:'Jeju' };
+const CARRIERS = { KE:'Korean Air', OZ:'Asiana', VN:'Vietnam Airlines', VJ:'Vietjet', '7C':'Jeju Air', TW:'Tway Air', LJ:'Jin Air', BX:'Air Busan' };
 
 // Khớp text Hàn → chỉ số giai đoạn (0..5). Thứ tự kiểm tra quan trọng.
 function stageFromKo(txt) {
@@ -256,13 +257,9 @@ function genDemoBatch() {
 // ── API thật ────────────────────────────────────────────────────────────────
 function apiKey() { return document.getElementById('apiKey').value.trim(); }
 
-async function fetchReal(num) {
-  // Trả về model hiển thị, hoặc null nếu không gọi được (để fallback demo)
+async function callCargo(q) {
   try {
-    const isCarg = /[A-Za-z]/.test(num);   // mã quản lý hàng thường có chữ cái
-    const params = new URLSearchParams();
-    if (isCarg) params.set('cargMtNo', num);
-    else { params.set('hblNo', num); params.set('blYy', new Date().getFullYear()); }
+    const params = new URLSearchParams(q);
     const headers = { Accept: 'application/json' };
     const k = apiKey();
     if (k) headers['x-unipass-key'] = k;
@@ -270,8 +267,19 @@ async function fetchReal(num) {
     if (!r.ok) return null;
     const ct = r.headers.get('content-type') || '';
     if (ct.includes('application/json')) return null;   // NO_KEY / lỗi
-    return mapXml(await r.text(), num);
+    return mapXml(await r.text(), q.hblNo || q.cargMtNo);
   } catch { return null; }
+}
+
+async function fetchReal(num) {
+  // Mã quản lý hàng (có chữ cái) tra theo cargMtNo; còn lại tra theo HBL (thử năm nay rồi năm trước)
+  if (/[A-Za-z]/.test(num)) return callCargo({ cargMtNo: num });
+  const y = new Date().getFullYear();
+  for (const yy of [y, y - 1]) {
+    const d = await callCargo({ hblNo: num, blYy: yy });
+    if (d) return d;
+  }
+  return null;
 }
 
 function nt(parent, tag) { const e = parent.getElementsByTagName(tag); return e.length ? (e[0].textContent || '').trim() : ''; }
@@ -281,6 +289,7 @@ function mapXml(xml, num) {
   const s = doc.getElementsByTagName('cargCsclPrgsInfoQryVo')[0];
   if (!s) return null;
   const statusKo = nt(s, 'prgsStts') || nt(s, 'csclPrgsStts');
+  const sgn = nt(s, 'shcoFlcoSgn');
   return {
     hawb: nt(s, 'hblNo') || nt(s, 'mblNo') || nt(s, 'cargMtNo') || num,
     blType: nt(s, 'hblNo') ? 'H B/L' : (nt(s, 'mblNo') ? 'M B/L' : 'Mã quản lý'),
@@ -288,8 +297,8 @@ function mapXml(xml, num) {
     productName: nt(s, 'prnm') || '—',
     packages: `${nt(s, 'pckGcnt') || '—'} ${nt(s, 'pckUt') || ''}`.trim(),
     weight: `${nt(s, 'ttwg') || '—'} ${nt(s, 'wghtUt') || 'kg'}`.trim(),
-    carrier: nt(s, 'sanm') || nt(s, 'shipNm') || '—',
-    flight: nt(s, 'vydf') || '',
+    carrier: CARRIERS[sgn] || nt(s, 'shcoFlco') || '—',
+    flight: nt(s, 'shipNm') || '',
     from: nt(s, 'ldprCd') || '', to: nt(s, 'dsprCd') || '',
     date: nt(s, 'etprDt'), statusKo, stage: stageFromKo(statusKo), real: true,
   };

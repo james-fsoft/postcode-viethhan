@@ -3,6 +3,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const fs   = require('fs');
 const https = require('https');
 const http  = require('http');
 
@@ -316,9 +317,42 @@ app.get('/about', (req, res) => {
   sendPage(res, 'views', 'landing.html');
 });
 
-// ── Trang tra cứu thông quan (UNI-PASS) — bản thử nghiệm độc lập ──────────────
+// ── Trang tra cứu thông quan (UNI-PASS) — SEO đa ngôn ngữ (vi/en/ko) ──────────
+const TRACKING_SEO = {
+  vi: {
+    title: 'Tra cứu thông quan Hàn Quốc theo số vận đơn (UNI-PASS) | Vietnam - Korea Logistics',
+    desc:  'Tra cứu tiến trình thông quan hàng nhập khẩu Hàn Quốc theo số vận đơn HAWB hoặc mã quản lý hàng hóa — dữ liệu trực tiếp từ Hải quan Hàn Quốc (UNI-PASS). Hỗ trợ quét hàng loạt từ Excel, cho logistics Việt - Hàn.',
+    kw:    'tra cứu thông quan Hàn Quốc, UNI-PASS, tra cứu vận đơn Hàn Quốc, HAWB, thông quan hàng nhập khẩu, logistics Việt Hàn, mã quản lý hàng hóa',
+    locale: 'vi_VN', canon: '',
+  },
+  en: {
+    title: 'Korea customs clearance tracking by B/L number (UNI-PASS) | Vietnam - Korea Logistics',
+    desc:  'Track Korea import customs clearance progress by HAWB or cargo management number — data directly from Korea Customs (UNI-PASS). Batch lookup from Excel for Vietnam - Korea logistics.',
+    kw:    'Korea customs tracking, UNI-PASS, cargo clearance Korea, HAWB lookup, import clearance status, Vietnam Korea logistics, cargo management number',
+    locale: 'en_US', canon: '?lang=en',
+  },
+  ko: {
+    title: '운송장 번호로 한국 통관 진행정보 조회 (UNI-PASS) | Vietnam - Korea Logistics',
+    desc:  'HAWB 또는 화물관리번호로 한국 수입 통관 진행정보를 조회합니다. 관세청(UNI-PASS) 직접 연동, 엑셀 대량 조회 지원. 베트남-한국 물류 서비스.',
+    kw:    '화물통관진행정보, UNI-PASS, 통관조회, HAWB 조회, 수입통관, 화물관리번호, 베트남 한국 물류',
+    locale: 'ko_KR', canon: '?lang=ko',
+  },
+};
+let trackingHtmlRaw = null;
 app.get('/tracking', (req, res) => {
-  sendPage(res, 'views', 'tracking.html');
+  const lang = ['vi', 'en', 'ko'].includes(req.query.lang) ? req.query.lang : 'vi';
+  const s = TRACKING_SEO[lang];
+  if (!trackingHtmlRaw || process.env.NODE_ENV !== 'production') {
+    trackingHtmlRaw = fs.readFileSync(path.join(__dirname, 'views', 'tracking.html'), 'utf8');
+  }
+  const html = trackingHtmlRaw
+    .replace(/__LANG__/g, lang)
+    .replace(/__TITLE__/g, s.title)
+    .replace(/__DESC__/g, s.desc)
+    .replace(/__KEYWORDS__/g, s.kw)
+    .replace(/__LOCALE__/g, s.locale)
+    .replace(/__CANON__/g, s.canon);
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate').type('html').send(html);
 });
 
 // ── robots.txt + sitemap.xml (cho Google index) ──────────────────────────────

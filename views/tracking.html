@@ -1,37 +1,41 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="__LANG__">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Tra cứu thông quan Hàn Quốc theo số vận đơn (UNI-PASS) | Vietnam - Korea Logistics</title>
-<meta name="description" content="Tra cứu tiến trình thông quan hàng nhập khẩu Hàn Quốc theo số vận đơn HAWB hoặc mã quản lý hàng hóa — dữ liệu trực tiếp từ Hải quan Hàn Quốc (UNI-PASS). Hỗ trợ quét hàng loạt từ file Excel, dành cho nghiệp vụ logistics Việt - Hàn." />
-<meta name="keywords" content="tra cứu thông quan Hàn Quốc, UNI-PASS, 화물통관진행정보, tra cứu vận đơn Hàn Quốc, HAWB, thông quan hàng nhập khẩu, logistics Việt Hàn, mã quản lý hàng hóa, customs tracking Korea, tra cứu hàng nhập Hàn Quốc" />
+<title>__TITLE__</title>
+<meta name="description" content="__DESC__" />
+<meta name="keywords" content="__KEYWORDS__" />
 <meta name="author" content="Transflash · Vietnam - Korea Logistics" />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#1e40af" />
-<link rel="canonical" href="https://postcode-viethhan.vercel.app/tracking" />
+<link rel="canonical" href="https://postcode-viethhan.vercel.app/tracking__CANON__" />
+<link rel="alternate" hreflang="vi" href="https://postcode-viethhan.vercel.app/tracking" />
+<link rel="alternate" hreflang="en" href="https://postcode-viethhan.vercel.app/tracking?lang=en" />
+<link rel="alternate" hreflang="ko" href="https://postcode-viethhan.vercel.app/tracking?lang=ko" />
+<link rel="alternate" hreflang="x-default" href="https://postcode-viethhan.vercel.app/tracking" />
 <!-- Open Graph -->
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Vietnam - Korea Logistics" />
-<meta property="og:title" content="Tra cứu thông quan Hàn Quốc theo số vận đơn (UNI-PASS)" />
-<meta property="og:description" content="Tra tiến trình thông quan hàng nhập Hàn Quốc theo HAWB / mã quản lý hàng, dữ liệu trực tiếp từ Hải quan (UNI-PASS). Quét hàng loạt từ Excel." />
-<meta property="og:url" content="https://postcode-viethhan.vercel.app/tracking" />
-<meta property="og:locale" content="vi_VN" />
+<meta property="og:title" content="__TITLE__" />
+<meta property="og:description" content="__DESC__" />
+<meta property="og:url" content="https://postcode-viethhan.vercel.app/tracking__CANON__" />
+<meta property="og:locale" content="__LOCALE__" />
 <!-- Twitter -->
 <meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Tra cứu thông quan Hàn Quốc theo số vận đơn (UNI-PASS)" />
-<meta name="twitter:description" content="Tra tiến trình thông quan hàng nhập Hàn Quốc theo HAWB, dữ liệu từ Hải quan UNI-PASS. Quét hàng loạt từ Excel." />
+<meta name="twitter:title" content="__TITLE__" />
+<meta name="twitter:description" content="__DESC__" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%231e40af'/><text x='12' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='%23d42126'>V</text><text x='54' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='white'>H</text></svg>" />
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  "name": "Tra cứu thông quan Hàn Quốc (UNI-PASS)",
+  "name": "Korea Customs Clearance Tracking (UNI-PASS)",
   "url": "https://postcode-viethhan.vercel.app/tracking",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
-  "inLanguage": "vi",
-  "description": "Tra cứu tiến trình thông quan hàng nhập khẩu Hàn Quốc theo số vận đơn HAWB hoặc mã quản lý hàng hóa, dữ liệu trực tiếp từ Hải quan Hàn Quốc (UNI-PASS). Hỗ trợ quét hàng loạt từ file Excel.",
+  "inLanguage": ["vi", "en", "ko"],
+  "description": "Track Korea import customs clearance progress by HAWB or cargo management number, data directly from Korea Customs (UNI-PASS). Batch lookup from Excel.",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "VND" },
   "provider": { "@type": "Organization", "name": "Vietnam - Korea Logistics", "url": "https://postcode-viethhan.vercel.app/" }
 }
@@ -59,14 +63,17 @@
   .brand-area img { height:44px; width:auto; display:block; }
   .brand-name { font-size:1rem; font-weight:800; color:var(--blue); letter-spacing:.2px; }
   .brand-sub { font-size:.72rem; color:var(--muted2); letter-spacing:1.5px; text-transform:uppercase; }
+  .topbar-right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .lang-select { padding:7px 11px; border:1.5px solid var(--line); border-radius:8px; background:#fff;
+    cursor:pointer; font-size:.8rem; font-weight:600; color:var(--muted); font-family:inherit; }
+  .lang-select:focus { outline:none; border-color:var(--blue); }
   .nav-home { font-size:.82rem; font-weight:600; color:var(--blue); text-decoration:none;
     border:1.5px solid var(--line); background:#fff; padding:8px 16px; border-radius:99px; transition:all .15s; }
   .nav-home:hover { border-color:var(--blue); }
 
   .eyebrow { color:var(--green-d); font-size:.74rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-bottom:10px; }
   h1 { font-size:1.9rem; font-weight:800; letter-spacing:-.01em; margin-bottom:12px; color:var(--text); }
-  .lead { color:var(--muted); font-size:1rem; max-width:660px; margin-bottom:22px; }
-  .lead .k { color:var(--muted2); }
+  .lead { color:var(--muted); font-size:1rem; max-width:680px; margin-bottom:22px; }
 
   .panel { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:22px; box-shadow:var(--shadow); }
   .section { margin-bottom:48px; }
@@ -167,67 +174,71 @@
 <body>
 <div class="wrap">
 
-  <!-- Top bar (đồng bộ trang chính) -->
+  <!-- Top bar -->
   <div class="topbar">
     <div class="brand-area">
       <img src="/logo.png" alt="Vietnam - Korea Logistics" />
       <div class="brand-text">
         <div class="brand-name">Vietnam - Korea Logistics</div>
-        <div class="brand-sub">Tra Cứu Thông Quan Hàn Quốc</div>
+        <div class="brand-sub" data-i18n="brandSub">Tra Cứu Thông Quan Hàn Quốc</div>
       </div>
     </div>
     <div class="topbar-right">
-      <a class="nav-home" href="/">← Tra mã bưu điện</a>
+      <select class="lang-select" id="langSelect" onchange="setLang(this.value)">
+        <option value="vi">Tiếng Việt</option>
+        <option value="en">English</option>
+        <option value="ko">한국어</option>
+      </select>
+      <a class="nav-home" href="/" data-i18n="navHome">← Tra mã bưu điện</a>
     </div>
   </div>
 
   <!-- ══ Section 1: Đơn lẻ ══ -->
   <div class="section">
-    <div class="eyebrow">Tra cứu đơn lẻ</div>
-    <h1>Tra cứu tức thì bằng số vận đơn</h1>
-    <p class="lead">Nhập số vận đơn nhánh <span class="k">(HAWB / H B/L)</span> hoặc mã quản lý hàng hóa. Hệ thống truy vấn trực tiếp Hải quan Hàn Quốc (UNI-PASS) và hiển thị đầy đủ tiến trình thông quan.</p>
+    <div class="eyebrow" data-i18n="eyebrow1">Tra cứu đơn lẻ</div>
+    <h1 data-i18n="h1a">Tra cứu tức thì bằng số vận đơn</h1>
+    <p class="lead" data-i18n="lead1">Nhập số vận đơn nhánh (HAWB / H B/L) hoặc mã quản lý hàng hóa. Hệ thống truy vấn trực tiếp Hải quan Hàn Quốc (UNI-PASS) và hiển thị đầy đủ tiến trình thông quan.</p>
 
     <div class="panel">
       <div class="search-row">
-        <input type="text" id="searchInput" placeholder="Nhập số vận đơn / mã quản lý hàng (vd: 304433643476)"
+        <input type="text" id="searchInput" data-i18n-ph="searchPh" placeholder="Nhập số vận đơn / mã quản lý hàng (vd: 304433643476)"
                onkeydown="if(event.key==='Enter')doSearch()" />
-        <button class="btn-go" id="searchBtn" onclick="doSearch()">Tra cứu</button>
+        <button class="btn-go" id="searchBtn" data-i18n="btnSearch" onclick="doSearch()">Tra cứu</button>
       </div>
-
       <div class="result" id="result"></div>
     </div>
   </div>
 
   <!-- ══ Section 2: Hàng loạt ══ -->
   <div class="section">
-    <div class="eyebrow">Tra cứu hàng loạt</div>
-    <h1>Quét toàn bộ danh sách kho một lần</h1>
-    <p class="lead">Tải lên danh sách Excel (như file kho lạnh Yongma) và quét toàn bộ vận đơn cùng lúc — thay vì tra từng số trên website.</p>
+    <div class="eyebrow" data-i18n="eyebrow2">Tra cứu hàng loạt</div>
+    <h1 data-i18n="h1b">Quét toàn bộ danh sách kho một lần</h1>
+    <p class="lead" data-i18n="lead2">Tải lên danh sách Excel (như file kho lạnh Yongma) và quét toàn bộ vận đơn cùng lúc — thay vì tra từng số trên website.</p>
 
     <div class="panel">
       <div class="batch-head">
-        <div class="batch-title" id="batchTitle">Kho lạnh Yongma · Danh sách tháng 5 <span class="muted" id="batchCount"></span></div>
+        <div class="batch-title" id="batchTitle"></div>
         <div class="batch-tools">
-          <select class="sel hidden" id="sheetSelect" onchange="onSheetChange()" title="Chọn sheet (ngày)"></select>
-          <select class="sel" id="filterDate" onchange="renderBatch()"><option value="">Tất cả ngày</option></select>
-          <select class="sel" id="filterStatus" onchange="renderBatch()"><option value="">Tất cả trạng thái</option></select>
+          <select class="sel hidden" id="sheetSelect" onchange="onSheetChange()" title="Sheet"></select>
+          <select class="sel" id="filterDate" onchange="renderBatch()"></select>
+          <select class="sel" id="filterStatus" onchange="renderBatch()"></select>
           <input type="file" id="fileInput" class="hidden" accept=".xlsx,.xls,.csv" onchange="onFile(event)" />
-          <button class="btn-up" onclick="document.getElementById('fileInput').click()">⬆ Upload Excel</button>
-          <button class="btn-ghost" onclick="rescan()">↻ Quét lại</button>
+          <button class="btn-up" data-i18n="btnUpload" onclick="document.getElementById('fileInput').click()">⬆ Upload Excel</button>
+          <button class="btn-ghost" data-i18n="btnRescan" onclick="rescan()">↻ Quét lại</button>
         </div>
       </div>
       <div class="progress-mini" id="batchProgress"></div>
       <div class="tbl-wrap">
         <table>
           <thead><tr>
-            <th>Vận đơn <span class="ko">HAWB</span></th>
-            <th>Ngày đến</th>
-            <th>Trọng lượng</th>
-            <th>Trạng thái thông quan</th>
+            <th><span data-i18n="colHawb">Vận đơn</span> <span class="ko">HAWB</span></th>
+            <th data-i18n="colArrival">Ngày đến</th>
+            <th data-i18n="colWeight">Trọng lượng</th>
+            <th data-i18n="colStatus">Trạng thái thông quan</th>
           </tr></thead>
           <tbody id="batchBody"></tbody>
         </table>
-        <div class="batch-empty hidden" id="batchEmpty">Không có vận đơn nào khớp bộ lọc.</div>
+        <div class="batch-empty hidden" id="batchEmpty" data-i18n="emptyFilter">Không có vận đơn nào khớp bộ lọc.</div>
       </div>
     </div>
   </div>
@@ -235,11 +246,11 @@
   <footer class="app-footer">
     <span class="tf-brand">Transflash</span>
     <span class="tf-dot">•</span>
-    <span>Giải pháp logistics Việt - Hàn</span>
+    <span data-i18n="footerTagline">Giải pháp logistics Việt - Hàn</span>
     <span class="tf-dot">•</span>
-    <a href="/about" class="footer-support">Giới thiệu</a>
+    <a href="/about" class="footer-support" data-i18n="footerAbout">Giới thiệu</a>
     <span class="tf-dot">•</span>
-    <a href="/" class="footer-support">Tra mã bưu điện</a>
+    <a href="/" class="footer-support" data-i18n="footerPostal">Tra mã bưu điện</a>
     <span class="tf-dot">•</span>
     <span>© 2026</span>
   </footer>
@@ -247,19 +258,125 @@
 </div>
 
 <script>
+// ── i18n ──────────────────────────────────────────────────────────────────────
+const LANGS = {
+  vi: {
+    brandSub:'Tra Cứu Thông Quan Hàn Quốc', navHome:'← Tra mã bưu điện',
+    eyebrow1:'Tra cứu đơn lẻ', h1a:'Tra cứu tức thì bằng số vận đơn',
+    lead1:'Nhập số vận đơn nhánh (HAWB / H B/L) hoặc mã quản lý hàng hóa. Hệ thống truy vấn trực tiếp Hải quan Hàn Quốc (UNI-PASS) và hiển thị đầy đủ tiến trình thông quan.',
+    searchPh:'Nhập số vận đơn / mã quản lý hàng (vd: 304433643476)', btnSearch:'Tra cứu',
+    eyebrow2:'Tra cứu hàng loạt', h1b:'Quét toàn bộ danh sách kho một lần',
+    lead2:'Tải lên danh sách Excel (như file kho lạnh Yongma) và quét toàn bộ vận đơn cùng lúc — thay vì tra từng số trên website.',
+    btnUpload:'⬆ Upload Excel', btnRescan:'↻ Quét lại',
+    colHawb:'Vận đơn', colArrival:'Ngày đến', colWeight:'Trọng lượng', colStatus:'Trạng thái thông quan',
+    emptyFilter:'Không có vận đơn nào khớp bộ lọc.',
+    footerTagline:'Giải pháp logistics Việt - Hàn', footerAbout:'Giới thiệu', footerPostal:'Tra mã bưu điện',
+    allDates:'Tất cả ngày', allStatus:'Tất cả trạng thái', countUnit:'vận đơn',
+    demoTitle:'Kho lạnh Yongma · Danh sách tháng 5',
+    subBranch:'Vận đơn nhánh', released:'Đã xuất kho',
+    labCargoType:'Loại hàng', labProduct:'Tên hàng', labPkgWeight:'Kiện / Trọng lượng',
+    labCarrier:'Hãng / Chuyến bay', labRoute:'Cảng xếp → Cảng dỡ', labArrival:'Ngày đến',
+    tlTitle:'Tiến trình thông quan',
+    loading:'Đang tra cứu...', scanning:(i,t)=>`Đang quét... ${i}/${t}`,
+    apiError:'Lỗi gọi API', notFound:(n)=>`Không tìm thấy thông tin cho ${n}. Kiểm tra lại số vận đơn (HAWB) hoặc thử số quản lý hàng hóa.`,
+    noHawb:(s)=>`Không tìm thấy cột HAWB trong sheet "${s}".`,
+    stages:['Nộp manifest','Khai dỡ hàng','Nhập kho','Khai nhập khẩu','Thông quan','Xuất kho'],
+  },
+  en: {
+    brandSub:'Korea Customs Clearance', navHome:'← Postal code lookup',
+    eyebrow1:'Single lookup', h1a:'Instant lookup by B/L number',
+    lead1:'Enter the house bill number (HAWB / H B/L) or cargo management number. Queries Korea Customs (UNI-PASS) directly and shows the full clearance progress.',
+    searchPh:'Enter B/L / cargo number (e.g. 304433643476)', btnSearch:'Look up',
+    eyebrow2:'Batch lookup', h1b:'Scan an entire warehouse list at once',
+    lead2:'Upload an Excel list (like the Yongma cold-storage file) and scan every B/L at once — instead of looking up one by one.',
+    btnUpload:'⬆ Upload Excel', btnRescan:'↻ Rescan',
+    colHawb:'B/L', colArrival:'Arrival', colWeight:'Weight', colStatus:'Clearance status',
+    emptyFilter:'No B/L matches the filter.',
+    footerTagline:'Vietnam - Korea logistics solution', footerAbout:'About', footerPostal:'Postal code lookup',
+    allDates:'All dates', allStatus:'All statuses', countUnit:'B/Ls',
+    demoTitle:'Yongma Cold Storage · May list',
+    subBranch:'House B/L', released:'Released',
+    labCargoType:'Cargo type', labProduct:'Product', labPkgWeight:'Packages / Weight',
+    labCarrier:'Carrier / Flight', labRoute:'Origin → Destination', labArrival:'Arrival date',
+    tlTitle:'Clearance progress',
+    loading:'Looking up...', scanning:(i,t)=>`Scanning... ${i}/${t}`,
+    apiError:'API error', notFound:(n)=>`No information found for ${n}. Check the B/L number (HAWB) or try the cargo management number.`,
+    noHawb:(s)=>`No HAWB column found in sheet "${s}".`,
+    stages:['Manifest filed','Unloading report','Warehoused','Import declared','Cleared','Released'],
+  },
+  ko: {
+    brandSub:'한국 통관조회', navHome:'← 우편번호 조회',
+    eyebrow1:'단건 조회', h1a:'운송장 번호로 즉시 조회',
+    lead1:'HAWB(House B/L) 또는 화물관리번호를 입력하세요. 관세청(UNI-PASS)에서 직접 조회해 통관 진행 단계를 보여줍니다.',
+    searchPh:'운송장 / 화물관리번호 입력 (예: 304433643476)', btnSearch:'조회',
+    eyebrow2:'대량 조회', h1b:'창고 리스트 전체를 한 번에 조회',
+    lead2:'엑셀 목록(욜마 냉동창고 파일 등)을 업로드하면 모든 운송장을 한 번에 조회합니다 — 하나씩 조회할 필요 없이.',
+    btnUpload:'⬆ 엑셀 업로드', btnRescan:'↻ 다시 조회',
+    colHawb:'운송장', colArrival:'입항일', colWeight:'중량', colStatus:'통관진행상태',
+    emptyFilter:'필터에 맞는 운송장이 없습니다.',
+    footerTagline:'베트남-한국 물류 솔루션', footerAbout:'소개', footerPostal:'우편번호 조회',
+    allDates:'전체 날짜', allStatus:'전체 상태', countUnit:'건',
+    demoTitle:'욜마 냉동창고 · 5월 목록',
+    subBranch:'House B/L', released:'반출완료',
+    labCargoType:'화물구분', labProduct:'품명', labPkgWeight:'포장 / 중량',
+    labCarrier:'선사 / 편명', labRoute:'적재항 → 양륙항', labArrival:'입항일',
+    tlTitle:'통관진행단계',
+    loading:'조회 중...', scanning:(i,t)=>`조회 중... ${i}/${t}`,
+    apiError:'API 오류', notFound:(n)=>`${n} 정보를 찾을 수 없습니다. 운송장(HAWB) 또는 화물관리번호를 확인하세요.`,
+    noHawb:(s)=>`"${s}" 시트에서 HAWB 열을 찾을 수 없습니다.`,
+    stages:['적재화물목록제출','하선/하기신고','물품반입','수입신고','수입신고수리','물품반출'],
+  },
+};
+// Title/description theo ngôn ngữ (cập nhật khi đổi không reload — đồng bộ server SEO)
+const SEO_META = {
+  vi: { title:'Tra cứu thông quan Hàn Quốc theo số vận đơn (UNI-PASS) | Vietnam - Korea Logistics',
+        desc:'Tra cứu tiến trình thông quan hàng nhập khẩu Hàn Quốc theo số vận đơn HAWB hoặc mã quản lý hàng hóa, dữ liệu trực tiếp từ Hải quan Hàn Quốc (UNI-PASS).' },
+  en: { title:'Korea customs clearance tracking by B/L number (UNI-PASS) | Vietnam - Korea Logistics',
+        desc:'Track Korea import customs clearance progress by HAWB or cargo management number, data directly from Korea Customs (UNI-PASS).' },
+  ko: { title:'운송장 번호로 한국 통관 진행정보 조회 (UNI-PASS) | Vietnam - Korea Logistics',
+        desc:'HAWB 또는 화물관리번호로 한국 수입 통관 진행정보를 조회합니다. 관세청(UNI-PASS) 직접 연동, 엑셀 대량 조회 지원.' },
+};
+
+let currentLang = 'vi';
+function t(key, ...args) {
+  const v = (LANGS[currentLang] || LANGS.vi)[key];
+  return typeof v === 'function' ? v(...args) : (v ?? key);
+}
+function stageLabel(i) { return i === 5 ? t('released') : (LANGS[currentLang].stages[i] || LANGS.vi.stages[i]); }
+// Mã tiếng Hàn (tham chiếu) — ẩn khi đang xem tiếng Hàn để khỏi trùng
+const STAGE_KO = ['적재화물목록제출','하선/하기신고','물품반입','수입신고','수입신고수리','물품반출'];
+function koRef(text) { return currentLang === 'ko' ? '' : text; }
+
+function setMeta(name, val) {
+  let el = document.querySelector(`meta[name="${name}"]`);
+  if (el) el.setAttribute('content', val);
+}
+function setLang(lang) {
+  if (!LANGS[lang]) lang = 'vi';
+  currentLang = lang;
+  localStorage.setItem('lang', lang);
+  document.documentElement.lang = lang;
+  const sel = document.getElementById('langSelect'); if (sel) sel.value = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const v = LANGS[lang][el.dataset.i18n]; if (typeof v === 'string') el.textContent = v;
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const v = LANGS[lang][el.dataset.i18nPh]; if (v) el.placeholder = v;
+  });
+  if (SEO_META[lang]) { document.title = SEO_META[lang].title; setMeta('description', SEO_META[lang].desc); }
+  // cập nhật URL ?lang để chia sẻ / index đúng
+  const u = new URL(location.href);
+  if (lang === 'vi') u.searchParams.delete('lang'); else u.searchParams.set('lang', lang);
+  history.replaceState(null, '', u);
+  // render lại phần động
+  if (lastResult) renderResult(lastResult.d, lastResult.demo);
+  refreshBatchUI();
+}
+
 // ── Cấu hình giai đoạn thông quan ────────────────────────────────────────────
-const STAGES = [
-  { vi:'Nộp manifest',   ko:'적재화물목록제출' },
-  { vi:'Khai dỡ hàng',   ko:'하선/하기신고' },
-  { vi:'Nhập kho',       ko:'물품반입' },
-  { vi:'Khai nhập khẩu', ko:'수입신고' },
-  { vi:'Thông quan',     ko:'수입신고수리' },
-  { vi:'Xuất kho',       ko:'물품반출' },
-];
 const PORTS = { DAD:'Đà Nẵng', ICN:'Incheon', HAN:'Hà Nội', SGN:'TP.HCM', PUS:'Busan', GMP:'Gimpo', HPH:'Hải Phòng', TAE:'Daegu', CJU:'Jeju' };
 const CARRIERS = { KE:'Korean Air', OZ:'Asiana', VN:'Vietnam Airlines', VJ:'Vietjet', '7C':'Jeju Air', TW:'Tway Air', LJ:'Jin Air', BX:'Air Busan' };
 
-// Khớp text Hàn → chỉ số giai đoạn (0..5). Thứ tự kiểm tra quan trọng.
 function stageFromKo(txt) {
   txt = String(txt || '');
   if (txt.includes('반출')) return 5;
@@ -278,17 +395,16 @@ function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 
 // ── DEMO data (xem giao diện khi chưa có API key) ────────────────────────────
 const DEMO = {
-  '304433643476': { hawb:'304433643476', blType:'H B/L', cargoType:'Hàng nhập khẩu thường', productName:'Hàng đông lạnh',
+  '304433643476': { hawb:'304433643476', cargoType:'수입 일반화물', productName:'Hàng đông lạnh',
     packages:'1 CT', weight:'15.7 kg', carrier:'Korean Air', flight:'KE460', from:'DAD', to:'ICN', date:'20260512', stage:1 },
-  '304433645834': { hawb:'304433645834', blType:'H B/L', cargoType:'Hàng nhập khẩu thường', productName:'Linh kiện điện tử',
+  '304433645834': { hawb:'304433645834', cargoType:'수입 일반화물', productName:'Linh kiện điện tử',
     packages:'3 CT', weight:'42.0 kg', carrier:'Asiana', flight:'OZ752', from:'SGN', to:'ICN', date:'20260512', stage:4 },
-  '304433650723': { hawb:'304433650723', blType:'H B/L', cargoType:'Hàng nhập khẩu thường', productName:'Hàng may mặc',
+  '304433650723': { hawb:'304433650723', cargoType:'수입 일반화물', productName:'Hàng may mặc',
     packages:'5 CT', weight:'88.3 kg', carrier:'Vietnam Airlines', flight:'VN416', from:'HAN', to:'ICN', date:'20260511', stage:5 },
-  '304434690901': { hawb:'304434690901', blType:'H B/L', cargoType:'Hàng nhập khẩu thường', productName:'Thực phẩm khô',
+  '304434690901': { hawb:'304434690901', cargoType:'수입 일반화물', productName:'Thực phẩm khô',
     packages:'2 CT', weight:'9.4 kg', carrier:'Korean Air', flight:'KE468', from:'DAD', to:'ICN', date:'20260512', stage:2 },
 };
 
-// Sinh dữ liệu demo cho danh sách hàng loạt (giống ảnh kho Yongma)
 function genDemoBatch() {
   const rows = [];
   let n = 304433643163;
@@ -297,42 +413,35 @@ function genDemoBatch() {
     const h = String(n);
     const seed = [...h].reduce((a, c) => a + c.charCodeAt(0), 0);
     const weight = (((seed * 7) % 190) / 10 + 2).toFixed(1);
-    const stage = seed % 6;
-    rows.push({ hawb:h, date:'20260512', weight:`${weight} kg`, stage });
+    rows.push({ hawb:h, date:'20260512', weight:`${weight} kg`, stage:seed % 6 });
   }
   return rows;
 }
 
 // ── API thật ────────────────────────────────────────────────────────────────
 // Key đặt ở env Vercel (UNIPASS_API_KEY) — server tự dùng, không cần nhập trên trang
-function apiKey() { return ''; }
-
-let lastCargoError = '';   // lý do gọi API thất bại gần nhất (để hiện cho người dùng)
+let lastCargoError = '';
 
 async function callCargo(q) {
   try {
     const params = new URLSearchParams(q);
-    const headers = { Accept: 'application/json' };
-    const k = apiKey();
-    if (k) headers['x-unipass-key'] = k;
-    const r = await fetch('/api/cargo?' + params.toString(), { headers });
+    const r = await fetch('/api/cargo?' + params.toString(), { headers: { Accept: 'application/json' } });
     if (!r.ok) {
       let msg = 'HTTP ' + r.status;
       try { const j = await r.json(); if (j.error) msg = j.error; } catch { /* ignore */ }
       if (r.status === 401) msg = 'Cần đăng nhập';
-      if (msg === 'NO_KEY') msg = '';   // chưa có key → không coi là lỗi, để fallback demo
+      if (msg === 'NO_KEY') msg = '';
       lastCargoError = msg;
       return null;
     }
     const ct = r.headers.get('content-type') || '';
-    if (ct.includes('application/json')) { lastCargoError = ''; return null; }   // NO_KEY
+    if (ct.includes('application/json')) { lastCargoError = ''; return null; }
     return mapXml(await r.text(), q.hblNo || q.cargMtNo);
   } catch (e) { lastCargoError = e.message; return null; }
 }
 
 async function fetchReal(num) {
   lastCargoError = '';
-  // Mã quản lý hàng (có chữ cái) tra theo cargMtNo; còn lại tra theo HBL (thử năm nay rồi năm trước)
   if (/[A-Za-z]/.test(num)) return callCargo({ cargMtNo: num });
   const y = new Date().getFullYear();
   for (const yy of [y, y - 1]) {
@@ -352,7 +461,6 @@ function mapXml(xml, num) {
   const sgn = nt(s, 'shcoFlcoSgn');
   return {
     hawb: nt(s, 'hblNo') || nt(s, 'mblNo') || nt(s, 'cargMtNo') || num,
-    blType: nt(s, 'hblNo') ? 'H B/L' : (nt(s, 'mblNo') ? 'M B/L' : 'Mã quản lý'),
     cargoType: nt(s, 'cargTp') || '—',
     productName: nt(s, 'prnm') || '—',
     packages: `${nt(s, 'pckGcnt') || '—'} ${nt(s, 'pckUt') || ''}`.trim(),
@@ -365,6 +473,8 @@ function mapXml(xml, num) {
 }
 
 // ── Tra đơn lẻ ───────────────────────────────────────────────────────────────
+let lastResult = null;   // {d, demo} để render lại khi đổi ngôn ngữ
+
 async function doSearch() {
   const num = document.getElementById('searchInput').value.trim();
   if (!num) return;
@@ -373,9 +483,10 @@ async function doSearch() {
   let data = await fetchReal(num);
   let demo = false;
   if (!data) { data = DEMO[num]; demo = !!data; }
-  btn.disabled = false; btn.textContent = 'Tra cứu';
+  btn.disabled = false; btn.textContent = t('btnSearch');
 
-  if (!data) { renderNotFound(num); return; }
+  if (!data) { lastResult = null; renderNotFound(num); return; }
+  lastResult = { d: data, demo };
   renderResult(data, demo);
 }
 
@@ -387,66 +498,79 @@ function portLabel(code) {
 
 function renderResult(d, demo) {
   const stage = d.stage ?? stageFromKo(d.statusKo);
-  const st = STAGES[stage] || STAGES[0];
   const isOut = stage === 5;
-  const statusVi = isOut ? 'Đã xuất kho' : st.vi;
+  const statusMain = stageLabel(stage);
+  const statusKo = STAGE_KO[stage];
 
   const cells = [
-    ['Loại hàng', '화물구분', esc(d.cargoType || '—')],
-    ['Tên hàng', '품명', esc(d.productName || '—')],
-    ['Kiện / Trọng lượng', '', `${esc(d.packages || '—')} · ${esc(d.weight || '')}`],
-    ['Hãng / Chuyến bay', '', `${esc(d.carrier || '—')} ${esc(d.flight || '')}`.trim()],
-    ['Cảng xếp → Cảng dỡ', '', `${portLabel(d.from)} → ${portLabel(d.to)}`],
-    ['Ngày đến', '입항일', esc(fmtDate(d.date))],
-  ].map(([lab, ko, val]) =>
-    `<div class="info-cell"><div class="lab">${lab}${ko ? ` <span class="ko">${ko}</span>` : ''}</div><div class="val">${val}</div></div>`
-  ).join('');
-
-  const tl = STAGES.map((s, i) => {
-    const cls = i < stage ? 'done' : (i === stage ? (isOut ? 'done' : 'current') : '');
-    return `<div class="tl-step ${cls}"><div class="tl-bar"></div><div class="tl-lab">${s.vi}</div><div class="tl-ko">${s.ko}</div></div>`;
+    [t('labCargoType'), '화물구분', esc(d.cargoType || '—')],
+    [t('labProduct'), '품명', esc(d.productName || '—')],
+    [t('labPkgWeight'), '', `${esc(d.packages || '—')} · ${esc(d.weight || '')}`],
+    [t('labCarrier'), '', `${esc(d.carrier || '—')} ${esc(d.flight || '')}`.trim()],
+    [t('labRoute'), '', `${portLabel(d.from)} → ${portLabel(d.to)}`],
+    [t('labArrival'), '입항일', esc(fmtDate(d.date))],
+  ].map(([lab, ko, val]) => {
+    const koTag = (ko && koRef(ko)) ? ` <span class="ko">${ko}</span>` : '';
+    return `<div class="info-cell"><div class="lab">${lab}${koTag}</div><div class="val">${val}</div></div>`;
   }).join('');
 
+  const tl = LANGS[currentLang].stages.map((_, i) => {
+    const cls = i < stage ? 'done' : (i === stage ? (isOut ? 'done' : 'current') : '');
+    const ko = koRef(STAGE_KO[i]) ? `<div class="tl-ko">${STAGE_KO[i]}</div>` : '';
+    return `<div class="tl-step ${cls}"><div class="tl-bar"></div><div class="tl-lab">${stageLabel(i)}</div>${ko}</div>`;
+  }).join('');
+
+  const koPill = koRef(statusKo) ? `<span class="ko">${statusKo}</span>` : '';
+  const koTl = koRef('진행단계') ? `<span class="ko">진행단계</span>` : '';
   document.getElementById('result').innerHTML = `
     <div class="res-top">
       <div>
         <div class="res-no">${esc(d.hawb)}${demo ? '<span class="demo-tag">DEMO</span>' : ''}</div>
-        <div class="res-sub">Vận đơn nhánh · ${esc(d.blType || 'H B/L')}</div>
+        <div class="res-sub">${t('subBranch')}</div>
       </div>
-      <div class="status-pill ${isOut ? 'green' : ''}"><span class="led"></span>${statusVi}<span class="ko">${st.ko}</span></div>
+      <div class="status-pill ${isOut ? 'green' : ''}"><span class="led"></span>${statusMain}${koPill}</div>
     </div>
     <div class="info-grid">${cells}</div>
-    <div class="tl-title">Tiến trình thông quan<span class="ko">진행단계</span></div>
+    <div class="tl-title">${t('tlTitle')}${koTl}</div>
     <div class="timeline">${tl}</div>`;
   document.getElementById('result').classList.add('show');
 }
 
 function renderNotFound(num) {
   const errLine = lastCargoError
-    ? `<div class="res-sub" style="padding:4px 0;color:#dc2626">⚠️ Lỗi gọi API: <b>${esc(lastCargoError)}</b></div>`
+    ? `<div class="res-sub" style="padding:4px 0;color:#dc2626">⚠️ ${t('apiError')}: <b>${esc(lastCargoError)}</b></div>`
     : '';
   document.getElementById('result').innerHTML =
-    `<div class="res-sub" style="padding:6px 0">Không tìm thấy thông tin cho <b>${esc(num)}</b>. ` +
-    `Kiểm tra lại số vận đơn (HAWB) hoặc thử số quản lý hàng hóa.</div>` + errLine;
+    `<div class="res-sub" style="padding:6px 0">${esc(t('notFound', num))}</div>` + errLine;
   document.getElementById('result').classList.add('show');
 }
 
 // ── Tra hàng loạt ────────────────────────────────────────────────────────────
-let batchRows = [];        // {hawb, date, weight, stage}
+let batchRows = [];
+let batchMeta = { demo: true, label: '' };   // demo=true → tiêu đề mặc định dịch theo ngôn ngữ
 
-function setBatch(rows, sourceTitle) {
+function batchTitleText() { return batchMeta.demo ? t('demoTitle') : batchMeta.label; }
+
+function setBatch(rows, meta) {
+  if (meta) batchMeta = meta;
   batchRows = rows;
-  // Gộp tiêu đề + số lượng trong 1 lần (tránh ghi đè làm mất span đếm)
+  refreshBatchUI();
+}
+
+// Render lại tiêu đề + bộ lọc + bảng (giữ lựa chọn lọc khi đổi ngôn ngữ)
+function refreshBatchUI() {
   document.getElementById('batchTitle').innerHTML =
-    `${esc(sourceTitle)} <span class="muted">(${rows.length} vận đơn)</span>`;
-  // populate filter trạng thái
+    `${esc(batchTitleText())} <span class="muted">(${batchRows.length} ${t('countUnit')})</span>`;
   const fs = document.getElementById('filterStatus');
-  fs.innerHTML = '<option value="">Tất cả trạng thái</option>' +
-    STAGES.map((s, i) => `<option value="${i}">${i === 5 ? 'Đã xuất kho' : s.vi}</option>`).join('');
-  // populate filter ngày
-  const dates = [...new Set(rows.map(r => fmtDate(r.date)))].sort();
-  document.getElementById('filterDate').innerHTML = '<option value="">Tất cả ngày</option>' +
-    dates.map(d => `<option value="${d}">${d}</option>`).join('');
+  const keepS = fs.value;
+  fs.innerHTML = `<option value="">${t('allStatus')}</option>` +
+    LANGS[currentLang].stages.map((_, i) => `<option value="${i}">${stageLabel(i)}</option>`).join('');
+  fs.value = keepS;
+  const fd = document.getElementById('filterDate');
+  const keepD = fd.value;
+  const dates = [...new Set(batchRows.map(r => fmtDate(r.date)))].sort();
+  fd.innerHTML = `<option value="">${t('allDates')}</option>` + dates.map(d => `<option value="${d}">${d}</option>`).join('');
+  fd.value = keepD;
   renderBatch();
 }
 
@@ -462,18 +586,17 @@ function renderBatch() {
   empty.classList.add('hidden');
   body.innerHTML = rows.map(r => {
     const isOut = r.stage === 5;
-    const label = isOut ? 'Đã xuất kho' : STAGES[r.stage].vi;
     return `<tr>
       <td class="hawb">${esc(r.hawb)}</td>
       <td>${esc(fmtDate(r.date))}</td>
       <td>${esc(r.weight)}</td>
-      <td><span class="badge ${isOut ? 'green' : 'blue'}">${label}</span></td>
+      <td><span class="badge ${isOut ? 'green' : 'blue'}">${stageLabel(r.stage)}</span></td>
     </tr>`;
   }).join('');
 }
 
-let workbook = null;       // file Excel đã đọc
-let currentFile = '';      // tên file
+let workbook = null;
+let currentFile = '';
 
 function onFile(ev) {
   const file = ev.target.files[0];
@@ -482,7 +605,6 @@ function onFile(ev) {
   const reader = new FileReader();
   reader.onload = e => {
     workbook = XLSX.read(e.target.result, { type:'array' });
-    // Đổ danh sách sheet (ngày) vào dropdown
     const sel = document.getElementById('sheetSelect');
     sel.innerHTML = workbook.SheetNames.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
     sel.classList.toggle('hidden', workbook.SheetNames.length <= 1);
@@ -495,7 +617,6 @@ function onSheetChange() {
   if (workbook) parseAndScan(document.getElementById('sheetSelect').value);
 }
 
-// Chuyển ô ngày ("5월 12일" / "2026-05-12" / số serial Excel / tên sheet "05.12") → yyyymmdd
 function parseDateCell(val, sheetName) {
   const p2 = n => String(+n).padStart(2, '0');
   const yr = () => new Date().getFullYear();
@@ -504,16 +625,15 @@ function parseDateCell(val, sheetName) {
     if (d) return `${d.y}${p2(d.m)}${p2(d.d)}`;
   }
   const s = String(val);
-  let m = s.match(/(\d{4})\D(\d{1,2})\D(\d{1,2})/);     // "2026-05-12"
+  let m = s.match(/(\d{4})\D(\d{1,2})\D(\d{1,2})/);
   if (m) return `${m[1]}${p2(m[2])}${p2(m[3])}`;
-  m = s.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);        // "5월 12일"
+  m = s.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
   if (m) return `${yr()}${p2(m[1])}${p2(m[2])}`;
-  m = String(sheetName).match(/(\d{1,2})[.\-/](\d{1,2})/); // tên sheet "05.12"
+  m = String(sheetName).match(/(\d{1,2})[.\-/](\d{1,2})/);
   if (m) return `${yr()}${p2(m[1])}${p2(m[2])}`;
   return s;
 }
 
-// Đọc 1 sheet → danh sách bản ghi {hawb, date, weight, pcs}
 function parseSheet(sheetName) {
   const aoa = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header:1, defval:'' });
   let hi = -1; const col = {};
@@ -529,42 +649,35 @@ function parseSheet(sheetName) {
     }
   }
   const recs = [];
-  if (hi < 0) {   // không thấy header HAWB → quét mọi ô là số 9-13 chữ số
+  if (hi < 0) {
     aoa.forEach(r => r.forEach(c => {
       const v = String(c).replace(/\s/g,'');
-      if (/^\d{9,13}$/.test(v)) recs.push({ hawb:v, date:parseDateCell('', sheetName), weight:'', pcs:'' });
+      if (/^\d{9,13}$/.test(v)) recs.push({ hawb:v, date:parseDateCell('', sheetName), weight:'' });
     }));
     return recs;
   }
   for (let i = hi + 1; i < aoa.length; i++) {
     const row = aoa[i];
     const hawb = String(row[col.hawb] ?? '').replace(/\s/g,'');
-    if (!/^\d{9,13}$/.test(hawb)) continue;   // bỏ dòng TOTAL / trống
-    const wt  = col.wt  >= 0 ? String(row[col.wt]  ?? '').trim() : '';
-    const pcs = col.pcs >= 0 ? String(row[col.pcs] ?? '').trim() : '';
-    recs.push({
-      hawb,
-      date: parseDateCell(col.date >= 0 ? row[col.date] : '', sheetName),
-      weight: wt ? `${wt} kg` : '',
-      pcs,
-    });
+    if (!/^\d{9,13}$/.test(hawb)) continue;
+    const wt = col.wt >= 0 ? String(row[col.wt] ?? '').trim() : '';
+    recs.push({ hawb, date: parseDateCell(col.date >= 0 ? row[col.date] : '', sheetName), weight: wt ? `${wt} kg` : '' });
   }
   return recs;
 }
 
 async function parseAndScan(sheetName) {
   const recs = parseSheet(sheetName);
-  if (!recs.length) { alert('Không tìm thấy cột HAWB trong sheet "' + sheetName + '".'); return; }
+  if (!recs.length) { alert(t('noHawb', sheetName)); return; }
   await scanRecords(recs, `${currentFile} · ${sheetName}`);
 }
 
-// Tra trạng thái cho từng bản ghi, giữ nguyên ngày/trọng lượng lấy từ file
-async function scanRecords(recs, sourceName) {
+async function scanRecords(recs, label) {
   const prog = document.getElementById('batchProgress');
   prog.style.display = 'block';
   const rows = [];
   for (let i = 0; i < recs.length; i++) {
-    prog.textContent = `Đang quét... ${i + 1}/${recs.length}`;
+    prog.textContent = t('scanning', i + 1, recs.length);
     const rec = recs[i];
     const d = await fetchReal(rec.hawb);
     let stage;
@@ -572,26 +685,30 @@ async function scanRecords(recs, sourceName) {
       stage = d.stage;
       if (!rec.weight) rec.weight = d.weight;
       if (!rec.date)   rec.date = d.date;
-      await new Promise(r => setTimeout(r, 120));   // tránh quá tải API
+      await new Promise(r => setTimeout(r, 120));
     } else {
       const seed = [...rec.hawb].reduce((a, c) => a + c.charCodeAt(0), 0);
-      stage = seed % 6;   // demo trạng thái khi chưa có key
+      stage = seed % 6;
       if (!rec.weight) rec.weight = `${(((seed * 7) % 190) / 10 + 2).toFixed(1)} kg`;
     }
     rows.push({ hawb:rec.hawb, date:rec.date, weight:rec.weight, stage });
   }
   prog.style.display = 'none';
-  setBatch(rows, sourceName);
+  setBatch(rows, { demo: false, label });
 }
 
 function rescan() {
   if (workbook) parseAndScan(document.getElementById('sheetSelect').value || workbook.SheetNames[0]);
-  else setBatch(genDemoBatch(), 'Kho lạnh Yongma · Danh sách tháng 5');
+  else setBatch(genDemoBatch(), { demo: true, label: '' });
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 (function () {
-  setBatch(genDemoBatch(), 'Kho lạnh Yongma · Danh sách tháng 5');
+  const param = new URLSearchParams(location.search).get('lang');
+  const lang = ['vi','en','ko'].includes(param) ? param : (localStorage.getItem('lang') || 'vi');
+  batchRows = genDemoBatch();
+  batchMeta = { demo: true, label: '' };
+  setLang(lang);   // setLang gọi refreshBatchUI để dựng bảng demo
 })();
 </script>
 </body>

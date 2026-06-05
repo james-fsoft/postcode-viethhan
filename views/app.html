@@ -258,6 +258,11 @@
       background: var(--gray-50);
     }
     textarea:focus { outline: none; border-color: var(--blue); background: white; }
+    .addr-input {
+      width: 100%; padding: 14px 16px; border: 1.5px solid var(--gray-200);
+      border-radius: 8px; font-size: 0.95rem; font-family: inherit; background: var(--gray-50);
+    }
+    .addr-input:focus { outline: none; border-color: var(--blue); background: white; }
 
     .hint { font-size: 0.76rem; color: var(--gray-400); margin-top: 6px; line-height: 1.5; }
 
@@ -632,13 +637,13 @@
   <!-- ══ TAB 1: Manual ══ -->
   <div class="tab-panel active" id="tab-manual">
     <div class="card">
-      <label data-i18n="manualLabel">Danh sách địa chỉ (mỗi dòng 1 địa chỉ)</label>
-      <textarea id="addressInput" data-i18n-placeholder="manualPlaceholder"></textarea>
+      <label data-i18n="manualLabel">Địa chỉ Hàn Quốc</label>
+      <input type="text" id="addressInput" class="addr-input" data-i18n-placeholder="manualPlaceholder" placeholder="경기 수원시 팔달구 향교로 122" onkeydown="if(event.key==='Enter')runManualSearch()" />
       <p class="hint" data-i18n="manualHint">Gợi ý: bỏ số phòng / tên tòa nhà sẽ cho kết quả chính xác hơn.</p>
       <div class="btn-row">
         <button class="btn btn-primary" id="searchBtn" onclick="runManualSearch()" data-i18n="btnSearch">Tra cứu</button>
         <button class="btn btn-ghost" onclick="clearManual()" data-i18n="btnClear">Xóa</button>
-        <button class="btn btn-ghost ml-auto" onclick="loadSample()" data-i18n="btnSample">Tải địa chỉ mẫu</button>
+        <button class="btn btn-ghost ml-auto" onclick="loadSample()" data-i18n="btnSample">Ví dụ</button>
       </div>
       <div class="progress-bar-wrap" id="manualProgressWrap"><div class="progress-bar-fill" id="manualProgressFill"></div></div>
       <div class="progress-label" id="manualProgressLabel"></div>
@@ -794,10 +799,10 @@ const LANGS = {
     excelLockBody: 'Đăng nhập để tải lên file Excel và tra cứu hàng loạt hàng nghìn địa chỉ.',
     errGuestMax: (n) => `Chế độ khách chỉ tra tối đa ${n} địa chỉ mỗi lần. Đăng nhập để tra nhiều hơn.`,
     tabManual: 'Tìm kiếm thủ công', tabExcel: 'Upload Excel',
-    manualLabel: 'Danh sách địa chỉ (mỗi dòng 1 địa chỉ)',
-    manualPlaceholder: 'Ví dụ:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
+    manualLabel: 'Địa chỉ Hàn Quốc',
+    manualPlaceholder: '경기 수원시 팔달구 향교로 122',
     manualHint: 'Gợi ý: bỏ số phòng / tên tòa nhà sẽ cho kết quả chính xác hơn.',
-    btnSearch: 'Tra cứu', btnClear: 'Xóa', btnSample: 'Tải địa chỉ mẫu',
+    btnSearch: 'Tra cứu', btnClear: 'Xóa', btnSample: 'Ví dụ',
     btnCopy: 'Sao chép', btnDownloadResult: 'Tải .xlsx',
     btnDownloadOriginal: 'Tải file gốc', btnProcess: 'Tra cứu mã bưu điện', btnSampleFile: 'Tải file mẫu',
     btnRemove: 'Xóa file', btnLogout: 'Đăng xuất',
@@ -873,10 +878,10 @@ const LANGS = {
     excelLockBody: 'Sign in to upload Excel files and look up thousands of addresses in bulk.',
     errGuestMax: (n) => `Guest mode allows max ${n} addresses per search. Sign in for more.`,
     tabManual: 'Manual Search', tabExcel: 'Upload Excel',
-    manualLabel: 'Address list (one per line)',
-    manualPlaceholder: 'Example:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
+    manualLabel: 'Korean address',
+    manualPlaceholder: '경기 수원시 팔달구 향교로 122',
     manualHint: 'Tip: removing room numbers / building names improves accuracy.',
-    btnSearch: 'Search', btnClear: 'Clear', btnSample: 'Load sample addresses',
+    btnSearch: 'Search', btnClear: 'Clear', btnSample: 'Example',
     btnCopy: 'Copy', btnDownloadResult: 'Download .xlsx',
     btnDownloadOriginal: 'Download original', btnProcess: 'Look up postal codes', btnSampleFile: 'Download template',
     btnRemove: 'Remove', btnLogout: 'Sign out',
@@ -952,10 +957,10 @@ const LANGS = {
     excelLockBody: '엑셀 파일을 업로드하고 수천 개의 주소를 일괄 조회하려면 로그인하세요.',
     errGuestMax: (n) => `게스트 모드는 1회당 최대 ${n}개 주소까지 조회할 수 있습니다. 더 많은 조회는 로그인하세요.`,
     tabManual: '수동 검색', tabExcel: '엑셀 업로드',
-    manualLabel: '주소 목록 (한 줄에 하나씩)',
-    manualPlaceholder: '예시:\n경기 수원시 팔달구 향교로 122\n부산 동래구 미남로116번길 79-4\n대구광역시 북구 태암로6길 37',
+    manualLabel: '한국 주소',
+    manualPlaceholder: '경기 수원시 팔달구 향교로 122',
     manualHint: '팁: 호수/동호 정보를 제거하면 더 정확한 결과를 얻을 수 있습니다.',
-    btnSearch: '우편번호 조회', btnClear: '초기화', btnSample: '예시 주소 불러오기',
+    btnSearch: '우편번호 조회', btnClear: '초기화', btnSample: '예시',
     btnCopy: '복사', btnDownloadResult: '.xlsx 다운로드',
     btnDownloadOriginal: '원본 파일', btnProcess: '우편번호 조회 시작', btnSampleFile: '샘플 파일 다운로드',
     btnRemove: '파일 제거', btnLogout: '로그아웃',
@@ -1375,7 +1380,7 @@ async function batchLookup(addresses, apiKey, onProgress) {
 
 // ── Manual ────────────────────────────────────────────────────────────────────
 let manualRows = [];
-function loadSample() { document.getElementById('addressInput').value = SAMPLE; }
+function loadSample() { document.getElementById('addressInput').value = '경기 수원시 팔달구 향교로 122'; }
 function clearManual() {
   document.getElementById('addressInput').value = '';
   document.getElementById('manualResults').style.display = 'none';
@@ -1387,7 +1392,7 @@ async function runManualSearch() {
   const raw    = document.getElementById('addressInput').value.trim();
   if (!apiKey && !SERVER_JUSO_KEY) { alert(t('errNoApiKey')); return; }
   if (!raw)    { alert(t('errNoAddress')); return; }
-  const addresses = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const addresses = [raw];   // tìm kiếm thủ công: 1 địa chỉ mỗi lần (bulk dùng tab Excel)
   if (!(await useQuota(addresses.length))) return;
   const btn  = document.getElementById('searchBtn');
   const wrap = document.getElementById('manualProgressWrap');

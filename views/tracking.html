@@ -715,7 +715,7 @@ async function loadAuth() {
   if (link) link.style.display = IS_GUEST ? 'inline-flex' : 'none';
 }
 function tryUpload() {
-  if (IS_GUEST) { alert(t('needLogin')); location.href = '/login'; return; }
+  if (IS_GUEST) { alert(t('needLogin')); return; }   // chỉ báo, không chuyển trang
   document.getElementById('fileInput').click();
 }
 

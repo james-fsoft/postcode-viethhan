@@ -257,6 +257,8 @@ function genDemoBatch() {
 // ── API thật ────────────────────────────────────────────────────────────────
 function apiKey() { return document.getElementById('apiKey').value.trim(); }
 
+let lastCargoError = '';   // lý do gọi API thất bại gần nhất (để hiện cho người dùng)
+
 async function callCargo(q) {
   try {
     const params = new URLSearchParams(q);
@@ -264,14 +266,22 @@ async function callCargo(q) {
     const k = apiKey();
     if (k) headers['x-unipass-key'] = k;
     const r = await fetch('/api/cargo?' + params.toString(), { headers });
-    if (!r.ok) return null;
+    if (!r.ok) {
+      let msg = 'HTTP ' + r.status;
+      try { const j = await r.json(); if (j.error) msg = j.error; } catch { /* ignore */ }
+      if (r.status === 401) msg = 'Cần đăng nhập';
+      if (msg === 'NO_KEY') msg = '';   // chưa có key → không coi là lỗi, để fallback demo
+      lastCargoError = msg;
+      return null;
+    }
     const ct = r.headers.get('content-type') || '';
-    if (ct.includes('application/json')) return null;   // NO_KEY / lỗi
+    if (ct.includes('application/json')) { lastCargoError = ''; return null; }   // NO_KEY
     return mapXml(await r.text(), q.hblNo || q.cargMtNo);
-  } catch { return null; }
+  } catch (e) { lastCargoError = e.message; return null; }
 }
 
 async function fetchReal(num) {
+  lastCargoError = '';
   // Mã quản lý hàng (có chữ cái) tra theo cargMtNo; còn lại tra theo HBL (thử năm nay rồi năm trước)
   if (/[A-Za-z]/.test(num)) return callCargo({ cargMtNo: num });
   const y = new Date().getFullYear();
@@ -364,9 +374,12 @@ function renderResult(d, demo) {
 }
 
 function renderNotFound(num) {
+  const errLine = lastCargoError
+    ? `<div class="res-sub" style="padding:4px 0;color:#e0708a">⚠️ Lỗi gọi API: <b>${esc(lastCargoError)}</b></div>`
+    : '';
   document.getElementById('result').innerHTML =
     `<div class="res-sub" style="padding:6px 0">Không tìm thấy thông tin cho <b>${esc(num)}</b>. ` +
-    `Cần nhập UNI-PASS API key (nút ⚙ ở trên) để tra dữ liệu thật.</div>`;
+    `Cần nhập UNI-PASS API key (nút ⚙ ở trên) để tra dữ liệu thật.</div>` + errLine;
   document.getElementById('result').classList.add('show');
 }
 
@@ -376,8 +389,9 @@ let batchSource = 'demo';  // 'demo' | tên file
 
 function setBatch(rows, sourceTitle) {
   batchRows = rows;
-  if (sourceTitle) document.getElementById('batchTitle').innerHTML = `${esc(sourceTitle)}`;
-  document.getElementById('batchCount').textContent = `(${rows.length} vận đơn)`;
+  // Gộp tiêu đề + số lượng trong 1 lần (tránh ghi đè làm mất span đếm)
+  document.getElementById('batchTitle').innerHTML =
+    `${esc(sourceTitle)} <span class="muted">(${rows.length} vận đơn)</span>`;
   // populate filter trạng thái
   const fs = document.getElementById('filterStatus');
   fs.innerHTML = '<option value="">Tất cả trạng thái</option>' +

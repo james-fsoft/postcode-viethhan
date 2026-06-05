@@ -101,6 +101,8 @@ function getText(url, extraHeaders = {}, depth = 0) {
       res.on('end', () => resolve(raw));
     });
 
+    // Timeout 9s — tránh treo function nếu cổng :38010 bị chặn (Vercel egress)
+    req.setTimeout(9000, () => req.destroy(new Error('UPSTREAM_TIMEOUT: không kết nối được tới máy chủ Hải quan (có thể bị chặn cổng/IP)')));
     req.on('error', reject);
     req.end();
   });

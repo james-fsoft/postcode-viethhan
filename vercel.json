@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "regions": ["icn1"],
   "builds": [
     {
       "src": "server.js",

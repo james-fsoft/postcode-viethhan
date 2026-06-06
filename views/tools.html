@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="Vietnam - Korea Logistics" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%231e40af'/><text x='12' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='%23d42126'>V</text><text x='54' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='white'>H</text></svg>" />
 <script type="application/ld+json">
-{ "@context":"https://schema.org","@type":"WebApplication","name":"Tiện ích logistics Việt - Hàn","url":"__BASE__/tools","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"vi","description":"Tỷ giá KRW↔VND, tính trọng lượng tính cước, lịch nghỉ lễ Hàn Quốc, mã sân bay/cảng & giờ Hàn Quốc.","offers":{"@type":"Offer","price":"0","priceCurrency":"VND"} }
+{ "@context":"https://schema.org","@type":"WebApplication","name":"Tiện ích logistics Việt - Hàn","url":"__BASE__/tools","applicationCategory":"BusinessApplication","operatingSystem":"Web","description":"Tỷ giá KRW↔VND, tính trọng lượng tính cước, lịch nghỉ lễ Hàn Quốc, mã sân bay/cảng & giờ Hàn Quốc.","offers":{"@type":"Offer","price":"0","priceCurrency":"VND"} }
 </script>
 <style>
   :root{ --red:#d42126; --blue:#1e40af; --blue-light:#eff6ff; --green:#16a34a; --green-d:#15803d; --green-light:#ecfdf5;
@@ -30,8 +30,21 @@
   .brand img{height:42px;}
   .brand .bn{font-size:1rem;font-weight:800;color:var(--blue);}
   .brand .bs{font-size:.72rem;color:var(--muted2);letter-spacing:1.2px;text-transform:uppercase;}
+  .topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .lang-select{padding:7px 11px;border:1.5px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--muted);font-family:inherit;}
+  .lang-select:focus{outline:none;border-color:var(--blue);}
   .nav-home{font-size:.82rem;font-weight:600;color:var(--blue);text-decoration:none;border:1.5px solid var(--line);background:#fff;padding:8px 16px;border-radius:99px;}
   .nav-home:hover{border-color:var(--blue);}
+  .user-chip{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:99px;padding:4px 12px 4px 5px;box-shadow:var(--shadow);}
+  .user-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--blue));color:#fff;font-weight:700;font-size:.75rem;display:flex;align-items:center;justify-content:center;text-transform:uppercase;flex-shrink:0;}
+  .user-meta{display:flex;flex-direction:column;line-height:1.15;}
+  .user-name{font-size:.78rem;font-weight:700;color:var(--text);}
+  .user-plan{font-size:.64rem;font-weight:600;letter-spacing:.2px;color:var(--muted2);text-transform:uppercase;}
+  .user-plan.trial{color:#b45309;} .user-plan.pro{color:var(--green);} .user-plan.enterprise{color:var(--blue);}
+  .btn-login-top{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--red),var(--blue));color:#fff;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;}
+  .btn-login-top:hover{opacity:.9;}
+  .btn-logout{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1.5px solid #fecaca;background:#fff;color:var(--red);font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;}
+  .btn-logout:hover{background:#fff1f1;}
   .eyebrow{color:var(--green-d);font-size:.74rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;}
   h1{font-size:1.7rem;font-weight:800;margin-bottom:8px;}
   .lead{color:var(--muted);font-size:1rem;margin-bottom:24px;}
@@ -45,17 +58,15 @@
   input.in:focus,select.in:focus{border-color:var(--blue);background:#fff;}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
-  /* FX */
   .fx-big{font-size:1.5rem;font-weight:800;color:var(--blue);margin:2px 0 2px;}
-  .fx-sub{font-size:.78rem;color:var(--muted2);margin-bottom:12px;}
+  .fx-sub{font-size:.76rem;color:var(--muted2);margin-bottom:4px;}
+  .fx-note{font-size:.72rem;color:var(--muted2);margin-bottom:12px;font-style:italic;}
   .fx-conv{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:8px;}
   .fx-conv .swap{align-self:center;color:var(--muted2);font-weight:800;padding-bottom:9px;}
-  /* result box */
   .res{margin-top:14px;background:var(--green-light);border:1px solid #a7f3d0;border-radius:10px;padding:12px 14px;}
   .res .big{font-size:1.4rem;font-weight:800;color:var(--green-d);}
   .res .lbl{font-size:.78rem;color:#065f46;}
   .res .small{font-size:.85rem;color:var(--green-d);margin-top:2px;}
-  /* holidays */
   .hol-next{background:var(--blue-light);border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;margin-bottom:12px;}
   .hol-next .d{font-weight:800;color:var(--blue);font-size:1.05rem;}
   .hol-next .c{font-size:.82rem;color:var(--muted);}
@@ -66,7 +77,7 @@
   .hol-row .dt{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;}
   .hol-row .nm b{color:var(--text);} .hol-row .nm span{color:var(--muted2);font-size:.8rem;}
   .warn{font-size:.78rem;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;margin-top:10px;}
-  /* clock + codes */
+  .src{font-size:.72rem;color:var(--muted2);margin-top:8px;}
   .clock{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
   .clk{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 13px;text-align:center;}
   .clk .t{font-size:1.25rem;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text);}
@@ -89,23 +100,35 @@
   <div class="topbar">
     <a class="brand" href="/">
       <img src="/logo.png" alt="Vietnam - Korea Logistics" />
-      <div><div class="bn">Vietnam - Korea Logistics</div><div class="bs">Tiện ích logistics Việt - Hàn</div></div>
+      <div><div class="bn">Vietnam - Korea Logistics</div><div class="bs" data-i18n="brandSub">Tiện ích logistics Việt - Hàn</div></div>
     </a>
-    <a class="nav-home" href="/">← Trang chính</a>
+    <div class="topbar-right">
+      <div class="user-chip" id="userChip" style="display:none">
+        <span class="user-avatar" id="userAvatar">U</span>
+        <span class="user-meta"><span class="user-name" id="userName"></span><span class="user-plan" id="userPlan"></span></span>
+      </div>
+      <select class="lang-select" id="langSelect" onchange="setLang(this.value)">
+        <option value="vi">Tiếng Việt</option><option value="en">English</option><option value="ko">한국어</option>
+      </select>
+      <button class="btn-login-top" id="loginBtn" onclick="location.href='/login'" style="display:none" data-i18n="login">Đăng nhập</button>
+      <button class="btn-logout" id="logoutBtn" onclick="logout()" style="display:none" data-i18n="logout">Đăng xuất</button>
+      <a class="nav-home" href="/" data-i18n="navHome">← Trang chính</a>
+    </div>
   </div>
 
-  <div class="eyebrow">Tiện ích</div>
-  <h1>Tiện ích logistics Việt - Hàn</h1>
-  <p class="lead">Mấy thứ dân Việt - Hàn cần mỗi ngày: tỷ giá Won, tính cước, lịch lễ Hàn Quốc, mã sân bay/cảng.</p>
+  <div class="eyebrow" data-i18n="eyebrow">Tiện ích</div>
+  <h1 data-i18n="h1">Tiện ích logistics Việt - Hàn</h1>
+  <p class="lead" data-i18n="lead">Mấy thứ dân Việt - Hàn cần mỗi ngày: tỷ giá Won, tính cước, lịch lễ Hàn Quốc, mã sân bay/cảng.</p>
 
   <div class="grid">
 
     <!-- 1. Tỷ giá -->
     <div class="card">
-      <h2>💱 Tỷ giá KRW ↔ VND</h2>
-      <div class="hint">Won Hàn Quốc ↔ Đồng Việt Nam</div>
-      <div class="fx-big" id="fxBig">Đang tải...</div>
+      <h2>💱 <span data-i18n="fxTitle">Tỷ giá KRW ↔ VND</span></h2>
+      <div class="hint" data-i18n="fxHint">Won Hàn Quốc ↔ Đồng Việt Nam</div>
+      <div class="fx-big" id="fxBig">…</div>
       <div class="fx-sub" id="fxSub"></div>
+      <div class="fx-note" id="fxNote"></div>
       <div class="fx-conv">
         <div><label class="fld">KRW (₩)</label><input class="in" id="fxKrw" type="text" inputmode="numeric" value="1000" oninput="fxFrom('krw')" /></div>
         <div class="swap">⇄</div>
@@ -115,25 +138,24 @@
 
     <!-- 2. Trọng lượng tính cước -->
     <div class="card">
-      <h2>📦 Trọng lượng tính cước</h2>
-      <div class="hint">Volumetric / chargeable weight cho hàng không &amp; chuyển phát</div>
+      <h2>📦 <span data-i18n="wTitle">Trọng lượng tính cước</span></h2>
+      <div class="hint" data-i18n="wHint">Volumetric / chargeable weight cho hàng không &amp; chuyển phát</div>
       <div class="row3">
-        <div><label class="fld">Dài (cm)</label><input class="in" id="wD" type="number" min="0" value="40" oninput="calcW()" /></div>
-        <div><label class="fld">Rộng (cm)</label><input class="in" id="wW" type="number" min="0" value="30" oninput="calcW()" /></div>
-        <div><label class="fld">Cao (cm)</label><input class="in" id="wH" type="number" min="0" value="20" oninput="calcW()" /></div>
+        <div><label class="fld" data-i18n="wLong">Dài (cm)</label><input class="in" id="wD" type="number" min="0" value="40" oninput="calcW()" /></div>
+        <div><label class="fld" data-i18n="wWide">Rộng (cm)</label><input class="in" id="wW" type="number" min="0" value="30" oninput="calcW()" /></div>
+        <div><label class="fld" data-i18n="wHigh">Cao (cm)</label><input class="in" id="wH" type="number" min="0" value="20" oninput="calcW()" /></div>
       </div>
-      <div class="row3">
-        <div><label class="fld">Số kiện</label><input class="in" id="wP" type="number" min="1" value="1" oninput="calcW()" /></div>
-        <div><label class="fld">KL thực (kg)</label><input class="in" id="wA" type="number" min="0" value="5" oninput="calcW()" /></div>
-        <div><label class="fld">Loại</label>
-          <select class="in" id="wDiv" onchange="calcW()">
-            <option value="6000">Hàng không (÷6000)</option>
-            <option value="5000">Chuyển phát (÷5000)</option>
-          </select>
-        </div>
+      <div class="row2">
+        <div><label class="fld" data-i18n="wPcs">Số kiện</label><input class="in" id="wP" type="number" min="1" value="1" oninput="calcW()" /></div>
+        <div><label class="fld" data-i18n="wActual">KL thực (kg)</label><input class="in" id="wA" type="number" min="0" value="5" oninput="calcW()" /></div>
       </div>
+      <label class="fld" data-i18n="wType">Loại</label>
+      <select class="in" id="wDiv" onchange="calcW()">
+        <option value="6000" data-i18n="wAir">Hàng không (÷6000)</option>
+        <option value="5000" data-i18n="wExp">Chuyển phát nhanh (÷5000)</option>
+      </select>
       <div class="res">
-        <div class="lbl">Trọng lượng tính cước (chargeable)</div>
+        <div class="lbl" data-i18n="wChargeLbl">Trọng lượng tính cước (chargeable)</div>
         <div class="big" id="wCharge">—</div>
         <div class="small" id="wVol"></div>
       </div>
@@ -141,143 +163,245 @@
 
     <!-- 3. Lịch nghỉ lễ Hàn Quốc -->
     <div class="card">
-      <h2>📅 Lịch nghỉ lễ Hàn Quốc</h2>
-      <div class="hint">Hải quan đóng cửa các ngày này — thông quan có thể trễ.</div>
+      <h2>📅 <span data-i18n="holTitle">Lịch nghỉ lễ Hàn Quốc</span></h2>
+      <div class="hint" data-i18n="holHint">Hải quan đóng cửa các ngày này — thông quan có thể trễ.</div>
       <select class="in" id="holYear" onchange="loadHolidays()" style="margin-bottom:12px;"></select>
       <div id="holNext"></div>
       <div class="hol-list" id="holList"></div>
+      <div class="src" data-i18n="holSrc">Nguồn: lịch ngày lễ công cộng Hàn Quốc (Nager.Date).</div>
     </div>
 
     <!-- 4. Mã sân bay/cảng + giờ HQ -->
     <div class="card">
-      <h2>🛫 Mã sân bay/cảng &amp; giờ Hàn Quốc</h2>
-      <div class="hint">Giờ Hàn Quốc lệch +2 so với Việt Nam.</div>
+      <h2>🛫 <span data-i18n="codeTitle">Mã sân bay/cảng &amp; giờ Hàn Quốc</span></h2>
+      <div class="hint" data-i18n="codeHint">Giờ Hàn Quốc lệch +2 so với Việt Nam.</div>
       <div class="clock">
-        <div class="clk"><div class="t" id="clkKR">--:--:--</div><div class="z">🇰🇷 Hàn Quốc (KST +9)</div></div>
-        <div class="clk"><div class="t" id="clkVN">--:--:--</div><div class="z">🇻🇳 Việt Nam (+7)</div></div>
+        <div class="clk"><div class="t" id="clkKR">--:--:--</div><div class="z" data-i18n="clkKR">🇰🇷 Hàn Quốc (KST +9)</div></div>
+        <div class="clk"><div class="t" id="clkVN">--:--:--</div><div class="z" data-i18n="clkVN">🇻🇳 Việt Nam (+7)</div></div>
       </div>
-      <input class="in" id="codeSearch" type="text" placeholder="Tìm mã / tên (vd: ICN, Busan, Đà Nẵng)" oninput="renderCodes()" />
+      <input class="in" id="codeSearch" type="text" data-i18n-ph="codePh" placeholder="Tìm mã / tên (vd: ICN, Busan, Đà Nẵng)" oninput="renderCodes()" />
       <div class="code-list" id="codeList"></div>
     </div>
 
   </div>
 
   <footer>
-    <p><span class="tf">Transflash</span> · Giải pháp logistics Việt - Hàn</p>
+    <p><span class="tf">Transflash</span> · <span data-i18n="footerTagline">Giải pháp logistics Việt - Hàn</span></p>
     <p style="margin-top:6px;">
-      <a href="/">Tra mã bưu điện</a> · <a href="/tracking">Tra cứu thông quan</a> ·
-      <a href="/customs-guide">Hướng dẫn thông quan</a> · © 2026
+      <a href="/" data-i18n="fPostal">Tra mã bưu điện</a> · <a href="/tracking" data-i18n="fTracking">Tra cứu thông quan</a> ·
+      <a href="/customs-guide" data-i18n="fGuide">Hướng dẫn thông quan</a> · © 2026
     </p>
   </footer>
 </div>
 
 <script>
-const fmt = n => Math.round(n).toLocaleString('vi-VN');
-const onlyNum = s => String(s).replace(/[^\d]/g, '');
+// ── i18n ──────────────────────────────────────────────────────────────────────
+const LANGS = {
+  vi: {
+    brandSub:'Tiện ích logistics Việt - Hàn', navHome:'← Trang chính', login:'Đăng nhập', logout:'Đăng xuất',
+    eyebrow:'Tiện ích', h1:'Tiện ích logistics Việt - Hàn',
+    lead:'Mấy thứ dân Việt - Hàn cần mỗi ngày: tỷ giá Won, tính cước, lịch lễ Hàn Quốc, mã sân bay/cảng.',
+    fxTitle:'Tỷ giá KRW ↔ VND', fxHint:'Won Hàn Quốc ↔ Đồng Việt Nam',
+    fxSub:(d)=>`Tỷ giá tham khảo giữa thị trường (mid-market) · Nguồn: open.er-api.com · Cập nhật ${d}`,
+    fxNote:'Chỉ để tham khảo — không phải tỷ giá giao dịch của ngân hàng.',
+    fxErr:'Không tải được tỷ giá, thử lại sau.',
+    wTitle:'Trọng lượng tính cước', wHint:'Volumetric / chargeable weight cho hàng không & chuyển phát',
+    wLong:'Dài (cm)', wWide:'Rộng (cm)', wHigh:'Cao (cm)', wPcs:'Số kiện', wActual:'KL thực (kg)', wType:'Loại',
+    wAir:'Hàng không (÷6000)', wExp:'Chuyển phát nhanh (÷5000)',
+    wChargeLbl:'Trọng lượng tính cước (chargeable)',
+    wDetail:(vol,act)=>`KL quy đổi: ${vol} kg · KL thực: ${act} kg`,
+    holTitle:'Lịch nghỉ lễ Hàn Quốc', holHint:'Hải quan đóng cửa các ngày này — thông quan có thể trễ.',
+    holYear:(y)=>`Năm ${y}`, holNext:(days,en)=>`Lễ tiếp theo — còn ${days} ngày (${en})`,
+    holWarn:'⚠️ Hải quan & kho HQ nghỉ các ngày này; lịch âm (설날/추석) đổi theo năm.',
+    holSrc:'Nguồn: lịch ngày lễ công cộng Hàn Quốc (Nager.Date).',
+    loading:'Đang tải...', holErr:'Không tải được lịch lễ, thử lại sau.',
+    codeTitle:'Mã sân bay/cảng & giờ Hàn Quốc', codeHint:'Giờ Hàn Quốc lệch +2 so với Việt Nam.',
+    clkKR:'🇰🇷 Hàn Quốc (KST +9)', clkVN:'🇻🇳 Việt Nam (+7)',
+    codePh:'Tìm mã / tên (vd: ICN, Busan, Đà Nẵng)', codeNone:'Không tìm thấy.', typeAir:'Sân bay', typeSea:'Cảng biển',
+    footerTagline:'Giải pháp logistics Việt - Hàn', fPostal:'Tra mã bưu điện', fTracking:'Tra cứu thông quan', fGuide:'Hướng dẫn thông quan',
+  },
+  en: {
+    brandSub:'Vietnam - Korea logistics tools', navHome:'← Home', login:'Log in', logout:'Log out',
+    eyebrow:'Tools', h1:'Vietnam - Korea logistics tools',
+    lead:'What Vietnam - Korea logistics people need daily: KRW rate, chargeable weight, Korea holidays, airport/port codes.',
+    fxTitle:'KRW ↔ VND exchange rate', fxHint:'Korean Won ↔ Vietnamese Dong',
+    fxSub:(d)=>`Mid-market reference rate · Source: open.er-api.com · Updated ${d}`,
+    fxNote:'For reference only — not a bank transaction rate.',
+    fxErr:'Could not load the rate, try again later.',
+    wTitle:'Chargeable weight', wHint:'Volumetric / chargeable weight for air & express',
+    wLong:'Length (cm)', wWide:'Width (cm)', wHigh:'Height (cm)', wPcs:'Pieces', wActual:'Actual wt (kg)', wType:'Mode',
+    wAir:'Air (÷6000)', wExp:'Express (÷5000)',
+    wChargeLbl:'Chargeable weight',
+    wDetail:(vol,act)=>`Volumetric: ${vol} kg · Actual: ${act} kg`,
+    holTitle:'Korea public holidays', holHint:'Customs is closed on these days — clearance may be delayed.',
+    holYear:(y)=>`Year ${y}`, holNext:(days,en)=>`Next holiday — in ${days} days (${en})`,
+    holWarn:'⚠️ Korea customs & warehouses close on these days; lunar dates (Seollal/Chuseok) change yearly.',
+    holSrc:'Source: Korea public holidays (Nager.Date).',
+    loading:'Loading...', holErr:'Could not load holidays, try again later.',
+    codeTitle:'Airport/port codes & Korea time', codeHint:'Korea time is +2 ahead of Vietnam.',
+    clkKR:'🇰🇷 Korea (KST +9)', clkVN:'🇻🇳 Vietnam (+7)',
+    codePh:'Search code / name (e.g. ICN, Busan)', codeNone:'Not found.', typeAir:'Airport', typeSea:'Seaport',
+    footerTagline:'Vietnam - Korea logistics solution', fPostal:'Postal code', fTracking:'Customs tracking', fGuide:'Customs guide',
+  },
+  ko: {
+    brandSub:'베트남-한국 물류 도구', navHome:'← 메인', login:'로그인', logout:'로그아웃',
+    eyebrow:'도구', h1:'베트남-한국 물류 도구',
+    lead:'매일 필요한 것들: 환율, 운임중량, 한국 공휴일, 공항/항만 코드.',
+    fxTitle:'환율 KRW ↔ VND', fxHint:'한국 원화 ↔ 베트남 동',
+    fxSub:(d)=>`중간 시장 기준 참고 환율 · 출처: open.er-api.com · 업데이트 ${d}`,
+    fxNote:'참고용 — 은행 거래 환율이 아닙니다.',
+    fxErr:'환율을 불러오지 못했습니다.',
+    wTitle:'운임 적용 중량', wHint:'항공·특송 부피중량/운임중량',
+    wLong:'길이 (cm)', wWide:'너비 (cm)', wHigh:'높이 (cm)', wPcs:'개수', wActual:'실중량 (kg)', wType:'구분',
+    wAir:'항공 (÷6000)', wExp:'특송 (÷5000)',
+    wChargeLbl:'운임 적용 중량 (chargeable)',
+    wDetail:(vol,act)=>`부피중량: ${vol} kg · 실중량: ${act} kg`,
+    holTitle:'한국 공휴일', holHint:'이 날에는 세관이 휴무 — 통관이 지연될 수 있습니다.',
+    holYear:(y)=>`${y}년`, holNext:(days,en)=>`다음 공휴일 — ${days}일 남음 (${en})`,
+    holWarn:'⚠️ 이 날에는 세관·창고 휴무; 음력(설날/추석)은 매년 변동.',
+    holSrc:'출처: 한국 공휴일 (Nager.Date).',
+    loading:'불러오는 중...', holErr:'공휴일을 불러오지 못했습니다.',
+    codeTitle:'공항/항만 코드 & 한국 시간', codeHint:'한국 시간은 베트남보다 +2 빠릅니다.',
+    clkKR:'🇰🇷 한국 (KST +9)', clkVN:'🇻🇳 베트남 (+7)',
+    codePh:'코드/이름 검색 (예: ICN, 부산)', codeNone:'없음.', typeAir:'공항', typeSea:'항만',
+    footerTagline:'베트남-한국 물류 솔루션', fPostal:'우편번호', fTracking:'통관조회', fGuide:'통관 가이드',
+  },
+};
+let currentLang = 'vi';
+function t(key, ...a){ const v=(LANGS[currentLang]||LANGS.vi)[key]; return typeof v==='function'?v(...a):(v??key); }
+function setLang(lang){
+  if(!LANGS[lang]) lang='vi';
+  currentLang=lang; localStorage.setItem('lang',lang); document.documentElement.lang=lang;
+  const sel=document.getElementById('langSelect'); if(sel) sel.value=lang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ const v=LANGS[lang][el.dataset.i18n]; if(typeof v==='string') el.textContent=v; });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ const v=LANGS[lang][el.dataset.i18nPh]; if(v) el.placeholder=v; });
+  const u=new URL(location.href); if(lang==='vi') u.searchParams.delete('lang'); else u.searchParams.set('lang',lang); history.replaceState(null,'',u);
+  // render lại phần động
+  setupYears(); fxRender(); calcW(); renderHolidays(); renderCodes();
+}
 
-// ── 1. Tỷ giá ────────────────────────────────────────────────────────────────
-let RATE = 0;   // 1 KRW = RATE VND
-async function loadFx() {
-  try {
-    const d = await fetch('/api/fx').then(r => r.json());
-    if (!d.vnd) throw new Error('no rate');
-    RATE = d.vnd;
-    document.getElementById('fxBig').textContent = `1.000 ₩ = ${fmt(RATE * 1000)} ₫`;
-    document.getElementById('fxSub').textContent = `1 ₩ = ${RATE.toFixed(2)} ₫ · Cập nhật: ${(d.updated || '').replace('+0000','UTC')}`;
-    fxFrom('krw');
-  } catch {
-    document.getElementById('fxBig').textContent = '—';
-    document.getElementById('fxSub').innerHTML = '<span class="err">Không tải được tỷ giá, thử lại sau.</span>';
+// ── Đăng nhập ─────────────────────────────────────────────────────────────────
+async function logout(){ try{ await fetch('/api/logout',{method:'POST'}); }catch{} location.reload(); }
+async function loadAuth(){
+  let cfg={}; try{ cfg=await fetch('/api/config').then(r=>r.json()); }catch{}
+  const chip=document.getElementById('userChip'), lb=document.getElementById('loginBtn'), ob=document.getElementById('logoutBtn');
+  if(cfg.isGuest===true || !cfg.username){ chip.style.display='none'; lb.style.display='inline-flex'; ob.style.display='none'; }
+  else{
+    chip.style.display='flex'; document.getElementById('userAvatar').textContent=String(cfg.username).charAt(0);
+    document.getElementById('userName').textContent=cfg.username;
+    const pe=document.getElementById('userPlan'); pe.textContent=cfg.plan||''; pe.className='user-plan '+(cfg.plan||'');
+    lb.style.display='none'; ob.style.display='inline-flex';
   }
 }
-function fxFrom(src) {
-  if (!RATE) return;
-  const krwEl = document.getElementById('fxKrw'), vndEl = document.getElementById('fxVnd');
-  if (src === 'krw') { const k = +onlyNum(krwEl.value) || 0; vndEl.value = fmt(k * RATE); }
-  else { const v = +onlyNum(vndEl.value) || 0; krwEl.value = fmt(v / RATE); }
+
+const fmt = n => Math.round(n).toLocaleString('vi-VN');
+const onlyNum = s => String(s).replace(/[^\d]/g, '');
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+// ── 1. Tỷ giá ────────────────────────────────────────────────────────────────
+let RATE = 0, FX_UPDATED = '';
+async function loadFx(){
+  try{
+    const d=await fetch('/api/fx').then(r=>r.json());
+    if(!d.vnd) throw 0;
+    RATE=d.vnd; FX_UPDATED=(d.updated||'').replace('+0000','UTC'); fxRender(); fxFrom('krw');
+  }catch{ document.getElementById('fxBig').textContent='—'; document.getElementById('fxSub').innerHTML=`<span class="err">${t('fxErr')}</span>`; }
+}
+function fxRender(){
+  if(!RATE) return;
+  document.getElementById('fxBig').textContent=`1.000 ₩ = ${fmt(RATE*1000)} ₫`;
+  document.getElementById('fxSub').textContent=`1 ₩ = ${RATE.toFixed(2)} ₫ · ${t('fxSub', FX_UPDATED)}`;
+  document.getElementById('fxNote').textContent=t('fxNote');
+}
+function fxFrom(src){
+  if(!RATE) return;
+  const k=document.getElementById('fxKrw'), v=document.getElementById('fxVnd');
+  if(src==='krw'){ v.value=fmt((+onlyNum(k.value)||0)*RATE); } else { k.value=fmt((+onlyNum(v.value)||0)/RATE); }
 }
 
 // ── 2. Trọng lượng tính cước ─────────────────────────────────────────────────
-function calcW() {
+function calcW(){
   const D=+document.getElementById('wD').value||0, W=+document.getElementById('wW').value||0,
         H=+document.getElementById('wH').value||0, P=+document.getElementById('wP').value||1,
         A=+document.getElementById('wA').value||0, div=+document.getElementById('wDiv').value||6000;
-  const vol = (D*W*H*P)/div;
-  const charge = Math.max(A, vol);
-  document.getElementById('wCharge').textContent = `${charge.toFixed(2)} kg`;
-  document.getElementById('wVol').textContent = `KL quy đổi: ${vol.toFixed(2)} kg · KL thực: ${A.toFixed(2)} kg`;
+  const vol=(D*W*H*P)/div, charge=Math.max(A,vol);
+  document.getElementById('wCharge').textContent=`${charge.toFixed(2)} kg`;
+  document.getElementById('wVol').textContent=t('wDetail', vol.toFixed(2), A.toFixed(2));
 }
 
 // ── 3. Lịch nghỉ lễ ──────────────────────────────────────────────────────────
-function setupYears() {
-  const y = new Date().getFullYear(), sel = document.getElementById('holYear');
-  sel.innerHTML = [y, y+1].map(v => `<option value="${v}">Năm ${v}</option>`).join('');
+let HOLIDAYS = [];
+function setupYears(){
+  const y=new Date().getFullYear(), sel=document.getElementById('holYear'), cur=sel.value;
+  sel.innerHTML=[y,y+1].map(v=>`<option value="${v}">${t('holYear',v)}</option>`).join('');
+  if(cur) sel.value=cur;
 }
-async function loadHolidays() {
-  const year = document.getElementById('holYear').value;
-  const list = document.getElementById('holList'), next = document.getElementById('holNext');
-  list.innerHTML = '<div style="padding:12px;color:#94a3b8;font-size:.85rem">Đang tải...</div>'; next.innerHTML='';
-  try {
-    const arr = await fetch('/api/holidays?year=' + year).then(r => r.json());
-    if (!Array.isArray(arr) || !arr.length) throw new Error('empty');
-    const today = new Date(); today.setHours(0,0,0,0);
-    const upcoming = arr.find(h => new Date(h.date) >= today);
-    if (upcoming) {
-      const days = Math.ceil((new Date(upcoming.date) - today) / 86400000);
-      next.innerHTML = `<div class="hol-next"><div class="d">${fmtD(upcoming.date)} · ${upcoming.ko}</div><div class="c">Lễ tiếp theo — còn ${days} ngày (${upcoming.en})</div></div>`;
-    }
-    list.innerHTML = arr.map(h => {
-      const past = new Date(h.date) < today;
-      return `<div class="hol-row${past?' past':''}"><span class="dt">${fmtD(h.date)}</span><span class="nm"><b>${esc(h.ko)}</b> <span>${esc(h.en)}</span></span></div>`;
-    }).join('') + '<div class="warn">⚠️ Hải quan & kho HQ nghỉ các ngày này, lịch âm (설날/추석) đổi theo năm.</div>';
-  } catch {
-    list.innerHTML = '<div class="err" style="padding:12px">Không tải được lịch lễ, thử lại sau.</div>';
-  }
+async function loadHolidays(){
+  const year=document.getElementById('holYear').value;
+  document.getElementById('holList').innerHTML=`<div style="padding:12px;color:#94a3b8;font-size:.85rem">${t('loading')}</div>`;
+  document.getElementById('holNext').innerHTML='';
+  try{
+    HOLIDAYS=await fetch('/api/holidays?year='+year).then(r=>r.json());
+    if(!Array.isArray(HOLIDAYS)||!HOLIDAYS.length) throw 0;
+    renderHolidays();
+  }catch{ HOLIDAYS=[]; document.getElementById('holList').innerHTML=`<div class="err" style="padding:12px">${t('holErr')}</div>`; }
+}
+function renderHolidays(){
+  if(!HOLIDAYS.length) return;
+  const today=new Date(); today.setHours(0,0,0,0);
+  const up=HOLIDAYS.find(h=>new Date(h.date)>=today);
+  const next=document.getElementById('holNext');
+  next.innerHTML = up ? `<div class="hol-next"><div class="d">${fmtD(up.date)} · ${esc(up.ko)}</div><div class="c">${t('holNext', Math.ceil((new Date(up.date)-today)/86400000), esc(up.en))}</div></div>` : '';
+  document.getElementById('holList').innerHTML = HOLIDAYS.map(h=>{
+    const past=new Date(h.date)<today;
+    return `<div class="hol-row${past?' past':''}"><span class="dt">${fmtD(h.date)}</span><span class="nm"><b>${esc(h.ko)}</b> <span>${esc(h.en)}</span></span></div>`;
+  }).join('') + `<div class="warn">${t('holWarn')}</div>`;
 }
 function fmtD(s){ const [y,m,d]=s.split('-'); return `${d}/${m}`; }
-function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
 // ── 4. Giờ + mã sân bay/cảng ─────────────────────────────────────────────────
 const PLACES = [
-  {code:'ICN', name:'Incheon Intl', city:'Seoul / Incheon', flag:'🇰🇷', type:'Sân bay'},
-  {code:'GMP', name:'Gimpo Intl', city:'Seoul', flag:'🇰🇷', type:'Sân bay'},
-  {code:'PUS', name:'Gimhae Intl', city:'Busan', flag:'🇰🇷', type:'Sân bay'},
-  {code:'CJU', name:'Jeju Intl', city:'Jeju', flag:'🇰🇷', type:'Sân bay'},
-  {code:'TAE', name:'Daegu Intl', city:'Daegu', flag:'🇰🇷', type:'Sân bay'},
-  {code:'DAD', name:'Đà Nẵng Intl', city:'Đà Nẵng', flag:'🇻🇳', type:'Sân bay'},
-  {code:'SGN', name:'Tân Sơn Nhất', city:'TP.HCM', flag:'🇻🇳', type:'Sân bay'},
-  {code:'HAN', name:'Nội Bài', city:'Hà Nội', flag:'🇻🇳', type:'Sân bay'},
-  {code:'HPH', name:'Cát Bi', city:'Hải Phòng', flag:'🇻🇳', type:'Sân bay'},
-  {code:'CXR', name:'Cam Ranh', city:'Nha Trang', flag:'🇻🇳', type:'Sân bay'},
-  {code:'VCA', name:'Cần Thơ', city:'Cần Thơ', flag:'🇻🇳', type:'Sân bay'},
-  {code:'KRPUS', name:'Cảng Busan', city:'Busan', flag:'🇰🇷', type:'Cảng biển'},
-  {code:'KRINC', name:'Cảng Incheon', city:'Incheon', flag:'🇰🇷', type:'Cảng biển'},
-  {code:'KRKAN', name:'Cảng Gwangyang', city:'Gwangyang', flag:'🇰🇷', type:'Cảng biển'},
-  {code:'VNSGN', name:'Cảng Cát Lái', city:'TP.HCM', flag:'🇻🇳', type:'Cảng biển'},
-  {code:'VNHPH', name:'Cảng Hải Phòng', city:'Hải Phòng', flag:'🇻🇳', type:'Cảng biển'},
-  {code:'VNDAD', name:'Cảng Tiên Sa', city:'Đà Nẵng', flag:'🇻🇳', type:'Cảng biển'},
+  {code:'ICN', name:'Incheon Intl', city:'Seoul / Incheon', flag:'🇰🇷', type:'air'},
+  {code:'GMP', name:'Gimpo Intl', city:'Seoul', flag:'🇰🇷', type:'air'},
+  {code:'PUS', name:'Gimhae Intl', city:'Busan', flag:'🇰🇷', type:'air'},
+  {code:'CJU', name:'Jeju Intl', city:'Jeju', flag:'🇰🇷', type:'air'},
+  {code:'TAE', name:'Daegu Intl', city:'Daegu', flag:'🇰🇷', type:'air'},
+  {code:'DAD', name:'Đà Nẵng Intl', city:'Đà Nẵng', flag:'🇻🇳', type:'air'},
+  {code:'SGN', name:'Tân Sơn Nhất', city:'TP.HCM', flag:'🇻🇳', type:'air'},
+  {code:'HAN', name:'Nội Bài', city:'Hà Nội', flag:'🇻🇳', type:'air'},
+  {code:'HPH', name:'Cát Bi', city:'Hải Phòng', flag:'🇻🇳', type:'air'},
+  {code:'CXR', name:'Cam Ranh', city:'Nha Trang', flag:'🇻🇳', type:'air'},
+  {code:'VCA', name:'Cần Thơ', city:'Cần Thơ', flag:'🇻🇳', type:'air'},
+  {code:'KRPUS', name:'Cảng Busan', city:'Busan', flag:'🇰🇷', type:'sea'},
+  {code:'KRINC', name:'Cảng Incheon', city:'Incheon', flag:'🇰🇷', type:'sea'},
+  {code:'KRKAN', name:'Cảng Gwangyang', city:'Gwangyang', flag:'🇰🇷', type:'sea'},
+  {code:'VNSGN', name:'Cảng Cát Lái', city:'TP.HCM', flag:'🇻🇳', type:'sea'},
+  {code:'VNHPH', name:'Cảng Hải Phòng', city:'Hải Phòng', flag:'🇻🇳', type:'sea'},
+  {code:'VNDAD', name:'Cảng Tiên Sa', city:'Đà Nẵng', flag:'🇻🇳', type:'sea'},
 ];
-function renderCodes() {
-  const q = (document.getElementById('codeSearch').value || '').trim().toLowerCase();
-  const rows = PLACES.filter(p => !q || (p.code + p.name + p.city).toLowerCase().includes(q));
-  document.getElementById('codeList').innerHTML = rows.length ? rows.map(p =>
-    `<div class="code-row"><span class="cd">${p.code}</span><span class="nm">${p.flag} ${esc(p.name)} <span>${esc(p.city)}</span></span><span class="tp">${p.type}</span></div>`
-  ).join('') : '<div style="padding:10px;color:#94a3b8;font-size:.85rem">Không tìm thấy.</div>';
+function renderCodes(){
+  const q=(document.getElementById('codeSearch').value||'').trim().toLowerCase();
+  const rows=PLACES.filter(p=>!q||(p.code+p.name+p.city).toLowerCase().includes(q));
+  document.getElementById('codeList').innerHTML = rows.length ? rows.map(p=>
+    `<div class="code-row"><span class="cd">${p.code}</span><span class="nm">${p.flag} ${esc(p.name)} <span>${esc(p.city)}</span></span><span class="tp">${t(p.type==='air'?'typeAir':'typeSea')}</span></div>`
+  ).join('') : `<div style="padding:10px;color:#94a3b8;font-size:.85rem">${t('codeNone')}</div>`;
 }
-function tickClock() {
-  const now = new Date();
-  const opt = { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false };
-  document.getElementById('clkKR').textContent = now.toLocaleTimeString('vi-VN', { ...opt, timeZone:'Asia/Seoul' });
-  document.getElementById('clkVN').textContent = now.toLocaleTimeString('vi-VN', { ...opt, timeZone:'Asia/Ho_Chi_Minh' });
+function tickClock(){
+  const now=new Date(), opt={hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false};
+  document.getElementById('clkKR').textContent=now.toLocaleTimeString('vi-VN',{...opt,timeZone:'Asia/Seoul'});
+  document.getElementById('clkVN').textContent=now.toLocaleTimeString('vi-VN',{...opt,timeZone:'Asia/Ho_Chi_Minh'});
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-loadFx();
-calcW();
-setupYears();
-loadHolidays();
-renderCodes();
-tickClock(); setInterval(tickClock, 1000);
+(function(){
+  const param=new URLSearchParams(location.search).get('lang');
+  const lang=['vi','en','ko'].includes(param)?param:(localStorage.getItem('lang')||'vi');
+  setLang(lang);       // dựng text tĩnh + setupYears
+  loadAuth();
+  loadFx();
+  loadHolidays();
+  tickClock(); setInterval(tickClock,1000);
+})();
 </script>
 </body>
 </html>

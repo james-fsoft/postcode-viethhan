@@ -128,6 +128,7 @@
       <div class="hint" data-i18n="fxHint">Won Hàn Quốc ↔ Đồng Việt Nam</div>
       <div class="fx-big" id="fxBig">…</div>
       <div class="fx-sub" id="fxSub"></div>
+      <div class="fx-bank" id="fxBank" style="font-size:.84rem;color:var(--green-d);font-weight:700;margin:6px 0;"></div>
       <div class="fx-note" id="fxNote"></div>
       <div class="fx-conv">
         <div><label class="fld">KRW (₩)</label><input class="in" id="fxKrw" type="text" inputmode="numeric" value="1000" oninput="fxFrom('krw')" /></div>
@@ -183,6 +184,26 @@
       <div class="code-list" id="codeList"></div>
     </div>
 
+    <!-- 5. Ước tính thuế nhập khẩu -->
+    <div class="card">
+      <h2>🧾 <span data-i18n="taxTitle">Ước tính thuế nhập khẩu (Hàn Quốc)</span></h2>
+      <div class="hint" data-i18n="taxHint">Thuế nhập khẩu + VAT 10% (관세 + 부가세)</div>
+      <div class="row2">
+        <div><label class="fld" data-i18n="taxCif">Trị giá CIF</label><input class="in" id="txCif" type="number" min="0" value="1000" oninput="calcTax()" /></div>
+        <div><label class="fld" data-i18n="taxUnit">Đơn vị</label><input class="in" id="txUnit" type="text" value="USD" oninput="calcTax()" /></div>
+      </div>
+      <div class="row2">
+        <div><label class="fld" data-i18n="taxDuty">Thuế NK (%)</label><input class="in" id="txDuty" type="number" min="0" value="8" oninput="calcTax()" /></div>
+        <div><label class="fld" data-i18n="taxVat">VAT (%)</label><input class="in" id="txVat" type="number" min="0" value="10" oninput="calcTax()" /></div>
+      </div>
+      <div class="res">
+        <div class="lbl" data-i18n="taxTotalLbl">Tổng thuế ước tính</div>
+        <div class="big" id="txTotal">—</div>
+        <div class="small" id="txBreak"></div>
+      </div>
+      <div class="src" data-i18n="taxNote">Ước tính tham khảo. Thuế NK thực tế theo HS code & C/O ưu đãi (form VK theo VKFTA).</div>
+    </div>
+
   </div>
 
   <footer>
@@ -205,6 +226,11 @@ const LANGS = {
     fxSub:(d)=>`Tỷ giá tham khảo giữa thị trường (mid-market) · Nguồn: open.er-api.com · Cập nhật ${d}`,
     fxNote:'Chỉ để tham khảo — không phải tỷ giá giao dịch của ngân hàng.',
     fxErr:'Không tải được tỷ giá, thử lại sau.',
+    fxBank:(t,s)=>`Vietcombank (KRW): Mua CK ${t} · Bán ${s} ₫/₩`,
+    taxTitle:'Ước tính thuế nhập khẩu (Hàn Quốc)', taxHint:'Thuế nhập khẩu + VAT 10% (관세 + 부가세)',
+    taxCif:'Trị giá CIF', taxUnit:'Đơn vị', taxDuty:'Thuế NK (%)', taxVat:'VAT (%)', taxTotalLbl:'Tổng thuế ước tính',
+    taxBreak:(d,v,g,u)=>`Thuế NK: ${d} · VAT: ${v} · Tổng có hàng: ${g} ${u}`,
+    taxNote:'Ước tính tham khảo. Thuế NK thực tế theo HS code & C/O ưu đãi (form VK theo VKFTA).',
     wTitle:'Trọng lượng tính cước', wHint:'Volumetric / chargeable weight cho hàng không & chuyển phát',
     wLong:'Dài (cm)', wWide:'Rộng (cm)', wHigh:'Cao (cm)', wPcs:'Số kiện', wActual:'KL thực (kg)', wType:'Loại',
     wAir:'Hàng không (÷6000)', wExp:'Chuyển phát nhanh (÷5000)',
@@ -228,6 +254,11 @@ const LANGS = {
     fxSub:(d)=>`Mid-market reference rate · Source: open.er-api.com · Updated ${d}`,
     fxNote:'For reference only — not a bank transaction rate.',
     fxErr:'Could not load the rate, try again later.',
+    fxBank:(t,s)=>`Vietcombank (KRW): Buy ${t} · Sell ${s} ₫/₩`,
+    taxTitle:'Import tax estimate (Korea)', taxHint:'Import duty + 10% VAT',
+    taxCif:'CIF value', taxUnit:'Unit', taxDuty:'Duty (%)', taxVat:'VAT (%)', taxTotalLbl:'Estimated total tax',
+    taxBreak:(d,v,g,u)=>`Duty: ${d} · VAT: ${v} · With goods: ${g} ${u}`,
+    taxNote:'Reference estimate. Actual duty depends on HS code & preferential C/O (VKFTA form VK).',
     wTitle:'Chargeable weight', wHint:'Volumetric / chargeable weight for air & express',
     wLong:'Length (cm)', wWide:'Width (cm)', wHigh:'Height (cm)', wPcs:'Pieces', wActual:'Actual wt (kg)', wType:'Mode',
     wAir:'Air (÷6000)', wExp:'Express (÷5000)',
@@ -251,6 +282,11 @@ const LANGS = {
     fxSub:(d)=>`중간 시장 기준 참고 환율 · 출처: open.er-api.com · 업데이트 ${d}`,
     fxNote:'참고용 — 은행 거래 환율이 아닙니다.',
     fxErr:'환율을 불러오지 못했습니다.',
+    fxBank:(t,s)=>`Vietcombank (KRW): 매입 ${t} · 매도 ${s} ₫/₩`,
+    taxTitle:'수입세 예상 (한국)', taxHint:'관세 + 부가세 10%',
+    taxCif:'CIF 금액', taxUnit:'단위', taxDuty:'관세 (%)', taxVat:'부가세 (%)', taxTotalLbl:'예상 세금 합계',
+    taxBreak:(d,v,g,u)=>`관세: ${d} · 부가세: ${v} · 물품포함: ${g} ${u}`,
+    taxNote:'참고용 예상치. 실제 관세는 HS코드 및 특혜 C/O(VKFTA form VK)에 따라 달라집니다.',
     wTitle:'운임 적용 중량', wHint:'항공·특송 부피중량/운임중량',
     wLong:'길이 (cm)', wWide:'너비 (cm)', wHigh:'높이 (cm)', wPcs:'개수', wActual:'실중량 (kg)', wType:'구분',
     wAir:'항공 (÷6000)', wExp:'특송 (÷5000)',
@@ -277,7 +313,7 @@ function setLang(lang){
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ const v=LANGS[lang][el.dataset.i18nPh]; if(v) el.placeholder=v; });
   const u=new URL(location.href); if(lang==='vi') u.searchParams.delete('lang'); else u.searchParams.set('lang',lang); history.replaceState(null,'',u);
   // render lại phần động
-  setupYears(); fxRender(); calcW(); renderHolidays(); renderCodes();
+  setupYears(); fxRender(); renderVcb(); calcW(); calcTax(); renderHolidays(); renderCodes();
 }
 
 // ── Đăng nhập ─────────────────────────────────────────────────────────────────
@@ -318,6 +354,15 @@ function fxFrom(src){
   const k=document.getElementById('fxKrw'), v=document.getElementById('fxVnd');
   if(src==='krw'){ v.value=fmt((+onlyNum(k.value)||0)*RATE); } else { k.value=fmt((+onlyNum(v.value)||0)/RATE); }
 }
+// Tỷ giá ngân hàng Vietcombank (KRW)
+let VCB=null;
+async function loadVcb(){
+  try{ VCB=await fetch('/api/vcb').then(r=>r.json()); if(!VCB||!VCB.transfer) throw 0; renderVcb(); }catch{ VCB=null; }
+}
+function renderVcb(){
+  const el=document.getElementById('fxBank');
+  el.textContent = VCB ? t('fxBank', VCB.transfer, VCB.sell) : '';
+}
 
 // ── 2. Trọng lượng tính cước ─────────────────────────────────────────────────
 function calcW(){
@@ -327,6 +372,15 @@ function calcW(){
   const vol=(D*W*H*P)/div, charge=Math.max(A,vol);
   document.getElementById('wCharge').textContent=`${charge.toFixed(2)} kg`;
   document.getElementById('wVol').textContent=t('wDetail', vol.toFixed(2), A.toFixed(2));
+}
+
+// ── 5. Ước tính thuế nhập khẩu ────────────────────────────────────────────────
+function calcTax(){
+  const cif=+document.getElementById('txCif').value||0, duty=(+document.getElementById('txDuty').value||0)/100,
+        vat=(+document.getElementById('txVat').value||0)/100, unit=(document.getElementById('txUnit').value||'').trim();
+  const dutyAmt=cif*duty, vatAmt=(cif+dutyAmt)*vat, total=dutyAmt+vatAmt;
+  document.getElementById('txTotal').textContent=`${fmt(total)} ${unit}`.trim();
+  document.getElementById('txBreak').textContent=t('taxBreak', fmt(dutyAmt), fmt(vatAmt), fmt(cif+total), unit);
 }
 
 // ── 3. Lịch nghỉ lễ ──────────────────────────────────────────────────────────
@@ -399,6 +453,7 @@ function tickClock(){
   setLang(lang);       // dựng text tĩnh + setupYears
   loadAuth();
   loadFx();
+  loadVcb();
   loadHolidays();
   tickClock(); setInterval(tickClock,1000);
 })();

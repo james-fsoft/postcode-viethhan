@@ -244,6 +244,22 @@ app.get('/api/fx', async (req, res) => {
   }
 });
 
+// ── Tiện ích: tỷ giá Vietcombank KRW (proxy + cache 1h) ──────────────────────
+let vcbCache = null;
+app.get('/api/vcb', async (req, res) => {
+  try {
+    if (vcbCache && Date.now() - vcbCache.fetchedAt < 3600 * 1000) return res.json(vcbCache);
+    const data = await getJson('https://www.vietcombank.com.vn/api/exchangerates?date=now');
+    const krw = (data.Data || []).find(x => x.currencyCode === 'KRW');
+    if (!krw) throw new Error('NO_KRW');
+    vcbCache = { cash: krw.cash, transfer: krw.transfer, sell: krw.sell, updated: data.UpdatedDate || '', fetchedAt: Date.now() };
+    res.json(vcbCache);
+  } catch (e) {
+    if (vcbCache) return res.json(vcbCache);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── Tiện ích: lịch nghỉ lễ Hàn Quốc (proxy + cache 24h) ──────────────────────
 const holCache = {};
 app.get('/api/holidays', async (req, res) => {

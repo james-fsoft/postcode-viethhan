@@ -170,8 +170,8 @@ function gen(){
       <div class="phon">${esc(r.phon)}</div>
     </div>
     <div class="btn-row">
-      <button class="btn2" onclick="copyResult()">📋 Sao chép</button>
-      <button class="btn2" onclick="copyLink()">🔗 Chia sẻ</button>
+      <button class="btn2" onclick="copyResult(this)">📋 Sao chép</button>
+      <button class="btn2" onclick="copyLink(this)">🔗 Chia sẻ</button>
     </div>
     <p class="note">⚠️ Chỉ để vui — một âm tiếng Việt có thể ứng nhiều chữ Hán, kết quả mang tính tương đối.</p>`;
   res.classList.add('show');
@@ -180,16 +180,30 @@ function gen(){
 function quick(n){ document.getElementById('nameIn').value=n; gen(); }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
-function copyResult(){
+function copyText(txt, el, msg){
+  const ok = () => flash(el, msg);
+  if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+    navigator.clipboard.writeText(txt).then(ok).catch(() => fallbackCopy(txt, ok));
+  } else { fallbackCopy(txt, ok); }
+}
+function fallbackCopy(txt, cb){
+  const ta = document.createElement('textarea');
+  ta.value = txt; ta.style.position = 'fixed'; ta.style.top = '-9999px'; ta.setAttribute('readonly','');
+  document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, txt.length);
+  try { document.execCommand('copy'); } catch (e) { /* ignore */ }
+  document.body.removeChild(ta); if (cb) cb();
+}
+function copyResult(el){
+  if (!LAST) return;
   const r = generate(LAST);
-  const txt = `Tên tiếng Hàn của tôi: ${r.han} (${r.roman})${r.hanja?' '+r.hanja:''} — tạo tại ${location.host}/ten-tieng-han`;
-  navigator.clipboard.writeText(txt).then(()=>flash(event.target,'✓ Đã copy'));
+  const txt = `Tên tiếng Hàn của tôi: ${r.han} (${r.roman})${r.hanja ? ' ' + r.hanja : ''} — tạo tại ${location.host}/ten-tieng-han`;
+  copyText(txt, el, '✓ Đã copy');
 }
-function copyLink(){
-  const u = new URL(location.origin+'/ten-tieng-han'); if(LAST) u.searchParams.set('name',LAST);
-  navigator.clipboard.writeText(u.toString()).then(()=>flash(event.target,'✓ Đã copy link'));
+function copyLink(el){
+  const u = new URL(location.origin + '/ten-tieng-han'); if (LAST) u.searchParams.set('name', LAST);
+  copyText(u.toString(), el, '✓ Đã copy link');
 }
-function flash(el,t){ const o=el.textContent; el.textContent=t; setTimeout(()=>el.textContent=o,1500); }
+function flash(el, t){ if (!el) return; const o = el.textContent; el.textContent = t; setTimeout(() => { el.textContent = o; }, 1500); }
 
 // Mở link chia sẻ ?name=...
 (function(){

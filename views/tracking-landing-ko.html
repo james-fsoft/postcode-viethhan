@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ── SEO ── -->
+  <title>운송장 번호로 한국 수입화물 통관진행정보 대량 조회 (UNI-PASS) | 베트남-한국 물류</title>
+  <meta name="description" content="운송장 번호(HAWB) 또는 화물관리번호로 한국 수입화물의 통관 진행정보(화물통관진행정보)를 조회합니다. 엑셀로 창고 리스트 수백 건을 한 번에 조회 — 관세청 UNI-PASS 직접 연동. 베트남-한국 운송·물류 업체를 위한 솔루션." />
+  <meta name="keywords" content="화물통관진행정보 조회, UNI-PASS, 통관조회, 운송장 조회, HAWB 조회, 화물관리번호 조회, 수입통관 진행정보, 대량 통관조회, 관세청 화물조회, 반출완료, 수입신고수리, 베트남 한국 물류, 통관 엑셀 조회" />
+  <link rel="canonical" href="https://postcode-viethhan.vercel.app/tracking-info?lang=ko" />
+  <link rel="alternate" hreflang="vi" href="https://postcode-viethhan.vercel.app/tracking-info" />
+  <link rel="alternate" hreflang="en" href="https://postcode-viethhan.vercel.app/tracking-info?lang=en" />
+  <link rel="alternate" hreflang="ko" href="https://postcode-viethhan.vercel.app/tracking-info?lang=ko" />
+  <link rel="alternate" hreflang="x-default" href="https://postcode-viethhan.vercel.app/tracking-info" />
+  <meta name="robots" content="index, follow" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="운송장 번호로 한국 수입화물 통관진행정보 대량 조회 (UNI-PASS)" />
+  <meta property="og:description" content="엑셀로 창고 리스트 수백 건의 통관 진행상태를 한 번에 조회. 관세청 UNI-PASS 직접 연동." />
+  <meta property="og:url" content="https://postcode-viethhan.vercel.app/tracking-info?lang=ko" />
+  <meta property="og:image" content="https://postcode-viethhan.vercel.app/logo.png" />
+  <meta property="og:site_name" content="Vietnam - Korea Logistics" />
+  <meta property="og:locale" content="ko_KR" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="한국 수입화물 통관진행정보 대량 조회 (UNI-PASS)" />
+  <meta name="twitter:description" content="운송장 번호로 통관 진행정보를 조회하고, 엑셀로 수백 건을 한 번에 조회하세요." />
+  <meta name="twitter:image" content="https://postcode-viethhan.vercel.app/logo.png" />
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%231e40af'/><text x='12' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='%23d42126'>V</text><text x='54' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='white'>H</text></svg>" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Vietnam - Korea Logistics – 한국 수입화물 통관진행정보 조회 (UNI-PASS)",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "운송장 번호(HAWB) 또는 화물관리번호로 한국 수입화물 통관진행정보를 조회하고, 엑셀로 대량 조회하는 베트남-한국 물류 업체용 솔루션. 관세청 UNI-PASS 직접 연동.",
+    "url": "https://postcode-viethhan.vercel.app/tracking",
+    "inLanguage": ["ko", "vi", "en"],
+    "offers": [
+      { "@type": "Offer", "name": "무료", "price": "0", "priceCurrency": "VND", "description": "운송장(HAWB)/화물관리번호 단건 조회 무제한." },
+      { "@type": "Offer", "name": "운송 기업", "priceCurrency": "VND", "description": "엑셀 창고 리스트 수백 건 일괄 조회, 다중 계정. 견적 문의." },
+      { "@type": "Offer", "name": "Enterprise / API", "priceCurrency": "VND", "description": "TMS/WMS API 연동, 우선 지원. 견적 문의." }
+    ],
+    "publisher": { "@type": "Organization", "name": "Transflash", "url": "https://transflash.app" }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "한국 수입화물의 통관 진행정보를 어떻게 조회하나요?",
+        "acceptedAnswer": { "@type": "Answer", "text": "운송장 번호(HAWB) 또는 화물관리번호를 입력하면 관세청 UNI-PASS에서 직접 조회하여 적재화물목록제출 → 하선/하기신고 → 물품반입 → 수입신고 → 수입신고수리 → 반출완료까지 전체 통관 진행단계를 보여줍니다." } },
+      { "@type": "Question", "name": "여러 건을 한 번에 조회할 수 있나요?",
+        "acceptedAnswer": { "@type": "Answer", "text": "네. 창고 리스트 엑셀 파일(HAWB 열)을 업로드하면 수백 건의 통관 진행상태를 한 번에 조회합니다. 관세청 웹사이트에서 한 건씩 조회할 필요가 없습니다." } },
+      { "@type": "Question", "name": "데이터는 정확한가요?",
+        "acceptedAnswer": { "@type": "Answer", "text": "관세청 국가관세종합정보시스템 UNI-PASS의 화물통관진행정보조회 Open API에서 실시간으로 가져오므로 관세청 웹사이트 조회와 동일하게 정확합니다." } },
+      { "@type": "Question", "name": "MBL과 HAWB 중 무엇으로 조회하나요?",
+        "acceptedAnswer": { "@type": "Answer", "text": "운송장 번호 HAWB 또는 화물관리번호로 조회하면 각 건의 상태와 진행단계가 모두 나옵니다. 마스터 B/L(MBL)로 조회하면 HAWB 목록만 나오고 상세 상태는 표시되지 않습니다." } },
+      { "@type": "Question", "name": "요금은 어떻게 되나요?",
+        "acceptedAnswer": { "@type": "Answer", "text": "단건 조회는 무료입니다. 엑셀 대량 조회·다중 계정이 필요한 운송 기업 요금은 support@transflash.app 으로 문의하시면 물량에 맞춰 안내드립니다." } }
+    ]
+  }
+  </script>
+
+  <style>
+    :root{ --red:#d42126; --blue:#1e40af; --blue-light:#eff6ff; --green:#16a34a; --green-d:#15803d; --green-light:#ecfdf5;
+      --g50:#f8fafc; --g100:#f1f5f9; --g200:#e2e8f0; --g300:#cbd5e1; --g400:#94a3b8; --g500:#64748b; --g600:#475569; --g700:#334155; --g900:#0f172a; }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Noto Sans KR','Segoe UI',Arial,sans-serif;color:var(--g700);line-height:1.7;background:#fff;}
+    .wrap{max-width:880px;margin:0 auto;padding:0 18px;}
+    a{color:var(--green-d);}
+    header{border-bottom:1px solid var(--g200);background:#fff;position:sticky;top:0;z-index:10;}
+    .nav{max-width:880px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+    .brand img{height:38px;}
+    .brand b{font-size:1rem;color:var(--blue);font-weight:800;}
+    .nav-links{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+    .nav-links a.txt{color:var(--g600);text-decoration:none;font-size:0.88rem;font-weight:600;}
+    .nav-cta{display:inline-block;padding:8px 18px;border-radius:8px;background:linear-gradient(135deg,#22c55e,var(--green-d));color:#fff;font-weight:700;font-size:0.88rem;text-decoration:none;}
+    .lang-switch{font-size:0.82rem;color:var(--g400);}
+    .lang-switch a{color:var(--g500);text-decoration:none;font-weight:700;padding:0 2px;}
+    .lang-switch a.on{color:var(--green-d);}
+    .hero{background:linear-gradient(160deg,#16a34a 0%,#15803d 55%,#064e3b 100%);color:#fff;padding:56px 0 50px;}
+    .hero .wrap{text-align:center;}
+    .hero .eyebrow{font-size:0.8rem;font-weight:800;letter-spacing:.08em;color:#bbf7d0;margin-bottom:14px;}
+    .hero h1{font-size:1.9rem;font-weight:800;line-height:1.35;margin-bottom:16px;}
+    .hero p{font-size:1.05rem;color:#d1fae5;max-width:700px;margin:0 auto 26px;}
+    .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+    .btn{display:inline-block;padding:12px 26px;border-radius:10px;font-weight:700;text-decoration:none;font-size:0.95rem;}
+    .btn-primary{background:#fff;color:var(--green-d);}
+    .btn-primary:hover{background:#f0fdf4;}
+    .btn-ghost{background:rgba(255,255,255,0.12);color:#fff;border:1.5px solid rgba(255,255,255,0.4);}
+    .btn-ghost:hover{background:rgba(255,255,255,0.2);}
+    section{padding:44px 0;border-bottom:1px solid var(--g100);}
+    h2{font-size:1.45rem;color:var(--g900);margin-bottom:14px;font-weight:800;}
+    h3{font-size:1.05rem;color:var(--g900);margin:18px 0 6px;}
+    p{margin-bottom:14px;}
+    .lead{font-size:1.05rem;color:var(--g600);}
+    ul{margin:0 0 14px 22px;}
+    li{margin-bottom:8px;}
+    .pain{background:#fff1f1;border-left:4px solid var(--red);border-radius:8px;padding:16px 18px;color:#7f1d1d;font-size:0.96rem;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:18px;}
+    .feat{background:var(--g50);border:1px solid var(--g200);border-radius:10px;padding:18px;}
+    .feat .ic{font-size:1.6rem;margin-bottom:8px;}
+    .feat h3{margin:0 0 6px;font-size:1rem;}
+    .feat p{font-size:0.9rem;color:var(--g500);margin:0;}
+    .tl-demo{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap;}
+    .tl-demo .s{flex:1;min-width:90px;}
+    .tl-demo .bar{height:6px;border-radius:4px;background:var(--g200);}
+    .tl-demo .s.done .bar{background:var(--green);}
+    .tl-demo .s.cur .bar{background:var(--blue);}
+    .tl-demo .lab{font-size:0.78rem;font-weight:700;color:var(--g600);margin-top:8px;}
+    .steps{display:grid;gap:14px;margin-top:18px;}
+    .step{display:flex;gap:14px;align-items:flex-start;}
+    .step .n{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;}
+    .step h3{margin:0 0 2px;}
+    .step p{margin:0;font-size:0.92rem;color:var(--g500);}
+    .cmp{width:100%;border-collapse:collapse;margin-top:18px;font-size:0.92rem;border:1px solid var(--g200);border-radius:10px;overflow:hidden;}
+    .cmp th,.cmp td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--g100);}
+    .cmp thead th{background:var(--g50);font-size:0.82rem;color:var(--g500);font-weight:700;}
+    .cmp thead th.hl{color:var(--green-d);}
+    .cmp td.man{color:var(--g600);}
+    .cmp td.sw{color:var(--g900);font-weight:600;background:var(--green-light);}
+    .cmp tr:last-child td{border-bottom:none;}
+    .prices{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:20px;}
+    .price{border:1.5px solid var(--g200);border-radius:14px;padding:22px;display:flex;flex-direction:column;}
+    .price.hl{border-color:var(--green);box-shadow:0 8px 30px rgba(22,163,74,0.12);position:relative;}
+    .price.hl::before{content:'인기';position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;font-size:0.72rem;font-weight:700;padding:3px 12px;border-radius:99px;}
+    .price .name{font-size:1.05rem;font-weight:800;color:var(--g900);}
+    .price .amt{font-size:1.5rem;font-weight:800;color:var(--green-d);margin:8px 0;}
+    .price .amt small{font-size:0.78rem;color:var(--g400);font-weight:600;}
+    .price ul{margin:8px 0 18px 18px;}
+    .price li{font-size:0.88rem;color:var(--g600);}
+    .price .btn{margin-top:auto;text-align:center;}
+    .price-note{font-size:0.82rem;color:var(--g400);margin-top:14px;text-align:center;}
+    .faq{border:1px solid var(--g200);border-radius:10px;margin-bottom:10px;overflow:hidden;}
+    .faq summary{cursor:pointer;padding:14px 16px;font-weight:700;color:var(--g700);font-size:0.95rem;list-style:none;}
+    .faq summary::-webkit-details-marker{display:none;}
+    .faq[open] summary{color:var(--green-d);}
+    .faq .a{padding:0 16px 14px;color:var(--g600);font-size:0.92rem;}
+    .cta-band{background:var(--green-light);text-align:center;}
+    .cta-band .btn-primary{background:var(--green-d);color:#fff;}
+    .cta-band .btn-primary:hover{background:var(--green);}
+    footer{padding:26px 0;text-align:center;color:var(--g400);font-size:0.82rem;}
+    footer .tf{font-weight:800;background:linear-gradient(135deg,var(--red),var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+    footer a{color:var(--g500);text-decoration:none;margin:0 6px;}
+    @media(max-width:640px){ .hero h1{font-size:1.4rem;} h2{font-size:1.25rem;} }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="brand" href="/tracking-info?lang=ko">
+      <img src="/logo.png" alt="Vietnam - Korea Logistics logo" />
+      <b>Vietnam - Korea Logistics</b>
+    </a>
+    <div class="nav-links">
+      <span class="lang-switch"><a href="/tracking-info">VI</a> · <a href="/tracking-info?lang=en">EN</a> · <a class="on" href="/tracking-info?lang=ko">KO</a></span>
+      <a class="nav-cta" href="/tracking?lang=ko">바로 조회 →</a>
+    </div>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">운송·물류 기업을 위한 · 베트남-한국</div>
+    <h1>운송장 번호로 한국 수입화물 통관진행정보를 한 번에 조회</h1>
+    <p>운송장(HAWB) 또는 화물관리번호로 통관 진행상태(화물통관진행정보)를 조회하고, 엑셀로 창고 리스트 수백 건을 한 번에 확인하세요. 관세청 UNI-PASS 실시간 연동.</p>
+    <div class="hero-btns">
+      <a class="btn btn-primary" href="/tracking?lang=ko">바로 조회하기</a>
+      <a class="btn btn-ghost" href="#bang-gia">요금 보기</a>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <h2>웹사이트에서 한 건씩 조회하면 너무 느립니다</h2>
+    <p class="lead">베트남-한국 노선 운송 기업은 매일 수백 건의 수입화물이 서로 다른 통관 단계에 놓여 있습니다. 고객은 계속 "내 화물 지금 어디까지 갔나요?"라고 묻습니다.</p>
+    <p>수작업으로 하면 직원이 관세청 UNI-PASS에 접속해 운송장 번호를 하나씩 입력하고, 페이지를 기다리고, 상태를 읽어 파일에 적는 과정을 건마다 반복해야 합니다. <strong>창고 리스트 수백 건</strong>이면 매일 몇 시간이 들고 실시간 업데이트도 불가능합니다.</p>
+    <div class="pain">⚠️ UNI-PASS에서 한 건씩 조회하면 느리고 누락이 많습니다. 어떤 건이 <strong>수입신고수리</strong>(통관)되고 어떤 건이 <strong>반출완료</strong>되었는지 제때 파악하지 못하면 배송 배차가 지연됩니다.</div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>해결책: 통관 리스트 전체를 한 번에 조회</h2>
+    <p>Vietnam - Korea Logistics의 <strong>통관조회</strong> 도구는 운송장 번호(HAWB) 또는 화물관리번호로 관세청 UNI-PASS를 직접 조회합니다. 단건은 즉시 전체 진행단계를 보여주고, 엑셀 창고 리스트를 올리면 <strong>모든 운송장의 상태를 한 번에</strong> 조회합니다.</p>
+    <div class="tl-demo">
+      <div class="s done"><div class="bar"></div><div class="lab">적재화물목록제출</div></div>
+      <div class="s done"><div class="bar"></div><div class="lab">하선/하기신고</div></div>
+      <div class="s done"><div class="bar"></div><div class="lab">물품반입</div></div>
+      <div class="s cur"><div class="bar"></div><div class="lab">수입신고</div></div>
+      <div class="s"><div class="bar"></div><div class="lab">수입신고수리</div></div>
+      <div class="s"><div class="bar"></div><div class="lab">물품반출</div></div>
+    </div>
+    <div class="grid">
+      <div class="feat"><div class="ic">⚡</div><h3>엑셀 대량 조회</h3><p>창고 리스트(HAWB 열)를 올리면 수백 건의 통관 상태를 몇 분 만에 확인합니다.</p></div>
+      <div class="feat"><div class="ic">🏛️</div><h3>관세청 공식 데이터</h3><p>관세청 UNI-PASS Open API 직접 연동 — 실시간, 정확.</p></div>
+      <div class="feat"><div class="ic">🚦</div><h3>전체 진행단계</h3><p>적재화물목록제출 → 하선 → 반입 → 수입신고 → 수리 → 반출까지 6단계 표시.</p></div>
+      <div class="feat"><div class="ic">📋</div><h3>화물 상세정보</h3><p>품명, 중량, 항공사/편명, 적재항→양륙항, 입항일, 특송업체.</p></div>
+      <div class="feat"><div class="ic">🔎</div><h3>날짜·상태 필터</h3><p>입항일 또는 통관 상태로 빠르게 필터링하여 배차에 활용.</p></div>
+      <div class="feat"><div class="ic">🌐</div><h3>다국어</h3><p>한국어·베트남어·영어 — 한국 담당자와 베트남 팀 모두 사용.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>이용 방법 — 3단계</h2>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><div><h3>번호 입력 또는 엑셀 업로드</h3><p>HAWB/화물관리번호 한 건을 입력하거나, 창고 리스트 엑셀을 업로드합니다.</p></div></div>
+      <div class="step"><div class="n">2</div><div><h3>관세청 자동 조회</h3><p>각 운송장을 UNI-PASS에서 조회하여 최신 통관 상태와 진행단계를 가져옵니다.</p></div></div>
+      <div class="step"><div class="n">3</div><div><h3>결과 확인 및 필터</h3><p>건별 진행단계를 보고 날짜/상태로 필터 — 어떤 건이 통관·반출되었는지 즉시 파악.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>웹사이트 수작업보다 훨씬 빠릅니다</h2>
+    <table class="cmp">
+      <thead><tr><th>항목</th><th>UNI-PASS 수작업</th><th class="hl">대량 조회</th></tr></thead>
+      <tbody>
+        <tr><td>200건 조회</td><td class="man">몇 시간, 한 건씩 입력</td><td class="sw">몇 분, 파일 하나</td></tr>
+        <tr><td>상태 갱신</td><td class="man">건마다 재조회</td><td class="sw">버튼 한 번으로 전체 재조회</td></tr>
+        <tr><td>오류·누락</td><td class="man">높음 — 반복 작업</td><td class="sw">낮음 — HAWB 자동 처리</td></tr>
+        <tr><td>"내 화물 어디?" 응대</td><td class="man">느림 — 건마다 조회</td><td class="sw">즉시 — 표로 제공</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="bang-gia">
+  <div class="wrap">
+    <h2>요금 안내</h2>
+    <p class="lead">단건 조회는 무료입니다. 매일 창고 리스트 수백 건을 조회해야 한다면 업그레이드하세요.</p>
+    <div class="prices">
+      <div class="price">
+        <div class="name">무료</div>
+        <div class="amt">0₫</div>
+        <ul>
+          <li>단건 조회 (HAWB / 화물관리번호)</li>
+          <li>조회 횟수 <strong>무제한</strong></li>
+          <li>전체 통관 진행단계</li>
+          <li>엑셀 체험 최대 5건</li>
+        </ul>
+        <a class="btn btn-primary" style="background:var(--green-d);color:#fff" href="/tracking?lang=ko">바로 조회</a>
+      </div>
+      <div class="price hl">
+        <div class="name">운송 기업</div>
+        <div class="amt">견적 <small>문의</small></div>
+        <ul>
+          <li>엑셀 <strong>대량 조회</strong></li>
+          <li>건당 수백 건</li>
+          <li>날짜/상태 필터</li>
+          <li>팀 다중 계정</li>
+        </ul>
+        <a class="btn btn-primary" style="background:var(--green-d);color:#fff" href="mailto:support@transflash.app?subject=통관조회 운송 기업 요금 문의">가입 문의</a>
+      </div>
+      <div class="price">
+        <div class="name">Enterprise / API</div>
+        <div class="amt">견적 <small>문의</small></div>
+        <ul>
+          <li>TMS / WMS API 연동</li>
+          <li>상태 자동 동기화</li>
+          <li>우선 지원</li>
+        </ul>
+        <a class="btn btn-ghost" style="border-color:var(--g300);color:var(--g700)" href="mailto:support@transflash.app?subject=통관 API 문의">상담 요청</a>
+      </div>
+    </div>
+    <p class="price-note">물량에 맞는 요금은 <a href="mailto:support@transflash.app">support@transflash.app</a> 으로 문의하세요.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>누구를 위한 서비스인가요?</h2>
+    <ul>
+      <li>베트남–한국 노선 <strong>운송·포워딩·특송</strong> 업체.</li>
+      <li>매일 수백 건의 수입화물을 추적하는 <strong>창고·물류</strong> 업체.</li>
+      <li>한국으로 수입하는 <strong>이커머스</strong> 사업자.</li>
+      <li>고객에게 통관 진행상황을 빠르게 안내해야 하는 <strong>관세사·통관 대행</strong>.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>자주 묻는 질문</h2>
+    <details class="faq" open><summary>한국 수입화물의 통관 진행정보를 어떻게 조회하나요?</summary><div class="a">운송장 번호(HAWB) 또는 화물관리번호를 입력하면 관세청 UNI-PASS에서 직접 조회하여 적재화물목록제출 → 하선/하기신고 → 물품반입 → 수입신고 → 수입신고수리 → 반출완료까지 전체 진행단계를 보여줍니다.</div></details>
+    <details class="faq"><summary>여러 건을 한 번에 조회할 수 있나요?</summary><div class="a">네. 창고 리스트 엑셀(HAWB 열)을 업로드하면 수백 건의 통관 상태를 한 번에 조회합니다.</div></details>
+    <details class="faq"><summary>데이터는 정확한가요?</summary><div class="a">관세청 UNI-PASS의 화물통관진행정보조회 Open API에서 실시간으로 가져오므로 관세청 웹사이트 조회와 동일하게 정확합니다.</div></details>
+    <details class="faq"><summary>MBL과 HAWB 중 무엇으로 조회하나요?</summary><div class="a">HAWB 또는 화물관리번호로 조회하면 각 건의 상태와 진행단계가 모두 나옵니다. 마스터 B/L(MBL)은 HAWB 목록만 나오고 상세 상태는 표시되지 않습니다.</div></details>
+    <details class="faq"><summary>요금은 어떻게 되나요?</summary><div class="a">단건 조회는 무료입니다. 엑셀 대량 조회·다중 계정이 필요하면 <strong>support@transflash.app</strong> 으로 문의해 물량에 맞춰 안내받으세요.</div></details>
+    <details class="faq"><summary>한국 우편번호 조회 도구도 있나요?</summary><div class="a">네. 같은 시스템에서 주소로 한국 우편번호를 조회하고 엑셀로 일괄 입력하는 도구도 제공합니다.</div></details>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="wrap">
+    <h2>창고 리스트 전체 통관상태를 몇 분 만에</h2>
+    <p class="lead">관세청 웹사이트에서 한 건씩 조회하지 마세요 — 대량으로 조회하고 고객에게 즉시 안내하세요.</p>
+    <div class="hero-btns">
+      <a class="btn btn-primary" href="/tracking?lang=ko">바로 조회</a>
+      <a class="btn btn-ghost" style="border-color:var(--g300);color:var(--g700)" href="mailto:support@transflash.app">상담 문의</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><span class="tf">Transflash</span> — 베트남-한국 물류 솔루션</p>
+    <p style="margin-top:6px;">
+      <a href="/tracking?lang=ko">통관조회</a> ·
+      <a href="/?lang=ko">우편번호 조회</a> ·
+      <a href="mailto:support@transflash.app">support@transflash.app</a> ·
+      © 2026
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -9,6 +9,10 @@
   <meta name="description" content="Phần mềm tra cứu tiến trình thông quan hàng nhập khẩu Hàn Quốc (UNI-PASS / 화물통관진행정보) theo số vận đơn HAWB hoặc mã quản lý hàng hóa. Quét cả danh sách kho hàng trăm vận đơn một lần từ file Excel — thay vì tra từng số trên website Hải quan. Dữ liệu trực tiếp từ Hải quan Hàn Quốc (관세청), dành cho doanh nghiệp vận tải - logistics Việt - Hàn." />
   <meta name="keywords" content="tra cứu thông quan Hàn Quốc, UNI-PASS, 화물통관진행정보 조회, tra cứu vận đơn Hàn Quốc, tra HAWB, theo dõi thông quan hàng nhập, phần mềm logistics vận tải Việt Hàn, customs clearance tracking Korea, 통관조회, tra mã quản lý hàng hóa, 반출완료, 수입신고수리, tra cứu tờ khai hải quan Hàn Quốc, thông quan hàng không Incheon" />
   <link rel="canonical" href="https://postcode-viethhan.vercel.app/tracking-info" />
+  <link rel="alternate" hreflang="vi" href="https://postcode-viethhan.vercel.app/tracking-info" />
+  <link rel="alternate" hreflang="en" href="https://postcode-viethhan.vercel.app/tracking-info?lang=en" />
+  <link rel="alternate" hreflang="ko" href="https://postcode-viethhan.vercel.app/tracking-info?lang=ko" />
+  <link rel="alternate" hreflang="x-default" href="https://postcode-viethhan.vercel.app/tracking-info" />
   <meta name="robots" content="index, follow" />
 
   <!-- Open Graph / Social -->
@@ -86,6 +90,9 @@
     .nav-links{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
     .nav-links a.txt{color:var(--g600);text-decoration:none;font-size:0.88rem;font-weight:600;}
     .nav-cta{display:inline-block;padding:8px 18px;border-radius:8px;background:linear-gradient(135deg,#22c55e,var(--green-d));color:#fff;font-weight:700;font-size:0.88rem;text-decoration:none;}
+    .lang-switch{font-size:0.82rem;color:var(--g400);}
+    .lang-switch a{color:var(--g500);text-decoration:none;font-weight:700;padding:0 2px;}
+    .lang-switch a.on{color:var(--green-d);}
 
     .hero{background:linear-gradient(160deg,#16a34a 0%,#15803d 55%,#064e3b 100%);color:#fff;padding:56px 0 50px;}
     .hero .wrap{text-align:center;}
@@ -176,6 +183,7 @@
       <b>Vietnam - Korea Logistics</b>
     </a>
     <div class="nav-links">
+      <span class="lang-switch"><a class="on" href="/tracking-info">VI</a> · <a href="/tracking-info?lang=en">EN</a> · <a href="/tracking-info?lang=ko">KO</a></span>
       <a class="txt" href="/about">Tra mã bưu điện</a>
       <a class="nav-cta" href="/tracking">Tra cứu ngay →</a>
     </div>

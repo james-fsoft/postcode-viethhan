@@ -318,9 +318,12 @@ app.get('/about', (req, res) => {
   sendPage(res, 'views', 'landing.html');
 });
 
-// ── Landing SEO cho công cụ tra cứu thông quan (cho doanh nghiệp vận tải) ─────
+// ── Landing SEO cho công cụ tra cứu thông quan (đa ngôn ngữ vi/en/ko) ─────────
 app.get('/tracking-info', (req, res) => {
-  sendPage(res, 'views', 'tracking-landing.html');
+  const file = req.query.lang === 'ko' ? 'tracking-landing-ko.html'
+             : req.query.lang === 'en' ? 'tracking-landing-en.html'
+             : 'tracking-landing.html';
+  sendPage(res, 'views', file);
 });
 
 // ── Trang tra cứu thông quan (UNI-PASS) — SEO đa ngôn ngữ (vi/en/ko) ──────────
@@ -372,11 +375,16 @@ app.get('/sitemap.xml', (req, res) => {
   const today = new Date().toISOString().slice(0, 10);
   res.type('application/xml').send(
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
-    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n` +
     `  <url><loc>${SITE}/about</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>\n` +
     `  <url><loc>${SITE}/</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
     `  <url><loc>${SITE}/tracking</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>\n` +
-    `  <url><loc>${SITE}/tracking-info</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>\n` +
+    `  <url><loc>${SITE}/tracking-info</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority>` +
+    `<xhtml:link rel="alternate" hreflang="vi" href="${SITE}/tracking-info"/>` +
+    `<xhtml:link rel="alternate" hreflang="en" href="${SITE}/tracking-info?lang=en"/>` +
+    `<xhtml:link rel="alternate" hreflang="ko" href="${SITE}/tracking-info?lang=ko"/></url>\n` +
+    `  <url><loc>${SITE}/tracking-info?lang=en</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
+    `  <url><loc>${SITE}/tracking-info?lang=ko</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
     `</urlset>\n`
   );
 });

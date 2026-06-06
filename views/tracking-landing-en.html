@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ── SEO ── -->
+  <title>Bulk Korea Customs Clearance Tracking by B/L Number (UNI-PASS) | Vietnam - Korea Logistics</title>
+  <meta name="description" content="Track Korea import customs clearance progress (화물통관진행정보) by B/L number (HAWB) or cargo management number. Scan hundreds of shipments from an Excel warehouse list at once — data directly from Korea Customs (UNI-PASS). For Vietnam - Korea transport & logistics businesses." />
+  <meta name="keywords" content="Korea customs clearance tracking, UNI-PASS, cargo clearance Korea, HAWB lookup, bulk customs tracking, import clearance status Korea, Vietnam Korea logistics, cargo management number, 화물통관진행정보 조회, customs status Incheon air cargo" />
+  <link rel="canonical" href="https://postcode-viethhan.vercel.app/tracking-info?lang=en" />
+  <link rel="alternate" hreflang="vi" href="https://postcode-viethhan.vercel.app/tracking-info" />
+  <link rel="alternate" hreflang="en" href="https://postcode-viethhan.vercel.app/tracking-info?lang=en" />
+  <link rel="alternate" hreflang="ko" href="https://postcode-viethhan.vercel.app/tracking-info?lang=ko" />
+  <link rel="alternate" hreflang="x-default" href="https://postcode-viethhan.vercel.app/tracking-info" />
+  <meta name="robots" content="index, follow" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Bulk Korea Customs Clearance Tracking by B/L Number (UNI-PASS)" />
+  <meta property="og:description" content="Scan hundreds of shipments' clearance status from Excel at once. Data directly from Korea Customs (UNI-PASS)." />
+  <meta property="og:url" content="https://postcode-viethhan.vercel.app/tracking-info?lang=en" />
+  <meta property="og:image" content="https://postcode-viethhan.vercel.app/logo.png" />
+  <meta property="og:site_name" content="Vietnam - Korea Logistics" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Bulk Korea Customs Clearance Tracking (UNI-PASS)" />
+  <meta name="twitter:description" content="Track clearance progress by HAWB and scan hundreds of shipments from Excel at once." />
+  <meta name="twitter:image" content="https://postcode-viethhan.vercel.app/logo.png" />
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%231e40af'/><text x='12' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='%23d42126'>V</text><text x='54' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='white'>H</text></svg>" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Vietnam - Korea Logistics – Korea import customs clearance tracking (UNI-PASS)",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "Track Korea import customs clearance progress by B/L number (HAWB) or cargo management number, with bulk Excel lookup for Vietnam - Korea transport & logistics businesses. Data directly from Korea Customs (UNI-PASS).",
+    "url": "https://postcode-viethhan.vercel.app/tracking",
+    "inLanguage": ["en", "vi", "ko"],
+    "offers": [
+      { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "VND", "description": "Unlimited single lookups by HAWB / cargo management number." },
+      { "@type": "Offer", "name": "Transport Business", "priceCurrency": "VND", "description": "Bulk Excel lookup of hundreds of shipments, multiple accounts. Contact for pricing." },
+      { "@type": "Offer", "name": "Enterprise / API", "priceCurrency": "VND", "description": "API integration into TMS/WMS, priority support. Contact for pricing." }
+    ],
+    "publisher": { "@type": "Organization", "name": "Transflash", "url": "https://transflash.app" }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How do I track Korea import customs clearance status?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Enter a B/L number (HAWB) or cargo management number; the system queries Korea Customs (UNI-PASS) directly and shows the full progress: manifest filed, unloading report, warehoused, import declared, cleared (수입신고수리), and released (반출완료)." } },
+      { "@type": "Question", "name": "Can I look up many shipments at once?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Upload an Excel warehouse list (HAWB column) and scan the clearance status for hundreds of shipments at once, instead of checking one by one on the customs website." } },
+      { "@type": "Question", "name": "Is the data accurate?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Data comes directly from Korea's national customs system UNI-PASS via the official cargo clearance progress Open API, updated in real time — as accurate as checking on the customs website." } },
+      { "@type": "Question", "name": "Should I search by MBL or HAWB?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Search by HAWB or cargo management number to get the full status and progress per shipment. Searching by master B/L (MBL) only returns the HAWB list without detailed status." } },
+      { "@type": "Question", "name": "How much does it cost?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Single lookups are free. For bulk Excel lookups and multiple accounts, contact support@transflash.app for pricing based on your shipment volume." } }
+    ]
+  }
+  </script>
+
+  <style>
+    :root{ --red:#d42126; --blue:#1e40af; --blue-light:#eff6ff; --green:#16a34a; --green-d:#15803d; --green-light:#ecfdf5;
+      --g50:#f8fafc; --g100:#f1f5f9; --g200:#e2e8f0; --g300:#cbd5e1; --g400:#94a3b8; --g500:#64748b; --g600:#475569; --g700:#334155; --g900:#0f172a; }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Segoe UI','Noto Sans KR',Arial,sans-serif;color:var(--g700);line-height:1.7;background:#fff;}
+    .wrap{max-width:880px;margin:0 auto;padding:0 18px;}
+    a{color:var(--green-d);}
+    header{border-bottom:1px solid var(--g200);background:#fff;position:sticky;top:0;z-index:10;}
+    .nav{max-width:880px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+    .brand img{height:38px;}
+    .brand b{font-size:1rem;color:var(--blue);font-weight:800;}
+    .nav-links{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+    .nav-links a.txt{color:var(--g600);text-decoration:none;font-size:0.88rem;font-weight:600;}
+    .nav-cta{display:inline-block;padding:8px 18px;border-radius:8px;background:linear-gradient(135deg,#22c55e,var(--green-d));color:#fff;font-weight:700;font-size:0.88rem;text-decoration:none;}
+    .lang-switch{font-size:0.82rem;color:var(--g400);}
+    .lang-switch a{color:var(--g500);text-decoration:none;font-weight:700;padding:0 2px;}
+    .lang-switch a.on{color:var(--green-d);}
+    .hero{background:linear-gradient(160deg,#16a34a 0%,#15803d 55%,#064e3b 100%);color:#fff;padding:56px 0 50px;}
+    .hero .wrap{text-align:center;}
+    .hero .eyebrow{font-size:0.8rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#bbf7d0;margin-bottom:14px;}
+    .hero h1{font-size:2rem;font-weight:800;line-height:1.3;margin-bottom:16px;}
+    .hero p{font-size:1.05rem;color:#d1fae5;max-width:700px;margin:0 auto 26px;}
+    .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+    .btn{display:inline-block;padding:12px 26px;border-radius:10px;font-weight:700;text-decoration:none;font-size:0.95rem;}
+    .btn-primary{background:#fff;color:var(--green-d);}
+    .btn-primary:hover{background:#f0fdf4;}
+    .btn-ghost{background:rgba(255,255,255,0.12);color:#fff;border:1.5px solid rgba(255,255,255,0.4);}
+    .btn-ghost:hover{background:rgba(255,255,255,0.2);}
+    section{padding:44px 0;border-bottom:1px solid var(--g100);}
+    h2{font-size:1.5rem;color:var(--g900);margin-bottom:14px;font-weight:800;}
+    h3{font-size:1.1rem;color:var(--g900);margin:18px 0 6px;}
+    p{margin-bottom:14px;}
+    .lead{font-size:1.08rem;color:var(--g600);}
+    ul{margin:0 0 14px 22px;}
+    li{margin-bottom:8px;}
+    .pain{background:#fff1f1;border-left:4px solid var(--red);border-radius:8px;padding:16px 18px;color:#7f1d1d;font-size:0.98rem;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:18px;}
+    .feat{background:var(--g50);border:1px solid var(--g200);border-radius:10px;padding:18px;}
+    .feat .ic{font-size:1.6rem;margin-bottom:8px;}
+    .feat h3{margin:0 0 6px;font-size:1rem;}
+    .feat p{font-size:0.9rem;color:var(--g500);margin:0;}
+    .tl-demo{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap;}
+    .tl-demo .s{flex:1;min-width:90px;}
+    .tl-demo .bar{height:6px;border-radius:4px;background:var(--g200);}
+    .tl-demo .s.done .bar{background:var(--green);}
+    .tl-demo .s.cur .bar{background:var(--blue);}
+    .tl-demo .lab{font-size:0.78rem;font-weight:700;color:var(--g600);margin-top:8px;}
+    .tl-demo .ko{font-size:0.7rem;color:var(--g400);}
+    .steps{display:grid;gap:14px;margin-top:18px;}
+    .step{display:flex;gap:14px;align-items:flex-start;}
+    .step .n{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;}
+    .step h3{margin:0 0 2px;}
+    .step p{margin:0;font-size:0.92rem;color:var(--g500);}
+    .cmp{width:100%;border-collapse:collapse;margin-top:18px;font-size:0.92rem;border:1px solid var(--g200);border-radius:10px;overflow:hidden;}
+    .cmp th,.cmp td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--g100);}
+    .cmp thead th{background:var(--g50);font-size:0.82rem;color:var(--g500);font-weight:700;}
+    .cmp thead th.hl{color:var(--green-d);}
+    .cmp td.man{color:var(--g600);}
+    .cmp td.sw{color:var(--g900);font-weight:600;background:var(--green-light);}
+    .cmp tr:last-child td{border-bottom:none;}
+    .prices{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:20px;}
+    .price{border:1.5px solid var(--g200);border-radius:14px;padding:22px;display:flex;flex-direction:column;}
+    .price.hl{border-color:var(--green);box-shadow:0 8px 30px rgba(22,163,74,0.12);position:relative;}
+    .price.hl::before{content:'Popular';position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;font-size:0.72rem;font-weight:700;padding:3px 12px;border-radius:99px;}
+    .price .name{font-size:1.05rem;font-weight:800;color:var(--g900);}
+    .price .amt{font-size:1.5rem;font-weight:800;color:var(--green-d);margin:8px 0;}
+    .price .amt small{font-size:0.78rem;color:var(--g400);font-weight:600;}
+    .price ul{margin:8px 0 18px 18px;}
+    .price li{font-size:0.88rem;color:var(--g600);}
+    .price .btn{margin-top:auto;text-align:center;}
+    .price-note{font-size:0.82rem;color:var(--g400);margin-top:14px;text-align:center;}
+    .faq{border:1px solid var(--g200);border-radius:10px;margin-bottom:10px;overflow:hidden;}
+    .faq summary{cursor:pointer;padding:14px 16px;font-weight:700;color:var(--g700);font-size:0.95rem;list-style:none;}
+    .faq summary::-webkit-details-marker{display:none;}
+    .faq[open] summary{color:var(--green-d);}
+    .faq .a{padding:0 16px 14px;color:var(--g600);font-size:0.92rem;}
+    .cta-band{background:var(--green-light);text-align:center;}
+    .cta-band .btn-primary{background:var(--green-d);color:#fff;}
+    .cta-band .btn-primary:hover{background:var(--green);}
+    footer{padding:26px 0;text-align:center;color:var(--g400);font-size:0.82rem;}
+    footer .tf{font-weight:800;background:linear-gradient(135deg,var(--red),var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+    footer a{color:var(--g500);text-decoration:none;margin:0 6px;}
+    @media(max-width:640px){ .hero h1{font-size:1.55rem;} h2{font-size:1.3rem;} }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="brand" href="/tracking-info?lang=en">
+      <img src="/logo.png" alt="Vietnam - Korea Logistics logo" />
+      <b>Vietnam - Korea Logistics</b>
+    </a>
+    <div class="nav-links">
+      <span class="lang-switch"><a href="/tracking-info">VI</a> · <a class="on" href="/tracking-info?lang=en">EN</a> · <a href="/tracking-info?lang=ko">KO</a></span>
+      <a class="txt" href="/about?lang=en">Postal code</a>
+      <a class="nav-cta" href="/tracking?lang=en">Track now →</a>
+    </div>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">For transport &amp; logistics businesses · Vietnam - Korea</div>
+    <h1>Bulk Korea Customs Clearance Tracking by B/L Number</h1>
+    <p>Track clearance status (UNI-PASS / 화물통관진행정보) for hundreds of shipments at once from an Excel list — instead of checking each number on the Korea Customs website. Data directly from Korea Customs, updated in real time.</p>
+    <div class="hero-btns">
+      <a class="btn btn-primary" href="/tracking?lang=en">Track now</a>
+      <a class="btn btn-ghost" href="#bang-gia">See pricing</a>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <h2>Checking each shipment on the website is too slow</h2>
+    <p class="lead">A Vietnam - Korea transport company may have hundreds of import shipments in different clearance stages every day. Customers keep asking "where is my cargo now?".</p>
+    <p>Done manually, staff must open Korea Customs (UNI-PASS), type each B/L number (HAWB) or cargo management number, wait for the page, read the status, and record it — repeating for every shipment. With <strong>a warehouse list of hundreds of shipments</strong>, this takes hours daily and can't be updated continuously.</p>
+    <div class="pain">⚠️ Looking up each shipment on UNI-PASS is slow and error-prone. Not knowing which shipment is <strong>cleared (수입신고수리)</strong> and which is <strong>released (반출완료)</strong> delays your delivery dispatch.</div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>The solution: scan your whole clearance list at once</h2>
+    <p>The <strong>Customs Tracking</strong> tool from Vietnam - Korea Logistics queries Korea Customs (UNI-PASS) directly by B/L number (HAWB) or cargo management number. A single lookup shows the full progress instantly; upload an Excel warehouse list to scan the status for <strong>every shipment at once</strong>.</p>
+    <div class="tl-demo">
+      <div class="s done"><div class="bar"></div><div class="lab">Manifest filed</div><div class="ko">적재화물목록제출</div></div>
+      <div class="s done"><div class="bar"></div><div class="lab">Unloading report</div><div class="ko">하선/하기신고</div></div>
+      <div class="s done"><div class="bar"></div><div class="lab">Warehoused</div><div class="ko">물품반입</div></div>
+      <div class="s cur"><div class="bar"></div><div class="lab">Import declared</div><div class="ko">수입신고</div></div>
+      <div class="s"><div class="bar"></div><div class="lab">Cleared</div><div class="ko">수입신고수리</div></div>
+      <div class="s"><div class="bar"></div><div class="lab">Released</div><div class="ko">물품반출</div></div>
+    </div>
+    <div class="grid">
+      <div class="feat"><div class="ic">⚡</div><h3>Bulk lookup via Excel</h3><p>Upload a warehouse list (HAWB column) — get clearance status for hundreds of shipments in minutes.</p></div>
+      <div class="feat"><div class="ic">🏛️</div><h3>Official Korea Customs data</h3><p>Queries the UNI-PASS Open API directly — accurate and real-time.</p></div>
+      <div class="feat"><div class="ic">🚦</div><h3>Full progress timeline</h3><p>Six stages: manifest filed → unloading → warehoused → import declared → cleared → released.</p></div>
+      <div class="feat"><div class="ic">📋</div><h3>Shipment details</h3><p>Product, weight, airline/flight, origin → destination port, arrival date, express company.</p></div>
+      <div class="feat"><div class="ic">🔎</div><h3>Filter by date &amp; status</h3><p>Quickly filter the list by arrival date or clearance status to plan delivery.</p></div>
+      <div class="feat"><div class="ic">🌐</div><h3>Multilingual</h3><p>Vietnamese, English and Korean — for both your Vietnam team and Korean partners.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>How it works — 3 steps</h2>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><div><h3>Enter a number or upload Excel</h3><p>Type a single HAWB / cargo management number, or upload an Excel warehouse list of hundreds of shipments.</p></div></div>
+      <div class="step"><div class="n">2</div><div><h3>The system queries Customs</h3><p>Each shipment is looked up on UNI-PASS for the latest status and clearance progress.</p></div></div>
+      <div class="step"><div class="n">3</div><div><h3>View &amp; filter results</h3><p>See each shipment's progress and filter by date / status — instantly know what is cleared or released.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Much faster than manual lookups on the website</h2>
+    <table class="cmp">
+      <thead><tr><th>Criteria</th><th>Manual on UNI-PASS</th><th class="hl">Bulk lookup</th></tr></thead>
+      <tbody>
+        <tr><td>Look up 200 shipments</td><td class="man">Hours, one by one</td><td class="sw">Minutes, one file</td></tr>
+        <tr><td>Refresh status</td><td class="man">Re-check each number</td><td class="sw">Re-scan the whole list, one click</td></tr>
+        <tr><td>Errors / omissions</td><td class="man">High — repetitive work</td><td class="sw">Low — automated by HAWB</td></tr>
+        <tr><td>Answer "where is my cargo?"</td><td class="man">Slow, per shipment</td><td class="sw">Instant, table ready</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="bang-gia">
+  <div class="wrap">
+    <h2>Pricing</h2>
+    <p class="lead">Single lookups are free. Upgrade when you need to scan a whole warehouse list of hundreds of shipments daily.</p>
+    <div class="prices">
+      <div class="price">
+        <div class="name">Free</div>
+        <div class="amt">$0</div>
+        <ul>
+          <li>Single lookup (HAWB / cargo no.)</li>
+          <li><strong>Unlimited</strong> single lookups</li>
+          <li>Full clearance progress</li>
+          <li>Try Excel up to 5 shipments</li>
+        </ul>
+        <a class="btn btn-primary" style="background:var(--green-d);color:#fff" href="/tracking?lang=en">Track now</a>
+      </div>
+      <div class="price hl">
+        <div class="name">Transport Business</div>
+        <div class="amt">Contact <small>for pricing</small></div>
+        <ul>
+          <li><strong>Bulk lookup</strong> from Excel</li>
+          <li>Hundreds of shipments per run</li>
+          <li>Filter by date / status</li>
+          <li>Multiple accounts for your team</li>
+        </ul>
+        <a class="btn btn-primary" style="background:var(--green-d);color:#fff" href="mailto:support@transflash.app?subject=Customs Tracking - Business plan inquiry">Contact us</a>
+      </div>
+      <div class="price">
+        <div class="name">Enterprise / API</div>
+        <div class="amt">Contact <small>for pricing</small></div>
+        <ul>
+          <li>API integration into TMS / WMS</li>
+          <li>Automatic status sync</li>
+          <li>Priority support</li>
+        </ul>
+        <a class="btn btn-ghost" style="border-color:var(--g300);color:var(--g700)" href="mailto:support@transflash.app?subject=Customs Tracking API inquiry">Request a quote</a>
+      </div>
+    </div>
+    <p class="price-note">Contact <a href="mailto:support@transflash.app">support@transflash.app</a> for pricing based on your shipment volume.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Who is it for?</h2>
+    <ul>
+      <li><strong>Transport, freight forwarding, express</strong> companies on the Vietnam – Korea route.</li>
+      <li><strong>Warehousing &amp; logistics</strong> operators tracking hundreds of imports daily.</li>
+      <li><strong>E-commerce</strong> businesses importing into Korea.</li>
+      <li><strong>Customs brokers</strong> who need to quickly check clearance progress for clients.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Frequently asked questions</h2>
+    <details class="faq" open><summary>How do I track Korea import customs clearance status?</summary><div class="a">Enter a B/L number (HAWB) or cargo management number; the system queries Korea Customs (UNI-PASS) directly and shows the full progress: manifest filed → unloading report → warehoused → import declared → cleared (수입신고수리) → released (반출완료).</div></details>
+    <details class="faq"><summary>Can I look up many shipments at once?</summary><div class="a">Yes. Upload an Excel warehouse list (HAWB column) and scan the clearance status for hundreds of shipments at once.</div></details>
+    <details class="faq"><summary>Is the data accurate?</summary><div class="a">Data comes directly from Korea's national customs system UNI-PASS via the official cargo clearance progress Open API, updated in real time.</div></details>
+    <details class="faq"><summary>Should I search by MBL or HAWB?</summary><div class="a">Search by HAWB or cargo management number for full status and progress per shipment. A master B/L (MBL) only returns the HAWB list without detailed status.</div></details>
+    <details class="faq"><summary>How much does it cost?</summary><div class="a">Single lookups are free. For bulk Excel lookups and multiple accounts, contact <strong>support@transflash.app</strong> for pricing based on your volume.</div></details>
+    <details class="faq"><summary>Is there a Korean postal code tool too?</summary><div class="a">Yes. The same system also looks up Korean postal codes from addresses and fills them in bulk via Excel.</div></details>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="wrap">
+    <h2>Get your whole warehouse list's clearance status in minutes</h2>
+    <p class="lead">Stop checking each number on the customs website — scan in bulk and answer customers instantly.</p>
+    <div class="hero-btns">
+      <a class="btn btn-primary" href="/tracking?lang=en">Track now</a>
+      <a class="btn btn-ghost" style="border-color:var(--g300);color:var(--g700)" href="mailto:support@transflash.app">Contact us</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><span class="tf">Transflash</span> — Vietnam - Korea logistics solution</p>
+    <p style="margin-top:6px;">
+      <a href="/tracking?lang=en">Customs tracking</a> ·
+      <a href="/?lang=en">Postal code lookup</a> ·
+      <a href="/about?lang=en">About</a> ·
+      <a href="mailto:support@transflash.app">support@transflash.app</a> ·
+      © 2026
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

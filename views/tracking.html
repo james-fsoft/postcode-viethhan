@@ -259,6 +259,7 @@
       <div class="tbl-wrap">
         <table>
           <thead><tr>
+            <th><span data-i18n="colMbl">Vận đơn chủ</span> <span class="ko">M B/L</span></th>
             <th><span data-i18n="colHawb">Vận đơn</span> <span class="ko">HAWB</span></th>
             <th data-i18n="colArrival">Ngày đến</th>
             <th data-i18n="colWeight">Trọng lượng</th>
@@ -296,7 +297,7 @@ const LANGS = {
     eyebrow2:'Tra cứu hàng loạt', h1b:'Quét toàn bộ danh sách kho một lần',
     lead2:'Tải lên danh sách Excel (như file kho lạnh Yongma) và quét toàn bộ vận đơn cùng lúc — thay vì tra từng số trên website.',
     btnUpload:'⬆ Upload Excel', btnRescan:'↻ Quét lại',
-    colHawb:'Vận đơn', colArrival:'Ngày đến', colWeight:'Trọng lượng', colStatus:'Trạng thái thông quan',
+    colMbl:'Vận đơn chủ', colHawb:'Vận đơn', colArrival:'Ngày đến', colWeight:'Trọng lượng', colStatus:'Trạng thái thông quan',
     emptyFilter:'Không có vận đơn nào khớp bộ lọc.',
     footerTagline:'Giải pháp logistics Việt - Hàn', footerAbout:'Giới thiệu', footerPostal:'Tra mã bưu điện',
     login:'Đăng nhập', logout:'Đăng xuất', needLogin:'Tra cứu đơn lẻ thì miễn phí. Upload Excel hàng loạt cần đăng nhập.',
@@ -324,7 +325,7 @@ const LANGS = {
     eyebrow2:'Batch lookup', h1b:'Scan an entire warehouse list at once',
     lead2:'Upload an Excel list (like the Yongma cold-storage file) and scan every B/L at once — instead of looking up one by one.',
     btnUpload:'⬆ Upload Excel', btnRescan:'↻ Rescan',
-    colHawb:'B/L', colArrival:'Arrival', colWeight:'Weight', colStatus:'Clearance status',
+    colMbl:'Master B/L', colHawb:'B/L', colArrival:'Arrival', colWeight:'Weight', colStatus:'Clearance status',
     emptyFilter:'No B/L matches the filter.',
     footerTagline:'Vietnam - Korea logistics solution', footerAbout:'About', footerPostal:'Postal code lookup',
     login:'Log in', logout:'Log out', needLogin:'Single lookup is free. Batch Excel upload requires login.',
@@ -352,7 +353,7 @@ const LANGS = {
     eyebrow2:'대량 조회', h1b:'창고 리스트 전체를 한 번에 조회',
     lead2:'엑셀 목록(욜마 냉동창고 파일 등)을 업로드하면 모든 운송장을 한 번에 조회합니다 — 하나씩 조회할 필요 없이.',
     btnUpload:'⬆ 엑셀 업로드', btnRescan:'↻ 다시 조회',
-    colHawb:'운송장', colArrival:'입항일', colWeight:'중량', colStatus:'통관진행상태',
+    colMbl:'M B/L', colHawb:'운송장', colArrival:'입항일', colWeight:'중량', colStatus:'통관진행상태',
     emptyFilter:'필터에 맞는 운송장이 없습니다.',
     footerTagline:'베트남-한국 물류 솔루션', footerAbout:'소개', footerPostal:'우편번호 조회',
     login:'로그인', logout:'로그아웃', needLogin:'단건 조회는 무료입니다. 엑셀 대량 조회는 로그인이 필요합니다.',
@@ -720,6 +721,7 @@ function renderBatch() {
   body.innerHTML = rows.map(r => {
     const isOut = r.stage === 5;
     return `<tr>
+      <td>${esc(r.mbl || '—')}</td>
       <td class="hawb">${esc(r.hawb)}</td>
       <td>${esc(fmtDate(r.date))}</td>
       <td>${esc(r.weight)}</td>
@@ -813,9 +815,9 @@ async function scanRecords(recs, label) {
     prog.textContent = t('scanning', i + 1, recs.length);
     const rec = recs[i];
     const d = await fetchReal(rec.hawb);
-    let stage;
+    let stage, mbl = '';
     if (d) {
-      stage = d.stage;
+      stage = d.stage; mbl = d.mbl || '';
       if (!rec.weight) rec.weight = d.weight;
       if (!rec.date)   rec.date = d.date;
       await new Promise(r => setTimeout(r, 120));
@@ -824,7 +826,7 @@ async function scanRecords(recs, label) {
       stage = seed % 6;
       if (!rec.weight) rec.weight = `${(((seed * 7) % 190) / 10 + 2).toFixed(1)} kg`;
     }
-    rows.push({ hawb:rec.hawb, date:rec.date, weight:rec.weight, stage });
+    rows.push({ hawb:rec.hawb, mbl, date:rec.date, weight:rec.weight, stage });
   }
   prog.style.display = 'none';
   setBatch(rows, label);

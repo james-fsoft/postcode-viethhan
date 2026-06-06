@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>주소로 한국 우편번호 대량 자동 조회 (도로명주소) | 베트남-한국 물류 솔루션</title>
+  <meta name="description" content="주소로 한국 우편번호(우편번호 5자리)를 자동 조회하는 물류 업체용 소프트웨어. 엑셀로 수백·수천 건의 주소에 우편번호를 단 몇 분 만에 일괄 입력 — 도로명주소 공식 데이터 기반. 한국어·베트남어·영어 지원." />
+  <meta name="keywords" content="한국 우편번호 조회, 우편번호 자동 조회, 도로명주소 우편번호, 주소 우편번호 일괄, 엑셀 우편번호 입력, 대량 우편번호, 베트남 한국 물류, Korean postal code lookup, zipcode 일괄 조회" />
+  <link rel="canonical" href="https://postcode-viethhan.vercel.app/about?lang=ko" />
+  <link rel="alternate" hreflang="vi" href="https://postcode-viethhan.vercel.app/about" />
+  <link rel="alternate" hreflang="en" href="https://postcode-viethhan.vercel.app/about?lang=en" />
+  <link rel="alternate" hreflang="ko" href="https://postcode-viethhan.vercel.app/about?lang=ko" />
+  <link rel="alternate" hreflang="x-default" href="https://postcode-viethhan.vercel.app/about" />
+  <meta name="robots" content="index, follow" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="주소로 한국 우편번호 대량 자동 조회 (도로명주소)" />
+  <meta property="og:description" content="엑셀로 수천 건의 주소에 우편번호를 몇 분 만에 일괄 입력. 도로명주소 공식 데이터." />
+  <meta property="og:url" content="https://postcode-viethhan.vercel.app/about?lang=ko" />
+  <meta property="og:image" content="https://postcode-viethhan.vercel.app/logo.png" />
+  <meta property="og:site_name" content="Vietnam - Korea Logistics" />
+  <meta property="og:locale" content="ko_KR" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="주소로 한국 우편번호 대량 자동 조회" />
+  <meta name="twitter:description" content="엑셀로 수천 건 주소에 우편번호 일괄 입력." />
+  <meta name="twitter:image" content="https://postcode-viethhan.vercel.app/logo.png" />
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%231e40af'/><text x='12' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='%23d42126'>V</text><text x='54' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='white'>H</text></svg>" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Vietnam - Korea Logistics – 한국 우편번호 조회",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "주소로 한국 우편번호(우편번호)를 자동 조회하고 엑셀로 일괄 입력하는 베트남-한국 물류 업체용 소프트웨어.",
+    "url": "https://postcode-viethhan.vercel.app/",
+    "inLanguage": ["ko", "vi", "en"],
+    "offers": [
+      { "@type": "Offer", "name": "무료 체험", "price": "0", "priceCurrency": "VND", "description": "단건 조회, 엑셀 체험 최대 5건." },
+      { "@type": "Offer", "name": "Pro", "price": "29000000", "priceCurrency": "VND", "description": "연 29,000,000₫ (정가 35,000,000₫). 조회 무제한, 회당 최대 2,000건, 엑셀 일괄 처리." },
+      { "@type": "Offer", "name": "Enterprise", "priceCurrency": "VND", "description": "무제한, 회당 최대 10,000건, 다중 계정, 우선 지원. 견적 문의." }
+    ],
+    "publisher": { "@type": "Organization", "name": "Transflash", "url": "https://transflash.app" }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "수천 건의 주소에 대한 한국 우편번호를 어떻게 조회하나요?",
+        "acceptedAnswer": { "@type": "Answer", "text": "주소 목록이 담긴 엑셀 파일을 업로드하면 소프트웨어가 각 행의 우편번호를 자동으로 조회하여 결과 파일로 내보냅니다 — 한 건씩 손으로 조회하느라 몇 시간 걸리던 일을 단 몇 분으로." } },
+      { "@type": "Question", "name": "데이터 출처는 어디인가요?",
+        "acceptedAnswer": { "@type": "Answer", "text": "대한민국 행정안전부의 도로명주소 공식 API(juso.go.kr)를 사용하여 정확한 5자리 우편번호를 제공합니다." } },
+      { "@type": "Question", "name": "건물명·호수가 포함된 주소도 처리되나요?",
+        "acceptedAnswer": { "@type": "Answer", "text": "네. 건물명·호수·회사명·메모를 자동으로 제거하여 도로명주소와 지번주소 모두에서 정확한 우편번호를 찾습니다." } },
+      { "@type": "Question", "name": "요금은 얼마인가요?",
+        "acceptedAnswer": { "@type": "Answer", "text": "무료 체험이 있습니다. Pro는 연 29,000,000₫(정가 35,000,000₫)으로 무제한 조회와 엑셀 처리를 제공하며, 데이터 입력 직원(연 1.2~1.44억₫)보다 약 75% 저렴합니다. Enterprise는 견적 문의." } }
+    ]
+  }
+  </script>
+
+  <style>
+    :root{ --red:#d42126; --red-dark:#b91c22; --blue:#1e40af; --blue-light:#eff6ff; --green:#059669;
+      --g50:#f8fafc; --g100:#f1f5f9; --g200:#e2e8f0; --g300:#cbd5e1; --g400:#94a3b8; --g500:#64748b; --g600:#475569; --g700:#334155; --g900:#0f172a; }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Noto Sans KR','Segoe UI',Arial,sans-serif;color:var(--g700);line-height:1.7;background:#fff;}
+    .wrap{max-width:880px;margin:0 auto;padding:0 18px;}
+    a{color:var(--blue);}
+    header{border-bottom:1px solid var(--g200);background:#fff;position:sticky;top:0;z-index:10;}
+    .nav{max-width:880px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+    .brand img{height:38px;}
+    .brand b{font-size:1rem;color:var(--blue);font-weight:800;}
+    .nav-links{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+    .nav-cta{display:inline-block;padding:8px 18px;border-radius:8px;background:linear-gradient(135deg,var(--red),var(--blue));color:#fff;font-weight:700;font-size:0.88rem;text-decoration:none;}
+    .lang-switch{font-size:0.82rem;color:var(--g400);}
+    .lang-switch a{color:var(--g500);text-decoration:none;font-weight:700;padding:0 2px;}
+    .lang-switch a.on{color:var(--blue);}
+    .hero{background:linear-gradient(160deg,#1e40af 0%,#1e3a8a 55%,#172554 100%);color:#fff;padding:56px 0 50px;}
+    .hero .wrap{text-align:center;}
+    .hero h1{font-size:1.9rem;font-weight:800;line-height:1.35;margin-bottom:16px;}
+    .hero p{font-size:1.05rem;color:#dbeafe;max-width:680px;margin:0 auto 26px;}
+    .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+    .btn{display:inline-block;padding:12px 26px;border-radius:10px;font-weight:700;text-decoration:none;font-size:0.95rem;}
+    .btn-primary{background:var(--red);color:#fff;}
+    .btn-primary:hover{background:var(--red-dark);}
+    .btn-ghost{background:rgba(255,255,255,0.12);color:#fff;border:1.5px solid rgba(255,255,255,0.35);}
+    .btn-ghost:hover{background:rgba(255,255,255,0.2);}
+    section{padding:44px 0;border-bottom:1px solid var(--g100);}
+    h2{font-size:1.45rem;color:var(--g900);margin-bottom:14px;font-weight:800;}
+    h3{font-size:1.05rem;color:var(--g900);margin:18px 0 6px;}
+    p{margin-bottom:14px;}
+    .lead{font-size:1.05rem;color:var(--g600);}
+    ul{margin:0 0 14px 22px;}
+    li{margin-bottom:8px;}
+    .pain{background:#fff1f1;border-left:4px solid var(--red);border-radius:8px;padding:16px 18px;color:#7f1d1d;font-size:0.96rem;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:18px;}
+    .feat{background:var(--g50);border:1px solid var(--g200);border-radius:10px;padding:18px;}
+    .feat .ic{font-size:1.6rem;margin-bottom:8px;}
+    .feat h3{margin:0 0 6px;font-size:1rem;}
+    .feat p{font-size:0.9rem;color:var(--g500);margin:0;}
+    .steps{display:grid;gap:14px;margin-top:18px;}
+    .step{display:flex;gap:14px;align-items:flex-start;}
+    .step .n{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;}
+    .step h3{margin:0 0 2px;}
+    .step p{margin:0;font-size:0.92rem;color:var(--g500);}
+    .prices{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:20px;}
+    .price{border:1.5px solid var(--g200);border-radius:14px;padding:22px;display:flex;flex-direction:column;}
+    .price.hl{border-color:var(--blue);box-shadow:0 8px 30px rgba(30,64,175,0.12);position:relative;}
+    .price.hl::before{content:'인기';position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:0.72rem;font-weight:700;padding:3px 12px;border-radius:99px;}
+    .price .name{font-size:1.05rem;font-weight:800;color:var(--g900);}
+    .price .amt{font-size:1.4rem;font-weight:800;color:var(--blue);margin:8px 0;}
+    .price .amt small{font-size:0.78rem;color:var(--g400);font-weight:600;}
+    .price .amt .old{text-decoration:line-through;color:var(--g400);font-size:0.92rem;font-weight:600;margin-right:6px;}
+    .price .save{font-size:0.8rem;color:var(--green);font-weight:700;margin-bottom:6px;}
+    .price ul{margin:8px 0 18px 18px;}
+    .price li{font-size:0.88rem;color:var(--g600);}
+    .price .btn{margin-top:auto;text-align:center;}
+    .price-note{font-size:0.82rem;color:var(--g400);margin-top:14px;text-align:center;}
+    .cmp{width:100%;border-collapse:collapse;margin-top:18px;font-size:0.92rem;border:1px solid var(--g200);border-radius:10px;overflow:hidden;}
+    .cmp th,.cmp td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--g100);}
+    .cmp thead th{background:var(--g50);font-size:0.82rem;color:var(--g500);font-weight:700;}
+    .cmp thead th.hl{color:var(--blue);}
+    .cmp td.man{color:var(--g600);}
+    .cmp td.sw{color:var(--g900);font-weight:600;background:var(--blue-light);}
+    .cmp tr:last-child td{border-bottom:none;}
+    .savings-box{margin-top:18px;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:12px;padding:18px 20px;text-align:center;}
+    .savings-box .big{font-size:1.6rem;font-weight:800;color:var(--green);}
+    .savings-box p{margin:6px 0 0;color:#065f46;font-size:0.92rem;}
+    .faq{border:1px solid var(--g200);border-radius:10px;margin-bottom:10px;overflow:hidden;}
+    .faq summary{cursor:pointer;padding:14px 16px;font-weight:700;color:var(--g700);font-size:0.95rem;list-style:none;}
+    .faq summary::-webkit-details-marker{display:none;}
+    .faq[open] summary{color:var(--blue);}
+    .faq .a{padding:0 16px 14px;color:var(--g600);font-size:0.92rem;}
+    .cta-band{background:var(--g50);text-align:center;}
+    footer{padding:26px 0;text-align:center;color:var(--g400);font-size:0.82rem;}
+    footer .tf{font-weight:800;background:linear-gradient(135deg,var(--red),var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+    footer a{color:var(--g500);text-decoration:none;margin:0 6px;}
+    @media(max-width:640px){ .hero h1{font-size:1.4rem;} h2{font-size:1.25rem;} }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="brand" href="/about?lang=ko">
+      <img src="/logo.png" alt="Vietnam - Korea Logistics logo" />
+      <b>Vietnam - Korea Logistics</b>
+    </a>
+    <div class="nav-links">
+      <span class="lang-switch"><a href="/about">VI</a> · <a href="/about?lang=en">EN</a> · <a class="on" href="/about?lang=ko">KO</a></span>
+      <a class="nav-cta" href="/?lang=ko">무료 체험 →</a>
+    </div>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <h1>수천 건 주소의 한국 우편번호를 자동으로 한 번에</h1>
+    <p>주소에 우편번호(우편번호)를 매일 수백·수천 건 입력해야 하는 베트남-한국 물류 업체를 위한 솔루션 — 엑셀로 빠르고 정확하게.</p>
+    <div class="hero-btns">
+      <a class="btn btn-primary" href="/?lang=ko">바로 사용하기</a>
+      <a class="btn btn-ghost" href="#bang-gia">요금 보기</a>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <h2>수천 건의 우편번호를 손으로 찾는 것은 불가능합니다</h2>
+    <p class="lead">베트남-한국 노선 물류 업체는 매일 수백·수천 건의 주문을 처리합니다. 각 건마다 통관과 배송을 위해 정확한 한국 우편번호가 필요합니다.</p>
+    <p>수작업이면 직원이 조회 페이지를 열고 주소를 붙여넣고 우편번호를 복사해 파일에 옮기는 일을 끝없이 반복해야 합니다. 하루 <strong>2,000건</strong>이면 사실상 한 사람의 근무 시간을 모두 잡아먹고, 실수도 잦으며 물량을 따라가기 어렵습니다.</p>
+    <div class="pain">⚠️ 2,000건을 손으로 조회하면 하루 8~13시간이 듭니다. 우편번호 오류 하나로 화물이 통관에서 지연되거나 오배송될 수 있습니다.</div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>해결책: 주소에서 우편번호 자동 입력</h2>
+    <p><strong>Vietnam - Korea Logistics</strong> 소프트웨어는 한국어 주소에서 우편번호(우편번호)를 자동으로 조회합니다. 목록을 붙여넣거나 엑셀을 업로드하면 전체 주소에 5자리 우편번호를 <strong>몇 분</strong> 만에 채워 결과 파일로 내보냅니다.</p>
+    <div class="grid">
+      <div class="feat"><div class="ic">⚡</div><h3>엑셀 일괄 처리</h3><p>파일을 올리면 해당 열에 우편번호가 채워진 파일을 돌려받습니다. 수천 행도 몇 분.</p></div>
+      <div class="feat"><div class="ic">🎯</div><h3>정확·공식 데이터</h3><p>행정안전부 도로명주소 API(juso.go.kr) 사용 — 정확한 5자리.</p></div>
+      <div class="feat"><div class="ic">🏢</div><h3>복잡한 주소도 처리</h3><p>건물명·호수·회사명을 자동 제거; 도로명주소와 지번주소 모두 지원.</p></div>
+      <div class="feat"><div class="ic">🌐</div><h3>다국어</h3><p>한국어·베트남어·영어 — 베트남 팀과 한국 파트너 모두 사용.</p></div>
+      <div class="feat"><div class="ic">📦</div><h3>배송 파일 처리</h3><p>배송 파일 양식에 우편번호를 바로 채우고 다른 열은 그대로 유지(Pro/Enterprise).</p></div>
+      <div class="feat"><div class="ic">✏️</div><h3>수정 후 재조회</h3><p>미매칭 주소는 바로 수정해 다시 조회 — 처음부터 다시 할 필요 없음.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>이용 방법 — 3단계</h2>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><div><h3>주소 입력 또는 업로드</h3><p>한국어 주소 목록을 붙여넣거나 수천 행 엑셀을 업로드합니다.</p></div></div>
+      <div class="step"><div class="n">2</div><div><h3>자동 우편번호 조회</h3><p>각 주소를 한국 공식 주소 데이터와 대조해 우편번호를 가져옵니다.</p></div></div>
+      <div class="step"><div class="n">3</div><div><h3>결과 파일 다운로드</h3><p>미리 보고 우편번호가 채워진 엑셀을 다운로드 — 배송·통관에 바로 사용.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>사람을 고용하는 것보다 훨씬 저렴합니다</h2>
+    <table class="cmp">
+      <thead><tr><th>항목</th><th>수작업 직원</th><th class="hl">소프트웨어 (Pro)</th></tr></thead>
+      <tbody>
+        <tr><td>연간 비용</td><td class="man">1.2~1.44억₫ (급여+수당)</td><td class="sw">2,900만₫</td></tr>
+        <tr><td>2,000건 처리</td><td class="man">하루 8~13시간</td><td class="sw">몇 분</td></tr>
+        <tr><td>오류율</td><td class="man">높음 — 피로·오타·누락</td><td class="sw">낮음 — 정부 데이터</td></tr>
+        <tr><td>물량 2배 증가 시</td><td class="man">인력 추가 필요</td><td class="sw">조회 무제한, 추가비용 없음</td></tr>
+      </tbody>
+    </table>
+    <div class="savings-box">
+      <div class="big">연 약 1억₫ 절감</div>
+      <p>인건비 1.2~1.44억₫ 대신 <strong>연 2,900만₫</strong> — 약 <strong>75% 절감</strong>. 1~2개월이면 투자 회수.</p>
+    </div>
+  </div>
+</section>
+
+<section id="bang-gia">
+  <div class="wrap">
+    <h2>요금 안내</h2>
+    <p class="lead">무료로 시작하세요. 대량 처리가 필요할 때 업그레이드 — 인건비의 일부 비용.</p>
+    <div class="prices">
+      <div class="price">
+        <div class="name">무료 체험</div>
+        <div class="amt">무료</div>
+        <ul>
+          <li>단건 조회</li>
+          <li>엑셀 체험 최대 5건</li>
+          <li>수동 검색</li>
+        </ul>
+        <a class="btn btn-ghost" style="border-color:var(--g300);color:var(--g700)" href="/?lang=ko">시작</a>
+      </div>
+      <div class="price hl">
+        <div class="name">Pro</div>
+        <div class="amt"><span class="old">35,000,000₫</span>29,000,000₫ <small>/년</small></div>
+        <div class="save">인건비 대비 연 약 1억₫ 절감</div>
+        <ul>
+          <li><strong>무제한</strong> 조회</li>
+          <li>회당 최대 2,000건</li>
+          <li>엑셀 일괄 업로드</li>
+          <li>배송 파일 처리</li>
+        </ul>
+        <a class="btn btn-primary" href="mailto:support@transflash.app?subject=Pro 가입 문의 - Postcode Transflash">가입 문의</a>
+      </div>
+      <div class="price">
+        <div class="name">Enterprise</div>
+        <div class="amt">견적 <small>문의</small></div>
+        <ul>
+          <li>무제한 조회</li>
+          <li>회당 최대 10,000건</li>
+          <li>다중 계정</li>
+          <li>우선 지원</li>
+        </ul>
+        <a class="btn btn-ghost" style="border-color:var(--g300);color:var(--g700)" href="mailto:support@transflash.app?subject=Enterprise 상담 - Postcode Transflash">상담 요청</a>
+      </div>
+    </div>
+    <p class="price-note">물량에 맞는 요금은 <a href="mailto:support@transflash.app">support@transflash.app</a> 으로 문의하세요.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>누구를 위한 서비스인가요?</h2>
+    <ul>
+      <li>베트남–한국 노선 <strong>물류·특송·포워딩</strong> 업체.</li>
+      <li>한국으로 판매하는 <strong>이커머스</strong> 사업자(쿠팡, Qoo10 등).</li>
+      <li>정확한 우편번호가 필요한 <strong>통관·관세</strong> 대행.</li>
+      <li>매일 <strong>많은 주소에 우편번호를 입력</strong>해야 하는 모든 분.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>자주 묻는 질문</h2>
+    <details class="faq" open><summary>수천 건의 주소에 우편번호를 어떻게 조회하나요?</summary><div class="a">주소 목록 엑셀을 업로드하면 각 행의 우편번호를 자동 조회해 결과 파일로 내보냅니다 — 손으로 몇 시간 걸리던 일을 몇 분으로.</div></details>
+    <details class="faq"><summary>데이터는 정확한가요?</summary><div class="a">행정안전부 도로명주소 공식 API(juso.go.kr)를 사용해 정확한 5자리 우편번호를 제공합니다.</div></details>
+    <details class="faq"><summary>건물명·호수가 있는 주소는요?</summary><div class="a">건물명·호수·회사명·메모를 자동 제거하여 도로명주소와 지번주소 모두에서 정확한 우편번호를 찾습니다.</div></details>
+    <details class="faq"><summary>요금은 얼마인가요?</summary><div class="a">무료 체험이 있습니다. Pro는 연 <strong>29,000,000₫</strong>(정가 35,000,000₫)으로 무제한 조회와 엑셀 처리를 제공하며, 데이터 입력 직원보다 약 75% 저렴합니다. Enterprise는 견적 문의.</div></details>
+    <details class="faq"><summary>한국 수입화물 통관조회 도구도 있나요?</summary><div class="a">네. 같은 시스템에서 운송장(HAWB)으로 한국 수입화물 통관진행정보를 조회하는 도구도 제공합니다.</div></details>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="wrap">
+    <h2>지금부터 우편번호 수작업을 멈추세요</h2>
+    <p class="lead">매일 몇 시간을 절약하고 오류를 줄이며 더 빠르게 배송하세요.</p>
+    <div class="hero-btns">
+      <a class="btn btn-primary" href="/?lang=ko">무료 체험</a>
+      <a class="btn btn-ghost" style="border-color:var(--g300);color:var(--g700)" href="mailto:support@transflash.app">상담 문의</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><span class="tf">Transflash</span> — 베트남-한국 물류 솔루션</p>
+    <p style="margin-top:6px;">
+      <a href="/?lang=ko">앱 사용</a> ·
+      <a href="/tracking-info?lang=ko">통관조회</a> ·
+      <a href="mailto:support@transflash.app">support@transflash.app</a> ·
+      © 2026
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -313,9 +313,12 @@ app.post('/api/use', requireAuth, async (req, res) => {
   }
 });
 
-// ── Trang giới thiệu / landing (PUBLIC, chuẩn SEO) ───────────────────────────
+// ── Trang giới thiệu / landing mã bưu điện (đa ngôn ngữ vi/en/ko) ────────────
 app.get('/about', (req, res) => {
-  sendPage(res, 'views', 'landing.html');
+  const file = req.query.lang === 'ko' ? 'landing-ko.html'
+             : req.query.lang === 'en' ? 'landing-en.html'
+             : 'landing.html';
+  sendPage(res, 'views', file);
 });
 
 // ── Landing SEO cho công cụ tra cứu thông quan (đa ngôn ngữ vi/en/ko) ─────────
@@ -324,6 +327,11 @@ app.get('/tracking-info', (req, res) => {
              : req.query.lang === 'en' ? 'tracking-landing-en.html'
              : 'tracking-landing.html';
   sendPage(res, 'views', file);
+});
+
+// ── Bài hướng dẫn / glossary thuật ngữ thông quan (SEO + AEO) ─────────────────
+app.get('/customs-guide', (req, res) => {
+  sendPage(res, 'views', 'customs-guide.html');
 });
 
 // ── Trang tra cứu thông quan (UNI-PASS) — SEO đa ngôn ngữ (vi/en/ko) ──────────
@@ -368,7 +376,7 @@ app.get('/tracking', (req, res) => {
 const SITE = process.env.SITE_URL || 'https://postcode-viethhan.vercel.app';
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(
-    `User-agent: *\nAllow: /\nAllow: /about\nAllow: /tracking\nAllow: /tracking-info\nDisallow: /api/\nDisallow: /shipping\nDisallow: /login\n\nSitemap: ${SITE}/sitemap.xml\n`
+    `User-agent: *\nAllow: /\nAllow: /about\nAllow: /tracking\nAllow: /tracking-info\nAllow: /customs-guide\nDisallow: /api/\nDisallow: /shipping\nDisallow: /login\n\nSitemap: ${SITE}/sitemap.xml\n`
   );
 });
 app.get('/sitemap.xml', (req, res) => {
@@ -376,7 +384,12 @@ app.get('/sitemap.xml', (req, res) => {
   res.type('application/xml').send(
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
     `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n` +
-    `  <url><loc>${SITE}/about</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>\n` +
+    `  <url><loc>${SITE}/about</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority>` +
+    `<xhtml:link rel="alternate" hreflang="vi" href="${SITE}/about"/>` +
+    `<xhtml:link rel="alternate" hreflang="en" href="${SITE}/about?lang=en"/>` +
+    `<xhtml:link rel="alternate" hreflang="ko" href="${SITE}/about?lang=ko"/></url>\n` +
+    `  <url><loc>${SITE}/about?lang=en</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
+    `  <url><loc>${SITE}/about?lang=ko</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
     `  <url><loc>${SITE}/</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
     `  <url><loc>${SITE}/tracking</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>\n` +
     `  <url><loc>${SITE}/tracking-info</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority>` +
@@ -385,6 +398,7 @@ app.get('/sitemap.xml', (req, res) => {
     `<xhtml:link rel="alternate" hreflang="ko" href="${SITE}/tracking-info?lang=ko"/></url>\n` +
     `  <url><loc>${SITE}/tracking-info?lang=en</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
     `  <url><loc>${SITE}/tracking-info?lang=ko</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
+    `  <url><loc>${SITE}/customs-guide</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>\n` +
     `</urlset>\n`
   );
 });

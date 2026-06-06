@@ -9,6 +9,10 @@
   <meta name="description" content="Phần mềm tra mã bưu điện Hàn Quốc (우편번호) tự động từ địa chỉ cho doanh nghiệp logistics. Điền mã cho hàng trăm, hàng nghìn địa chỉ mỗi ngày chỉ trong vài phút bằng file Excel — thay vì tra tay mất hàng giờ. Hỗ trợ tiếng Việt, Anh, Hàn." />
   <meta name="keywords" content="tra mã bưu điện Hàn Quốc, mã bưu điện Hàn Quốc, 우편번호 자동 조회, 도로명주소 우편번호, Korean postal code lookup, bulk postal code, điền mã bưu điện Excel, logistics Việt Hàn, vận đơn Hàn Quốc, zipcode Hàn Quốc hàng loạt" />
   <link rel="canonical" href="https://postcode-viethhan.vercel.app/about" />
+  <link rel="alternate" hreflang="vi" href="https://postcode-viethhan.vercel.app/about" />
+  <link rel="alternate" hreflang="en" href="https://postcode-viethhan.vercel.app/about?lang=en" />
+  <link rel="alternate" hreflang="ko" href="https://postcode-viethhan.vercel.app/about?lang=ko" />
+  <link rel="alternate" hreflang="x-default" href="https://postcode-viethhan.vercel.app/about" />
   <meta name="robots" content="index, follow" />
 
   <!-- Open Graph / Social -->
@@ -83,6 +87,10 @@
     .brand img{height:38px;}
     .brand b{font-size:1rem;color:var(--blue);font-weight:800;}
     .nav-cta{display:inline-block;padding:8px 18px;border-radius:8px;background:linear-gradient(135deg,var(--red),var(--blue));color:#fff;font-weight:700;font-size:0.88rem;text-decoration:none;}
+    .nav-links{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+    .lang-switch{font-size:0.82rem;color:var(--g400);}
+    .lang-switch a{color:var(--g500);text-decoration:none;font-weight:700;padding:0 2px;}
+    .lang-switch a.on{color:var(--blue);}
 
     /* Hero */
     .hero{background:linear-gradient(160deg,#1e40af 0%,#1e3a8a 55%,#172554 100%);color:#fff;padding:56px 0 50px;}
@@ -171,7 +179,10 @@
       <img src="/logo.png" alt="Vietnam - Korea Logistics logo" />
       <b>Vietnam - Korea Logistics</b>
     </a>
-    <a class="nav-cta" href="/">Dùng thử miễn phí →</a>
+    <div class="nav-links">
+      <span class="lang-switch"><a class="on" href="/about">VI</a> · <a href="/about?lang=en">EN</a> · <a href="/about?lang=ko">KO</a></span>
+      <a class="nav-cta" href="/">Dùng thử miễn phí →</a>
+    </div>
   </div>
 </header>
 

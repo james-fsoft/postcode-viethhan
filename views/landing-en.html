@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Bulk Korean Postal Code Lookup From Address (도로명주소) | Vietnam - Korea Logistics</title>
+  <meta name="description" content="Software to automatically look up Korean postal codes (우편번호) from addresses for logistics businesses. Fill postal codes for hundreds or thousands of addresses in minutes via Excel — instead of hours of manual lookup. Official Korean government address data. Vietnamese, English, Korean." />
+  <meta name="keywords" content="Korean postal code lookup, bulk postal code Korea, zipcode Korea, fill postal codes Excel, address to postal code Korea, 우편번호 자동 조회, 도로명주소 우편번호, Vietnam Korea logistics, Korea zipcode API" />
+  <link rel="canonical" href="https://postcode-viethhan.vercel.app/about?lang=en" />
+  <link rel="alternate" hreflang="vi" href="https://postcode-viethhan.vercel.app/about" />
+  <link rel="alternate" hreflang="en" href="https://postcode-viethhan.vercel.app/about?lang=en" />
+  <link rel="alternate" hreflang="ko" href="https://postcode-viethhan.vercel.app/about?lang=ko" />
+  <link rel="alternate" hreflang="x-default" href="https://postcode-viethhan.vercel.app/about" />
+  <meta name="robots" content="index, follow" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Bulk Korean Postal Code Lookup From Address (도로명주소)" />
+  <meta property="og:description" content="Fill postal codes for thousands of addresses in minutes via Excel. Official Korean address data." />
+  <meta property="og:url" content="https://postcode-viethhan.vercel.app/about?lang=en" />
+  <meta property="og:image" content="https://postcode-viethhan.vercel.app/logo.png" />
+  <meta property="og:site_name" content="Vietnam - Korea Logistics" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Bulk Korean Postal Code Lookup From Address" />
+  <meta name="twitter:description" content="Fill postal codes for thousands of addresses in minutes via Excel." />
+  <meta name="twitter:image" content="https://postcode-viethhan.vercel.app/logo.png" />
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%231e40af'/><text x='12' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='%23d42126'>V</text><text x='54' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='white'>H</text></svg>" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Vietnam - Korea Logistics – Korean postal code lookup",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "Software to look up Korean postal codes (우편번호) from addresses and fill them in bulk via Excel for Vietnam - Korea logistics businesses.",
+    "url": "https://postcode-viethhan.vercel.app/",
+    "inLanguage": ["en", "vi", "ko"],
+    "offers": [
+      { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "VND", "description": "Single lookup, Excel trial up to 5 addresses." },
+      { "@type": "Offer", "name": "Pro", "price": "29000000", "priceCurrency": "VND", "description": "29,000,000₫/year (was 35,000,000₫). Unlimited lookups, up to 2,000 addresses per run, bulk Excel processing." },
+      { "@type": "Offer", "name": "Enterprise", "priceCurrency": "VND", "description": "Unlimited, up to 10,000 addresses per run, multiple accounts, priority support. Contact for pricing." }
+    ],
+    "publisher": { "@type": "Organization", "name": "Transflash", "url": "https://transflash.app" }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How do I look up Korean postal codes for thousands of addresses?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Upload an Excel file with your address list; the software automatically looks up the postal code for each row and exports a result file in minutes, instead of hours of manual lookup." } },
+      { "@type": "Question", "name": "What data source does it use?",
+        "acceptedAnswer": { "@type": "Answer", "text": "It uses the official road-name address API of Korea's Ministry of the Interior and Safety (도로명주소, juso.go.kr) for accurate 5-digit postal codes." } },
+      { "@type": "Question", "name": "Does it handle addresses with building names and room numbers?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. It automatically strips building names, room numbers, company names and notes to find the correct postal code for both road-name (도로명) and lot-number (지번) addresses." } },
+      { "@type": "Question", "name": "How much does it cost?",
+        "acceptedAnswer": { "@type": "Answer", "text": "There is a free trial. Pro is 29,000,000₫/year (was 35,000,000₫) with unlimited lookups and Excel processing — about 75% cheaper than hiring a data-entry staff (120–144M₫/year). Enterprise is contact for pricing." } }
+    ]
+  }
+  </script>
+
+  <style>
+    :root{ --red:#d42126; --red-dark:#b91c22; --blue:#1e40af; --blue-light:#eff6ff; --green:#059669;
+      --g50:#f8fafc; --g100:#f1f5f9; --g200:#e2e8f0; --g300:#cbd5e1; --g400:#94a3b8; --g500:#64748b; --g600:#475569; --g700:#334155; --g900:#0f172a; }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Segoe UI','Noto Sans KR',Arial,sans-serif;color:var(--g700);line-height:1.7;background:#fff;}
+    .wrap{max-width:880px;margin:0 auto;padding:0 18px;}
+    a{color:var(--blue);}
+    header{border-bottom:1px solid var(--g200);background:#fff;position:sticky;top:0;z-index:10;}
+    .nav{max-width:880px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+    .brand img{height:38px;}
+    .brand b{font-size:1rem;color:var(--blue);font-weight:800;}
+    .nav-links{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+    .nav-cta{display:inline-block;padding:8px 18px;border-radius:8px;background:linear-gradient(135deg,var(--red),var(--blue));color:#fff;font-weight:700;font-size:0.88rem;text-decoration:none;}
+    .lang-switch{font-size:0.82rem;color:var(--g400);}
+    .lang-switch a{color:var(--g500);text-decoration:none;font-weight:700;padding:0 2px;}
+    .lang-switch a.on{color:var(--blue);}
+    .hero{background:linear-gradient(160deg,#1e40af 0%,#1e3a8a 55%,#172554 100%);color:#fff;padding:56px 0 50px;}
+    .hero .wrap{text-align:center;}
+    .hero h1{font-size:2rem;font-weight:800;line-height:1.3;margin-bottom:16px;}
+    .hero p{font-size:1.05rem;color:#dbeafe;max-width:680px;margin:0 auto 26px;}
+    .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+    .btn{display:inline-block;padding:12px 26px;border-radius:10px;font-weight:700;text-decoration:none;font-size:0.95rem;}
+    .btn-primary{background:var(--red);color:#fff;}
+    .btn-primary:hover{background:var(--red-dark);}
+    .btn-ghost{background:rgba(255,255,255,0.12);color:#fff;border:1.5px solid rgba(255,255,255,0.35);}
+    .btn-ghost:hover{background:rgba(255,255,255,0.2);}
+    section{padding:44px 0;border-bottom:1px solid var(--g100);}
+    h2{font-size:1.5rem;color:var(--g900);margin-bottom:14px;font-weight:800;}
+    h3{font-size:1.1rem;color:var(--g900);margin:18px 0 6px;}
+    p{margin-bottom:14px;}
+    .lead{font-size:1.08rem;color:var(--g600);}
+    ul{margin:0 0 14px 22px;}
+    li{margin-bottom:8px;}
+    .pain{background:#fff1f1;border-left:4px solid var(--red);border-radius:8px;padding:16px 18px;color:#7f1d1d;font-size:0.98rem;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:18px;}
+    .feat{background:var(--g50);border:1px solid var(--g200);border-radius:10px;padding:18px;}
+    .feat .ic{font-size:1.6rem;margin-bottom:8px;}
+    .feat h3{margin:0 0 6px;font-size:1rem;}
+    .feat p{font-size:0.9rem;color:var(--g500);margin:0;}
+    .steps{display:grid;gap:14px;margin-top:18px;}
+    .step{display:flex;gap:14px;align-items:flex-start;}
+    .step .n{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;}
+    .step h3{margin:0 0 2px;}
+    .step p{margin:0;font-size:0.92rem;color:var(--g500);}
+    .prices{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:20px;}
+    .price{border:1.5px solid var(--g200);border-radius:14px;padding:22px;display:flex;flex-direction:column;}
+    .price.hl{border-color:var(--blue);box-shadow:0 8px 30px rgba(30,64,175,0.12);position:relative;}
+    .price.hl::before{content:'Popular';position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:0.72rem;font-weight:700;padding:3px 12px;border-radius:99px;}
+    .price .name{font-size:1.05rem;font-weight:800;color:var(--g900);}
+    .price .amt{font-size:1.4rem;font-weight:800;color:var(--blue);margin:8px 0;}
+    .price .amt small{font-size:0.78rem;color:var(--g400);font-weight:600;}
+    .price .amt .old{text-decoration:line-through;color:var(--g400);font-size:0.92rem;font-weight:600;margin-right:6px;}
+    .price .save{font-size:0.8rem;color:var(--green);font-weight:700;margin-bottom:6px;}
+    .price ul{margin:8px 0 18px 18px;}
+    .price li{font-size:0.88rem;color:var(--g600);}
+    .price .btn{margin-top:auto;text-align:center;}
+    .price-note{font-size:0.82rem;color:var(--g400);margin-top:14px;text-align:center;}
+    .cmp{width:100%;border-collapse:collapse;margin-top:18px;font-size:0.92rem;border:1px solid var(--g200);border-radius:10px;overflow:hidden;}
+    .cmp th,.cmp td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--g100);}
+    .cmp thead th{background:var(--g50);font-size:0.82rem;color:var(--g500);font-weight:700;}
+    .cmp thead th.hl{color:var(--blue);}
+    .cmp td.man{color:var(--g600);}
+    .cmp td.sw{color:var(--g900);font-weight:600;background:var(--blue-light);}
+    .cmp tr:last-child td{border-bottom:none;}
+    .savings-box{margin-top:18px;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:12px;padding:18px 20px;text-align:center;}
+    .savings-box .big{font-size:1.6rem;font-weight:800;color:var(--green);}
+    .savings-box p{margin:6px 0 0;color:#065f46;font-size:0.92rem;}
+    .faq{border:1px solid var(--g200);border-radius:10px;margin-bottom:10px;overflow:hidden;}
+    .faq summary{cursor:pointer;padding:14px 16px;font-weight:700;color:var(--g700);font-size:0.95rem;list-style:none;}
+    .faq summary::-webkit-details-marker{display:none;}
+    .faq[open] summary{color:var(--blue);}
+    .faq .a{padding:0 16px 14px;color:var(--g600);font-size:0.92rem;}
+    .cta-band{background:var(--g50);text-align:center;}
+    footer{padding:26px 0;text-align:center;color:var(--g400);font-size:0.82rem;}
+    footer .tf{font-weight:800;background:linear-gradient(135deg,var(--red),var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+    footer a{color:var(--g500);text-decoration:none;margin:0 6px;}
+    @media(max-width:640px){ .hero h1{font-size:1.55rem;} h2{font-size:1.3rem;} }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="brand" href="/about?lang=en">
+      <img src="/logo.png" alt="Vietnam - Korea Logistics logo" />
+      <b>Vietnam - Korea Logistics</b>
+    </a>
+    <div class="nav-links">
+      <span class="lang-switch"><a href="/about">VI</a> · <a class="on" href="/about?lang=en">EN</a> · <a href="/about?lang=ko">KO</a></span>
+      <a class="nav-cta" href="/?lang=en">Try it free →</a>
+    </div>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <h1>Automatic Korean Postal Codes for Thousands of Addresses</h1>
+    <p>A solution for Vietnam - Korea logistics businesses that need to fill postal codes (우편번호) for hundreds or thousands of addresses every day — fast, accurate, via Excel.</p>
+    <div class="hero-btns">
+      <a class="btn btn-primary" href="/?lang=en">Try it now</a>
+      <a class="btn btn-ghost" href="#bang-gia">See pricing</a>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <h2>Looking up thousands of postal codes by hand is impossible</h2>
+    <p class="lead">A Vietnam - Korea logistics company processes hundreds to thousands of orders daily. Each needs an accurate Korean postal code for customs and delivery.</p>
+    <p>Done manually, staff open a lookup page, paste each address, copy the postal code, paste it back into a file… over and over. At <strong>2,000 addresses/day</strong>, this consumes nearly a full employee's time — tiring, error-prone, and almost impossible to keep up with the volume.</p>
+    <div class="pain">⚠️ Looking up 2,000 addresses by hand takes 8–13 hours a day. A single wrong postal code can hold a shipment at customs or cause a misdelivery.</div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>The solution: fill postal codes from addresses automatically</h2>
+    <p>The <strong>Vietnam - Korea Logistics</strong> software automatically looks up Korean postal codes (우편번호) from Korean addresses. Paste a list or upload an Excel file, and it fills the 5-digit code for every address in <strong>minutes</strong> and exports a result file.</p>
+    <div class="grid">
+      <div class="feat"><div class="ic">⚡</div><h3>Bulk via Excel</h3><p>Upload a file, get it back with postal codes in the right column. Thousands of rows in minutes.</p></div>
+      <div class="feat"><div class="ic">🎯</div><h3>Accurate, official data</h3><p>Uses Korea's government address API (도로명주소, juso.go.kr) — standard 5-digit codes.</p></div>
+      <div class="feat"><div class="ic">🏢</div><h3>Handles complex addresses</h3><p>Auto-strips building names, room numbers, company names; supports road-name (도로명) and lot-number (지번).</p></div>
+      <div class="feat"><div class="ic">🌐</div><h3>Multilingual</h3><p>Vietnamese, English and Korean — for both your Vietnam team and Korean partners.</p></div>
+      <div class="feat"><div class="ic">📦</div><h3>Shipping file processing</h3><p>Fill codes directly into your shipping file template, keeping every other column (Pro/Enterprise).</p></div>
+      <div class="feat"><div class="ic">✏️</div><h3>Edit &amp; re-search</h3><p>Unmatched addresses can be edited and re-searched instantly — no need to start over.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>How it works — 3 steps</h2>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><div><h3>Enter or upload addresses</h3><p>Paste a list of Korean addresses, or upload an Excel file with thousands of rows.</p></div></div>
+      <div class="step"><div class="n">2</div><div><h3>Automatic postal code lookup</h3><p>Each address is matched against Korea's official address data to get the postal code.</p></div></div>
+      <div class="step"><div class="n">3</div><div><h3>Download the result file</h3><p>Preview, then download the Excel with postal codes filled — ready for shipping and customs.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Far cheaper than hiring someone to do it by hand</h2>
+    <table class="cmp">
+      <thead><tr><th>Criteria</th><th>Manual staff</th><th class="hl">Software (Pro)</th></tr></thead>
+      <tbody>
+        <tr><td>Cost per year</td><td class="man">120–144M₫ (salary + benefits)</td><td class="sw">29M₫</td></tr>
+        <tr><td>Process 2,000 addresses</td><td class="man">8–13 hours / day</td><td class="sw">Minutes</td></tr>
+        <tr><td>Error rate</td><td class="man">High — fatigue, typos, omissions</td><td class="sw">Low — government data</td></tr>
+        <tr><td>When volume doubles</td><td class="man">Hire more people</td><td class="sw">Unlimited, no extra cost</td></tr>
+      </tbody>
+    </table>
+    <div class="savings-box">
+      <div class="big">Save ~100M₫ per year</div>
+      <p>Pay <strong>29M₫/year</strong> instead of <strong>120–144M₫</strong> in staff cost — about <strong>75% savings</strong>. Pays for itself in 1–2 months.</p>
+    </div>
+  </div>
+</section>
+
+<section id="bang-gia">
+  <div class="wrap">
+    <h2>Pricing &amp; plans</h2>
+    <p class="lead">Start free. Upgrade when you need to process large volumes — a fraction of the cost of a data-entry hire.</p>
+    <div class="prices">
+      <div class="price">
+        <div class="name">Free</div>
+        <div class="amt">Free</div>
+        <ul>
+          <li>Single lookup</li>
+          <li>Excel trial up to 5 addresses</li>
+          <li>Manual search</li>
+        </ul>
+        <a class="btn btn-ghost" style="border-color:var(--g300);color:var(--g700)" href="/?lang=en">Start</a>
+      </div>
+      <div class="price hl">
+        <div class="name">Pro</div>
+        <div class="amt"><span class="old">35,000,000₫</span>29,000,000₫ <small>/year</small></div>
+        <div class="save">Save ~100M₫/year vs. a hire</div>
+        <ul>
+          <li><strong>Unlimited</strong> lookups</li>
+          <li>Up to 2,000 addresses/run</li>
+          <li>Bulk Excel upload</li>
+          <li>Shipping file processing</li>
+        </ul>
+        <a class="btn btn-primary" href="mailto:support@transflash.app?subject=Pro plan inquiry - Postcode Transflash">Contact to register</a>
+      </div>
+      <div class="price">
+        <div class="name">Enterprise</div>
+        <div class="amt">Contact <small>for pricing</small></div>
+        <ul>
+          <li>Unlimited lookups</li>
+          <li>Up to 10,000 addresses/run</li>
+          <li>Multiple accounts</li>
+          <li>Priority support</li>
+        </ul>
+        <a class="btn btn-ghost" style="border-color:var(--g300);color:var(--g700)" href="mailto:support@transflash.app?subject=Enterprise inquiry - Postcode Transflash">Request a quote</a>
+      </div>
+    </div>
+    <p class="price-note">Contact <a href="mailto:support@transflash.app">support@transflash.app</a> for a plan that fits your order volume.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Who is it for?</h2>
+    <ul>
+      <li><strong>Logistics, express, forwarding</strong> companies on the Vietnam – Korea route.</li>
+      <li><strong>E-commerce</strong> businesses selling into Korea (Coupang, Qoo10, etc.).</li>
+      <li><strong>Customs brokerage</strong> teams that need accurate postal codes.</li>
+      <li>Anyone who has to <strong>fill Korean postal codes for many addresses</strong> daily.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Frequently asked questions</h2>
+    <details class="faq" open><summary>How do I look up Korean postal codes for thousands of addresses?</summary><div class="a">Upload an Excel file with your address list; the software looks up the postal code for each row and exports a result file in minutes, instead of hours of manual work.</div></details>
+    <details class="faq"><summary>Is the data accurate?</summary><div class="a">It uses the official road-name address API of Korea's Ministry of the Interior and Safety (도로명주소, juso.go.kr) for accurate 5-digit codes.</div></details>
+    <details class="faq"><summary>What about addresses with building names and room numbers?</summary><div class="a">It auto-strips building names, room numbers, company names and notes to find the correct code for both road-name (도로명) and lot-number (지번) addresses.</div></details>
+    <details class="faq"><summary>How much does it cost?</summary><div class="a">There is a free trial. Pro is <strong>29,000,000₫/year</strong> (was 35,000,000₫) with unlimited lookups and Excel processing — about 75% cheaper than a data-entry hire. Enterprise is contact for pricing.</div></details>
+    <details class="faq"><summary>Is there a Korea customs clearance tracking tool too?</summary><div class="a">Yes. The same system also tracks Korea import customs clearance by B/L number (HAWB).</div></details>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="wrap">
+    <h2>Stop looking up postal codes by hand today</h2>
+    <p class="lead">Save hours every day, reduce errors, ship faster.</p>
+    <div class="hero-btns">
+      <a class="btn btn-primary" href="/?lang=en">Try it free</a>
+      <a class="btn btn-ghost" style="border-color:var(--g300);color:var(--g700)" href="mailto:support@transflash.app">Contact us</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><span class="tf">Transflash</span> — Vietnam - Korea logistics solution</p>
+    <p style="margin-top:6px;">
+      <a href="/?lang=en">Open app</a> ·
+      <a href="/tracking-info?lang=en">Customs tracking</a> ·
+      <a href="mailto:support@transflash.app">support@transflash.app</a> ·
+      © 2026
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

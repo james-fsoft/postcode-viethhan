@@ -307,6 +307,9 @@ const LANGS = {
     subBranch:'Vận đơn nhánh', released:'Đã xuất kho',
     labCargoType:'Loại hàng', labProduct:'Tên hàng', labPkgWeight:'Kiện / Trọng lượng',
     labCarrier:'Hãng / Chuyến bay', labRoute:'Cảng xếp → Cảng dỡ', labArrival:'Ngày đến',
+    labMgmtNo:'Số quản lý hàng', labBL:'Vận đơn (M·H B/L)', labClearance:'Trạng thái thông quan',
+    labBLType:'Loại B/L', labShipNat:'Quốc tịch tàu/bay', labOrigin:'Nước xuất',
+    labProcTime:'Thời gian xử lý', labEntryCustoms:'Hải quan nhập', labExpressCo:'Đơn vị chuyển phát',
     tlTitle:'Tiến trình thông quan',
     loading:'Đang tra cứu...', scanning:(i,t)=>`Đang quét... ${i}/${t}`,
     apiError:'Lỗi gọi API', notFound:(n)=>`Không tìm thấy thông tin cho ${n}. Kiểm tra lại số vận đơn (HAWB) hoặc thử số quản lý hàng hóa.`,
@@ -332,6 +335,9 @@ const LANGS = {
     subBranch:'House B/L', released:'Released',
     labCargoType:'Cargo type', labProduct:'Product', labPkgWeight:'Packages / Weight',
     labCarrier:'Carrier / Flight', labRoute:'Origin → Destination', labArrival:'Arrival date',
+    labMgmtNo:'Cargo mgmt no.', labBL:'B/L (M·H)', labClearance:'Clearance status',
+    labBLType:'B/L type', labShipNat:'Carrier nation', labOrigin:'Origin country',
+    labProcTime:'Processed at', labEntryCustoms:'Entry customs', labExpressCo:'Express company',
     tlTitle:'Clearance progress',
     loading:'Looking up...', scanning:(i,t)=>`Scanning... ${i}/${t}`,
     apiError:'API error', notFound:(n)=>`No information found for ${n}. Check the B/L number (HAWB) or try the cargo management number.`,
@@ -357,6 +363,9 @@ const LANGS = {
     subBranch:'House B/L', released:'반출완료',
     labCargoType:'화물구분', labProduct:'품명', labPkgWeight:'포장 / 중량',
     labCarrier:'선사 / 편명', labRoute:'적재항 → 양륙항', labArrival:'입항일',
+    labMgmtNo:'화물관리번호', labBL:'M·H B/L', labClearance:'통관진행상태',
+    labBLType:'B/L유형', labShipNat:'선박국적', labOrigin:'적출국',
+    labProcTime:'처리일시', labEntryCustoms:'입항세관', labExpressCo:'특송업체',
     tlTitle:'통관진행단계',
     loading:'조회 중...', scanning:(i,t)=>`조회 중... ${i}/${t}`,
     apiError:'API 오류', notFound:(n)=>`${n} 정보를 찾을 수 없습니다. 운송장(HAWB) 또는 화물관리번호를 확인하세요.`,
@@ -428,6 +437,11 @@ function fmtDate(s) {
   if (d.length >= 8) return `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;
   return s || '';
 }
+function fmtDateTime(s) {
+  const d = String(s || '').replace(/\D/g, '');
+  if (d.length >= 12) return `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)} ${d.slice(8,10)}:${d.slice(10,12)}`;
+  return fmtDate(s);
+}
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ── DEMO data (xem giao diện khi chưa có API key) ────────────────────────────
@@ -481,18 +495,25 @@ function mapXml(xml, num) {
   const doc = new DOMParser().parseFromString(xml, 'text/xml');
   const s = doc.getElementsByTagName('cargCsclPrgsInfoQryVo')[0];
   if (!s) return null;
-  const statusKo = nt(s, 'prgsStts') || nt(s, 'csclPrgsStts');
-  const sgn = nt(s, 'shcoFlcoSgn');
+  const g = tag => nt(s, tag);
+  const statusKo = g('prgsStts') || g('csclPrgsStts');
+  const sgn = g('shcoFlcoSgn');
+  const join = (a, b) => [a, b].filter(Boolean).join(' ');
   return {
-    hawb: nt(s, 'hblNo') || nt(s, 'mblNo') || nt(s, 'cargMtNo') || num,
-    cargoType: nt(s, 'cargTp') || '—',
-    productName: nt(s, 'prnm') || '—',
-    packages: `${nt(s, 'pckGcnt') || '—'} ${nt(s, 'pckUt') || ''}`.trim(),
-    weight: `${nt(s, 'ttwg') || '—'} ${nt(s, 'wghtUt') || 'kg'}`.trim(),
-    carrier: CARRIERS[sgn] || nt(s, 'shcoFlco') || '—',
-    flight: nt(s, 'shipNm') || '',
-    from: nt(s, 'ldprCd') || '', to: nt(s, 'dsprCd') || '',
-    date: nt(s, 'etprDt'), statusKo, stage: stageFromKo(statusKo), real: true,
+    hawb: g('hblNo') || g('mblNo') || g('cargMtNo') || num,
+    cargMtNo: g('cargMtNo'), mbl: g('mblNo'), hbl: g('hblNo'),
+    cargoType: g('cargTp'), blType: g('blPtNm'),
+    productName: g('prnm'),
+    packages: join(g('pckGcnt'), g('pckUt')),
+    weight: join(g('ttwg'), g('wghtUt') || 'kg'),
+    carrier: CARRIERS[sgn] || g('shcoFlco'), flight: g('shipNm'),
+    shipNat: g('shipNatNm'),
+    from: join(g('ldprCd'), g('ldprNm')), to: join(g('dsprCd'), g('dsprNm')),
+    origin: g('lodCntyCd'),
+    date: g('etprDt'), procTime: g('prcsDttm'),
+    entryCustoms: g('etprCstm'), csclStatus: g('csclPrgsStts'),
+    expressCo: g('frwrEntsConm'),
+    statusKo, stage: stageFromKo(statusKo), real: true,
   };
 }
 
@@ -548,16 +569,26 @@ function renderResult(d, demo) {
   const statusMain = stageLabel(stage);
   const statusKo = STAGE_KO[stage];
 
+  const route = (d.from || d.to) ? `${d.from || '—'} → ${d.to || '—'}` : '';
   const cells = [
-    [t('labCargoType'), '화물구분', esc(d.cargoType || '—')],
-    [t('labProduct'), '품명', esc(d.productName || '—')],
-    [t('labPkgWeight'), '', `${esc(d.packages || '—')} · ${esc(d.weight || '')}`],
-    [t('labCarrier'), '', `${esc(d.carrier || '—')} ${esc(d.flight || '')}`.trim()],
-    [t('labRoute'), '', `${portLabel(d.from)} → ${portLabel(d.to)}`],
-    [t('labArrival'), '입항일', esc(fmtDate(d.date))],
-  ].map(([lab, ko, val]) => {
-    const koTag = (ko && koRef(ko)) ? ` <span class="ko">${ko}</span>` : '';
-    return `<div class="info-cell"><div class="lab">${lab}${koTag}</div><div class="val">${val}</div></div>`;
+    [t('labMgmtNo'), '화물관리번호', d.cargMtNo],
+    [t('labBL'), 'M·H B/L', [d.mbl, d.hbl].filter(Boolean).join(' · ')],
+    [t('labClearance'), '통관진행상태', d.csclStatus],
+    [t('labCargoType'), '화물구분', d.cargoType],
+    [t('labBLType'), 'B/L유형', d.blType],
+    [t('labProduct'), '품명', d.productName],
+    [t('labPkgWeight'), '포장/중량', [d.packages, d.weight].filter(Boolean).join(' · ')],
+    [t('labCarrier'), '선사/편명', `${d.carrier || ''} ${d.flight || ''}`.trim()],
+    [t('labShipNat'), '선박국적', d.shipNat],
+    [t('labRoute'), '적재항→양륙항', route],
+    [t('labOrigin'), '적출국', d.origin],
+    [t('labArrival'), '입항일', fmtDate(d.date)],
+    [t('labProcTime'), '처리일시', fmtDateTime(d.procTime)],
+    [t('labEntryCustoms'), '입항세관', d.entryCustoms],
+    [t('labExpressCo'), '특송업체', d.expressCo],
+  ].filter(([, , v]) => v && v !== '—').map(([lab, ko, val]) => {
+    const koTag = koRef(ko) ? ` <span class="ko">${ko}</span>` : '';
+    return `<div class="info-cell"><div class="lab">${lab}${koTag}</div><div class="val">${esc(val)}</div></div>`;
   }).join('');
 
   const tl = LANGS[currentLang].stages.map((_, i) => {

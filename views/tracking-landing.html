@@ -8,25 +8,25 @@
   <title>Tra Cứu Thông Quan Hàng Nhập Hàn Quốc Hàng Loạt (UNI-PASS) | Giải Pháp Cho Doanh Nghiệp Vận Tải Việt - Hàn</title>
   <meta name="description" content="Phần mềm tra cứu tiến trình thông quan hàng nhập khẩu Hàn Quốc (UNI-PASS / 화물통관진행정보) theo số vận đơn HAWB hoặc mã quản lý hàng hóa. Quét cả danh sách kho hàng trăm vận đơn một lần từ file Excel — thay vì tra từng số trên website Hải quan. Dữ liệu trực tiếp từ Hải quan Hàn Quốc (관세청), dành cho doanh nghiệp vận tải - logistics Việt - Hàn." />
   <meta name="keywords" content="tra cứu thông quan Hàn Quốc, UNI-PASS, 화물통관진행정보 조회, tra cứu vận đơn Hàn Quốc, tra HAWB, theo dõi thông quan hàng nhập, phần mềm logistics vận tải Việt Hàn, customs clearance tracking Korea, 통관조회, tra mã quản lý hàng hóa, 반출완료, 수입신고수리, tra cứu tờ khai hải quan Hàn Quốc, thông quan hàng không Incheon" />
-  <link rel="canonical" href="https://postcode-viethhan.vercel.app/tracking-info" />
-  <link rel="alternate" hreflang="vi" href="https://postcode-viethhan.vercel.app/tracking-info" />
-  <link rel="alternate" hreflang="en" href="https://postcode-viethhan.vercel.app/tracking-info?lang=en" />
-  <link rel="alternate" hreflang="ko" href="https://postcode-viethhan.vercel.app/tracking-info?lang=ko" />
-  <link rel="alternate" hreflang="x-default" href="https://postcode-viethhan.vercel.app/tracking-info" />
+  <link rel="canonical" href="__BASE__/tracking-info" />
+  <link rel="alternate" hreflang="vi" href="__BASE__/tracking-info" />
+  <link rel="alternate" hreflang="en" href="__BASE__/tracking-info?lang=en" />
+  <link rel="alternate" hreflang="ko" href="__BASE__/tracking-info?lang=ko" />
+  <link rel="alternate" hreflang="x-default" href="__BASE__/tracking-info" />
   <meta name="robots" content="index, follow" />
 
   <!-- Open Graph / Social -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Tra Cứu Thông Quan Hàng Nhập Hàn Quốc Hàng Loạt (UNI-PASS) — Cho Doanh Nghiệp Vận Tải" />
   <meta property="og:description" content="Tra trạng thái thông quan hàng trăm vận đơn cùng lúc từ Excel, dữ liệu trực tiếp từ Hải quan Hàn Quốc (UNI-PASS). Thay vì tra từng số trên website 관세청." />
-  <meta property="og:url" content="https://postcode-viethhan.vercel.app/tracking-info" />
-  <meta property="og:image" content="https://postcode-viethhan.vercel.app/logo.png" />
+  <meta property="og:url" content="__BASE__/tracking-info" />
+  <meta property="og:image" content="__BASE__/logo.png" />
   <meta property="og:site_name" content="Vietnam - Korea Logistics" />
   <meta property="og:locale" content="vi_VN" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Tra Cứu Thông Quan Hàng Nhập Hàn Quốc Hàng Loạt (UNI-PASS)" />
   <meta name="twitter:description" content="Giải pháp tra tiến trình thông quan hàng nhập Hàn Quốc cho hàng trăm vận đơn mỗi ngày, dành cho doanh nghiệp vận tải." />
-  <meta name="twitter:image" content="https://postcode-viethhan.vercel.app/logo.png" />
+  <meta name="twitter:image" content="__BASE__/logo.png" />
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%231e40af'/><text x='12' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='%23d42126'>V</text><text x='54' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='white'>H</text></svg>" />
 
@@ -39,7 +39,7 @@
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Web",
     "description": "Phần mềm tra cứu tiến trình thông quan hàng nhập khẩu Hàn Quốc (화물통관진행정보) theo số vận đơn HAWB hoặc mã quản lý hàng hóa, quét hàng loạt qua file Excel cho doanh nghiệp vận tải - logistics Việt - Hàn. Dữ liệu trực tiếp từ Hải quan Hàn Quốc (UNI-PASS, 관세청).",
-    "url": "https://postcode-viethhan.vercel.app/tracking",
+    "url": "__BASE__/tracking",
     "inLanguage": ["vi", "ko", "en"],
     "offers": [
       { "@type": "Offer", "name": "Miễn phí", "price": "0", "priceCurrency": "VND", "description": "Tra lẻ từng vận đơn (HAWB / mã quản lý hàng hóa) không giới hạn." },
@@ -105,6 +105,10 @@
     .btn-primary:hover{background:#f0fdf4;}
     .btn-ghost{background:rgba(255,255,255,0.12);color:#fff;border:1.5px solid rgba(255,255,255,0.4);}
     .btn-ghost:hover{background:rgba(255,255,255,0.2);}
+    .trust{background:var(--g50);border-bottom:1px solid var(--g200);}
+    .trust .row{max-width:880px;margin:0 auto;padding:14px 18px;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 24px;}
+    .trust .item{display:flex;align-items:center;gap:7px;font-size:0.86rem;color:var(--g600);}
+    .trust .item b{color:var(--g900);font-weight:700;}
 
     section{padding:44px 0;border-bottom:1px solid var(--g100);}
     h2{font-size:1.5rem;color:var(--g900);margin-bottom:14px;font-weight:800;}
@@ -200,6 +204,16 @@
       <a class="btn btn-primary" href="/tracking">Tra cứu ngay</a>
       <a class="btn btn-ghost" href="#bang-gia">Xem bảng giá</a>
     </div>
+  </div>
+</div>
+
+<!-- TRUST BAR -->
+<div class="trust">
+  <div class="row">
+    <div class="item">🏛️ <span>Trực tiếp từ <b>Hải quan Hàn Quốc</b> (UNI-PASS)</span></div>
+    <div class="item">⚡ <span>Cập nhật <b>real-time</b></span></div>
+    <div class="item">🆓 <span>Tra lẻ <b>miễn phí</b></span></div>
+    <div class="item">🌐 <span>Việt · Anh · Hàn</span></div>
   </div>
 </div>
 

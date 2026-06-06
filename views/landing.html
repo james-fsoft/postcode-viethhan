@@ -8,24 +8,24 @@
   <title>Tra Mã Bưu Điện Hàn Quốc Tự Động Hàng Loạt | Giải Pháp Cho Doanh Nghiệp Logistics Việt - Hàn</title>
   <meta name="description" content="Phần mềm tra mã bưu điện Hàn Quốc (우편번호) tự động từ địa chỉ cho doanh nghiệp logistics. Điền mã cho hàng trăm, hàng nghìn địa chỉ mỗi ngày chỉ trong vài phút bằng file Excel — thay vì tra tay mất hàng giờ. Hỗ trợ tiếng Việt, Anh, Hàn." />
   <meta name="keywords" content="tra mã bưu điện Hàn Quốc, mã bưu điện Hàn Quốc, 우편번호 자동 조회, 도로명주소 우편번호, Korean postal code lookup, bulk postal code, điền mã bưu điện Excel, logistics Việt Hàn, vận đơn Hàn Quốc, zipcode Hàn Quốc hàng loạt" />
-  <link rel="canonical" href="https://postcode-viethhan.vercel.app/about" />
-  <link rel="alternate" hreflang="vi" href="https://postcode-viethhan.vercel.app/about" />
-  <link rel="alternate" hreflang="en" href="https://postcode-viethhan.vercel.app/about?lang=en" />
-  <link rel="alternate" hreflang="ko" href="https://postcode-viethhan.vercel.app/about?lang=ko" />
-  <link rel="alternate" hreflang="x-default" href="https://postcode-viethhan.vercel.app/about" />
+  <link rel="canonical" href="__BASE__/about" />
+  <link rel="alternate" hreflang="vi" href="__BASE__/about" />
+  <link rel="alternate" hreflang="en" href="__BASE__/about?lang=en" />
+  <link rel="alternate" hreflang="ko" href="__BASE__/about?lang=ko" />
+  <link rel="alternate" hreflang="x-default" href="__BASE__/about" />
   <meta name="robots" content="index, follow" />
 
   <!-- Open Graph / Social -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Tra Mã Bưu Điện Hàn Quốc Tự Động Hàng Loạt Cho Doanh Nghiệp Logistics" />
   <meta property="og:description" content="Tra tay hàng nghìn mã bưu điện Hàn Quốc là bất khả thi. Giải pháp tự động điền 우편번호 từ địa chỉ qua file Excel cho công ty logistics Việt - Hàn." />
-  <meta property="og:url" content="https://postcode-viethhan.vercel.app/about" />
-  <meta property="og:image" content="https://postcode-viethhan.vercel.app/logo.png" />
+  <meta property="og:url" content="__BASE__/about" />
+  <meta property="og:image" content="__BASE__/logo.png" />
   <meta property="og:site_name" content="Vietnam - Korea Logistics" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Tra Mã Bưu Điện Hàn Quốc Tự Động Hàng Loạt" />
   <meta name="twitter:description" content="Giải pháp điền mã bưu điện Hàn Quốc cho hàng nghìn địa chỉ mỗi ngày dành cho doanh nghiệp logistics." />
-  <meta name="twitter:image" content="https://postcode-viethhan.vercel.app/logo.png" />
+  <meta name="twitter:image" content="__BASE__/logo.png" />
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%231e40af'/><text x='12' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='%23d42126'>V</text><text x='54' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='white'>H</text></svg>" />
 
@@ -38,7 +38,7 @@
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Web",
     "description": "Phần mềm tra mã bưu điện Hàn Quốc (우편번호) tự động từ địa chỉ, điền hàng loạt qua file Excel cho doanh nghiệp logistics Việt - Hàn.",
-    "url": "https://postcode-viethhan.vercel.app/",
+    "url": "__BASE__/",
     "inLanguage": ["vi", "ko", "en"],
     "offers": [
       { "@type": "Offer", "name": "Gói Dùng thử", "price": "0", "priceCurrency": "VND", "description": "15 lượt tra cứu, mỗi lượt tối đa 30 địa chỉ." },
@@ -103,6 +103,10 @@
     .btn-primary:hover{background:var(--red-dark);}
     .btn-ghost{background:rgba(255,255,255,0.12);color:#fff;border:1.5px solid rgba(255,255,255,0.35);}
     .btn-ghost:hover{background:rgba(255,255,255,0.2);}
+    .trust{background:var(--g50);border-bottom:1px solid var(--g200);}
+    .trust .row{max-width:880px;margin:0 auto;padding:14px 18px;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 24px;}
+    .trust .item{display:flex;align-items:center;gap:7px;font-size:0.86rem;color:var(--g600);}
+    .trust .item b{color:var(--g900);font-weight:700;}
 
     /* Sections */
     section{padding:44px 0;border-bottom:1px solid var(--g100);}
@@ -195,6 +199,16 @@
       <a class="btn btn-primary" href="/">Dùng thử ngay</a>
       <a class="btn btn-ghost" href="#bang-gia">Xem bảng giá</a>
     </div>
+  </div>
+</div>
+
+<!-- TRUST BAR -->
+<div class="trust">
+  <div class="row">
+    <div class="item">🏛️ <span>Dữ liệu <b>Chính phủ Hàn Quốc</b> (도로명주소)</span></div>
+    <div class="item">🎯 <span>Mã <b>5 chữ số</b> chính xác</span></div>
+    <div class="item">🆓 <span>Tra lẻ <b>miễn phí</b></span></div>
+    <div class="item">🌐 <span>Việt · Anh · Hàn</span></div>
   </div>
 </div>
 

@@ -115,6 +115,23 @@ function sendPage(res, ...parts) {
   res.sendFile(path.join(__dirname, ...parts));
 }
 
+// Domain gốc — đổi domain chỉ cần sửa biến môi trường SITE_URL (1 chỗ duy nhất)
+const BASE_URL = process.env.SITE_URL || 'https://postcode-viethhan.vercel.app';
+
+// Trả trang HTML và chèn __BASE__ = domain hiện tại (+ các thay thế khác nếu có)
+const _tplCache = {};
+function sendTpl(res, file, extra = {}) {
+  let html = _tplCache[file];
+  if (!html || process.env.NODE_ENV !== 'production') {
+    html = fs.readFileSync(path.join(__dirname, 'views', file), 'utf8');
+    if (process.env.NODE_ENV === 'production') _tplCache[file] = html;
+  }
+  html = html.split('__BASE__').join(BASE_URL)
+             .split('__BASE_HOST__').join(BASE_URL.replace(/^https?:\/\//, ''));
+  for (const [k, v] of Object.entries(extra)) html = html.split(k).join(v);
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate').type('html').send(html);
+}
+
 // ── Auth middleware ───────────────────────────────────────────────────────────
 function requireAuth(req, res, next) {
   const token = req.cookies?.[COOKIE];
@@ -318,7 +335,7 @@ app.get('/about', (req, res) => {
   const file = req.query.lang === 'ko' ? 'landing-ko.html'
              : req.query.lang === 'en' ? 'landing-en.html'
              : 'landing.html';
-  sendPage(res, 'views', file);
+  sendTpl(res, file);
 });
 
 // ── Landing SEO cho công cụ tra cứu thông quan (đa ngôn ngữ vi/en/ko) ─────────
@@ -326,12 +343,12 @@ app.get('/tracking-info', (req, res) => {
   const file = req.query.lang === 'ko' ? 'tracking-landing-ko.html'
              : req.query.lang === 'en' ? 'tracking-landing-en.html'
              : 'tracking-landing.html';
-  sendPage(res, 'views', file);
+  sendTpl(res, file);
 });
 
 // ── Bài hướng dẫn / glossary thuật ngữ thông quan (SEO + AEO) ─────────────────
 app.get('/customs-guide', (req, res) => {
-  sendPage(res, 'views', 'customs-guide.html');
+  sendTpl(res, 'customs-guide.html');
 });
 
 // ── Trang tra cứu thông quan (UNI-PASS) — SEO đa ngôn ngữ (vi/en/ko) ──────────
@@ -355,25 +372,17 @@ const TRACKING_SEO = {
     locale: 'ko_KR', canon: '?lang=ko',
   },
 };
-let trackingHtmlRaw = null;
 app.get('/tracking', (req, res) => {
   const lang = ['vi', 'en', 'ko'].includes(req.query.lang) ? req.query.lang : 'vi';
   const s = TRACKING_SEO[lang];
-  if (!trackingHtmlRaw || process.env.NODE_ENV !== 'production') {
-    trackingHtmlRaw = fs.readFileSync(path.join(__dirname, 'views', 'tracking.html'), 'utf8');
-  }
-  const html = trackingHtmlRaw
-    .replace(/__LANG__/g, lang)
-    .replace(/__TITLE__/g, s.title)
-    .replace(/__DESC__/g, s.desc)
-    .replace(/__KEYWORDS__/g, s.kw)
-    .replace(/__LOCALE__/g, s.locale)
-    .replace(/__CANON__/g, s.canon);
-  res.set('Cache-Control', 'no-store, no-cache, must-revalidate').type('html').send(html);
+  sendTpl(res, 'tracking.html', {
+    __LANG__: lang, __TITLE__: s.title, __DESC__: s.desc,
+    __KEYWORDS__: s.kw, __LOCALE__: s.locale, __CANON__: s.canon,
+  });
 });
 
 // ── robots.txt + sitemap.xml (cho Google index) ──────────────────────────────
-const SITE = process.env.SITE_URL || 'https://postcode-viethhan.vercel.app';
+const SITE = BASE_URL;
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(
     `User-agent: *\nAllow: /\nAllow: /about\nAllow: /tracking\nAllow: /tracking-info\nAllow: /customs-guide\nDisallow: /api/\nDisallow: /shipping\nDisallow: /login\n\nSitemap: ${SITE}/sitemap.xml\n`
@@ -405,7 +414,7 @@ app.get('/sitemap.xml', (req, res) => {
 
 // ── Trang chính — PUBLIC: ai cũng vào được (khách hoặc đã login) ─────────────
 app.get('/', (req, res) => {
-  sendPage(res, 'views', 'app.html');
+  sendTpl(res, 'app.html');
 });
 
 // ── Trang xử lý file vận đơn — chỉ gói Pro / Enterprise ──────────────────────

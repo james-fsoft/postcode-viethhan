@@ -387,6 +387,11 @@ app.get('/tools', (req, res) => {
   sendTpl(res, 'tools.html');
 });
 
+// ── Bài SEO: PCCC, quy định thực phẩm, quy trình XNK ─────────────────────────
+app.get('/pccc',         (req, res) => sendTpl(res, 'pccc-guide.html'));
+app.get('/food-korea',   (req, res) => sendTpl(res, 'food-korea.html'));
+app.get('/import-guide', (req, res) => sendTpl(res, 'import-guide.html'));
+
 // ── Trang tra cứu thông quan (UNI-PASS) — SEO đa ngôn ngữ (vi/en/ko) ──────────
 const TRACKING_SEO = {
   vi: {
@@ -421,7 +426,7 @@ app.get('/tracking', (req, res) => {
 const SITE = BASE_URL;
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(
-    `User-agent: *\nAllow: /\nAllow: /about\nAllow: /tracking\nAllow: /tracking-info\nAllow: /customs-guide\nAllow: /tools\nDisallow: /api/\nDisallow: /shipping\nDisallow: /login\n\nSitemap: ${SITE}/sitemap.xml\n`
+    `User-agent: *\nAllow: /\nAllow: /about\nAllow: /tracking\nAllow: /tracking-info\nAllow: /customs-guide\nAllow: /tools\nAllow: /pccc\nAllow: /food-korea\nAllow: /import-guide\nDisallow: /api/\nDisallow: /shipping\nDisallow: /login\n\nSitemap: ${SITE}/sitemap.xml\n`
   );
 });
 app.get('/sitemap.xml', (req, res) => {
@@ -445,6 +450,9 @@ app.get('/sitemap.xml', (req, res) => {
     `  <url><loc>${SITE}/tracking-info?lang=ko</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
     `  <url><loc>${SITE}/customs-guide</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>\n` +
     `  <url><loc>${SITE}/tools</loc><lastmod>${today}</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>\n` +
+    `  <url><loc>${SITE}/pccc</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>\n` +
+    `  <url><loc>${SITE}/food-korea</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>\n` +
+    `  <url><loc>${SITE}/import-guide</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>\n` +
     `</urlset>\n`
   );
 });

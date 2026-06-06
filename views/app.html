@@ -218,6 +218,11 @@
     .tool-badge.go  { background:#ecfdf5; color:#15803d; }
     .tool-card.customs:hover .tool-badge.go { background:#15803d; color:#fff; }
     @media (max-width:640px){ .tool-nav{ grid-template-columns:1fr; } }
+    .tools-link{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;
+      margin-bottom:18px;background:#fff;border:1.5px solid var(--gray-200);border-radius:12px;
+      padding:11px 16px;text-decoration:none;color:var(--gray-600);font-size:0.88rem;transition:all .15s;}
+    .tools-link:hover{border-color:var(--blue);box-shadow:var(--shadow);}
+    .tools-link .ar{color:var(--blue);font-weight:800;}
 
     /* ── Tiêu đề công cụ (đồng bộ trang thông quan) ── */
     .sec-head { margin:6px 0 16px; }
@@ -608,6 +613,9 @@
     </a>
   </div>
 
+  <!-- Link tới trang Tiện ích -->
+  <a class="tools-link" href="/tools"><span data-i18n="toolsLink">🧰 Tiện ích: Tỷ giá Won · Tính cước · Lịch lễ Hàn Quốc · Mã sân bay</span> <span class="ar">→</span></a>
+
   <!-- Tiêu đề công cụ (đồng bộ trang thông quan) -->
   <div class="sec-head">
     <div class="sec-eyebrow" data-i18n="postalEyebrow">Tra cứu mã bưu điện</div>
@@ -845,6 +853,7 @@ const LANGS = {
     toolActive: 'Đang dùng', toolOpen: 'Mở →',
     postalEyebrow: 'Tra cứu mã bưu điện', postalTitle: 'Tìm mã bưu điện từ địa chỉ Hàn Quốc',
     postalLead: 'Nhập danh sách địa chỉ Hàn Quốc, hệ thống tự trả về mã bưu điện 5 số — tra thủ công hoặc upload Excel hàng loạt.',
+    toolsLink: '🧰 Tiện ích: Tỷ giá Won · Tính cước · Lịch lễ Hàn Quốc · Mã sân bay',
     cargoKeyLabel: 'UNI-PASS Open API Key (관세청)', cargoGetKey: 'Đăng ký key UNI-PASS →',
     cargoLabel: 'Tra cứu trạng thái thông quan hàng nhập',
     cargoTypeCarg: 'Số quản lý hàng hóa (화물관리번호)', cargoTypeMbl: 'Master B/L (M B/L)', cargoTypeHbl: 'House B/L (H B/L)',
@@ -927,6 +936,7 @@ const LANGS = {
     toolActive: 'In use', toolOpen: 'Open →',
     postalEyebrow: 'Postal code lookup', postalTitle: 'Find Korean postal codes from an address',
     postalLead: 'Enter a list of Korean addresses and get the 5-digit postal code — manual lookup or batch Excel upload.',
+    toolsLink: '🧰 Tools: KRW rate · Chargeable weight · Korea holidays · Airport codes',
     cargoKeyLabel: 'UNI-PASS Open API Key (Korea Customs)', cargoGetKey: 'Register UNI-PASS key →',
     cargoLabel: 'Track import cargo clearance status',
     cargoTypeCarg: 'Cargo mgmt no. (화물관리번호)', cargoTypeMbl: 'Master B/L (M B/L)', cargoTypeHbl: 'House B/L (H B/L)',
@@ -1009,6 +1019,7 @@ const LANGS = {
     toolActive: '사용 중', toolOpen: '열기 →',
     postalEyebrow: '우편번호 조회', postalTitle: '한국 주소로 우편번호 찾기',
     postalLead: '한국 주소 목록을 입력하면 5자리 우편번호를 자동으로 반환합니다 — 수동 조회 또는 엑셀 대량 업로드.',
+    toolsLink: '🧰 도구: 환율 · 운임중량 · 한국 공휴일 · 공항코드',
     cargoKeyLabel: 'UNI-PASS Open API 키 (관세청)', cargoGetKey: 'UNI-PASS 키 신청 →',
     cargoLabel: '수입화물 통관진행정보 조회',
     cargoTypeCarg: '화물관리번호', cargoTypeMbl: 'Master B/L (M B/L)', cargoTypeHbl: 'House B/L (H B/L)',

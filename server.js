@@ -229,6 +229,37 @@ app.get('/api/cargo', async (req, res) => {
   }
 });
 
+// ── Tiện ích: tỷ giá KRW↔VND (proxy + cache 1h) ──────────────────────────────
+let fxCache = null;
+app.get('/api/fx', async (req, res) => {
+  try {
+    if (fxCache && Date.now() - fxCache.fetchedAt < 3600 * 1000) return res.json(fxCache);
+    const data = await getJson('https://open.er-api.com/v6/latest/KRW');
+    if (!data.rates || !data.rates.VND) throw new Error('NO_RATE');
+    fxCache = { vnd: data.rates.VND, updated: data.time_last_update_utc || '', fetchedAt: Date.now() };
+    res.json(fxCache);
+  } catch (e) {
+    if (fxCache) return res.json(fxCache);   // dùng bản cũ nếu lỗi
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── Tiện ích: lịch nghỉ lễ Hàn Quốc (proxy + cache 24h) ──────────────────────
+const holCache = {};
+app.get('/api/holidays', async (req, res) => {
+  const year = /^\d{4}$/.test(req.query.year) ? req.query.year : String(new Date().getFullYear());
+  try {
+    if (holCache[year] && Date.now() - holCache[year].fetchedAt < 86400 * 1000) return res.json(holCache[year].list);
+    const data = await getJson(`https://date.nager.at/api/v3/PublicHolidays/${year}/KR`);
+    const list = (Array.isArray(data) ? data : []).map(h => ({ date: h.date, ko: h.localName, en: h.name }));
+    holCache[year] = { list, fetchedAt: Date.now() };
+    res.json(list);
+  } catch (e) {
+    if (holCache[year]) return res.json(holCache[year].list);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── Gói dịch vụ ───────────────────────────────────────────────────────────────
 const PLANS = {
   trial:      { maxLookups: 15, maxPerLookup: 30 },
@@ -351,6 +382,11 @@ app.get('/customs-guide', (req, res) => {
   sendTpl(res, 'customs-guide.html');
 });
 
+// ── Tiện ích logistics (tỷ giá, tính cước, lịch lễ, mã sân bay) ───────────────
+app.get('/tools', (req, res) => {
+  sendTpl(res, 'tools.html');
+});
+
 // ── Trang tra cứu thông quan (UNI-PASS) — SEO đa ngôn ngữ (vi/en/ko) ──────────
 const TRACKING_SEO = {
   vi: {
@@ -385,7 +421,7 @@ app.get('/tracking', (req, res) => {
 const SITE = BASE_URL;
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(
-    `User-agent: *\nAllow: /\nAllow: /about\nAllow: /tracking\nAllow: /tracking-info\nAllow: /customs-guide\nDisallow: /api/\nDisallow: /shipping\nDisallow: /login\n\nSitemap: ${SITE}/sitemap.xml\n`
+    `User-agent: *\nAllow: /\nAllow: /about\nAllow: /tracking\nAllow: /tracking-info\nAllow: /customs-guide\nAllow: /tools\nDisallow: /api/\nDisallow: /shipping\nDisallow: /login\n\nSitemap: ${SITE}/sitemap.xml\n`
   );
 });
 app.get('/sitemap.xml', (req, res) => {
@@ -408,6 +444,7 @@ app.get('/sitemap.xml', (req, res) => {
     `  <url><loc>${SITE}/tracking-info?lang=en</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
     `  <url><loc>${SITE}/tracking-info?lang=ko</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
     `  <url><loc>${SITE}/customs-guide</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>\n` +
+    `  <url><loc>${SITE}/tools</loc><lastmod>${today}</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>\n` +
     `</urlset>\n`
   );
 });

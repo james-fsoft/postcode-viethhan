@@ -318,6 +318,11 @@ app.get('/about', (req, res) => {
   sendPage(res, 'views', 'landing.html');
 });
 
+// ── Landing SEO cho công cụ tra cứu thông quan (cho doanh nghiệp vận tải) ─────
+app.get('/tracking-info', (req, res) => {
+  sendPage(res, 'views', 'tracking-landing.html');
+});
+
 // ── Trang tra cứu thông quan (UNI-PASS) — SEO đa ngôn ngữ (vi/en/ko) ──────────
 const TRACKING_SEO = {
   vi: {
@@ -360,7 +365,7 @@ app.get('/tracking', (req, res) => {
 const SITE = process.env.SITE_URL || 'https://postcode-viethhan.vercel.app';
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(
-    `User-agent: *\nAllow: /\nAllow: /about\nAllow: /tracking\nDisallow: /api/\nDisallow: /shipping\nDisallow: /login\n\nSitemap: ${SITE}/sitemap.xml\n`
+    `User-agent: *\nAllow: /\nAllow: /about\nAllow: /tracking\nAllow: /tracking-info\nDisallow: /api/\nDisallow: /shipping\nDisallow: /login\n\nSitemap: ${SITE}/sitemap.xml\n`
   );
 });
 app.get('/sitemap.xml', (req, res) => {
@@ -371,6 +376,7 @@ app.get('/sitemap.xml', (req, res) => {
     `  <url><loc>${SITE}/about</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>\n` +
     `  <url><loc>${SITE}/</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
     `  <url><loc>${SITE}/tracking</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>\n` +
+    `  <url><loc>${SITE}/tracking-info</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>\n` +
     `</urlset>\n`
   );
 });

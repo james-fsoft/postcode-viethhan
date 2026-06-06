@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ── SEO ── -->
+  <title>Tra Cứu Thông Quan Hàng Nhập Hàn Quốc Hàng Loạt (UNI-PASS) | Giải Pháp Cho Doanh Nghiệp Vận Tải Việt - Hàn</title>
+  <meta name="description" content="Phần mềm tra cứu tiến trình thông quan hàng nhập khẩu Hàn Quốc (UNI-PASS / 화물통관진행정보) theo số vận đơn HAWB hoặc mã quản lý hàng hóa. Quét cả danh sách kho hàng trăm vận đơn một lần từ file Excel — thay vì tra từng số trên website Hải quan. Dữ liệu trực tiếp từ Hải quan Hàn Quốc (관세청), dành cho doanh nghiệp vận tải - logistics Việt - Hàn." />
+  <meta name="keywords" content="tra cứu thông quan Hàn Quốc, UNI-PASS, 화물통관진행정보 조회, tra cứu vận đơn Hàn Quốc, tra HAWB, theo dõi thông quan hàng nhập, phần mềm logistics vận tải Việt Hàn, customs clearance tracking Korea, 통관조회, tra mã quản lý hàng hóa, 반출완료, 수입신고수리, tra cứu tờ khai hải quan Hàn Quốc, thông quan hàng không Incheon" />
+  <link rel="canonical" href="https://postcode-viethhan.vercel.app/tracking-info" />
+  <meta name="robots" content="index, follow" />
+
+  <!-- Open Graph / Social -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Tra Cứu Thông Quan Hàng Nhập Hàn Quốc Hàng Loạt (UNI-PASS) — Cho Doanh Nghiệp Vận Tải" />
+  <meta property="og:description" content="Tra trạng thái thông quan hàng trăm vận đơn cùng lúc từ Excel, dữ liệu trực tiếp từ Hải quan Hàn Quốc (UNI-PASS). Thay vì tra từng số trên website 관세청." />
+  <meta property="og:url" content="https://postcode-viethhan.vercel.app/tracking-info" />
+  <meta property="og:image" content="https://postcode-viethhan.vercel.app/logo.png" />
+  <meta property="og:site_name" content="Vietnam - Korea Logistics" />
+  <meta property="og:locale" content="vi_VN" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Tra Cứu Thông Quan Hàng Nhập Hàn Quốc Hàng Loạt (UNI-PASS)" />
+  <meta name="twitter:description" content="Giải pháp tra tiến trình thông quan hàng nhập Hàn Quốc cho hàng trăm vận đơn mỗi ngày, dành cho doanh nghiệp vận tải." />
+  <meta name="twitter:image" content="https://postcode-viethhan.vercel.app/logo.png" />
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%231e40af'/><text x='12' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='%23d42126'>V</text><text x='54' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='white'>H</text></svg>" />
+
+  <!-- ── JSON-LD: SoftwareApplication + Offer ── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Vietnam - Korea Logistics – Tra cứu thông quan hàng nhập Hàn Quốc (UNI-PASS)",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "Phần mềm tra cứu tiến trình thông quan hàng nhập khẩu Hàn Quốc (화물통관진행정보) theo số vận đơn HAWB hoặc mã quản lý hàng hóa, quét hàng loạt qua file Excel cho doanh nghiệp vận tải - logistics Việt - Hàn. Dữ liệu trực tiếp từ Hải quan Hàn Quốc (UNI-PASS, 관세청).",
+    "url": "https://postcode-viethhan.vercel.app/tracking",
+    "inLanguage": ["vi", "ko", "en"],
+    "offers": [
+      { "@type": "Offer", "name": "Miễn phí", "price": "0", "priceCurrency": "VND", "description": "Tra lẻ từng vận đơn (HAWB / mã quản lý hàng hóa) không giới hạn." },
+      { "@type": "Offer", "name": "Doanh nghiệp vận tải", "priceCurrency": "VND", "description": "Quét cả danh sách kho / file Excel hàng trăm vận đơn một lần, nhiều tài khoản, xuất file kết quả. Liên hệ báo giá." },
+      { "@type": "Offer", "name": "Enterprise / API", "priceCurrency": "VND", "description": "Tích hợp API vào hệ thống TMS/WMS, hỗ trợ ưu tiên. Liên hệ báo giá." }
+    ],
+    "publisher": { "@type": "Organization", "name": "Transflash", "url": "https://transflash.app" }
+  }
+  </script>
+
+  <!-- ── JSON-LD: FAQ (giúp Google & AI hiểu nội dung) ── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "Làm sao tra cứu trạng thái thông quan hàng nhập khẩu Hàn Quốc?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Nhập số vận đơn nhánh (HAWB) hoặc mã quản lý hàng hóa (화물관리번호), hệ thống truy vấn trực tiếp Hải quan Hàn Quốc (UNI-PASS) và hiển thị đầy đủ tiến trình thông quan: từ nộp manifest, khai dỡ hàng, nhập kho, khai nhập khẩu, thông quan đến xuất kho (반출완료)." } },
+      { "@type": "Question", "name": "Có tra được nhiều vận đơn cùng lúc không?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Có. Doanh nghiệp vận tải có thể tải lên file Excel danh sách kho (cột HAWB) và quét trạng thái thông quan cho hàng trăm vận đơn cùng lúc, thay vì tra từng số trên website Hải quan." } },
+      { "@type": "Question", "name": "Dữ liệu thông quan lấy từ đâu, có chính xác không?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Dữ liệu lấy trực tiếp từ hệ thống thông tin hải quan quốc gia Hàn Quốc UNI-PASS (관세청) qua Open API 화물통관진행정보조회, cập nhật theo thời gian thực nên chính xác như tra trên website Hải quan." } },
+      { "@type": "Question", "name": "Tra theo số vận đơn chủ (MBL) hay vận đơn nhánh (HAWB)?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Nên tra theo số vận đơn nhánh HAWB hoặc mã quản lý hàng hóa để có đầy đủ trạng thái và tiến trình từng lô. Tra theo MBL chỉ ra danh sách các HAWB mà không kèm trạng thái chi tiết." } },
+      { "@type": "Question", "name": "Chi phí sử dụng là bao nhiêu?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Tra lẻ từng vận đơn miễn phí. Gói Doanh nghiệp vận tải (quét hàng loạt từ Excel, nhiều tài khoản) liên hệ support@transflash.app để được báo giá theo khối lượng vận đơn." } }
+    ]
+  }
+  </script>
+
+  <style>
+    :root{
+      --red:#d42126; --blue:#1e40af; --blue-light:#eff6ff;
+      --green:#16a34a; --green-d:#15803d; --green-light:#ecfdf5;
+      --g50:#f8fafc; --g100:#f1f5f9; --g200:#e2e8f0; --g300:#cbd5e1; --g400:#94a3b8;
+      --g500:#64748b; --g600:#475569; --g700:#334155; --g900:#0f172a;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Segoe UI','Noto Sans KR',Arial,sans-serif;color:var(--g700);line-height:1.7;background:#fff;}
+    .wrap{max-width:880px;margin:0 auto;padding:0 18px;}
+    a{color:var(--green-d);}
+
+    header{border-bottom:1px solid var(--g200);background:#fff;position:sticky;top:0;z-index:10;}
+    .nav{max-width:880px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+    .brand img{height:38px;}
+    .brand b{font-size:1rem;color:var(--blue);font-weight:800;}
+    .nav-links{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+    .nav-links a.txt{color:var(--g600);text-decoration:none;font-size:0.88rem;font-weight:600;}
+    .nav-cta{display:inline-block;padding:8px 18px;border-radius:8px;background:linear-gradient(135deg,#22c55e,var(--green-d));color:#fff;font-weight:700;font-size:0.88rem;text-decoration:none;}
+
+    .hero{background:linear-gradient(160deg,#16a34a 0%,#15803d 55%,#064e3b 100%);color:#fff;padding:56px 0 50px;}
+    .hero .wrap{text-align:center;}
+    .hero .eyebrow{font-size:0.8rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#bbf7d0;margin-bottom:14px;}
+    .hero h1{font-size:2rem;font-weight:800;line-height:1.3;margin-bottom:16px;}
+    .hero p{font-size:1.05rem;color:#d1fae5;max-width:700px;margin:0 auto 26px;}
+    .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+    .btn{display:inline-block;padding:12px 26px;border-radius:10px;font-weight:700;text-decoration:none;font-size:0.95rem;}
+    .btn-primary{background:#fff;color:var(--green-d);}
+    .btn-primary:hover{background:#f0fdf4;}
+    .btn-ghost{background:rgba(255,255,255,0.12);color:#fff;border:1.5px solid rgba(255,255,255,0.4);}
+    .btn-ghost:hover{background:rgba(255,255,255,0.2);}
+
+    section{padding:44px 0;border-bottom:1px solid var(--g100);}
+    h2{font-size:1.5rem;color:var(--g900);margin-bottom:14px;font-weight:800;}
+    h3{font-size:1.1rem;color:var(--g900);margin:18px 0 6px;}
+    p{margin-bottom:14px;}
+    .lead{font-size:1.08rem;color:var(--g600);}
+    ul{margin:0 0 14px 22px;}
+    li{margin-bottom:8px;}
+
+    .pain{background:#fff1f1;border-left:4px solid var(--red);border-radius:8px;padding:16px 18px;color:#7f1d1d;font-size:0.98rem;}
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:18px;}
+    .feat{background:var(--g50);border:1px solid var(--g200);border-radius:10px;padding:18px;}
+    .feat .ic{font-size:1.6rem;margin-bottom:8px;}
+    .feat h3{margin:0 0 6px;font-size:1rem;}
+    .feat p{font-size:0.9rem;color:var(--g500);margin:0;}
+
+    /* Timeline minh hoạ */
+    .tl-demo{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap;}
+    .tl-demo .s{flex:1;min-width:90px;}
+    .tl-demo .bar{height:6px;border-radius:4px;background:var(--g200);}
+    .tl-demo .s.done .bar{background:var(--green);}
+    .tl-demo .s.cur .bar{background:var(--blue);}
+    .tl-demo .lab{font-size:0.78rem;font-weight:700;color:var(--g600);margin-top:8px;}
+    .tl-demo .ko{font-size:0.7rem;color:var(--g400);}
+
+    .steps{counter-reset:s;display:grid;gap:14px;margin-top:18px;}
+    .step{display:flex;gap:14px;align-items:flex-start;}
+    .step .n{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;}
+    .step h3{margin:0 0 2px;}
+    .step p{margin:0;font-size:0.92rem;color:var(--g500);}
+
+    .cmp{width:100%;border-collapse:collapse;margin-top:18px;font-size:0.92rem;border:1px solid var(--g200);border-radius:10px;overflow:hidden;}
+    .cmp th,.cmp td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--g100);}
+    .cmp thead th{background:var(--g50);font-size:0.82rem;color:var(--g500);font-weight:700;}
+    .cmp thead th.hl{color:var(--green-d);}
+    .cmp td.man{color:var(--g600);}
+    .cmp td.sw{color:var(--g900);font-weight:600;background:var(--green-light);}
+    .cmp tr:last-child td{border-bottom:none;}
+
+    .prices{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:20px;}
+    .price{border:1.5px solid var(--g200);border-radius:14px;padding:22px;display:flex;flex-direction:column;}
+    .price.hl{border-color:var(--green);box-shadow:0 8px 30px rgba(22,163,74,0.12);position:relative;}
+    .price.hl::before{content:'Phổ biến';position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;font-size:0.72rem;font-weight:700;padding:3px 12px;border-radius:99px;}
+    .price .name{font-size:1.05rem;font-weight:800;color:var(--g900);}
+    .price .amt{font-size:1.5rem;font-weight:800;color:var(--green-d);margin:8px 0;}
+    .price .amt small{font-size:0.78rem;color:var(--g400);font-weight:600;}
+    .price ul{margin:8px 0 18px 18px;}
+    .price li{font-size:0.88rem;color:var(--g600);}
+    .price .btn{margin-top:auto;text-align:center;}
+    .price-note{font-size:0.82rem;color:var(--g400);margin-top:14px;text-align:center;}
+
+    .faq{border:1px solid var(--g200);border-radius:10px;margin-bottom:10px;overflow:hidden;}
+    .faq summary{cursor:pointer;padding:14px 16px;font-weight:700;color:var(--g700);font-size:0.95rem;list-style:none;}
+    .faq summary::-webkit-details-marker{display:none;}
+    .faq[open] summary{color:var(--green-d);}
+    .faq .a{padding:0 16px 14px;color:var(--g600);font-size:0.92rem;}
+
+    .cta-band{background:var(--green-light);text-align:center;}
+    .cta-band .btn-primary{background:var(--green-d);color:#fff;}
+    .cta-band .btn-primary:hover{background:var(--green);}
+
+    footer{padding:26px 0;text-align:center;color:var(--g400);font-size:0.82rem;}
+    footer .tf{font-weight:800;background:linear-gradient(135deg,var(--red),var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+    footer a{color:var(--g500);text-decoration:none;margin:0 6px;}
+
+    @media(max-width:640px){ .hero h1{font-size:1.55rem;} h2{font-size:1.3rem;} }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="brand" href="/tracking-info">
+      <img src="/logo.png" alt="Vietnam - Korea Logistics logo" />
+      <b>Vietnam - Korea Logistics</b>
+    </a>
+    <div class="nav-links">
+      <a class="txt" href="/about">Tra mã bưu điện</a>
+      <a class="nav-cta" href="/tracking">Tra cứu ngay →</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Cho doanh nghiệp vận tải · logistics Việt - Hàn</div>
+    <h1>Tra Cứu Thông Quan Hàng Nhập Hàn Quốc Hàng Loạt Theo Số Vận Đơn</h1>
+    <p>Quét trạng thái thông quan (UNI-PASS / 화물통관진행정보) cho hàng trăm vận đơn cùng lúc từ file Excel — thay vì tra từng số trên website Hải quan Hàn Quốc. Dữ liệu trực tiếp từ 관세청, cập nhật theo thời gian thực.</p>
+    <div class="hero-btns">
+      <a class="btn btn-primary" href="/tracking">Tra cứu ngay</a>
+      <a class="btn btn-ghost" href="#bang-gia">Xem bảng giá</a>
+    </div>
+  </div>
+</div>
+
+<!-- VẤN ĐỀ -->
+<section>
+  <div class="wrap">
+    <h2>Tra thông quan từng vận đơn trên website là quá chậm</h2>
+    <p class="lead">Mỗi ngày, một công ty vận tải tuyến Việt - Hàn có thể có hàng trăm lô hàng nhập đang trong các giai đoạn thông quan khác nhau. Khách hàng liên tục hỏi "hàng của tôi đến đâu rồi?".</p>
+    <p>Nếu làm thủ công, nhân viên phải mở website Hải quan (UNI-PASS), gõ từng số vận đơn (HAWB) hoặc mã quản lý hàng hóa, chờ trang tải, đọc trạng thái, ghi lại vào file… lặp lại cho từng đơn. Với <strong>cả danh sách kho mấy trăm vận đơn</strong>, việc này ngốn hàng giờ mỗi ngày và không thể cập nhật liên tục.</p>
+    <div class="pain">⚠️ Tra tay từng vận đơn trên UNI-PASS rất chậm và dễ bỏ sót. Không nắm kịp lô nào đã <strong>수입신고수리</strong> (thông quan), lô nào đã <strong>반출완료</strong> (xuất kho) khiến việc điều phối giao hàng bị trễ.</div>
+  </div>
+</section>
+
+<!-- GIẢI PHÁP -->
+<section>
+  <div class="wrap">
+    <h2>Giải pháp: Quét toàn bộ danh sách thông quan một lần</h2>
+    <p>Công cụ <strong>Tra cứu thông quan</strong> của Vietnam - Korea Logistics truy vấn trực tiếp Hải quan Hàn Quốc (UNI-PASS) theo số vận đơn nhánh (HAWB) hoặc mã quản lý hàng hóa (화물관리번호). Tra lẻ ra ngay tiến trình đầy đủ; hoặc tải lên file Excel danh sách kho để quét trạng thái cho <strong>toàn bộ vận đơn cùng lúc</strong>.</p>
+
+    <div class="tl-demo">
+      <div class="s done"><div class="bar"></div><div class="lab">Nộp manifest</div><div class="ko">적재화물목록제출</div></div>
+      <div class="s done"><div class="bar"></div><div class="lab">Khai dỡ hàng</div><div class="ko">하선/하기신고</div></div>
+      <div class="s done"><div class="bar"></div><div class="lab">Nhập kho</div><div class="ko">물품반입</div></div>
+      <div class="s cur"><div class="bar"></div><div class="lab">Khai nhập khẩu</div><div class="ko">수입신고</div></div>
+      <div class="s"><div class="bar"></div><div class="lab">Thông quan</div><div class="ko">수입신고수리</div></div>
+      <div class="s"><div class="bar"></div><div class="lab">Xuất kho</div><div class="ko">물품반출</div></div>
+    </div>
+
+    <div class="grid">
+      <div class="feat"><div class="ic">⚡</div><h3>Quét hàng loạt qua Excel</h3><p>Tải file danh sách kho (cột HAWB) — nhận trạng thái thông quan cho hàng trăm vận đơn trong vài phút.</p></div>
+      <div class="feat"><div class="ic">🏛️</div><h3>Dữ liệu chính thức 관세청</h3><p>Truy vấn trực tiếp Open API UNI-PASS của Hải quan Hàn Quốc — chính xác, cập nhật thời gian thực.</p></div>
+      <div class="feat"><div class="ic">🚦</div><h3>Tiến trình đầy đủ</h3><p>Hiển thị 6 giai đoạn: nộp manifest → dỡ hàng → nhập kho → khai nhập khẩu → thông quan → xuất kho.</p></div>
+      <div class="feat"><div class="ic">📋</div><h3>Thông tin lô hàng</h3><p>Tên hàng, trọng lượng, hãng bay/chuyến, cảng xếp → cảng dỡ, ngày nhập cảng, đơn vị chuyển phát.</p></div>
+      <div class="feat"><div class="ic">🔎</div><h3>Lọc theo ngày & trạng thái</h3><p>Lọc nhanh danh sách theo ngày đến hoặc trạng thái thông quan để điều phối giao hàng.</p></div>
+      <div class="feat"><div class="ic">🌐</div><h3>Đa ngôn ngữ</h3><p>Giao diện tiếng Việt, Anh, Hàn — phù hợp cả đội Việt Nam lẫn đối tác Hàn Quốc.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- CÁCH HOẠT ĐỘNG -->
+<section>
+  <div class="wrap">
+    <h2>Cách hoạt động — 3 bước</h2>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><div><h3>Nhập số vận đơn hoặc tải Excel</h3><p>Gõ một số HAWB / mã quản lý hàng hóa, hoặc tải lên file Excel danh sách kho hàng trăm vận đơn.</p></div></div>
+      <div class="step"><div class="n">2</div><div><h3>Hệ thống truy vấn Hải quan</h3><p>Mỗi vận đơn được tra trực tiếp trên UNI-PASS để lấy trạng thái và tiến trình thông quan mới nhất.</p></div></div>
+      <div class="step"><div class="n">3</div><div><h3>Xem & lọc kết quả</h3><p>Xem tiến trình từng lô, lọc theo ngày / trạng thái — biết ngay lô nào đã thông quan, lô nào đã xuất kho.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- SO SÁNH -->
+<section>
+  <div class="wrap">
+    <h2>Nhanh hơn hẳn so với tra tay trên website</h2>
+    <table class="cmp">
+      <thead>
+        <tr><th>Tiêu chí</th><th>Tra tay trên UNI-PASS</th><th class="hl">Quét hàng loạt</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Tra 200 vận đơn</td><td class="man">Vài giờ, gõ từng số</td><td class="sw">Vài phút, một file</td></tr>
+        <tr><td>Cập nhật trạng thái</td><td class="man">Phải tra lại từng số</td><td class="sw">Quét lại cả danh sách 1 nút</td></tr>
+        <tr><td>Sai sót / bỏ sót</td><td class="man">Cao — nhiều thao tác lặp</td><td class="sw">Thấp — tự động theo HAWB</td></tr>
+        <tr><td>Trả lời khách "hàng đến đâu"</td><td class="man">Chậm, phải tra từng đơn</td><td class="sw">Tức thì, có sẵn bảng</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- BẢNG GIÁ -->
+<section id="bang-gia">
+  <div class="wrap">
+    <h2>Bảng giá &amp; gói cước</h2>
+    <p class="lead">Tra lẻ từng vận đơn miễn phí. Nâng cấp khi cần quét cả danh sách kho hàng trăm vận đơn mỗi ngày.</p>
+    <div class="prices">
+      <div class="price">
+        <div class="name">Miễn phí</div>
+        <div class="amt">0₫</div>
+        <ul>
+          <li>Tra lẻ từng vận đơn (HAWB / mã quản lý)</li>
+          <li><strong>Không giới hạn</strong> số lần tra lẻ</li>
+          <li>Tiến trình thông quan đầy đủ</li>
+          <li>Thử quét Excel tối đa 5 vận đơn</li>
+        </ul>
+        <a class="btn btn-primary" style="background:var(--green-d);color:#fff" href="/tracking">Tra cứu ngay</a>
+      </div>
+      <div class="price hl">
+        <div class="name">Doanh nghiệp vận tải</div>
+        <div class="amt">Liên hệ <small>báo giá</small></div>
+        <ul>
+          <li><strong>Quét hàng loạt</strong> từ file Excel</li>
+          <li>Hàng trăm vận đơn mỗi lần</li>
+          <li>Lọc theo ngày / trạng thái</li>
+          <li>Nhiều tài khoản cho cả đội</li>
+        </ul>
+        <a class="btn btn-primary" style="background:var(--green-d);color:#fff" href="mailto:support@transflash.app?subject=Đăng%20ký%20gói%20Doanh%20nghiệp%20-%20Tra%20cứu%20thông%20quan">Liên hệ đăng ký</a>
+      </div>
+      <div class="price">
+        <div class="name">Enterprise / API</div>
+        <div class="amt">Liên hệ <small>báo giá</small></div>
+        <ul>
+          <li>Tích hợp API vào hệ thống TMS / WMS</li>
+          <li>Tự động đồng bộ trạng thái</li>
+          <li>Hỗ trợ ưu tiên</li>
+        </ul>
+        <a class="btn btn-ghost" style="border-color:var(--g300);color:var(--g700)" href="mailto:support@transflash.app?subject=Tư%20vấn%20API%20thông%20quan%20-%20Transflash">Nhận tư vấn</a>
+      </div>
+    </div>
+    <p class="price-note">Liên hệ <a href="mailto:support@transflash.app">support@transflash.app</a> để được báo giá theo khối lượng vận đơn của doanh nghiệp.</p>
+  </div>
+</section>
+
+<!-- AI DÀNH CHO -->
+<section>
+  <div class="wrap">
+    <h2>Dành cho ai?</h2>
+    <ul>
+      <li>Công ty <strong>vận tải, giao nhận, forwarding</strong> tuyến Việt Nam – Hàn Quốc.</li>
+      <li>Đơn vị <strong>chuyển phát nhanh, kho bãi</strong> theo dõi hàng trăm lô nhập mỗi ngày.</li>
+      <li>Doanh nghiệp <strong>thương mại điện tử</strong> nhập hàng về Hàn Quốc cần biết trạng thái thông quan.</li>
+      <li>Đại lý <strong>khai báo hải quan</strong> cần tra nhanh tiến trình tờ khai cho khách.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section>
+  <div class="wrap">
+    <h2>Câu hỏi thường gặp</h2>
+    <details class="faq" open><summary>Làm sao tra cứu trạng thái thông quan hàng nhập khẩu Hàn Quốc?</summary><div class="a">Nhập số vận đơn nhánh (HAWB) hoặc mã quản lý hàng hóa (화물관리번호), hệ thống truy vấn trực tiếp Hải quan Hàn Quốc (UNI-PASS) và hiển thị đầy đủ tiến trình: nộp manifest → khai dỡ hàng → nhập kho → khai nhập khẩu → thông quan (수입신고수리) → xuất kho (반출완료).</div></details>
+    <details class="faq"><summary>Có tra được nhiều vận đơn cùng lúc không?</summary><div class="a">Có. Tải lên file Excel danh sách kho (cột HAWB), hệ thống quét trạng thái thông quan cho hàng trăm vận đơn cùng lúc — thay vì tra từng số trên website Hải quan.</div></details>
+    <details class="faq"><summary>Dữ liệu thông quan có chính xác không?</summary><div class="a">Dữ liệu lấy trực tiếp từ hệ thống thông tin hải quan quốc gia Hàn Quốc UNI-PASS (관세청) qua Open API 화물통관진행정보조회, cập nhật theo thời gian thực, chính xác như tra trên website Hải quan.</div></details>
+    <details class="faq"><summary>Nên tra theo MBL hay HAWB?</summary><div class="a">Nên tra theo số vận đơn nhánh HAWB hoặc mã quản lý hàng hóa để có đầy đủ trạng thái và tiến trình từng lô. Tra theo vận đơn chủ (MBL) chỉ ra danh sách các HAWB mà không kèm trạng thái chi tiết.</div></details>
+    <details class="faq"><summary>Chi phí như thế nào?</summary><div class="a">Tra lẻ từng vận đơn hoàn toàn miễn phí. Gói Doanh nghiệp vận tải (quét hàng loạt từ Excel, nhiều tài khoản) liên hệ <strong>support@transflash.app</strong> để được báo giá theo khối lượng vận đơn.</div></details>
+    <details class="faq"><summary>Có công cụ tra mã bưu điện Hàn Quốc không?</summary><div class="a">Có. Cùng hệ thống còn có công cụ tra mã bưu điện Hàn Quốc (우편번호) từ địa chỉ, điền hàng loạt qua Excel — xem tại trang Tra mã bưu điện.</div></details>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-band">
+  <div class="wrap">
+    <h2>Nắm trạng thái thông quan cả danh sách kho trong vài phút</h2>
+    <p class="lead">Ngừng tra từng số trên website Hải quan — quét hàng loạt, trả lời khách tức thì.</p>
+    <div class="hero-btns">
+      <a class="btn btn-primary" href="/tracking">Tra cứu ngay</a>
+      <a class="btn btn-ghost" style="border-color:var(--g300);color:var(--g700)" href="mailto:support@transflash.app">Liên hệ tư vấn</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><span class="tf">Transflash</span> — Giải pháp logistics Việt - Hàn</p>
+    <p style="margin-top:6px;">
+      <a href="/tracking">Tra cứu thông quan</a> ·
+      <a href="/">Tra mã bưu điện</a> ·
+      <a href="/about">Giới thiệu</a> ·
+      <a href="mailto:support@transflash.app">support@transflash.app</a> ·
+      © 2026
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

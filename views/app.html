@@ -1564,10 +1564,14 @@ function copyManualResults() {
   });
 }
 
+// Dòng watermark thương hiệu cuối file xuất (marketing lan truyền theo file)
+const EXPORT_WATERMARK = 'Tạo bằng postcode-viethhan.vercel.app — Tra mã bưu điện & thông quan Hàn Quốc miễn phí';
+
 function downloadManualExcel() {
   if (!manualRows.length) return;
   const ws_data = [[t('colInput'), t('colZipResult'), t('colNormalized'), t('colType')]];
   manualRows.forEach(r => ws_data.push([r.original, r.zip||'', r.display||'', typeLabel(r.type)]));
+  ws_data.push([], [EXPORT_WATERMARK]);
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
   ws['!cols'] = [{ wch: 50 }, { wch: 10 }, { wch: 60 }, { wch: 12 }];
@@ -1745,6 +1749,7 @@ function downloadExcelResult() {
     if (ambiguous) ws_data.push([...r.rowData, t('errAmbiguous'), '', typeLabel('ambiguous')]);
     else           ws_data.push([...r.rowData, r.zip||'', r.display||'', typeLabel(r.type)]);
   });
+  ws_data.push([], [EXPORT_WATERMARK]);
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
   // Cột gốc giữ nguyên độ rộng, thêm 3 cột mới ở cuối

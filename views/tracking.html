@@ -117,6 +117,9 @@
   .res-top { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
   .res-no { font-size:1.5rem; font-weight:800; letter-spacing:.01em; color:var(--text); }
   .res-sub { color:var(--muted); font-size:.9rem; margin-top:2px; }
+  .share-btn { margin-left:8px; font-family:inherit; font-size:.78rem; font-weight:700; color:var(--green-d);
+    background:var(--green-light); border:1px solid #a7f3d0; border-radius:7px; padding:3px 10px; cursor:pointer; }
+  .share-btn:hover { background:#d1fae5; }
   .demo-tag { display:inline-block; margin-left:10px; font-size:.62rem; font-weight:800; letter-spacing:.1em;
     color:#b45309; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; padding:2px 7px; vertical-align:middle; }
   .status-pill { display:inline-flex; align-items:center; gap:9px; background:var(--blue-light);
@@ -297,6 +300,7 @@ const LANGS = {
     emptyFilter:'Không có vận đơn nào khớp bộ lọc.',
     footerTagline:'Giải pháp logistics Việt - Hàn', footerAbout:'Giới thiệu', footerPostal:'Tra mã bưu điện',
     login:'Đăng nhập', logout:'Đăng xuất', needLogin:'Tra cứu đơn lẻ thì miễn phí. Upload Excel hàng loạt cần đăng nhập.',
+    shareBtn:'Chia sẻ', shareCopied:'Đã copy link!',
     allDates:'Tất cả ngày', allStatus:'Tất cả trạng thái', countUnit:'vận đơn',
     batchEmptyTitle:'Danh sách vận đơn',
     uploadPrompt:'📄 Chưa có dữ liệu — tải lên file Excel (cột HAWB) để quét toàn bộ vận đơn.',
@@ -321,6 +325,7 @@ const LANGS = {
     emptyFilter:'No B/L matches the filter.',
     footerTagline:'Vietnam - Korea logistics solution', footerAbout:'About', footerPostal:'Postal code lookup',
     login:'Log in', logout:'Log out', needLogin:'Single lookup is free. Batch Excel upload requires login.',
+    shareBtn:'Share', shareCopied:'Link copied!',
     allDates:'All dates', allStatus:'All statuses', countUnit:'B/Ls',
     batchEmptyTitle:'B/L list',
     uploadPrompt:'📄 No data yet — upload an Excel file (HAWB column) to scan all B/Ls.',
@@ -345,6 +350,7 @@ const LANGS = {
     emptyFilter:'필터에 맞는 운송장이 없습니다.',
     footerTagline:'베트남-한국 물류 솔루션', footerAbout:'소개', footerPostal:'우편번호 조회',
     login:'로그인', logout:'로그아웃', needLogin:'단건 조회는 무료입니다. 엑셀 대량 조회는 로그인이 필요합니다.',
+    shareBtn:'공유', shareCopied:'링크 복사됨!',
     allDates:'전체 날짜', allStatus:'전체 상태', countUnit:'건',
     batchEmptyTitle:'운송장 목록',
     uploadPrompt:'📄 데이터 없음 — 엑셀 파일(HAWB 열)을 업로드하면 전체 운송장을 조회합니다.',
@@ -492,6 +498,27 @@ function mapXml(xml, num) {
 
 // ── Tra đơn lẻ ───────────────────────────────────────────────────────────────
 let lastResult = null;   // {d, demo} để render lại khi đổi ngôn ngữ
+let shareNum = '';       // số vận đơn của kết quả hiện tại (cho link chia sẻ)
+
+// Cập nhật URL ?q=<số> để chia sẻ / mở lại đúng kết quả
+function setShareUrl(num) {
+  shareNum = num || '';
+  const u = new URL(location.href);
+  if (num) u.searchParams.set('q', num); else u.searchParams.delete('q');
+  history.replaceState(null, '', u);
+}
+function shareUrl() {
+  const u = new URL(location.origin + '/tracking');
+  if (shareNum) u.searchParams.set('q', shareNum);
+  if (currentLang !== 'vi') u.searchParams.set('lang', currentLang);
+  return u.toString();
+}
+function copyShareLink(el) {
+  navigator.clipboard.writeText(shareUrl()).then(() => {
+    el.textContent = '✓ ' + t('shareCopied');
+    setTimeout(() => { el.textContent = '🔗 ' + t('shareBtn'); }, 1600);
+  });
+}
 
 async function doSearch() {
   const num = document.getElementById('searchInput').value.trim();
@@ -503,8 +530,9 @@ async function doSearch() {
   if (!data) { data = DEMO[num]; demo = !!data; }
   btn.disabled = false; btn.textContent = t('btnSearch');
 
-  if (!data) { lastResult = null; renderNotFound(num); return; }
+  if (!data) { lastResult = null; setShareUrl(''); renderNotFound(num); return; }
   lastResult = { d: data, demo };
+  setShareUrl(num);
   renderResult(data, demo);
 }
 
@@ -544,7 +572,7 @@ function renderResult(d, demo) {
     <div class="res-top">
       <div>
         <div class="res-no">${esc(d.hawb)}${demo ? '<span class="demo-tag">DEMO</span>' : ''}</div>
-        <div class="res-sub">${t('subBranch')}</div>
+        <div class="res-sub">${t('subBranch')} <button class="share-btn" onclick="copyShareLink(this)">🔗 ${t('shareBtn')}</button></div>
       </div>
       <div class="status-pill ${isOut ? 'green' : ''}"><span class="led"></span>${statusMain}${koPill}</div>
     </div>
@@ -763,6 +791,10 @@ function tryUpload() {
   batchRows = [];   // ban đầu trống — chờ upload Excel
   setLang(lang);    // setLang gọi refreshBatchUI để dựng trạng thái trống
   loadAuth();       // xác định khách / đã đăng nhập (gate upload Excel)
+
+  // Mở link chia sẻ ?q=<số> → tự điền và tra ngay
+  const q = new URLSearchParams(location.search).get('q');
+  if (q) { document.getElementById('searchInput').value = q; doSearch(); }
 })();
 </script>
 </body>

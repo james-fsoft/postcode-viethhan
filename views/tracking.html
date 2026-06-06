@@ -423,6 +423,55 @@ function setLang(lang) {
 const PORTS = { DAD:'Đà Nẵng', ICN:'Incheon', HAN:'Hà Nội', SGN:'TP.HCM', PUS:'Busan', GMP:'Gimpo', HPH:'Hải Phòng', TAE:'Daegu', CJU:'Jeju' };
 const CARRIERS = { KE:'Korean Air', OZ:'Asiana', VN:'Vietnam Airlines', VJ:'Vietjet', '7C':'Jeju Air', TW:'Tway Air', LJ:'Jin Air', BX:'Air Busan' };
 
+// ── Từ điển dịch giá trị tiếng Hàn (hiện song ngữ theo ngôn ngữ chọn) ─────────
+const KO_VALUE = {
+  '수입신고수리':{vi:'Đã thông quan',en:'Cleared'},
+  '반출완료':{vi:'Đã xuất kho',en:'Released'},
+  '수입신고':{vi:'Đã khai nhập khẩu',en:'Import declared'},
+  '물품반입':{vi:'Đã nhập kho',en:'Warehoused'},
+  '반입신고':{vi:'Khai nhập kho',en:'Inbound report'},
+  '반출신고':{vi:'Khai xuất kho',en:'Outbound report'},
+  '하기신고 수리':{vi:'Đã khai dỡ hàng',en:'Unloading approved'},
+  '수입 일반화물':{vi:'Hàng nhập khẩu thường',en:'General import cargo'},
+  '일반화물':{vi:'Hàng thường',en:'General cargo'},
+  '특송화물':{vi:'Hàng chuyển phát nhanh',en:'Express cargo'},
+  '한국':{vi:'Hàn Quốc',en:'Korea'},
+  '베트남':{vi:'Việt Nam',en:'Vietnam'},
+};
+const KO_COUNTRY = { KR:{vi:'Hàn Quốc',en:'Korea'}, VN:{vi:'Việt Nam',en:'Vietnam'}, CN:{vi:'Trung Quốc',en:'China'}, US:{vi:'Mỹ',en:'USA'}, JP:{vi:'Nhật Bản',en:'Japan'} };
+const KO_PLACE = { '다낭':{vi:'Đà Nẵng',en:'Da Nang'}, '서울/인천':{vi:'Seoul/Incheon',en:'Seoul/Incheon'}, '인천':{vi:'Incheon',en:'Incheon'}, '서울':{vi:'Seoul',en:'Seoul'}, '부산':{vi:'Busan',en:'Busan'}, '하노이':{vi:'Hà Nội',en:'Hanoi'}, '호치민':{vi:'TP.HCM',en:'Ho Chi Minh'} };
+
+// Giá trị Hàn → "Dịch (gốc)"; tiếng Hàn thì giữ nguyên; không dịch được thì để gốc
+function tval(val) {
+  if (!val) return '';
+  if (currentLang === 'ko') return esc(val);
+  if (KO_VALUE[val]) return `${esc(KO_VALUE[val][currentLang] || KO_VALUE[val].vi)} <span class="ko">(${esc(val)})</span>`;
+  for (const k in KO_VALUE) {
+    if (val.includes(k)) {
+      const tr = KO_VALUE[k][currentLang] || KO_VALUE[k].vi;
+      const rest = val.replace(k, '').trim();
+      return `${esc((tr + (rest ? ' ' + rest : '')).trim())} <span class="ko">(${esc(val)})</span>`;
+    }
+  }
+  return esc(val);
+}
+function tCountry(code) {
+  if (!code) return '';
+  if (currentLang === 'ko') return esc(code);
+  const tr = KO_COUNTRY[code];
+  return tr ? `${esc(tr[currentLang] || tr.vi)} <span class="ko">(${esc(code)})</span>` : esc(code);
+}
+function placeBi(code, ko) {
+  code = code || ''; ko = ko || '';
+  if (!code && !ko) return '';
+  if (currentLang === 'ko') return esc((code + ' ' + ko).trim());
+  const tr = KO_PLACE[ko];
+  const name = tr ? (tr[currentLang] || tr.vi) : '';
+  let main = code; if (name) main += (main ? ' ' : '') + name; if (!main) main = ko;
+  const koTag = (ko && main !== ko) ? ` <span class="ko">(${esc(ko)})</span>` : '';
+  return esc(main) + koTag;
+}
+
 function stageFromKo(txt) {
   txt = String(txt || '');
   if (txt.includes('반출')) return 5;
@@ -508,7 +557,7 @@ function mapXml(xml, num) {
     weight: join(g('ttwg'), g('wghtUt') || 'kg'),
     carrier: CARRIERS[sgn] || g('shcoFlco'), flight: g('shipNm'),
     shipNat: g('shipNatNm'),
-    from: join(g('ldprCd'), g('ldprNm')), to: join(g('dsprCd'), g('dsprNm')),
+    fromCode: g('ldprCd'), fromKo: g('ldprNm'), toCode: g('dsprCd'), toKo: g('dsprNm'),
     origin: g('lodCntyCd'),
     date: g('etprDt'), procTime: g('prcsDttm'),
     entryCustoms: g('etprCstm'), csclStatus: g('csclPrgsStts'),
@@ -569,26 +618,29 @@ function renderResult(d, demo) {
   const statusMain = stageLabel(stage);
   const statusKo = STAGE_KO[stage];
 
-  const route = (d.from || d.to) ? `${d.from || '—'} → ${d.to || '—'}` : '';
+  const fromCode = d.fromCode || d.from, toCode = d.toCode || d.to;
+  const route = (fromCode || toCode || d.fromKo || d.toKo)
+    ? `${placeBi(fromCode, d.fromKo)} → ${placeBi(toCode, d.toKo)}` : '';
+  // [nhãn, mã Hàn (chú thích), HTML giá trị đã an toàn]
   const cells = [
-    [t('labMgmtNo'), '화물관리번호', d.cargMtNo],
-    [t('labBL'), 'M·H B/L', [d.mbl, d.hbl].filter(Boolean).join(' · ')],
-    [t('labClearance'), '통관진행상태', d.csclStatus],
-    [t('labCargoType'), '화물구분', d.cargoType],
-    [t('labBLType'), 'B/L유형', d.blType],
-    [t('labProduct'), '품명', d.productName],
-    [t('labPkgWeight'), '포장/중량', [d.packages, d.weight].filter(Boolean).join(' · ')],
-    [t('labCarrier'), '선사/편명', `${d.carrier || ''} ${d.flight || ''}`.trim()],
-    [t('labShipNat'), '선박국적', d.shipNat],
+    [t('labMgmtNo'), '화물관리번호', esc(d.cargMtNo)],
+    [t('labBL'), 'M·H B/L', esc([d.mbl, d.hbl].filter(Boolean).join(' · '))],
+    [t('labClearance'), '통관진행상태', tval(d.csclStatus)],
+    [t('labCargoType'), '화물구분', tval(d.cargoType)],
+    [t('labBLType'), 'B/L유형', tval(d.blType)],
+    [t('labProduct'), '품명', esc(d.productName)],
+    [t('labPkgWeight'), '포장/중량', esc([d.packages, d.weight].filter(Boolean).join(' · '))],
+    [t('labCarrier'), '선사/편명', esc(`${d.carrier || ''} ${d.flight || ''}`.trim())],
+    [t('labShipNat'), '선박국적', tval(d.shipNat)],
     [t('labRoute'), '적재항→양륙항', route],
-    [t('labOrigin'), '적출국', d.origin],
-    [t('labArrival'), '입항일', fmtDate(d.date)],
-    [t('labProcTime'), '처리일시', fmtDateTime(d.procTime)],
-    [t('labEntryCustoms'), '입항세관', d.entryCustoms],
-    [t('labExpressCo'), '특송업체', d.expressCo],
+    [t('labOrigin'), '적출국', tCountry(d.origin)],
+    [t('labArrival'), '입항일', esc(fmtDate(d.date))],
+    [t('labProcTime'), '처리일시', esc(fmtDateTime(d.procTime))],
+    [t('labEntryCustoms'), '입항세관', tval(d.entryCustoms)],
+    [t('labExpressCo'), '특송업체', esc(d.expressCo)],
   ].filter(([, , v]) => v && v !== '—').map(([lab, ko, val]) => {
     const koTag = koRef(ko) ? ` <span class="ko">${ko}</span>` : '';
-    return `<div class="info-cell"><div class="lab">${lab}${koTag}</div><div class="val">${esc(val)}</div></div>`;
+    return `<div class="info-cell"><div class="lab">${lab}${koTag}</div><div class="val">${val}</div></div>`;
   }).join('');
 
   const tl = LANGS[currentLang].stages.map((_, i) => {

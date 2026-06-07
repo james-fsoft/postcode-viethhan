@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VC24 Global — Kế toán & Công nợ (nội bộ)</title>
+<meta name="description" content="Trang nội bộ VC24 Global — quản lý đơn hàng, công nợ khách hàng và xuất hóa đơn." />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231e3a8a'/><path d='M23 73 L77 50 L23 27 L23 45 L62 50 L23 55 Z' transform='rotate(-30 50 50)' fill='white'/><circle cx='76' cy='25' r='8' fill='%23ef4444'/><circle cx='76' cy='25' r='3.2' fill='white'/></svg>" />
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<style>
+  :root{ --red:#d42126; --blue:#1e40af; --blue-l:#eff6ff; --green:#16a34a; --green-l:#ecfdf5; --amber:#d97706; --amber-l:#fffbeb;
+    --indigo:#4f46e5; --g50:#f8fafc; --g100:#f1f5f9; --g200:#e2e8f0; --g300:#cbd5e1; --g400:#94a3b8; --g500:#64748b; --g600:#475569; --g700:#334155; --g900:#0f172a; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI','Noto Sans KR',Arial,sans-serif;color:var(--g700);background:var(--g100);min-height:100vh;line-height:1.5;padding:0 0 50px;}
+  a{color:var(--blue);text-decoration:none;}
+  .wrap{max-width:1240px;margin:0 auto;padding:22px 16px 0;}
+  /* Header */
+  .site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid var(--g200);}
+  .topbar{max-width:1240px;margin:0 auto;padding:9px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:10px;} .brand img{height:34px;} .brand b{font-size:.95rem;color:var(--blue);font-weight:800;} .brand .sub{font-size:.7rem;color:var(--g400);text-transform:uppercase;letter-spacing:1px;}
+  .hr-right{display:flex;align-items:center;gap:8px;}
+  .chip{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--g200);border-radius:99px;padding:4px 12px 4px 5px;}
+  .chip .av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--blue));color:#fff;font-weight:700;font-size:.72rem;display:flex;align-items:center;justify-content:center;text-transform:uppercase;}
+  .chip .nm{font-size:.78rem;font-weight:700;color:var(--g900);}
+  .btn-out{font-size:.8rem;font-weight:700;color:var(--red);background:#fff;border:1.5px solid var(--g200);border-radius:8px;padding:7px 13px;cursor:pointer;}
+  /* Tabs */
+  .tabs{display:flex;gap:4px;flex-wrap:wrap;margin:18px 0 16px;}
+  .tabs button{font-size:.9rem;font-weight:700;color:var(--g600);background:#fff;border:1px solid var(--g200);border-radius:10px;padding:9px 16px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
+  .tabs button.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+  .tab-pane{display:none;} .tab-pane.show{display:block;}
+  /* Card / panel */
+  .panel{background:#fff;border:1px solid var(--g200);border-radius:14px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+  .panel + .panel{margin-top:16px;}
+  .ph{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+  .ph h2{font-size:1.05rem;font-weight:800;color:var(--g900);}
+  .muted{color:var(--g400);} .small{font-size:.82rem;}
+  /* Upload */
+  .drop{border:2px dashed var(--g300);border-radius:12px;padding:26px;text-align:center;color:var(--g500);cursor:pointer;transition:.15s;background:var(--g50);}
+  .drop:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-l);}
+  .drop b{color:var(--g700);}
+  /* Filters */
+  .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+  .filters input,.filters select{font-family:inherit;font-size:.85rem;padding:9px 11px;border:1.5px solid var(--g200);border-radius:9px;background:#fff;color:var(--g700);outline:none;}
+  .filters input:focus,.filters select:focus{border-color:var(--blue);}
+  .filters .grow{flex:1;min-width:200px;}
+  /* Table */
+  .tbl-wrap{overflow:auto;border:1px solid var(--g200);border-radius:12px;max-height:70vh;}
+  table{width:100%;border-collapse:collapse;font-size:.83rem;white-space:nowrap;}
+  thead th{position:sticky;top:0;background:var(--g50);color:var(--g500);font-weight:700;text-align:left;padding:10px 11px;border-bottom:1px solid var(--g200);font-size:.76rem;text-transform:uppercase;letter-spacing:.3px;z-index:1;}
+  tbody td{padding:9px 11px;border-bottom:1px solid var(--g100);vertical-align:top;}
+  tbody tr:hover{background:var(--g50);}
+  td.r,th.r{text-align:right;} td.num{font-variant-numeric:tabular-nums;}
+  .pill{display:inline-block;font-size:.72rem;font-weight:700;border-radius:99px;padding:2px 9px;}
+  .pill.paid{background:var(--green-l);color:var(--green);} .pill.owe{background:#fff1f2;color:#e11d48;}
+  .pill.reg{background:var(--g100);color:var(--g600);}
+  .empty{padding:40px;text-align:center;color:var(--g400);}
+  /* Stat cards */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:16px;}
+  .stat{background:#fff;border:1px solid var(--g200);border-radius:14px;padding:16px;}
+  .stat .lab{font-size:.78rem;color:var(--g500);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+  .stat .val{font-size:1.5rem;font-weight:800;color:var(--g900);letter-spacing:-.02em;}
+  .stat .val.owe{color:#e11d48;} .stat .val.paid{color:var(--green);}
+  .stat .sub{font-size:.76rem;color:var(--g400);margin-top:3px;}
+  /* Buttons */
+  .btn{font-family:inherit;font-size:.84rem;font-weight:700;border-radius:9px;padding:8px 14px;cursor:pointer;border:1.5px solid var(--g200);background:#fff;color:var(--g700);display:inline-flex;align-items:center;gap:6px;}
+  .btn:hover{border-color:var(--blue);color:var(--blue);}
+  .btn.primary{background:linear-gradient(135deg,var(--indigo),#7c3aed);color:#fff;border:none;}
+  .btn.primary:hover{color:#fff;filter:brightness(1.05);}
+  .btn.sm{padding:5px 10px;font-size:.78rem;}
+  /* Modal */
+  .modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:flex-start;justify-content:center;padding:24px 14px;z-index:100;overflow:auto;}
+  .modal.show{display:flex;}
+  .modal-box{background:#fff;border-radius:14px;max-width:820px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.3);}
+  .modal-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--g200);position:sticky;top:0;background:#fff;border-radius:14px 14px 0 0;}
+  .modal-bar h3{font-size:1rem;font-weight:800;color:var(--g900);}
+  /* Invoice */
+  .inv{padding:30px 34px;color:#111;font-size:.86rem;}
+  .inv .inv-top{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;border-bottom:2px solid var(--g900);padding-bottom:16px;margin-bottom:18px;}
+  .inv .co-name{font-size:1.35rem;font-weight:900;color:var(--blue);letter-spacing:-.01em;}
+  .inv .co-line{font-size:.82rem;color:#444;margin-top:3px;}
+  .inv .inv-title{text-align:right;}
+  .inv .inv-title h1{font-size:1.5rem;font-weight:900;color:var(--g900);letter-spacing:.02em;}
+  .inv .inv-meta{font-size:.82rem;color:#444;margin-top:4px;}
+  .inv .bill-to{margin-bottom:14px;} .inv .bill-to .t{font-size:.74rem;text-transform:uppercase;color:#888;font-weight:700;letter-spacing:.5px;}
+  .inv .bill-to .v{font-size:1rem;font-weight:800;color:var(--g900);}
+  .inv table{width:100%;border-collapse:collapse;font-size:.8rem;white-space:normal;}
+  .inv th{background:var(--g100);border:1px solid var(--g300);padding:8px;text-align:left;font-size:.74rem;text-transform:uppercase;color:#555;}
+  .inv td{border:1px solid var(--g200);padding:8px;vertical-align:top;}
+  .inv .tot-row td{font-weight:800;background:var(--g50);}
+  .inv .pay-box{margin-top:18px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  .inv .bank{font-size:.84rem;line-height:1.7;} .inv .bank b{color:var(--g900);}
+  .inv .grand{text-align:right;} .inv .grand .g-lab{font-size:.8rem;color:#666;} .inv .grand .g-val{font-size:1.5rem;font-weight:900;color:#e11d48;}
+  .inv .note{margin-top:18px;font-size:.8rem;color:#555;border-top:1px dashed var(--g300);padding-top:12px;}
+  .field{display:block;margin-bottom:10px;} .field label{display:block;font-size:.78rem;font-weight:700;color:var(--g600);margin-bottom:4px;}
+  .field input,.field textarea{width:100%;font-family:inherit;font-size:.86rem;padding:9px 11px;border:1.5px solid var(--g200);border-radius:9px;outline:none;}
+  .field input:focus,.field textarea:focus{border-color:var(--blue);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:600px){ .grid2{grid-template-columns:1fr;} }
+  @media print {
+    body * { visibility:hidden; }
+    #invoiceDoc, #invoiceDoc * { visibility:visible; }
+    #invoiceDoc { position:absolute; left:0; top:0; width:100%; padding:0; }
+    .modal{ position:static; background:none; padding:0; display:block; }
+    .modal-bar, .no-print { display:none !important; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="topbar">
+    <a class="brand" href="/"><img src="/logo.svg" alt="VC24" /><span><b>VC24 Global</b><div class="sub">Kế toán &amp; Công nợ</div></span></a>
+    <div class="hr-right">
+      <div class="chip" id="userChip" style="display:none"><span class="av" id="uAv">V</span><span class="nm" id="uName"></span></div>
+      <button class="btn-out" onclick="logout()">Đăng xuất</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <button class="active" data-tab="list" onclick="tab('list')">📋 Danh sách &amp; lọc</button>
+    <button data-tab="debt" onclick="tab('debt')">📊 Công nợ</button>
+    <button data-tab="cust" onclick="tab('cust')">👤 Theo khách hàng</button>
+    <button data-tab="cfg" onclick="tab('cfg')">⚙️ Thông tin công ty</button>
+  </div>
+
+  <!-- ===== TAB: Danh sách ===== -->
+  <div class="tab-pane show" id="tab-list">
+    <div class="panel" id="uploadPanel">
+      <div class="ph"><h2>Tải file đơn hàng</h2><span class="small muted" id="fileInfo"></span></div>
+      <div class="drop" id="drop" onclick="document.getElementById('file').click()">
+        <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="onFile(event)" />
+        <div style="font-size:1.6rem;margin-bottom:6px;">📄⬆️</div>
+        <div><b>Bấm để chọn file Excel</b> (hoặc kéo thả vào đây)</div>
+        <div class="small muted" style="margin-top:4px;">Đọc đúng cột: Mã KH, Check TT, Khu vực, Thành tiền Won/VND, NV giao… — xử lý mọi sheet trong file.</div>
+      </div>
+    </div>
+
+    <div class="panel" id="listPanel" style="display:none;margin-top:16px;">
+      <div class="filters">
+        <input class="grow" id="q" placeholder="🔎 Tìm: mã KH, người nhận, SĐT, mã kiện, địa chỉ…" oninput="applyFilters()" />
+        <select id="fCust" onchange="applyFilters()"><option value="">Tất cả khách hàng</option></select>
+        <select id="fRegion" onchange="applyFilters()"><option value="">Tất cả khu vực</option></select>
+        <select id="fPay" onchange="applyFilters()"><option value="">Tất cả TT</option><option value="owe">Chưa thu</option><option value="paid">Đã thu</option></select>
+        <select id="fSheet" onchange="applyFilters()" style="display:none"></select>
+        <button class="btn sm" onclick="document.getElementById('file').click()">⬆ Đổi file</button>
+      </div>
+      <div class="small muted" id="listSummary" style="margin-bottom:10px;"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Ngày về</th><th>Mã kiện</th><th>Mã KH</th><th>TT</th><th>Người nhận</th><th>SĐT</th>
+            <th>Khu vực</th><th class="r">KG</th><th class="r">Đơn giá</th><th class="r">Tiền Won</th><th class="r">Tiền VND</th><th>NV giao</th>
+          </tr></thead>
+          <tbody id="listBody"></tbody>
+        </table>
+        <div class="empty" id="listEmpty">Chưa có dữ liệu — hãy tải file lên.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: Công nợ ===== -->
+  <div class="tab-pane" id="tab-debt">
+    <div class="stats" id="debtStats"></div>
+    <div class="panel">
+      <div class="ph"><h2>Công nợ theo khách hàng</h2><span class="small muted">Chỉ tính đơn <b>chưa thu</b> (Check TT ≠ "Đã TT")</span></div>
+      <div class="filters"><input class="grow" id="qDebt" placeholder="🔎 Tìm khách hàng…" oninput="renderDebt()" />
+        <select id="debtSort" onchange="renderDebt()"><option value="owe">Sắp theo nợ nhiều nhất</option><option value="name">Sắp theo tên KH</option></select></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Mã khách hàng</th><th class="r">Tổng đơn</th><th class="r">Đơn chưa thu</th><th class="r">Còn nợ (Won)</th><th class="r">Còn nợ (VND)</th><th></th></tr></thead>
+          <tbody id="debtBody"></tbody>
+        </table>
+        <div class="empty" id="debtEmpty">Chưa có dữ liệu.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: Theo khách hàng ===== -->
+  <div class="tab-pane" id="tab-cust">
+    <div class="panel">
+      <div class="filters">
+        <select class="grow" id="custPick" onchange="renderCust()"><option value="">— Chọn khách hàng —</option></select>
+        <button class="btn primary" id="custInvoiceBtn" onclick="openInvoice(document.getElementById('custPick').value, true)" style="display:none">🧾 Xuất hóa đơn (đơn chưa thu)</button>
+        <button class="btn" id="custInvoiceAllBtn" onclick="openInvoice(document.getElementById('custPick').value, false)" style="display:none">🧾 Hóa đơn tất cả đơn</button>
+      </div>
+      <div id="custSummary" class="stats"></div>
+      <div class="tbl-wrap" id="custTblWrap" style="display:none">
+        <table>
+          <thead><tr><th>Ngày về</th><th>Mã kiện</th><th>TT</th><th>Người nhận</th><th>Khu vực</th><th class="r">KG</th><th class="r">Tiền Won</th><th class="r">Tiền VND</th></tr></thead>
+          <tbody id="custBody"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="custEmpty">Chọn 1 khách hàng để xem chi tiết &amp; xuất hóa đơn.</div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: Thông tin công ty ===== -->
+  <div class="tab-pane" id="tab-cfg">
+    <div class="panel" style="max-width:680px;">
+      <div class="ph"><h2>Thông tin công ty (in lên hóa đơn)</h2></div>
+      <p class="small muted" style="margin-bottom:14px;">Điền 1 lần — tự lưu trên máy này và dùng cho mọi hóa đơn. (Các thông tin thật bạn điền sau cũng được.)</p>
+      <div class="grid2">
+        <div class="field"><label>Tên công ty</label><input id="cfg_name" placeholder="VC24 GLOBAL" /></div>
+        <div class="field"><label>Mã số thuế</label><input id="cfg_tax" placeholder="(đang cập nhật)" /></div>
+      </div>
+      <div class="field"><label>Địa chỉ</label><input id="cfg_addr" placeholder="Địa chỉ công ty…" /></div>
+      <div class="grid2">
+        <div class="field"><label>Điện thoại</label><input id="cfg_phone" placeholder="SĐT / Zalo" /></div>
+        <div class="field"><label>Email / Website</label><input id="cfg_email" placeholder="" /></div>
+      </div>
+      <h2 style="font-size:.92rem;margin:8px 0 10px;color:var(--g700);">Tài khoản nhận thanh toán</h2>
+      <div class="grid2">
+        <div class="field"><label>Ngân hàng</label><input id="cfg_bank" placeholder="Tên ngân hàng" /></div>
+        <div class="field"><label>Số tài khoản</label><input id="cfg_acc" placeholder="Số TK" /></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Chủ tài khoản</label><input id="cfg_holder" placeholder="Tên chủ TK" /></div>
+        <div class="field"><label>Ghi chú chuyển khoản</label><input id="cfg_memo" placeholder="VD: ghi mã KH khi chuyển" /></div>
+      </div>
+      <button class="btn primary" onclick="saveCfg()">💾 Lưu thông tin</button>
+      <span class="small" id="cfgSaved" style="margin-left:10px;color:var(--green);font-weight:700;display:none">✓ Đã lưu</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Invoice modal ===== -->
+<div class="modal" id="invoiceModal">
+  <div class="modal-box">
+    <div class="modal-bar no-print">
+      <h3>Hóa đơn / Yêu cầu thanh toán</h3>
+      <div style="display:flex;gap:8px;">
+        <button class="btn primary" onclick="window.print()">🖨️ In / Lưu PDF</button>
+        <button class="btn" onclick="closeInvoice()">Đóng</button>
+      </div>
+    </div>
+    <div class="inv" id="invoiceDoc"></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function noVN(s){ return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/gi,'d').toUpperCase().replace(/\s+/g,' ').trim(); }
+function money(s){ const d=String(s==null?'':s).replace(/[^\d]/g,''); return d?parseInt(d,10):0; }       // tiền nguyên (Won/VND)
+function weight(s){ if(typeof s==='number')return s; const t=String(s||'').replace(/[^\d.,]/g,'').replace(',','.'); const n=parseFloat(t); return isNaN(n)?0:n; }
+function fmtWon(n){ return n?('₩'+n.toLocaleString('vi-VN')):'—'; }
+function fmtVnd(n){ return n?(n.toLocaleString('vi-VN')+' ₫'):'—'; }
+function fmtKg(n){ return n?(n.toLocaleString('vi-VN',{maximumFractionDigits:2})+' kg'):'—'; }
+
+let ROWS = [];          // dữ liệu đã parse
+let CFG = {};
+
+function tab(name){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('show', p.id==='tab-'+name));
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  if(name==='debt') renderDebt();
+}
+
+/* ---------- Đăng nhập / chip ---------- */
+async function logout(){ try{ await fetch('/api/logout',{method:'POST'});}catch(e){} location.reload(); }
+(async function(){
+  try{ const c=await fetch('/api/config').then(r=>r.json());
+    if(c && c.username){ $('userChip').style.display='flex'; $('uAv').textContent=String(c.username).charAt(0); $('uName').textContent=c.username; }
+  }catch(e){}
+  loadCfg();
+})();
+
+/* ---------- Đọc file ---------- */
+function onFile(ev){
+  const f = ev.target.files[0]; if(!f) return;
+  const rd = new FileReader();
+  rd.onload = e => { const wb = XLSX.read(e.target.result,{type:'array'}); parseWB(wb, f.name); };
+  rd.readAsArrayBuffer(f);
+}
+// kéo thả
+['dragover','dragleave','drop'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();}));
+$('drop').addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(f){ const rd=new FileReader(); rd.onload=ev=>{const wb=XLSX.read(ev.target.result,{type:'array'});parseWB(wb,f.name);}; rd.readAsArrayBuffer(f);} });
+
+function findCol(H, ...keys){ for(let i=0;i<H.length;i++){ const h=H[i]; if(keys.every(k=>h.includes(k))) return i; } return -1; }
+function detect(H){
+  const c = {};
+  c.date   = findCol(H,'NGAY VE'); if(c.date<0)c.date=findCol(H,'NGAY');
+  c.pkg    = findCol(H,'MA KIEN');
+  c.status = findCol(H,'TRANG THAI');
+  c.cust   = findCol(H,'MA KHACH');
+  c.pay    = findCol(H,'CHECK TT'); if(c.pay<0)c.pay=findCol(H,'TT');
+  c.note   = findCol(H,'NGUOI GUI'); if(c.note<0)c.note=findCol(H,'GHI CHU');
+  c.rcvPh  = findCol(H,'SDT','NHAN'); if(c.rcvPh<0)c.rcvPh=findCol(H,'DT','NHAN');
+  c.addr   = findCol(H,'DIA CHI');
+  c.rcv    = (function(){ for(let i=0;i<H.length;i++){ const h=H[i]; if(h.includes('NGUOI NHAN') && !h.includes('SDT') && !h.includes('DIA CHI') && !h.includes('DT')) return i; } return -1; })();
+  c.region = findCol(H,'KHU VUC');
+  c.weight = findCol(H,'무게'); if(c.weight<0)c.weight=findCol(H,'KG');
+  c.price  = findCol(H,'DON GIA');
+  c.won    = findCol(H,'WON');
+  c.vnd    = findCol(H,'VND');
+  c.staff  = findCol(H,'NV GIAO'); if(c.staff<0)c.staff=findCol(H,'GIAO');
+  return c;
+}
+
+function parseWB(wb, fname){
+  const all = [];
+  let sheets = 0;
+  (wb.SheetNames||[]).forEach(name=>{
+    const aoa = XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:'',raw:true});
+    // tìm hàng tiêu đề (chứa "MÃ KHÁCH" hoặc "NGƯỜI NHẬN" hoặc "KHU VỰC")
+    let hi=-1;
+    for(let i=0;i<Math.min(aoa.length,15);i++){ const H=aoa[i].map(noVN); if(H.some(x=>x.includes('MA KHACH')||x.includes('NGUOI NHAN')||x.includes('KHU VUC'))){ hi=i; break; } }
+    if(hi<0) return;
+    const H = aoa[hi].map(noVN); const c = detect(H);
+    if(c.cust<0 && c.pkg<0 && c.won<0) return;
+    sheets++;
+    for(let i=hi+1;i<aoa.length;i++){
+      const row=aoa[i];
+      const get=k=>c[k]>=0?String(row[c[k]]??'').trim():'';
+      const cust=get('cust'), pkg=get('pkg'), won=money(get('won')), vnd=money(get('vnd'));
+      if(!cust && !pkg && !won && !vnd) continue;                 // bỏ dòng trống
+      if(noVN(cust)==='TOTAL'||noVN(pkg)==='TOTAL') continue;     // bỏ dòng tổng
+      const payRaw = get('pay');
+      all.push({
+        sheet:name, date:get('date'), pkg, status:get('status'), cust,
+        pay:payRaw, paid: noVN(payRaw)==='DA TT',
+        note:get('note'), rcv:get('rcv'), rcvPh:get('rcvPh'), addr:get('addr'),
+        region:get('region'), weight:weight(get('weight')), price:money(get('price')),
+        won, vnd,
+        staff:get('staff'),
+      });
+    }
+  });
+  if(!all.length){ alert('Không đọc được dòng dữ liệu nào. Kiểm tra file có đúng các cột (Mã khách hàng, Người nhận, Khu vực…) không.'); return; }
+  ROWS = all;
+  $('fileInfo').textContent = `${esc(fname)} · ${sheets} sheet · ${all.length} đơn`;
+  $('listPanel').style.display='block';
+  buildFilters();
+  applyFilters();
+  renderDebt();
+  buildCustomerPicker();
+}
+
+/* ---------- Bộ lọc + bảng danh sách ---------- */
+function uniq(arr){ return [...new Set(arr.filter(Boolean))]; }
+function buildFilters(){
+  const custs = uniq(ROWS.map(r=>r.cust)).sort((a,b)=>a.localeCompare(b,'vi'));
+  $('fCust').innerHTML = '<option value="">Tất cả khách hàng</option>' + custs.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  const regs = uniq(ROWS.map(r=>r.region));
+  $('fRegion').innerHTML = '<option value="">Tất cả khu vực</option>' + regs.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  const shs = uniq(ROWS.map(r=>r.sheet));
+  const fs=$('fSheet'); fs.style.display = shs.length>1?'':'none';
+  fs.innerHTML = '<option value="">Tất cả sheet</option>' + shs.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+}
+function currentFilter(){
+  const q=noVN($('q').value), fc=$('fCust').value, fr=$('fRegion').value, fp=$('fPay').value, fsh=$('fSheet').value;
+  return ROWS.filter(r=>{
+    if(fc && r.cust!==fc) return false;
+    if(fr && r.region!==fr) return false;
+    if(fsh && r.sheet!==fsh) return false;
+    if(fp==='paid' && !r.paid) return false;
+    if(fp==='owe' && r.paid) return false;
+    if(q){ const hay=noVN([r.cust,r.rcv,r.rcvPh,r.pkg,r.addr,r.note].join(' ')); if(!hay.includes(q)) return false; }
+    return true;
+  });
+}
+function applyFilters(){
+  const rows = currentFilter();
+  const body=$('listBody'), empty=$('listEmpty');
+  if(!rows.length){ body.innerHTML=''; empty.style.display='block'; empty.textContent = ROWS.length?'Không có đơn khớp bộ lọc.':'Chưa có dữ liệu — hãy tải file lên.'; }
+  else{
+    empty.style.display='none';
+    body.innerHTML = rows.map(r=>`<tr>
+      <td>${esc(r.date)}</td><td>${esc(r.pkg)}</td><td><b>${esc(r.cust)}</b></td>
+      <td><span class="pill ${r.paid?'paid':'owe'}">${esc(r.pay||(r.paid?'Đã TT':'Chưa TT'))}</span></td>
+      <td>${esc(r.rcv)}</td><td>${esc(r.rcvPh)}</td>
+      <td><span class="pill reg">${esc(r.region)}</span></td>
+      <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.price)}</td>
+      <td class="r num">${fmtWon(r.won)}</td><td class="r num">${fmtVnd(r.vnd)}</td><td>${esc(r.staff)}</td>
+    </tr>`).join('');
+  }
+  const owe=rows.filter(r=>!r.paid), sw=sum(owe,'won'), sv=sum(owe,'vnd');
+  $('listSummary').innerHTML = `Hiện <b>${rows.length}</b> đơn · Chưa thu: <b>${owe.length}</b> đơn — <b style="color:#e11d48">${fmtWon(sw)}</b>${sv?` · <b style="color:#e11d48">${fmtVnd(sv)}</b>`:''}`;
+}
+function sum(arr,k){ return arr.reduce((a,r)=>a+(r[k]||0),0); }
+
+/* ---------- Công nợ ---------- */
+function customerAgg(){
+  const m={};
+  ROWS.forEach(r=>{
+    const k=r.cust||'(không rõ)';
+    if(!m[k]) m[k]={cust:k,total:0,owe:0,oweWon:0,oweVnd:0,paidWon:0,paidVnd:0};
+    const a=m[k]; a.total++;
+    if(r.paid){ a.paidWon+=r.won; a.paidVnd+=r.vnd; }
+    else{ a.owe++; a.oweWon+=r.won; a.oweVnd+=r.vnd; }
+  });
+  return Object.values(m);
+}
+function renderDebt(){
+  const agg=customerAgg();
+  const owe=ROWS.filter(r=>!r.paid), paid=ROWS.filter(r=>r.paid);
+  $('debtStats').innerHTML = `
+    ${stat('Tổng đơn', ROWS.length, '', '')}
+    ${stat('Số khách hàng', agg.length, '', '')}
+    ${stat('Còn nợ (Won)', fmtWon(sum(owe,'won')), 'owe', owe.length+' đơn chưa thu')}
+    ${stat('Còn nợ (VND)', fmtVnd(sum(owe,'vnd')), 'owe', '')}
+    ${stat('Đã thu (Won)', fmtWon(sum(paid,'won')), 'paid', paid.length+' đơn đã thu')}`;
+  let list=agg.filter(a=>a.owe>0 || true);
+  const q=noVN($('qDebt').value); if(q) list=list.filter(a=>noVN(a.cust).includes(q));
+  const srt=$('debtSort').value;
+  list.sort((a,b)=> srt==='name'? a.cust.localeCompare(b.cust,'vi') : (b.oweWon+b.oweVnd)-(a.oweWon+a.oweVnd));
+  const body=$('debtBody'), empty=$('debtEmpty');
+  if(!list.length){ body.innerHTML=''; empty.style.display='block'; }
+  else{ empty.style.display='none';
+    body.innerHTML=list.map(a=>`<tr>
+      <td><b>${esc(a.cust)}</b></td><td class="r">${a.total}</td>
+      <td class="r">${a.owe?`<b style="color:#e11d48">${a.owe}</b>`:'0'}</td>
+      <td class="r num">${a.oweWon?`<b style="color:#e11d48">${fmtWon(a.oweWon)}</b>`:'—'}</td>
+      <td class="r num">${a.oweVnd?`<b style="color:#e11d48">${fmtVnd(a.oweVnd)}</b>`:'—'}</td>
+      <td class="r"><button class="btn sm" onclick="gotoCust('${esc(a.cust).replace(/'/g,"\\'")}')">Xem</button>
+        ${a.owe?`<button class="btn sm" onclick="openInvoice('${esc(a.cust).replace(/'/g,"\\'")}',true)">🧾 Hóa đơn</button>`:''}</td>
+    </tr>`).join('');
+  }
+}
+function stat(lab,val,cls,sub){ return `<div class="stat"><div class="lab">${lab}</div><div class="val ${cls||''}">${val}</div>${sub?`<div class="sub">${sub}</div>`:''}</div>`; }
+function gotoCust(c){ tab('cust'); $('custPick').value=c; renderCust(); }
+
+/* ---------- Theo khách hàng ---------- */
+function buildCustomerPicker(){
+  const custs = uniq(ROWS.map(r=>r.cust)).sort((a,b)=>a.localeCompare(b,'vi'));
+  $('custPick').innerHTML = '<option value="">— Chọn khách hàng —</option>' + custs.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+}
+function renderCust(){
+  const c=$('custPick').value;
+  const rows=ROWS.filter(r=>r.cust===c);
+  const has=!!c && rows.length;
+  $('custInvoiceBtn').style.display = has?'inline-flex':'none';
+  $('custInvoiceAllBtn').style.display = has?'inline-flex':'none';
+  $('custTblWrap').style.display = has?'block':'none';
+  $('custEmpty').style.display = has?'none':'block';
+  if(!has){ $('custSummary').innerHTML=''; return; }
+  const owe=rows.filter(r=>!r.paid);
+  $('custSummary').innerHTML = `
+    ${stat('Tổng đơn', rows.length,'','')}
+    ${stat('Đơn chưa thu', owe.length, owe.length?'owe':'', '')}
+    ${stat('Còn nợ (Won)', fmtWon(sum(owe,'won')), 'owe','')}
+    ${stat('Còn nợ (VND)', fmtVnd(sum(owe,'vnd')), 'owe','')}`;
+  $('custBody').innerHTML = rows.map(r=>`<tr>
+    <td>${esc(r.date)}</td><td>${esc(r.pkg)}</td>
+    <td><span class="pill ${r.paid?'paid':'owe'}">${esc(r.pay||(r.paid?'Đã TT':'Chưa TT'))}</span></td>
+    <td>${esc(r.rcv)}</td><td><span class="pill reg">${esc(r.region)}</span></td>
+    <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.won)}</td><td class="r num">${fmtVnd(r.vnd)}</td>
+  </tr>`).join('');
+}
+
+/* ---------- Hóa đơn ---------- */
+function openInvoice(cust, onlyOwe){
+  if(!cust) return;
+  let rows=ROWS.filter(r=>r.cust===cust);
+  if(onlyOwe) rows=rows.filter(r=>!r.paid);
+  if(!rows.length){ alert('Khách hàng này không có đơn '+(onlyOwe?'chưa thu':'')+'.'); return; }
+  const totWon=sum(rows,'won'), totVnd=sum(rows,'vnd');
+  const now=new Date(); const dd=String(now.getDate()).padStart(2,'0'), mm=String(now.getMonth()+1).padStart(2,'0');
+  const invNo='HD-'+noVN(cust).replace(/[^A-Z0-9]/g,'').slice(0,10)+'-'+now.getFullYear()+mm+dd;
+  const co=CFG||{};
+  const line=(v,fb)=> v?esc(v):`<span style="color:#aaa">${fb}</span>`;
+  $('invoiceDoc').innerHTML = `
+    <div class="inv-top">
+      <div>
+        <div class="co-name">${line(co.name,'VC24 GLOBAL')}</div>
+        <div class="co-line">${line(co.addr,'Địa chỉ: (đang cập nhật)')}</div>
+        <div class="co-line">${co.phone?('ĐT: '+esc(co.phone)):'<span style="color:#aaa">ĐT: (đang cập nhật)</span>'}${co.email?(' · '+esc(co.email)):''}</div>
+        ${co.tax?`<div class="co-line">MST: ${esc(co.tax)}</div>`:''}
+      </div>
+      <div class="inv-title">
+        <h1>HÓA ĐƠN</h1>
+        <div class="inv-meta">YÊU CẦU THANH TOÁN</div>
+        <div class="inv-meta">Số: <b>${esc(invNo)}</b></div>
+        <div class="inv-meta">Ngày: ${dd}/${mm}/${now.getFullYear()}</div>
+      </div>
+    </div>
+    <div class="bill-to"><div class="t">Khách hàng</div><div class="v">${esc(cust)}</div></div>
+    <table>
+      <thead><tr><th>STT</th><th>Ngày</th><th>Mã kiện</th><th>Người nhận</th><th>Khu vực</th><th style="text-align:right">KG</th><th style="text-align:right">Tiền Won</th><th style="text-align:right">Tiền VND</th></tr></thead>
+      <tbody>
+        ${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.date)}</td><td>${esc(r.pkg)}</td><td>${esc(r.rcv)}</td><td>${esc(r.region)}</td>
+          <td style="text-align:right">${r.weight?r.weight.toLocaleString('vi-VN',{maximumFractionDigits:2}):''}</td>
+          <td style="text-align:right">${r.won?r.won.toLocaleString('vi-VN'):''}</td>
+          <td style="text-align:right">${r.vnd?r.vnd.toLocaleString('vi-VN'):''}</td></tr>`).join('')}
+        <tr class="tot-row"><td colspan="6" style="text-align:right">TỔNG CỘNG (${rows.length} đơn)</td>
+          <td style="text-align:right">${totWon?('₩'+totWon.toLocaleString('vi-VN')):''}</td>
+          <td style="text-align:right">${totVnd?(totVnd.toLocaleString('vi-VN')+' ₫'):''}</td></tr>
+      </tbody>
+    </table>
+    <div class="pay-box">
+      <div class="bank">
+        <div style="font-size:.74rem;text-transform:uppercase;color:#888;font-weight:700;margin-bottom:4px;">Thông tin thanh toán</div>
+        <div><b>Ngân hàng:</b> ${line(co.bank,'(đang cập nhật)')}</div>
+        <div><b>Số TK:</b> ${line(co.acc,'(đang cập nhật)')}</div>
+        <div><b>Chủ TK:</b> ${line(co.holder,'(đang cập nhật)')}</div>
+        ${co.memo?`<div><b>Nội dung CK:</b> ${esc(co.memo)}</div>`:`<div><b>Nội dung CK:</b> ${esc(cust)}</div>`}
+      </div>
+      <div class="grand">
+        <div class="g-lab">Tổng phải thanh toán</div>
+        <div class="g-val">${totVnd?(totVnd.toLocaleString('vi-VN')+' ₫'):(totWon?('₩'+totWon.toLocaleString('vi-VN')):'—')}</div>
+        ${totVnd&&totWon?`<div class="g-lab" style="margin-top:4px">(${'₩'+totWon.toLocaleString('vi-VN')})</div>`:''}
+      </div>
+    </div>
+    <div class="note">Kính đề nghị Quý khách thanh toán số tiền trên. Cảm ơn Quý khách đã sử dụng dịch vụ của ${esc(co.name||'VC24 Global')}.</div>`;
+  $('invoiceModal').classList.add('show');
+}
+function closeInvoice(){ $('invoiceModal').classList.remove('show'); }
+$('invoiceModal').addEventListener('click', e=>{ if(e.target.id==='invoiceModal') closeInvoice(); });
+
+/* ---------- Thông tin công ty (localStorage) ---------- */
+const CFG_KEYS=['name','tax','addr','phone','email','bank','acc','holder','memo'];
+function loadCfg(){
+  try{ CFG=JSON.parse(localStorage.getItem('vc24_cfg')||'{}'); }catch(e){ CFG={}; }
+  CFG_KEYS.forEach(k=>{ const el=$('cfg_'+k); if(el) el.value=CFG[k]||''; });
+}
+function saveCfg(){
+  CFG={}; CFG_KEYS.forEach(k=>{ CFG[k]=$('cfg_'+k).value.trim(); });
+  localStorage.setItem('vc24_cfg', JSON.stringify(CFG));
+  const s=$('cfgSaved'); s.style.display='inline'; setTimeout(()=>s.style.display='none',1800);
+}
+(function(){var h=document.querySelector('.site-header');if(h)addEventListener('scroll',function(){h.classList.toggle('scrolled',window.scrollY>4);},{passive:true});})();
+</script>
+</body>
+</html>

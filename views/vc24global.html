@@ -258,7 +258,7 @@
       <div class="batch-head">
         <div class="batch-title" id="batchTitle"></div>
         <div class="batch-tools">
-          <select class="sel hidden" id="sheetSelect" onchange="onSheetChange()" title="Sheet"></select>
+          <select class="sel hidden" id="filterSheet" onchange="renderBatch()" title="Sheet"></select>
           <select class="sel" id="filterDate" onchange="renderBatch()"></select>
           <select class="sel" id="filterStatus" onchange="renderBatch()"></select>
           <input type="file" id="fileInput" class="hidden" accept=".xlsx,.xls,.csv" onchange="onFile(event)" />
@@ -271,6 +271,7 @@
       <div class="tbl-wrap">
         <table>
           <thead><tr>
+            <th data-i18n="colSheet">Sheet</th>
             <th><span data-i18n="colMbl">Vận đơn chủ</span> <span class="ko">M B/L</span></th>
             <th><span data-i18n="colHawb">Vận đơn</span> <span class="ko">HAWB</span></th>
             <th data-i18n="colArrival">Ngày đến</th>
@@ -310,12 +311,12 @@ const LANGS = {
     eyebrow2:'Tra cứu hàng loạt', h1b:'Quét toàn bộ danh sách kho một lần',
     lead2:'Tải lên danh sách Excel và quét toàn bộ vận đơn cùng lúc — thay vì tra từng số trên website.',
     btnUpload:'⬆ Upload Excel', btnRescan:'↻ Quét lại', btnDownload:'⬇ Tải kết quả', noExport:'Chưa có kết quả để tải. Hãy upload và quét file trước.',
-    colMbl:'Vận đơn chủ', colHawb:'Vận đơn', colArrival:'Ngày đến', colWeight:'Trọng lượng', colStatus:'Trạng thái thông quan',
+    colSheet:'Sheet', colMbl:'Vận đơn chủ', colHawb:'Vận đơn', colArrival:'Ngày đến', colWeight:'Trọng lượng', colStatus:'Trạng thái thông quan',
     emptyFilter:'Không có vận đơn nào khớp bộ lọc.',
     footerTagline:'Giải pháp logistics Việt - Hàn', footerAbout:'Giới thiệu', footerPostal:'Tra mã bưu điện',
     login:'Đăng nhập', logout:'Đăng xuất', needLogin:'Tra cứu đơn lẻ thì miễn phí. Upload Excel hàng loạt cần đăng nhập.',
     shareBtn:'Chia sẻ', shareCopied:'Đã copy link!',
-    allDates:'Tất cả ngày', allStatus:'Tất cả trạng thái', countUnit:'vận đơn',
+    allDates:'Tất cả ngày', allStatus:'Tất cả trạng thái', allSheets:'Tất cả sheet', countUnit:'vận đơn',
     batchEmptyTitle:'Danh sách vận đơn',
     uploadPrompt:'📄 Chưa có dữ liệu — tải lên file Excel (cột HAWB) để quét toàn bộ vận đơn.',
     subBranch:'Vận đơn nhánh', released:'Đã xuất kho',
@@ -339,12 +340,12 @@ const LANGS = {
     eyebrow2:'Batch lookup', h1b:'Scan an entire warehouse list at once',
     lead2:'Upload an Excel list (like the Yongma cold-storage file) and scan every B/L at once — instead of looking up one by one.',
     btnUpload:'⬆ Upload Excel', btnRescan:'↻ Rescan', btnDownload:'⬇ Download result', noExport:'No result to download yet. Please upload and scan a file first.',
-    colMbl:'Master B/L', colHawb:'B/L', colArrival:'Arrival', colWeight:'Weight', colStatus:'Clearance status',
+    colSheet:'Sheet', colMbl:'Master B/L', colHawb:'B/L', colArrival:'Arrival', colWeight:'Weight', colStatus:'Clearance status',
     emptyFilter:'No B/L matches the filter.',
     footerTagline:'Vietnam - Korea logistics solution', footerAbout:'About', footerPostal:'Postal code lookup',
     login:'Log in', logout:'Log out', needLogin:'Single lookup is free. Batch Excel upload requires login.',
     shareBtn:'Share', shareCopied:'Link copied!',
-    allDates:'All dates', allStatus:'All statuses', countUnit:'B/Ls',
+    allDates:'All dates', allStatus:'All statuses', allSheets:'All sheets', countUnit:'B/Ls',
     batchEmptyTitle:'B/L list',
     uploadPrompt:'📄 No data yet — upload an Excel file (HAWB column) to scan all B/Ls.',
     subBranch:'House B/L', released:'Released',
@@ -368,12 +369,12 @@ const LANGS = {
     eyebrow2:'대량 조회', h1b:'창고 리스트 전체를 한 번에 조회',
     lead2:'엑셀 목록(욜마 냉동창고 파일 등)을 업로드하면 모든 운송장을 한 번에 조회합니다 — 하나씩 조회할 필요 없이.',
     btnUpload:'⬆ 엑셀 업로드', btnRescan:'↻ 다시 조회', btnDownload:'⬇ 결과 다운로드', noExport:'다운로드할 결과가 없습니다. 먼저 파일을 업로드하고 조회하세요.',
-    colMbl:'M B/L', colHawb:'운송장', colArrival:'입항일', colWeight:'중량', colStatus:'통관진행상태',
+    colSheet:'시트', colMbl:'M B/L', colHawb:'운송장', colArrival:'입항일', colWeight:'중량', colStatus:'통관진행상태',
     emptyFilter:'필터에 맞는 운송장이 없습니다.',
     footerTagline:'베트남-한국 물류 솔루션', footerAbout:'소개', footerPostal:'우편번호 조회',
     login:'로그인', logout:'로그아웃', needLogin:'단건 조회는 무료입니다. 엑셀 대량 조회는 로그인이 필요합니다.',
     shareBtn:'공유', shareCopied:'링크 복사됨!',
-    allDates:'전체 날짜', allStatus:'전체 상태', countUnit:'건',
+    allDates:'전체 날짜', allStatus:'전체 상태', allSheets:'전체 시트', countUnit:'건',
     batchEmptyTitle:'운송장 목록',
     uploadPrompt:'📄 데이터 없음 — 엑셀 파일(HAWB 열)을 업로드하면 전체 운송장을 조회합니다.',
     subBranch:'House B/L', released:'반출완료',
@@ -716,6 +717,13 @@ function refreshBatchUI() {
   const dates = [...new Set(batchRows.map(r => fmtDate(r.date)))].sort();
   fd.innerHTML = `<option value="">${t('allDates')}</option>` + dates.map(d => `<option value="${d}">${d}</option>`).join('');
   fd.value = keepD;
+  // Bộ lọc theo sheet (chỉ hiện khi file có nhiều sheet)
+  const fsh = document.getElementById('filterSheet');
+  const keepSh = fsh.value;
+  const sheets = [...new Set(batchRows.map(r => r.sheet).filter(Boolean))];
+  fsh.innerHTML = `<option value="">${t('allSheets')}</option>` + sheets.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  fsh.value = keepSh;
+  fsh.classList.toggle('hidden', sheets.length <= 1);
   renderBatch();
 }
 
@@ -728,14 +736,16 @@ function renderBatch() {
   }
   const fd = document.getElementById('filterDate').value;
   const fsv = document.getElementById('filterStatus').value;
+  const fsh = document.getElementById('filterSheet').value;
   const rows = batchRows.filter(r =>
-    (!fd || fmtDate(r.date) === fd) && (fsv === '' || String(r.stage) === fsv)
+    (!fd || fmtDate(r.date) === fd) && (fsv === '' || String(r.stage) === fsv) && (!fsh || r.sheet === fsh)
   );
   if (!rows.length) { body.innerHTML = ''; empty.textContent = t('emptyFilter'); empty.classList.remove('hidden'); return; }
   empty.classList.add('hidden');
   body.innerHTML = rows.map(r => {
     const isOut = r.stage === 5;
     return `<tr>
+      <td class="muted">${esc(r.sheet || '')}</td>
       <td>${esc(r.mbl || '—')}</td>
       <td class="hawb">${esc(r.hawb)}</td>
       <td>${esc(fmtDate(r.date))}</td>
@@ -755,16 +765,9 @@ function onFile(ev) {
   const reader = new FileReader();
   reader.onload = e => {
     workbook = XLSX.read(e.target.result, { type:'array' });
-    const sel = document.getElementById('sheetSelect');
-    sel.innerHTML = workbook.SheetNames.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
-    sel.classList.toggle('hidden', workbook.SheetNames.length <= 1);
-    parseAndScan(workbook.SheetNames[0]);
+    scanAll();   // xử lý TẤT CẢ sheet trong file
   };
   reader.readAsArrayBuffer(file);
-}
-
-function onSheetChange() {
-  if (workbook) parseAndScan(document.getElementById('sheetSelect').value);
 }
 
 function parseDateCell(val, sheetName) {
@@ -784,8 +787,11 @@ function parseDateCell(val, sheetName) {
   return s;
 }
 
-function parseSheet(sheetName) {
-  const aoa = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header:1, defval:'' });
+// Quét metadata 1 sheet: tìm hàng tiêu đề, vị trí cột, và các dòng có HAWB (kèm chỉ số dòng để ghi ngược)
+function parseSheetMeta(name) {
+  const ws = workbook.Sheets[name];
+  if (!ws) return { name, ws:null, col:{}, rows:[] };
+  const aoa = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
   let hi = -1; const col = {};
   for (let i = 0; i < aoa.length; i++) {
     const rowU = aoa[i].map(c => String(c).trim().toUpperCase());
@@ -794,109 +800,76 @@ function parseSheet(sheetName) {
     if (j >= 0) {
       hi = i; col.hawb = j;
       col.date = rowU.indexOf('DATE');
-      col.pcs  = rowU.indexOf('PCS');
+      col.mbl  = rowN.indexOf('MBL');     // "M B/L" → "MBL"
       col.wt   = rowU.findIndex(c => c === 'WT' || c === 'WEIGHT');
-      col.mbl  = rowN.indexOf('MBL');                       // "M B/L" → "MBL"
-      col.no   = rowN.indexOf('NO');                        // "No." → "NO"
-      col.bigo = rowU.indexOf('비고');
       break;
     }
   }
-  const recs = [];
-  if (hi < 0) {
-    aoa.forEach(r => r.forEach(c => {
-      const v = String(c).replace(/\s/g,'');
-      if (/^\d{9,13}$/.test(v)) recs.push({ hawb:v, date:parseDateCell('', sheetName), weight:'' });
-    }));
-    return recs;
-  }
+  const rows = [];
   const cv = (row, k) => (col[k] >= 0 ? String(row[col[k]] ?? '').trim() : '');
+  if (hi < 0) return { name, ws, col, rows };   // sheet không có bảng HAWB → bỏ qua
   for (let i = hi + 1; i < aoa.length; i++) {
     const row = aoa[i];
     const hawb = String(row[col.hawb] ?? '').replace(/\s/g,'');
-    if (!/^\d{9,13}$/.test(hawb)) continue;
+    if (!/^\d{9,13}$/.test(hawb)) continue;       // bỏ dòng TOTAL / trống
     const wt = cv(row, 'wt');
-    recs.push({
-      hawb,
-      date: parseDateCell(col.date >= 0 ? row[col.date] : '', sheetName),
-      weight: wt ? `${wt} kg` : '',
-      // giữ nguyên giá trị gốc để xuất lại đúng format file của công ty
+    rows.push({
+      r: i, hawb,
       mblSrc: cv(row, 'mbl').replace(/\s/g, ''),
-      pcs:    cv(row, 'pcs'),
-      bigo:   cv(row, 'bigo'),
-      no:     cv(row, 'no'),
-      dateSrc: cv(row, 'date'),
-      wtSrc:   wt,
+      date: parseDateCell(col.date >= 0 ? row[col.date] : '', name),
+      weight: wt ? `${wt} kg` : '',
     });
   }
-  return recs;
+  return { name, ws, col, rows };
 }
 
-async function parseAndScan(sheetName) {
-  const recs = parseSheet(sheetName);
-  if (!recs.length) { alert(t('noHawb', sheetName)); return; }
-  await scanRecords(recs, `${currentFile} · ${sheetName}`);
-}
+let SHEETS = [];
 
-async function scanRecords(recs, label) {
+// Xử lý TOÀN BỘ sheet: tra Hải quan, điền M B/L vào đúng ô (chỉ ô đang trống), giữ nguyên mọi dữ liệu khác
+async function scanAll() {
+  SHEETS = (workbook.SheetNames || []).map(parseSheetMeta).filter(s => s.rows.length);
+  if (!SHEETS.length) { alert(t('noHawb', currentFile)); return; }
+
+  // Gom HAWB duy nhất trên mọi sheet → chỉ gọi Hải quan 1 lần cho mỗi số
+  const uniq = [...new Set([].concat(...SHEETS.map(s => s.rows.map(r => r.hawb))))];
   const prog = document.getElementById('batchProgress');
   prog.style.display = 'block';
-  const rows = [];
-  for (let i = 0; i < recs.length; i++) {
-    prog.textContent = t('scanning', i + 1, recs.length);
-    const rec = recs[i];
-    const d = await fetchReal(rec.hawb);
-    let stage, mbl = '';
-    if (d) {
-      stage = d.stage; mbl = d.mbl || '';
-      if (!rec.weight) rec.weight = d.weight;
-      if (!rec.date)   rec.date = d.date;
-      await new Promise(r => setTimeout(r, 120));
-    } else {
-      const seed = [...rec.hawb].reduce((a, c) => a + c.charCodeAt(0), 0);
-      stage = seed % 6;
-      if (!rec.weight) rec.weight = `${(((seed * 7) % 190) / 10 + 2).toFixed(1)} kg`;
+  const info = {};
+  for (let i = 0; i < uniq.length; i++) {
+    prog.textContent = t('scanning', i + 1, uniq.length);
+    const h = uniq[i];
+    const d = await fetchReal(h);
+    if (d) { info[h] = { mbl: d.mbl || '', stage: d.stage, date: d.date, weight: d.weight }; await new Promise(r => setTimeout(r, 120)); }
+    else {
+      const seed = [...h].reduce((a, c) => a + c.charCodeAt(0), 0);
+      info[h] = { mbl: '', stage: seed % 6, date: '', weight: `${(((seed * 7) % 190) / 10 + 2).toFixed(1)} kg` };
     }
-    rows.push({
-      hawb: rec.hawb,
-      mbl: mbl || rec.mblSrc || '',     // ưu tiên M B/L tra được từ Hải quan
-      date: rec.date, weight: rec.weight, stage,
-      pcs: rec.pcs || '', bigo: rec.bigo || '', no: rec.no || '',
-      dateSrc: rec.dateSrc || '', wtSrc: rec.wtSrc || '',
-    });
   }
   prog.style.display = 'none';
-  setBatch(rows, label);
-}
 
-function rescan() {
-  if (workbook) parseAndScan(document.getElementById('sheetSelect').value || workbook.SheetNames[0]);
-}
-
-// Xuất Excel kết quả — giữ format file VC24 Global, điền M B/L tra được + cột trạng thái
-function exportResult() {
-  if (!batchRows.length) { alert(t('noExport')); return; }
-  const header = ['No.', 'M B/L', 'HAWB', 'DATE', 'PCS', 'WT', '비고', '통관상태 / Trạng thái'];
-  const aoa = [header];
-  batchRows.forEach((r, i) => {
-    aoa.push([
-      r.no || (i + 1),
-      r.mbl || '',
-      r.hawb,
-      r.dateSrc || fmtDate(r.date),
-      r.pcs || '',
-      r.wtSrc || String(r.weight || '').replace(/\s*kg$/i, ''),
-      r.bigo || '',
-      stageLabel(r.stage),
-    ]);
+  // Ghi M B/L vào đúng ô (chỉ điền ô trống) + dựng danh sách hiển thị
+  const rows = [];
+  SHEETS.forEach(s => {
+    s.rows.forEach(r => {
+      const it = info[r.hawb] || {};
+      const mbl = r.mblSrc || it.mbl || '';        // giữ số gốc nếu đã có, nếu trống thì lấy số tra được
+      if (s.col.mbl >= 0 && !r.mblSrc && it.mbl) { // CHỈ điền ô đang trống, không sửa dữ liệu khác
+        s.ws[XLSX.utils.encode_cell({ r: r.r, c: s.col.mbl })] = { t: 's', v: it.mbl };
+      }
+      rows.push({ sheet: s.name, hawb: r.hawb, mbl, date: r.date || it.date || '', weight: r.weight || it.weight || '', stage: it.stage });
+    });
   });
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = [{ wch:5 }, { wch:16 }, { wch:16 }, { wch:12 }, { wch:6 }, { wch:8 }, { wch:14 }, { wch:22 }];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'VC24 Global');
+  setBatch(rows, `${currentFile} · ${SHEETS.length} sheet · ${rows.length} ${t('countUnit')}`);
+}
+
+function rescan() { if (workbook) scanAll(); }
+
+// Tải kết quả: CHÍNH file gốc (đủ mọi sheet) — chỉ cột M B/L được điền thêm, dữ liệu khác giữ nguyên
+function exportResult() {
+  if (!workbook || !SHEETS.length) { alert(t('noExport')); return; }
   const stamp = new Date().toISOString().slice(0, 10);
   const base = String(currentFile || 'vc24global').replace(/\.[^.]+$/, '');
-  XLSX.writeFile(wb, `${base}_ket-qua_${stamp}.xlsx`);
+  XLSX.writeFile(workbook, `${base}_M-B-L_${stamp}.xlsx`);
 }
 
 // ── Đăng nhập (tra đơn lẻ miễn phí; upload Excel cần login) ───────────────────

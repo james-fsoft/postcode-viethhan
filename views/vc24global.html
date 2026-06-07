@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VC24 Global — Tra cứu thông quan (nội bộ)</title>
+<meta name="description" content="Trang nội bộ VC24 Global — tra cứu tiến trình thông quan UNI-PASS." />
+<meta name="keywords" content="" />
+<meta name="author" content="Transflash · Vietnam - Korea Logistics" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#1e40af" />
+<link rel="canonical" href="__BASE__/vc24global" />
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Vietnam - Korea Logistics" />
+<meta property="og:title" content="VC24 Global — Tra cứu thông quan (nội bộ)" />
+<meta property="og:description" content="Trang nội bộ VC24 Global — tra cứu tiến trình thông quan UNI-PASS." />
+<meta property="og:url" content="__BASE__/vc24global" />
+<meta property="og:locale" content="vi_VN" />
+<!-- Twitter -->
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="VC24 Global — Tra cứu thông quan (nội bộ)" />
+<meta name="twitter:description" content="Trang nội bộ VC24 Global — tra cứu tiến trình thông quan UNI-PASS." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231e3a8a'/><path d='M23 73 L77 50 L23 27 L23 45 L62 50 L23 55 Z' transform='rotate(-30 50 50)' fill='white'/><circle cx='76' cy='25' r='8' fill='%23ef4444'/><circle cx='76' cy='25' r='3.2' fill='white'/></svg>" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Korea Customs Clearance Tracking (UNI-PASS)",
+  "url": "__BASE__/tracking",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "inLanguage": ["vi", "en", "ko"],
+  "description": "Track Korea import customs clearance progress by HAWB or cargo management number, data directly from Korea Customs (UNI-PASS). Batch lookup from Excel.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "VND" },
+  "provider": { "@type": "Organization", "name": "Vietnam - Korea Logistics", "url": "__BASE__/" }
+}
+</script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --red:#d42126; --blue:#1e40af; --blue-mid:#1d4ed8; --blue-light:#eff6ff;
+    --green:#16a34a; --green-d:#15803d; --green-light:#ecfdf5;
+    --text:#0f172a; --muted:#64748b; --muted2:#94a3b8;
+    --line:#e2e8f0; --line2:#cbd5e1; --card:#ffffff; --bg:#f1f5f9;
+    --shadow:0 1px 4px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    background:var(--bg); color:var(--text);
+    font-family:'Segoe UI','Noto Sans KR',Arial,sans-serif;
+    min-height:100vh; line-height:1.5; padding:0 0 56px;
+  }
+  .wrap { max-width:1080px; margin:0 auto; padding:26px 16px 0; }
+
+  /* Header tách rời, dính khi cuộn */
+  .site-header { position:sticky; top:0; z-index:50; background:rgba(255,255,255,.85);
+    backdrop-filter:saturate(180%) blur(8px); -webkit-backdrop-filter:saturate(180%) blur(8px);
+    border-bottom:1px solid var(--line); transition:box-shadow .2s; }
+  .site-header.scrolled { box-shadow:0 4px 16px -6px rgba(15,23,42,.18); }
+  .topbar { max-width:1080px; margin:0 auto; padding:9px 16px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  .brand-area { display:flex; align-items:center; gap:12px; }
+  .brand-area img { height:44px; width:auto; display:block; }
+  .brand-name { font-size:1rem; font-weight:800; color:var(--blue); letter-spacing:.2px; }
+  .brand-sub { font-size:.72rem; color:var(--muted2); letter-spacing:1.5px; text-transform:uppercase; }
+  .topbar-right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .lang-select { padding:7px 11px; border:1.5px solid var(--line); border-radius:8px; background:#fff;
+    cursor:pointer; font-size:.8rem; font-weight:600; color:var(--muted); font-family:inherit; }
+  .lang-select:focus { outline:none; border-color:var(--blue); }
+  .nav-home { font-size:.82rem; font-weight:600; color:var(--blue); text-decoration:none;
+    border:1.5px solid var(--line); background:#fff; padding:8px 16px; border-radius:99px; transition:all .15s; }
+  .nav-home:hover { border-color:var(--blue); }
+  /* Menu điều hướng header (đồng bộ với trang mã bưu điện) */
+  .top-nav { display:flex; align-items:center; gap:2px; flex-wrap:wrap; }
+  .top-nav a { font-size:.85rem; font-weight:600; color:#475569; text-decoration:none; padding:7px 11px; border-radius:8px; transition:background .14s,color .14s; white-space:nowrap; }
+  .top-nav a:hover { background:#f1f5f9; color:#1e40af; }
+  .top-nav a.active { color:var(--blue); background:#eff6ff; font-weight:800; }
+  @media (max-width:880px){ .top-nav { order:3; width:100%; justify-content:center; border-top:1px solid var(--line); padding-top:8px; } }
+  .user-chip { display:flex; align-items:center; gap:8px; background:#fff; border:1px solid var(--line);
+    border-radius:99px; padding:4px 12px 4px 5px; box-shadow:var(--shadow); }
+  .user-avatar { width:26px; height:26px; border-radius:50%; background:linear-gradient(135deg,var(--red),var(--blue));
+    color:#fff; font-weight:700; font-size:.75rem; display:flex; align-items:center; justify-content:center; text-transform:uppercase; flex-shrink:0; }
+  .user-meta { display:flex; flex-direction:column; line-height:1.15; }
+  .user-name { font-size:.78rem; font-weight:700; color:var(--text); }
+  .user-plan { font-size:.64rem; font-weight:600; letter-spacing:.2px; color:var(--muted2); text-transform:uppercase; }
+  .user-plan.trial { color:#b45309; }
+  .user-plan.pro { color:var(--green); }
+  .user-plan.enterprise { color:var(--blue); }
+  .btn-login-top { display:inline-flex; align-items:center; gap:6px; padding:7px 16px; border-radius:8px; border:none;
+    background:linear-gradient(135deg,var(--red),var(--blue)); color:#fff; font-size:.8rem; font-weight:700; cursor:pointer; font-family:inherit; }
+  .btn-login-top:hover { opacity:.9; }
+  .btn-logout { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; border:1.5px solid #fecaca;
+    background:#fff; color:var(--red); font-size:.8rem; font-weight:600; cursor:pointer; font-family:inherit; }
+  .btn-logout:hover { background:#fff1f1; }
+
+  .eyebrow { color:var(--green-d); font-size:.74rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-bottom:10px; }
+  h1 { font-size:1.9rem; font-weight:800; letter-spacing:-.01em; margin-bottom:12px; color:var(--text); }
+  .lead { color:var(--muted); font-size:1rem; max-width:680px; margin-bottom:22px; }
+
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:22px; box-shadow:var(--shadow); }
+  .section { margin-bottom:48px; }
+
+  /* search */
+  .search-row { display:flex; gap:12px; flex-wrap:wrap; }
+  .search-row input {
+    flex:1; min-width:220px; background:var(--bg); border:1.5px solid var(--line); border-radius:10px;
+    color:var(--text); font-size:1rem; padding:15px 18px; outline:none; transition:border-color .15s;
+  }
+  .search-row input::placeholder { color:var(--muted2); }
+  .search-row input:focus { border-color:var(--green); background:#fff; }
+  .btn-go {
+    background:linear-gradient(135deg,#22c55e,var(--green)); color:#fff; border:none;
+    border-radius:10px; padding:0 36px; font-size:1rem; font-weight:700; cursor:pointer;
+    box-shadow:0 4px 14px rgba(22,163,74,.25); transition:all .12s;
+  }
+  .btn-go:hover { box-shadow:0 6px 18px rgba(22,163,74,.35); }
+  .btn-go:active { transform:translateY(1px); }
+  .btn-go:disabled { opacity:.6; cursor:default; box-shadow:none; }
+
+  /* result card */
+  .result { margin-top:20px; background:var(--bg); border:1px solid var(--line); border-radius:12px; padding:22px 24px; display:none; }
+  .result.show { display:block; }
+  .res-top { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .res-no { font-size:1.5rem; font-weight:800; letter-spacing:.01em; color:var(--text); }
+  .res-sub { color:var(--muted); font-size:.9rem; margin-top:2px; }
+  .share-btn { margin-left:8px; font-family:inherit; font-size:.78rem; font-weight:700; color:var(--green-d);
+    background:var(--green-light); border:1px solid #a7f3d0; border-radius:7px; padding:3px 10px; cursor:pointer; }
+  .share-btn:hover { background:#d1fae5; }
+  .demo-tag { display:inline-block; margin-left:10px; font-size:.62rem; font-weight:800; letter-spacing:.1em;
+    color:#b45309; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; padding:2px 7px; vertical-align:middle; }
+  .status-pill { display:inline-flex; align-items:center; gap:9px; background:var(--blue-light);
+    border:1px solid #bfdbfe; border-radius:30px; padding:10px 18px; font-weight:700; color:var(--blue); }
+  .status-pill.green { background:var(--green-light); border-color:#a7f3d0; color:var(--green); }
+  .status-pill .ko { color:var(--muted2); font-weight:500; font-size:.82rem; }
+  .status-pill .led { width:9px; height:9px; border-radius:50%; background:currentColor; }
+
+  .info-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:var(--line); border:1px solid var(--line);
+    border-radius:10px; overflow:hidden; margin-top:22px; }
+  .info-cell { background:#fff; padding:15px 18px; }
+  .info-cell .lab { color:var(--muted2); font-size:.76rem; margin-bottom:7px; }
+  .info-cell .lab .ko { opacity:.85; }
+  .info-cell .val { font-size:.98rem; font-weight:700; color:var(--text); }
+  .info-cell .val .code { color:var(--muted2); font-weight:600; font-size:.84rem; }
+  @media (max-width:880px){ .info-grid{ grid-template-columns:repeat(2,1fr);} h1{font-size:1.6rem;} }
+
+  /* timeline */
+  .tl-title { margin:26px 0 14px; font-size:1rem; font-weight:700; color:var(--text); }
+  .tl-title .ko { color:var(--muted2); font-weight:500; font-size:.82rem; margin-left:6px; }
+  .timeline { display:flex; gap:10px; }
+  .tl-step { flex:1; min-width:0; }
+  .tl-bar { height:6px; border-radius:4px; background:var(--line); }
+  .tl-step.done .tl-bar { background:var(--green); }
+  .tl-step.current .tl-bar { background:var(--blue-mid); }
+  .tl-lab { margin-top:11px; font-size:.88rem; font-weight:700; color:var(--muted2); }
+  .tl-step.done .tl-lab, .tl-step.current .tl-lab { color:var(--text); }
+  .tl-ko { font-size:.74rem; color:var(--muted2); margin-top:2px; }
+
+  /* batch */
+  .batch-head { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
+  .batch-title { font-size:1.1rem; font-weight:800; color:var(--text); }
+  .batch-title .muted { color:var(--muted2); font-weight:500; font-size:.92rem; }
+  .batch-tools { display:flex; gap:10px; flex-wrap:wrap; }
+  .sel, .btn-ghost, .btn-up {
+    background:#fff; border:1.5px solid var(--line); color:var(--text); border-radius:8px;
+    padding:10px 14px; font-size:.88rem; cursor:pointer; font-family:inherit; outline:none;
+  }
+  .sel:focus { border-color:var(--blue); }
+  .btn-ghost:hover, .btn-up:hover { border-color:var(--blue); }
+  .btn-up { color:var(--green-d); border-color:#a7f3d0; }
+  .btn-up:hover { border-color:var(--green); }
+
+  .tbl-wrap { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#fff; }
+  table { width:100%; border-collapse:collapse; }
+  thead th { text-align:left; color:var(--muted2); font-size:.78rem; font-weight:700; letter-spacing:.02em;
+    padding:14px 20px; border-bottom:1px solid var(--line); background:var(--bg); }
+  thead th .ko { opacity:.85; font-weight:500; }
+  tbody td { padding:13px 20px; border-bottom:1px solid var(--line); font-size:.92rem; color:var(--text); }
+  tbody tr:last-child td { border-bottom:none; }
+  tbody tr:hover { background:var(--bg); }
+  .hawb { font-weight:700; letter-spacing:.01em; }
+  .badge { display:inline-block; padding:6px 13px; border-radius:8px; font-size:.83rem; font-weight:700; }
+  .badge.blue { color:var(--blue); background:var(--blue-light); }
+  .badge.green { color:var(--green); background:var(--green-light); }
+  .batch-empty { padding:36px; text-align:center; color:var(--muted2); }
+  .progress-mini { color:var(--muted); font-size:.86rem; padding:12px 20px; display:none; }
+  .hidden { display:none; }
+
+  /* footer */
+  .app-footer { margin-top:44px; text-align:center; font-size:.78rem; color:var(--muted2);
+    display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; }
+  .app-footer .tf-brand { font-weight:800; letter-spacing:.5px;
+    background:linear-gradient(135deg,var(--red),var(--blue)); -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent; font-size:.85rem; }
+  .app-footer .tf-dot { color:var(--line2); }
+  .footer-support { color:var(--blue); text-decoration:none; font-weight:600; }
+  .footer-support:hover { text-decoration:underline; }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="topbar">
+    <div class="brand-area">
+      <img src="/logo.svg" alt="Vietnam - Korea Logistics" />
+      <div class="brand-text">
+        <div class="brand-name">Vietnam - Korea Logistics</div>
+        <div class="brand-sub" data-i18n="brandSub">Tra Cứu Thông Quan Hàn Quốc</div>
+      </div>
+    </div>
+    <nav class="top-nav">
+      <a href="/" data-i18n="navPostal">Mã bưu điện</a>
+      <a href="/tracking" data-i18n="navCustoms">Mã thông quan</a>
+      <a href="/tools" data-i18n="navTools">Tiện ích</a>
+      <a href="/nguoi-viet-o-han" data-i18n="navHub">Người Việt ở Hàn</a>
+    </nav>
+    <div class="topbar-right">
+      <div class="user-chip" id="userChip" style="display:none">
+        <span class="user-avatar" id="userAvatar">U</span>
+        <span class="user-meta">
+          <span class="user-name" id="userName"></span>
+          <span class="user-plan" id="userPlan"></span>
+        </span>
+      </div>
+      <select class="lang-select" id="langSelect" onchange="setLang(this.value)">
+        <option value="vi">Tiếng Việt</option>
+        <option value="en">English</option>
+        <option value="ko">한국어</option>
+      </select>
+      <button class="btn-login-top" id="loginBtn" onclick="location.href='/login'" style="display:none" data-i18n="login">Đăng nhập</button>
+      <button class="btn-logout" id="logoutBtn" onclick="logout()" style="display:none" data-i18n="logout">Đăng xuất</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- ══ Section 1: Đơn lẻ ══ -->
+  <div class="section">
+    <div class="eyebrow" data-i18n="eyebrow1">Tra cứu đơn lẻ</div>
+    <h1 data-i18n="h1a">Tra cứu tức thì bằng số vận đơn</h1>
+    <p class="lead" data-i18n="lead1">Nhập số vận đơn nhánh (HAWB / H B/L) hoặc mã quản lý hàng hóa. Hệ thống truy vấn trực tiếp Hải quan Hàn Quốc (UNI-PASS) và hiển thị đầy đủ tiến trình thông quan.</p>
+
+    <div class="panel">
+      <div class="search-row">
+        <input type="text" id="searchInput" data-i18n-ph="searchPh" placeholder="Nhập số vận đơn / mã quản lý hàng (vd: 304433643476)"
+               onkeydown="if(event.key==='Enter')doSearch()" />
+        <button class="btn-go" id="searchBtn" data-i18n="btnSearch" onclick="doSearch()">Tra cứu</button>
+      </div>
+      <div class="result" id="result"></div>
+    </div>
+  </div>
+
+  <!-- ══ Section 2: Hàng loạt ══ -->
+  <div class="section">
+    <div class="eyebrow" data-i18n="eyebrow2">Tra cứu hàng loạt</div>
+    <h1 data-i18n="h1b">Quét toàn bộ danh sách kho một lần</h1>
+    <p class="lead" data-i18n="lead2">Tải lên danh sách Excel và quét toàn bộ vận đơn cùng lúc — thay vì tra từng số trên website.</p>
+
+    <div class="panel">
+      <div class="batch-head">
+        <div class="batch-title" id="batchTitle"></div>
+        <div class="batch-tools">
+          <select class="sel hidden" id="sheetSelect" onchange="onSheetChange()" title="Sheet"></select>
+          <select class="sel" id="filterDate" onchange="renderBatch()"></select>
+          <select class="sel" id="filterStatus" onchange="renderBatch()"></select>
+          <input type="file" id="fileInput" class="hidden" accept=".xlsx,.xls,.csv" onchange="onFile(event)" />
+          <button class="btn-up" data-i18n="btnUpload" onclick="tryUpload()">⬆ Upload Excel</button>
+          <button class="btn-ghost" data-i18n="btnRescan" onclick="rescan()">↻ Quét lại</button>
+        </div>
+      </div>
+      <div class="progress-mini" id="batchProgress"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th><span data-i18n="colMbl">Vận đơn chủ</span> <span class="ko">M B/L</span></th>
+            <th><span data-i18n="colHawb">Vận đơn</span> <span class="ko">HAWB</span></th>
+            <th data-i18n="colArrival">Ngày đến</th>
+            <th data-i18n="colWeight">Trọng lượng</th>
+            <th data-i18n="colStatus">Trạng thái thông quan</th>
+          </tr></thead>
+          <tbody id="batchBody"></tbody>
+        </table>
+        <div class="batch-empty hidden" id="batchEmpty"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="app-footer">
+    <span class="tf-brand">Transflash</span>
+    <span class="tf-dot">•</span>
+    <span data-i18n="footerTagline">Giải pháp logistics Việt - Hàn</span>
+    <span class="tf-dot">•</span>
+    <a href="/about" class="footer-support" data-i18n="footerAbout">Giới thiệu</a>
+    <span class="tf-dot">•</span>
+    <a href="/" class="footer-support" data-i18n="footerPostal">Tra mã bưu điện</a>
+    <span class="tf-dot">•</span>
+    <span>© 2026</span>
+  </footer>
+
+</div>
+
+<script>
+// ── i18n ──────────────────────────────────────────────────────────────────────
+const LANGS = {
+  vi: {
+    brandSub:'VC24 Global · Nội bộ', navHome:'← Tra mã bưu điện',
+    navPostal:'Mã bưu điện', navCustoms:'Mã thông quan', navTools:'Tiện ích', navHub:'Người Việt ở Hàn',
+    eyebrow1:'Tra cứu đơn lẻ', h1a:'Tra cứu tức thì bằng số vận đơn',
+    lead1:'Nhập số vận đơn nhánh (HAWB / H B/L) hoặc mã quản lý hàng hóa. Hệ thống truy vấn trực tiếp Hải quan Hàn Quốc (UNI-PASS) và hiển thị đầy đủ tiến trình thông quan.',
+    searchPh:'Nhập số vận đơn / mã quản lý hàng (vd: 304433643476)', btnSearch:'Tra cứu',
+    eyebrow2:'Tra cứu hàng loạt', h1b:'Quét toàn bộ danh sách kho một lần',
+    lead2:'Tải lên danh sách Excel và quét toàn bộ vận đơn cùng lúc — thay vì tra từng số trên website.',
+    btnUpload:'⬆ Upload Excel', btnRescan:'↻ Quét lại',
+    colMbl:'Vận đơn chủ', colHawb:'Vận đơn', colArrival:'Ngày đến', colWeight:'Trọng lượng', colStatus:'Trạng thái thông quan',
+    emptyFilter:'Không có vận đơn nào khớp bộ lọc.',
+    footerTagline:'Giải pháp logistics Việt - Hàn', footerAbout:'Giới thiệu', footerPostal:'Tra mã bưu điện',
+    login:'Đăng nhập', logout:'Đăng xuất', needLogin:'Tra cứu đơn lẻ thì miễn phí. Upload Excel hàng loạt cần đăng nhập.',
+    shareBtn:'Chia sẻ', shareCopied:'Đã copy link!',
+    allDates:'Tất cả ngày', allStatus:'Tất cả trạng thái', countUnit:'vận đơn',
+    batchEmptyTitle:'Danh sách vận đơn',
+    uploadPrompt:'📄 Chưa có dữ liệu — tải lên file Excel (cột HAWB) để quét toàn bộ vận đơn.',
+    subBranch:'Vận đơn nhánh', released:'Đã xuất kho',
+    labCargoType:'Loại hàng', labProduct:'Tên hàng', labPkgWeight:'Kiện / Trọng lượng',
+    labCarrier:'Hãng / Chuyến bay', labRoute:'Cảng xếp → Cảng dỡ', labArrival:'Ngày đến',
+    labMgmtNo:'Số quản lý hàng', labBL:'Vận đơn (M·H B/L)', labClearance:'Trạng thái thông quan',
+    labBLType:'Loại B/L', labShipNat:'Quốc tịch tàu/bay', labOrigin:'Nước xuất',
+    labProcTime:'Thời gian xử lý', labEntryCustoms:'Hải quan nhập', labExpressCo:'Đơn vị chuyển phát',
+    tlTitle:'Tiến trình thông quan',
+    loading:'Đang tra cứu...', scanning:(i,t)=>`Đang quét... ${i}/${t}`,
+    apiError:'Lỗi gọi API', notFound:(n)=>`Không tìm thấy thông tin cho ${n}. Kiểm tra lại số vận đơn (HAWB) hoặc thử số quản lý hàng hóa.`,
+    noHawb:(s)=>`Không tìm thấy cột HAWB trong sheet "${s}".`,
+    stages:['Nộp manifest','Khai dỡ hàng','Nhập kho','Khai nhập khẩu','Thông quan','Xuất kho'],
+  },
+  en: {
+    brandSub:'VC24 Global · Internal', navHome:'← Postal code lookup',
+    navPostal:'Postal code', navCustoms:'Customs', navTools:'Tools', navHub:'Vietnamese in Korea',
+    eyebrow1:'Single lookup', h1a:'Instant lookup by B/L number',
+    lead1:'Enter the house bill number (HAWB / H B/L) or cargo management number. Queries Korea Customs (UNI-PASS) directly and shows the full clearance progress.',
+    searchPh:'Enter B/L / cargo number (e.g. 304433643476)', btnSearch:'Look up',
+    eyebrow2:'Batch lookup', h1b:'Scan an entire warehouse list at once',
+    lead2:'Upload an Excel list (like the Yongma cold-storage file) and scan every B/L at once — instead of looking up one by one.',
+    btnUpload:'⬆ Upload Excel', btnRescan:'↻ Rescan',
+    colMbl:'Master B/L', colHawb:'B/L', colArrival:'Arrival', colWeight:'Weight', colStatus:'Clearance status',
+    emptyFilter:'No B/L matches the filter.',
+    footerTagline:'Vietnam - Korea logistics solution', footerAbout:'About', footerPostal:'Postal code lookup',
+    login:'Log in', logout:'Log out', needLogin:'Single lookup is free. Batch Excel upload requires login.',
+    shareBtn:'Share', shareCopied:'Link copied!',
+    allDates:'All dates', allStatus:'All statuses', countUnit:'B/Ls',
+    batchEmptyTitle:'B/L list',
+    uploadPrompt:'📄 No data yet — upload an Excel file (HAWB column) to scan all B/Ls.',
+    subBranch:'House B/L', released:'Released',
+    labCargoType:'Cargo type', labProduct:'Product', labPkgWeight:'Packages / Weight',
+    labCarrier:'Carrier / Flight', labRoute:'Origin → Destination', labArrival:'Arrival date',
+    labMgmtNo:'Cargo mgmt no.', labBL:'B/L (M·H)', labClearance:'Clearance status',
+    labBLType:'B/L type', labShipNat:'Carrier nation', labOrigin:'Origin country',
+    labProcTime:'Processed at', labEntryCustoms:'Entry customs', labExpressCo:'Express company',
+    tlTitle:'Clearance progress',
+    loading:'Looking up...', scanning:(i,t)=>`Scanning... ${i}/${t}`,
+    apiError:'API error', notFound:(n)=>`No information found for ${n}. Check the B/L number (HAWB) or try the cargo management number.`,
+    noHawb:(s)=>`No HAWB column found in sheet "${s}".`,
+    stages:['Manifest filed','Unloading report','Warehoused','Import declared','Cleared','Released'],
+  },
+  ko: {
+    brandSub:'VC24 Global · 내부', navHome:'← 우편번호 조회',
+    navPostal:'우편번호', navCustoms:'통관조회', navTools:'도구', navHub:'한국 거주 베트남인',
+    eyebrow1:'단건 조회', h1a:'운송장 번호로 즉시 조회',
+    lead1:'HAWB(House B/L) 또는 화물관리번호를 입력하세요. 관세청(UNI-PASS)에서 직접 조회해 통관 진행 단계를 보여줍니다.',
+    searchPh:'운송장 / 화물관리번호 입력 (예: 304433643476)', btnSearch:'조회',
+    eyebrow2:'대량 조회', h1b:'창고 리스트 전체를 한 번에 조회',
+    lead2:'엑셀 목록(욜마 냉동창고 파일 등)을 업로드하면 모든 운송장을 한 번에 조회합니다 — 하나씩 조회할 필요 없이.',
+    btnUpload:'⬆ 엑셀 업로드', btnRescan:'↻ 다시 조회',
+    colMbl:'M B/L', colHawb:'운송장', colArrival:'입항일', colWeight:'중량', colStatus:'통관진행상태',
+    emptyFilter:'필터에 맞는 운송장이 없습니다.',
+    footerTagline:'베트남-한국 물류 솔루션', footerAbout:'소개', footerPostal:'우편번호 조회',
+    login:'로그인', logout:'로그아웃', needLogin:'단건 조회는 무료입니다. 엑셀 대량 조회는 로그인이 필요합니다.',
+    shareBtn:'공유', shareCopied:'링크 복사됨!',
+    allDates:'전체 날짜', allStatus:'전체 상태', countUnit:'건',
+    batchEmptyTitle:'운송장 목록',
+    uploadPrompt:'📄 데이터 없음 — 엑셀 파일(HAWB 열)을 업로드하면 전체 운송장을 조회합니다.',
+    subBranch:'House B/L', released:'반출완료',
+    labCargoType:'화물구분', labProduct:'품명', labPkgWeight:'포장 / 중량',
+    labCarrier:'선사 / 편명', labRoute:'적재항 → 양륙항', labArrival:'입항일',
+    labMgmtNo:'화물관리번호', labBL:'M·H B/L', labClearance:'통관진행상태',
+    labBLType:'B/L유형', labShipNat:'선박국적', labOrigin:'적출국',
+    labProcTime:'처리일시', labEntryCustoms:'입항세관', labExpressCo:'특송업체',
+    tlTitle:'통관진행단계',
+    loading:'조회 중...', scanning:(i,t)=>`조회 중... ${i}/${t}`,
+    apiError:'API 오류', notFound:(n)=>`${n} 정보를 찾을 수 없습니다. 운송장(HAWB) 또는 화물관리번호를 확인하세요.`,
+    noHawb:(s)=>`"${s}" 시트에서 HAWB 열을 찾을 수 없습니다.`,
+    stages:['적재화물목록제출','하선/하기신고','물품반입','수입신고','수입신고수리','물품반출'],
+  },
+};
+// Title/description theo ngôn ngữ (cập nhật khi đổi không reload — đồng bộ server SEO)
+const SEO_META = {
+  vi: { title:'Tra cứu thông quan Hàn Quốc theo số vận đơn (UNI-PASS) | Vietnam - Korea Logistics',
+        desc:'Tra cứu tiến trình thông quan hàng nhập khẩu Hàn Quốc theo số vận đơn HAWB hoặc mã quản lý hàng hóa, dữ liệu trực tiếp từ Hải quan Hàn Quốc (UNI-PASS).' },
+  en: { title:'Korea customs clearance tracking by B/L number (UNI-PASS) | Vietnam - Korea Logistics',
+        desc:'Track Korea import customs clearance progress by HAWB or cargo management number, data directly from Korea Customs (UNI-PASS).' },
+  ko: { title:'운송장 번호로 한국 통관 진행정보 조회 (UNI-PASS) | Vietnam - Korea Logistics',
+        desc:'HAWB 또는 화물관리번호로 한국 수입 통관 진행정보를 조회합니다. 관세청(UNI-PASS) 직접 연동, 엑셀 대량 조회 지원.' },
+};
+
+let currentLang = 'vi';
+function t(key, ...args) {
+  const v = (LANGS[currentLang] || LANGS.vi)[key];
+  return typeof v === 'function' ? v(...args) : (v ?? key);
+}
+function stageLabel(i) { return i === 5 ? t('released') : (LANGS[currentLang].stages[i] || LANGS.vi.stages[i]); }
+// Mã tiếng Hàn (tham chiếu) — ẩn khi đang xem tiếng Hàn để khỏi trùng
+const STAGE_KO = ['적재화물목록제출','하선/하기신고','물품반입','수입신고','수입신고수리','물품반출'];
+function koRef(text) { return currentLang === 'ko' ? '' : text; }
+
+function setMeta(name, val) {
+  let el = document.querySelector(`meta[name="${name}"]`);
+  if (el) el.setAttribute('content', val);
+}
+function setLang(lang) {
+  if (!LANGS[lang]) lang = 'vi';
+  currentLang = lang;
+  localStorage.setItem('lang', lang);
+  document.documentElement.lang = lang;
+  const sel = document.getElementById('langSelect'); if (sel) sel.value = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const v = LANGS[lang][el.dataset.i18n]; if (typeof v === 'string') el.textContent = v;
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const v = LANGS[lang][el.dataset.i18nPh]; if (v) el.placeholder = v;
+  });
+  if (SEO_META[lang]) { document.title = SEO_META[lang].title; setMeta('description', SEO_META[lang].desc); }
+  // cập nhật URL ?lang để chia sẻ / index đúng
+  const u = new URL(location.href);
+  if (lang === 'vi') u.searchParams.delete('lang'); else u.searchParams.set('lang', lang);
+  history.replaceState(null, '', u);
+  // render lại phần động
+  if (lastResult) renderResult(lastResult.d, lastResult.demo);
+  refreshBatchUI();
+}
+
+// ── Cấu hình giai đoạn thông quan ────────────────────────────────────────────
+const PORTS = { DAD:'Đà Nẵng', ICN:'Incheon', HAN:'Hà Nội', SGN:'TP.HCM', PUS:'Busan', GMP:'Gimpo', HPH:'Hải Phòng', TAE:'Daegu', CJU:'Jeju' };
+const CARRIERS = { KE:'Korean Air', OZ:'Asiana', VN:'Vietnam Airlines', VJ:'Vietjet', '7C':'Jeju Air', TW:'Tway Air', LJ:'Jin Air', BX:'Air Busan' };
+
+// ── Từ điển dịch giá trị tiếng Hàn (hiện song ngữ theo ngôn ngữ chọn) ─────────
+const KO_VALUE = {
+  '수입신고수리':{vi:'Đã thông quan',en:'Cleared'},
+  '반출완료':{vi:'Đã xuất kho',en:'Released'},
+  '수입신고':{vi:'Đã khai nhập khẩu',en:'Import declared'},
+  '물품반입':{vi:'Đã nhập kho',en:'Warehoused'},
+  '반입신고':{vi:'Khai nhập kho',en:'Inbound report'},
+  '반출신고':{vi:'Khai xuất kho',en:'Outbound report'},
+  '하기신고 수리':{vi:'Đã khai dỡ hàng',en:'Unloading approved'},
+  '수입 일반화물':{vi:'Hàng nhập khẩu thường',en:'General import cargo'},
+  '일반화물':{vi:'Hàng thường',en:'General cargo'},
+  '특송화물':{vi:'Hàng chuyển phát nhanh',en:'Express cargo'},
+  '한국':{vi:'Hàn Quốc',en:'Korea'},
+  '베트남':{vi:'Việt Nam',en:'Vietnam'},
+};
+const KO_COUNTRY = { KR:{vi:'Hàn Quốc',en:'Korea'}, VN:{vi:'Việt Nam',en:'Vietnam'}, CN:{vi:'Trung Quốc',en:'China'}, US:{vi:'Mỹ',en:'USA'}, JP:{vi:'Nhật Bản',en:'Japan'} };
+const KO_PLACE = { '다낭':{vi:'Đà Nẵng',en:'Da Nang'}, '서울/인천':{vi:'Seoul/Incheon',en:'Seoul/Incheon'}, '인천':{vi:'Incheon',en:'Incheon'}, '서울':{vi:'Seoul',en:'Seoul'}, '부산':{vi:'Busan',en:'Busan'}, '하노이':{vi:'Hà Nội',en:'Hanoi'}, '호치민':{vi:'TP.HCM',en:'Ho Chi Minh'} };
+
+// Giá trị Hàn → "Dịch (gốc)"; tiếng Hàn thì giữ nguyên; không dịch được thì để gốc
+function tval(val) {
+  if (!val) return '';
+  if (currentLang === 'ko') return esc(val);
+  if (KO_VALUE[val]) return `${esc(KO_VALUE[val][currentLang] || KO_VALUE[val].vi)} <span class="ko">(${esc(val)})</span>`;
+  for (const k in KO_VALUE) {
+    if (val.includes(k)) {
+      const tr = KO_VALUE[k][currentLang] || KO_VALUE[k].vi;
+      const rest = val.replace(k, '').trim();
+      return `${esc((tr + (rest ? ' ' + rest : '')).trim())} <span class="ko">(${esc(val)})</span>`;
+    }
+  }
+  return esc(val);
+}
+function tCountry(code) {
+  if (!code) return '';
+  if (currentLang === 'ko') return esc(code);
+  const tr = KO_COUNTRY[code];
+  return tr ? `${esc(tr[currentLang] || tr.vi)} <span class="ko">(${esc(code)})</span>` : esc(code);
+}
+function placeBi(code, ko) {
+  code = code || ''; ko = ko || '';
+  if (!code && !ko) return '';
+  if (currentLang === 'ko') return esc((code + ' ' + ko).trim());
+  const tr = KO_PLACE[ko];
+  const name = tr ? (tr[currentLang] || tr.vi) : '';
+  let main = code; if (name) main += (main ? ' ' : '') + name; if (!main) main = ko;
+  const koTag = (ko && main !== ko) ? ` <span class="ko">(${esc(ko)})</span>` : '';
+  return esc(main) + koTag;
+}
+
+function stageFromKo(txt) {
+  txt = String(txt || '');
+  if (txt.includes('반출')) return 5;
+  if (txt.includes('수리')) return 4;
+  if (txt.includes('수입신고')) return 3;
+  if (txt.includes('반입')) return 2;
+  if (txt.includes('하선') || txt.includes('하기')) return 1;
+  return 0;
+}
+function fmtDate(s) {
+  const d = String(s || '').replace(/\D/g, '');
+  if (d.length >= 8) return `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;
+  return s || '';
+}
+function fmtDateTime(s) {
+  const d = String(s || '').replace(/\D/g, '');
+  if (d.length >= 12) return `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)} ${d.slice(8,10)}:${d.slice(10,12)}`;
+  return fmtDate(s);
+}
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── DEMO data (xem giao diện khi chưa có API key) ────────────────────────────
+const DEMO = {
+  '304433643476': { hawb:'304433643476', cargoType:'수입 일반화물', productName:'Hàng đông lạnh',
+    packages:'1 CT', weight:'15.7 kg', carrier:'Korean Air', flight:'KE460', from:'DAD', to:'ICN', date:'20260512', stage:1 },
+  '304433645834': { hawb:'304433645834', cargoType:'수입 일반화물', productName:'Linh kiện điện tử',
+    packages:'3 CT', weight:'42.0 kg', carrier:'Asiana', flight:'OZ752', from:'SGN', to:'ICN', date:'20260512', stage:4 },
+  '304433650723': { hawb:'304433650723', cargoType:'수입 일반화물', productName:'Hàng may mặc',
+    packages:'5 CT', weight:'88.3 kg', carrier:'Vietnam Airlines', flight:'VN416', from:'HAN', to:'ICN', date:'20260511', stage:5 },
+  '304434690901': { hawb:'304434690901', cargoType:'수입 일반화물', productName:'Thực phẩm khô',
+    packages:'2 CT', weight:'9.4 kg', carrier:'Korean Air', flight:'KE468', from:'DAD', to:'ICN', date:'20260512', stage:2 },
+};
+
+// ── API thật ────────────────────────────────────────────────────────────────
+// Key đặt ở env Vercel (UNIPASS_API_KEY) — server tự dùng, không cần nhập trên trang
+let lastCargoError = '';
+
+async function callCargo(q) {
+  try {
+    const params = new URLSearchParams(q);
+    const r = await fetch('/api/cargo?' + params.toString(), { headers: { Accept: 'application/json' } });
+    if (!r.ok) {
+      let msg = 'HTTP ' + r.status;
+      try { const j = await r.json(); if (j.error) msg = j.error; } catch { /* ignore */ }
+      if (r.status === 401) msg = 'Cần đăng nhập';
+      if (msg === 'NO_KEY') msg = '';
+      lastCargoError = msg;
+      return null;
+    }
+    const ct = r.headers.get('content-type') || '';
+    if (ct.includes('application/json')) { lastCargoError = ''; return null; }
+    return mapXml(await r.text(), q.hblNo || q.cargMtNo);
+  } catch (e) { lastCargoError = e.message; return null; }
+}
+
+async function fetchReal(num) {
+  lastCargoError = '';
+  if (/[A-Za-z]/.test(num)) return callCargo({ cargMtNo: num });
+  const y = new Date().getFullYear();
+  for (const yy of [y, y - 1]) {
+    const d = await callCargo({ hblNo: num, blYy: yy });
+    if (d) return d;
+  }
+  return null;
+}
+
+function nt(parent, tag) { const e = parent.getElementsByTagName(tag); return e.length ? (e[0].textContent || '').trim() : ''; }
+
+function mapXml(xml, num) {
+  const doc = new DOMParser().parseFromString(xml, 'text/xml');
+  const s = doc.getElementsByTagName('cargCsclPrgsInfoQryVo')[0];
+  if (!s) return null;
+  const g = tag => nt(s, tag);
+  const statusKo = g('prgsStts') || g('csclPrgsStts');
+  const sgn = g('shcoFlcoSgn');
+  const join = (a, b) => [a, b].filter(Boolean).join(' ');
+  return {
+    hawb: g('hblNo') || g('mblNo') || g('cargMtNo') || num,
+    cargMtNo: g('cargMtNo'), mbl: g('mblNo'), hbl: g('hblNo'),
+    cargoType: g('cargTp'), blType: g('blPtNm'),
+    productName: g('prnm'),
+    packages: join(g('pckGcnt'), g('pckUt')),
+    weight: join(g('ttwg'), g('wghtUt') || 'kg'),
+    carrier: CARRIERS[sgn] || g('shcoFlco'), flight: g('shipNm'),
+    shipNat: g('shipNatNm'),
+    fromCode: g('ldprCd'), fromKo: g('ldprNm'), toCode: g('dsprCd'), toKo: g('dsprNm'),
+    origin: g('lodCntyCd'),
+    date: g('etprDt'), procTime: g('prcsDttm'),
+    entryCustoms: g('etprCstm'), csclStatus: g('csclPrgsStts'),
+    expressCo: g('frwrEntsConm'),
+    statusKo, stage: stageFromKo(statusKo), real: true,
+  };
+}
+
+// ── Tra đơn lẻ ───────────────────────────────────────────────────────────────
+let lastResult = null;   // {d, demo} để render lại khi đổi ngôn ngữ
+let shareNum = '';       // số vận đơn của kết quả hiện tại (cho link chia sẻ)
+
+// Cập nhật URL ?q=<số> để chia sẻ / mở lại đúng kết quả
+function setShareUrl(num) {
+  shareNum = num || '';
+  const u = new URL(location.href);
+  if (num) u.searchParams.set('q', num); else u.searchParams.delete('q');
+  history.replaceState(null, '', u);
+}
+function shareUrl() {
+  const u = new URL(location.origin + '/tracking');
+  if (shareNum) u.searchParams.set('q', shareNum);
+  if (currentLang !== 'vi') u.searchParams.set('lang', currentLang);
+  return u.toString();
+}
+function copyShareLink(el) {
+  navigator.clipboard.writeText(shareUrl()).then(() => {
+    el.textContent = '✓ ' + t('shareCopied');
+    setTimeout(() => { el.textContent = '🔗 ' + t('shareBtn'); }, 1600);
+  });
+}
+
+async function doSearch() {
+  const num = document.getElementById('searchInput').value.trim();
+  if (!num) return;
+  const btn = document.getElementById('searchBtn');
+  btn.disabled = true; btn.textContent = '...';
+  let data = await fetchReal(num);
+  let demo = false;
+  if (!data) { data = DEMO[num]; demo = !!data; }
+  btn.disabled = false; btn.textContent = t('btnSearch');
+
+  if (!data) { lastResult = null; setShareUrl(''); renderNotFound(num); return; }
+  lastResult = { d: data, demo };
+  setShareUrl(num);
+  renderResult(data, demo);
+}
+
+function portLabel(code) {
+  if (!code) return '';
+  const nm = PORTS[code];
+  return nm ? `${nm} <span class="code">${esc(code)}</span>` : esc(code);
+}
+
+function renderResult(d, demo) {
+  const stage = d.stage ?? stageFromKo(d.statusKo);
+  const isOut = stage === 5;
+  const statusMain = stageLabel(stage);
+  const statusKo = STAGE_KO[stage];
+
+  const fromCode = d.fromCode || d.from, toCode = d.toCode || d.to;
+  const route = (fromCode || toCode || d.fromKo || d.toKo)
+    ? `${placeBi(fromCode, d.fromKo)} → ${placeBi(toCode, d.toKo)}` : '';
+  // [nhãn, mã Hàn (chú thích), HTML giá trị đã an toàn]
+  const cells = [
+    [t('labMgmtNo'), '화물관리번호', esc(d.cargMtNo)],
+    [t('labBL'), 'M·H B/L', esc([d.mbl, d.hbl].filter(Boolean).join(' · '))],
+    [t('labClearance'), '통관진행상태', tval(d.csclStatus)],
+    [t('labCargoType'), '화물구분', tval(d.cargoType)],
+    [t('labBLType'), 'B/L유형', tval(d.blType)],
+    [t('labProduct'), '품명', esc(d.productName)],
+    [t('labPkgWeight'), '포장/중량', esc([d.packages, d.weight].filter(Boolean).join(' · '))],
+    [t('labCarrier'), '선사/편명', esc(`${d.carrier || ''} ${d.flight || ''}`.trim())],
+    [t('labShipNat'), '선박국적', tval(d.shipNat)],
+    [t('labRoute'), '적재항→양륙항', route],
+    [t('labOrigin'), '적출국', tCountry(d.origin)],
+    [t('labArrival'), '입항일', esc(fmtDate(d.date))],
+    [t('labProcTime'), '처리일시', esc(fmtDateTime(d.procTime))],
+    [t('labEntryCustoms'), '입항세관', tval(d.entryCustoms)],
+    [t('labExpressCo'), '특송업체', esc(d.expressCo)],
+  ].filter(([, , v]) => v && v !== '—').map(([lab, ko, val]) => {
+    const koTag = koRef(ko) ? ` <span class="ko">${ko}</span>` : '';
+    return `<div class="info-cell"><div class="lab">${lab}${koTag}</div><div class="val">${val}</div></div>`;
+  }).join('');
+
+  const tl = LANGS[currentLang].stages.map((_, i) => {
+    const cls = i < stage ? 'done' : (i === stage ? (isOut ? 'done' : 'current') : '');
+    const ko = koRef(STAGE_KO[i]) ? `<div class="tl-ko">${STAGE_KO[i]}</div>` : '';
+    return `<div class="tl-step ${cls}"><div class="tl-bar"></div><div class="tl-lab">${stageLabel(i)}</div>${ko}</div>`;
+  }).join('');
+
+  const koPill = koRef(statusKo) ? `<span class="ko">${statusKo}</span>` : '';
+  const koTl = koRef('진행단계') ? `<span class="ko">진행단계</span>` : '';
+  document.getElementById('result').innerHTML = `
+    <div class="res-top">
+      <div>
+        <div class="res-no">${esc(d.hawb)}${demo ? '<span class="demo-tag">DEMO</span>' : ''}</div>
+        <div class="res-sub">${t('subBranch')} <button class="share-btn" onclick="copyShareLink(this)">🔗 ${t('shareBtn')}</button></div>
+      </div>
+      <div class="status-pill ${isOut ? 'green' : ''}"><span class="led"></span>${statusMain}${koPill}</div>
+    </div>
+    <div class="info-grid">${cells}</div>
+    <div class="tl-title">${t('tlTitle')}${koTl}</div>
+    <div class="timeline">${tl}</div>`;
+  document.getElementById('result').classList.add('show');
+}
+
+function renderNotFound(num) {
+  const errLine = lastCargoError
+    ? `<div class="res-sub" style="padding:4px 0;color:#dc2626">⚠️ ${t('apiError')}: <b>${esc(lastCargoError)}</b></div>`
+    : '';
+  document.getElementById('result').innerHTML =
+    `<div class="res-sub" style="padding:6px 0">${esc(t('notFound', num))}</div>` + errLine;
+  document.getElementById('result').classList.add('show');
+}
+
+// ── Tra hàng loạt ────────────────────────────────────────────────────────────
+let batchRows = [];
+let batchLabel = '';   // nhãn nguồn (tên file · sheet) sau khi upload
+
+function setBatch(rows, label) {
+  batchRows = rows;
+  if (label != null) batchLabel = label;
+  refreshBatchUI();
+}
+
+// Render lại tiêu đề + bộ lọc + bảng (giữ lựa chọn lọc khi đổi ngôn ngữ)
+function refreshBatchUI() {
+  const isEmpty = !batchRows.length && !workbook;
+  document.getElementById('batchTitle').innerHTML = isEmpty
+    ? esc(t('batchEmptyTitle'))
+    : `${esc(batchLabel || t('batchEmptyTitle'))} <span class="muted">(${batchRows.length} ${t('countUnit')})</span>`;
+  const fs = document.getElementById('filterStatus');
+  const keepS = fs.value;
+  fs.innerHTML = `<option value="">${t('allStatus')}</option>` +
+    LANGS[currentLang].stages.map((_, i) => `<option value="${i}">${stageLabel(i)}</option>`).join('');
+  fs.value = keepS;
+  const fd = document.getElementById('filterDate');
+  const keepD = fd.value;
+  const dates = [...new Set(batchRows.map(r => fmtDate(r.date)))].sort();
+  fd.innerHTML = `<option value="">${t('allDates')}</option>` + dates.map(d => `<option value="${d}">${d}</option>`).join('');
+  fd.value = keepD;
+  renderBatch();
+}
+
+function renderBatch() {
+  const body = document.getElementById('batchBody');
+  const empty = document.getElementById('batchEmpty');
+  // Chưa upload gì → mời tải file
+  if (!batchRows.length) {
+    body.innerHTML = ''; empty.textContent = t('uploadPrompt'); empty.classList.remove('hidden'); return;
+  }
+  const fd = document.getElementById('filterDate').value;
+  const fsv = document.getElementById('filterStatus').value;
+  const rows = batchRows.filter(r =>
+    (!fd || fmtDate(r.date) === fd) && (fsv === '' || String(r.stage) === fsv)
+  );
+  if (!rows.length) { body.innerHTML = ''; empty.textContent = t('emptyFilter'); empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  body.innerHTML = rows.map(r => {
+    const isOut = r.stage === 5;
+    return `<tr>
+      <td>${esc(r.mbl || '—')}</td>
+      <td class="hawb">${esc(r.hawb)}</td>
+      <td>${esc(fmtDate(r.date))}</td>
+      <td>${esc(r.weight)}</td>
+      <td><span class="badge ${isOut ? 'green' : 'blue'}">${stageLabel(r.stage)}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+let workbook = null;
+let currentFile = '';
+
+function onFile(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  currentFile = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    workbook = XLSX.read(e.target.result, { type:'array' });
+    const sel = document.getElementById('sheetSelect');
+    sel.innerHTML = workbook.SheetNames.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+    sel.classList.toggle('hidden', workbook.SheetNames.length <= 1);
+    parseAndScan(workbook.SheetNames[0]);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function onSheetChange() {
+  if (workbook) parseAndScan(document.getElementById('sheetSelect').value);
+}
+
+function parseDateCell(val, sheetName) {
+  const p2 = n => String(+n).padStart(2, '0');
+  const yr = () => new Date().getFullYear();
+  if (typeof val === 'number' && val > 30000 && XLSX.SSF) {
+    const d = XLSX.SSF.parse_date_code(val);
+    if (d) return `${d.y}${p2(d.m)}${p2(d.d)}`;
+  }
+  const s = String(val);
+  let m = s.match(/(\d{4})\D(\d{1,2})\D(\d{1,2})/);
+  if (m) return `${m[1]}${p2(m[2])}${p2(m[3])}`;
+  m = s.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
+  if (m) return `${yr()}${p2(m[1])}${p2(m[2])}`;
+  m = String(sheetName).match(/(\d{1,2})[.\-/](\d{1,2})/);
+  if (m) return `${yr()}${p2(m[1])}${p2(m[2])}`;
+  return s;
+}
+
+function parseSheet(sheetName) {
+  const aoa = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header:1, defval:'' });
+  let hi = -1; const col = {};
+  for (let i = 0; i < aoa.length; i++) {
+    const row = aoa[i].map(c => String(c).trim().toUpperCase());
+    const j = row.indexOf('HAWB');
+    if (j >= 0) {
+      hi = i; col.hawb = j;
+      col.date = row.indexOf('DATE');
+      col.pcs  = row.indexOf('PCS');
+      col.wt   = row.findIndex(c => c === 'WT' || c === 'WEIGHT');
+      break;
+    }
+  }
+  const recs = [];
+  if (hi < 0) {
+    aoa.forEach(r => r.forEach(c => {
+      const v = String(c).replace(/\s/g,'');
+      if (/^\d{9,13}$/.test(v)) recs.push({ hawb:v, date:parseDateCell('', sheetName), weight:'' });
+    }));
+    return recs;
+  }
+  for (let i = hi + 1; i < aoa.length; i++) {
+    const row = aoa[i];
+    const hawb = String(row[col.hawb] ?? '').replace(/\s/g,'');
+    if (!/^\d{9,13}$/.test(hawb)) continue;
+    const wt = col.wt >= 0 ? String(row[col.wt] ?? '').trim() : '';
+    recs.push({ hawb, date: parseDateCell(col.date >= 0 ? row[col.date] : '', sheetName), weight: wt ? `${wt} kg` : '' });
+  }
+  return recs;
+}
+
+async function parseAndScan(sheetName) {
+  const recs = parseSheet(sheetName);
+  if (!recs.length) { alert(t('noHawb', sheetName)); return; }
+  await scanRecords(recs, `${currentFile} · ${sheetName}`);
+}
+
+async function scanRecords(recs, label) {
+  const prog = document.getElementById('batchProgress');
+  prog.style.display = 'block';
+  const rows = [];
+  for (let i = 0; i < recs.length; i++) {
+    prog.textContent = t('scanning', i + 1, recs.length);
+    const rec = recs[i];
+    const d = await fetchReal(rec.hawb);
+    let stage, mbl = '';
+    if (d) {
+      stage = d.stage; mbl = d.mbl || '';
+      if (!rec.weight) rec.weight = d.weight;
+      if (!rec.date)   rec.date = d.date;
+      await new Promise(r => setTimeout(r, 120));
+    } else {
+      const seed = [...rec.hawb].reduce((a, c) => a + c.charCodeAt(0), 0);
+      stage = seed % 6;
+      if (!rec.weight) rec.weight = `${(((seed * 7) % 190) / 10 + 2).toFixed(1)} kg`;
+    }
+    rows.push({ hawb:rec.hawb, mbl, date:rec.date, weight:rec.weight, stage });
+  }
+  prog.style.display = 'none';
+  setBatch(rows, label);
+}
+
+function rescan() {
+  if (workbook) parseAndScan(document.getElementById('sheetSelect').value || workbook.SheetNames[0]);
+}
+
+// ── Đăng nhập (tra đơn lẻ miễn phí; upload Excel cần login) ───────────────────
+let IS_GUEST = true;
+async function logout() {
+  try { await fetch('/api/logout', { method: 'POST' }); } catch { /* ok */ }
+  location.reload();
+}
+async function loadAuth() {
+  let cfg = {};
+  try { cfg = await fetch('/api/config').then(r => r.json()); } catch { /* ok */ }
+  IS_GUEST = cfg.isGuest === true;
+  const chip = document.getElementById('userChip');
+  const loginBtn = document.getElementById('loginBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (IS_GUEST || !cfg.username) {
+    chip.style.display = 'none';
+    loginBtn.style.display = 'inline-flex';
+    logoutBtn.style.display = 'none';
+  } else {
+    chip.style.display = 'flex';
+    document.getElementById('userAvatar').textContent = String(cfg.username).charAt(0);
+    document.getElementById('userName').textContent = cfg.username;
+    const planEl = document.getElementById('userPlan');
+    planEl.textContent = cfg.plan || '';
+    planEl.className = 'user-plan ' + (cfg.plan || '');
+    loginBtn.style.display = 'none';
+    logoutBtn.style.display = 'inline-flex';
+  }
+}
+function tryUpload() {
+  if (IS_GUEST) { alert(t('needLogin')); return; }   // chỉ báo, không chuyển trang
+  document.getElementById('fileInput').click();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+(function () {
+  const param = new URLSearchParams(location.search).get('lang');
+  const lang = ['vi','en','ko'].includes(param) ? param : (localStorage.getItem('lang') || 'vi');
+  batchRows = [];   // ban đầu trống — chờ upload Excel
+  setLang(lang);    // setLang gọi refreshBatchUI để dựng trạng thái trống
+  loadAuth();       // xác định khách / đã đăng nhập (gate upload Excel)
+
+  // Mở link chia sẻ ?q=<số> → tự điền và tra ngay
+  const q = new URLSearchParams(location.search).get('q');
+  if (q) { document.getElementById('searchInput').value = q; doSearch(); }
+})();
+(function(){var h=document.querySelector('.site-header');if(h)addEventListener('scroll',function(){h.classList.toggle('scrolled',window.scrollY>4);},{passive:true});})();
+</script>
+</body>
+</html>

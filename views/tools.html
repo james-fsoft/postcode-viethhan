@@ -31,6 +31,11 @@
   .brand .bn{font-size:1rem;font-weight:800;color:var(--blue);}
   .brand .bs{font-size:.72rem;color:var(--muted2);letter-spacing:1.2px;text-transform:uppercase;}
   .topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .top-nav{display:flex;align-items:center;gap:2px;flex-wrap:wrap;}
+  .top-nav a{font-size:.85rem;font-weight:600;color:#475569;text-decoration:none;padding:7px 11px;border-radius:8px;transition:background .14s,color .14s;white-space:nowrap;}
+  .top-nav a:hover{background:#f1f5f9;color:#1e40af;}
+  .top-nav a.active{color:#1e40af;background:#eff6ff;font-weight:800;}
+  @media (max-width:880px){ .top-nav{order:3;width:100%;justify-content:center;border-top:1px solid var(--line);padding-top:8px;} }
   .lang-select{padding:7px 11px;border:1.5px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--muted);font-family:inherit;}
   .lang-select:focus{outline:none;border-color:var(--blue);}
   .nav-home{font-size:.82rem;font-weight:600;color:var(--blue);text-decoration:none;border:1.5px solid var(--line);background:#fff;padding:8px 16px;border-radius:99px;}
@@ -102,6 +107,12 @@
       <img src="/logo.svg" alt="Vietnam - Korea Logistics" />
       <div><div class="bn">Vietnam - Korea Logistics</div><div class="bs" data-i18n="brandSub">Tiện ích logistics Việt - Hàn</div></div>
     </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="navPostal">Mã bưu điện</a>
+      <a href="/tracking" data-i18n="navCustoms">Mã thông quan</a>
+      <a href="/tools" class="active" data-i18n="navTools">Tiện ích</a>
+      <a href="/nguoi-viet-o-han" data-i18n="navHub">Người Việt ở Hàn</a>
+    </nav>
     <div class="topbar-right">
       <div class="user-chip" id="userChip" style="display:none">
         <span class="user-avatar" id="userAvatar">U</span>
@@ -220,6 +231,7 @@
 const LANGS = {
   vi: {
     brandSub:'Tiện ích logistics Việt - Hàn', navHome:'← Trang chính', login:'Đăng nhập', logout:'Đăng xuất',
+    navPostal:'Mã bưu điện', navCustoms:'Mã thông quan', navTools:'Tiện ích', navHub:'Người Việt ở Hàn',
     eyebrow:'Tiện ích', h1:'Tiện ích logistics Việt - Hàn',
     lead:'Mấy thứ dân Việt - Hàn cần mỗi ngày: tỷ giá Won, tính cước, lịch lễ Hàn Quốc, mã sân bay/cảng.',
     fxTitle:'Tỷ giá KRW ↔ VND', fxHint:'Won Hàn Quốc ↔ Đồng Việt Nam',
@@ -248,6 +260,7 @@ const LANGS = {
   },
   en: {
     brandSub:'Vietnam - Korea logistics tools', navHome:'← Home', login:'Log in', logout:'Log out',
+    navPostal:'Postal code', navCustoms:'Customs', navTools:'Tools', navHub:'Vietnamese in Korea',
     eyebrow:'Tools', h1:'Vietnam - Korea logistics tools',
     lead:'What Vietnam - Korea logistics people need daily: KRW rate, chargeable weight, Korea holidays, airport/port codes.',
     fxTitle:'KRW ↔ VND exchange rate', fxHint:'Korean Won ↔ Vietnamese Dong',
@@ -276,6 +289,7 @@ const LANGS = {
   },
   ko: {
     brandSub:'베트남-한국 물류 도구', navHome:'← 메인', login:'로그인', logout:'로그아웃',
+    navPostal:'우편번호', navCustoms:'통관조회', navTools:'도구', navHub:'한국 거주 베트남인',
     eyebrow:'도구', h1:'베트남-한국 물류 도구',
     lead:'매일 필요한 것들: 환율, 운임중량, 한국 공휴일, 공항/항만 코드.',
     fxTitle:'환율 KRW ↔ VND', fxHint:'한국 원화 ↔ 베트남 동',

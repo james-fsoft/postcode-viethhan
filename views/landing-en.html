@@ -141,7 +141,11 @@
     footer .tf{font-weight:800;background:linear-gradient(135deg,var(--red),var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
     footer a{color:var(--g500);text-decoration:none;margin:0 6px;}
     @media(max-width:640px){ .hero h1{font-size:1.55rem;} h2{font-size:1.3rem;} }
-  </style>
+    .top-nav{display:flex;align-items:center;gap:2px;flex-wrap:wrap;}
+  .top-nav a{font-size:.85rem;font-weight:600;color:#475569;text-decoration:none;padding:7px 11px;border-radius:8px;transition:background .14s,color .14s;white-space:nowrap;}
+  .top-nav a:hover{background:#f1f5f9;color:#1e40af;}
+  .top-nav a.active{color:#1e40af;background:#eff6ff;font-weight:800;}
+</style>
 </head>
 <body>
 
@@ -153,7 +157,8 @@
     </a>
     <div class="nav-links">
       <span class="lang-switch"><a href="/about">VI</a> · <a class="on" href="/about?lang=en">EN</a> · <a href="/about?lang=ko">KO</a></span>
-      <a class="nav-cta" href="/?lang=en">Try it free →</a>
+      <nav class="top-nav"><a href="/">Postal code</a><a href="/tracking">Customs</a><a href="/tools">Tools</a><a href="/nguoi-viet-o-han">Vietnamese in Korea</a></nav>
+    <a class="nav-cta" href="/?lang=en">Try it free →</a>
     </div>
   </div>
 </header>

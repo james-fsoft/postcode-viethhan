@@ -21,141 +21,194 @@
 </script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231e3a8a'/><path d='M23 73 L77 50 L23 27 L23 45 L62 50 L23 55 Z' transform='rotate(-30 50 50)' fill='white'/><circle cx='76' cy='25' r='8' fill='%23ef4444'/><circle cx='76' cy='25' r='3.2' fill='white'/></svg>" />
 <style>
-  :root{ --red:#d42126; --blue:#1e40af; --purple:#7c3aed; --pink:#db2777;
-    --g50:#f8fafc; --g100:#f1f5f9; --g200:#e2e8f0; --g400:#94a3b8; --g500:#64748b; --g600:#475569; --g700:#334155; --g900:#0f172a; }
+  :root{ --red:#d42126; --blue:#1e40af; --indigo:#4f46e5;
+    --g50:#f8fafc; --g100:#f1f5f9; --g200:#e2e8f0; --g300:#cbd5e1; --g400:#94a3b8; --g500:#64748b; --g600:#475569; --g700:#334155; --g900:#0f172a; }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Segoe UI','Noto Sans KR',Arial,sans-serif;color:var(--g700);line-height:1.7;background:#fff;}
+  body{font-family:'Segoe UI','Noto Sans KR',Arial,sans-serif;color:var(--g700);line-height:1.7;background:#fff;-webkit-font-smoothing:antialiased;}
   a{color:var(--blue);text-decoration:none;}
-  header{border-bottom:1px solid var(--g200);background:#fff;position:sticky;top:0;z-index:10;}
-  .nav{max-width:980px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
-  .brand{display:flex;align-items:center;gap:10px;} .brand img{height:34px;} .brand b{font-size:0.95rem;color:var(--blue);font-weight:800;}
-  .nav-cta{display:inline-block;padding:8px 15px;border-radius:8px;background:linear-gradient(135deg,var(--red),var(--blue));color:#fff;font-weight:700;font-size:0.85rem;}
-  /* Hero */
-  .hero{background:linear-gradient(135deg,#1e3a8a 0%,#4f46e5 100%);color:#fff;text-align:center;padding:50px 18px 56px;position:relative;overflow:hidden;}
-  .hero::before{content:"";position:absolute;width:340px;height:340px;border-radius:50%;background:rgba(255,255,255,0.08);top:-120px;right:-80px;}
-  .hero::after{content:"";position:absolute;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,0.07);bottom:-100px;left:-60px;}
-  .hero .in{max-width:720px;margin:0 auto;position:relative;}
-  .hero .badge{display:inline-block;background:rgba(255,255,255,0.18);padding:5px 14px;border-radius:99px;font-size:0.82rem;font-weight:700;margin-bottom:16px;}
-  .hero h1{font-size:2.3rem;font-weight:900;line-height:1.2;margin-bottom:14px;letter-spacing:-0.02em;}
-  .hero p{font-size:1.08rem;opacity:0.95;max-width:600px;margin:0 auto;}
-  .wrap{max-width:980px;margin:0 auto;padding:0 18px;}
-  section{padding:36px 0 6px;}
-  .sec-h{display:flex;align-items:baseline;gap:10px;margin-bottom:18px;}
-  .sec-h h2{font-size:1.35rem;color:var(--g900);font-weight:800;}
-  .sec-h span{color:var(--g400);font-size:0.9rem;}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
-  .card{display:block;border:1px solid var(--g200);border-radius:16px;padding:20px;background:#fff;transition:transform .12s,box-shadow .15s,border-color .15s;position:relative;}
-  .card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(15,23,42,0.1);border-color:transparent;}
-  .card .ico{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:13px;}
-  .card h3{font-size:1.05rem;color:var(--g900);font-weight:800;margin-bottom:5px;}
-  .card p{font-size:0.88rem;color:var(--g500);line-height:1.6;}
-  .card .go{margin-top:10px;font-size:0.85rem;font-weight:800;color:var(--purple);}
-  .card.feat{background:linear-gradient(135deg,#4f46e5,#6d28d9);border:none;color:#fff;}
-  .card.feat h3,.card.feat .go{color:#fff;} .card.feat p{color:rgba(255,255,255,0.9);}
-  .card.feat .ico{background:rgba(255,255,255,0.2);}
-  .ico.b1{background:#eff6ff;} .ico.b2{background:#ecfdf5;} .ico.b3{background:#fef3c7;} .ico.b4{background:#fce7f3;} .ico.b5{background:#f3e8ff;} .ico.b6{background:#e0f2fe;}
-  .note{background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:14px 16px;color:#92400e;font-size:0.88rem;margin:24px 0 0;}
-  footer{padding:30px 0;border-top:1px solid var(--g100);text-align:center;color:var(--g400);font-size:0.82rem;margin-top:30px;}
-  footer .tf{font-weight:800;background:linear-gradient(135deg,var(--red),var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
-  footer a{color:var(--g500);margin:0 6px;}
-  @media(max-width:640px){ .hero h1{font-size:1.7rem;} .hero{padding:40px 18px 46px;} }
+  svg{display:block;}
+
+  /* Header */
+  header{border-bottom:1px solid var(--g200);background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(8px);position:sticky;top:0;z-index:20;}
+  .nav{max-width:1000px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:10px;} .brand img{height:34px;} .brand b{font-size:0.95rem;color:var(--blue);font-weight:800;letter-spacing:-.01em;}
   .top-nav{display:flex;align-items:center;gap:2px;flex-wrap:wrap;}
   .top-nav a{font-size:.85rem;font-weight:600;color:#475569;text-decoration:none;padding:7px 11px;border-radius:8px;transition:background .14s,color .14s;white-space:nowrap;}
   .top-nav a:hover{background:#f1f5f9;color:#1e40af;}
   .top-nav a.active{color:#1e40af;background:#eff6ff;font-weight:800;}
+
+  /* Hero */
+  .hero{position:relative;overflow:hidden;color:#fff;text-align:center;padding:64px 20px 70px;
+    background:radial-gradient(120% 120% at 50% -10%, #2c3aa5 0%, #1e2a78 55%, #172159 100%);}
+  .hero::before{content:"";position:absolute;inset:0;opacity:.5;
+    background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.10) 1px, transparent 0);background-size:26px 26px;}
+  .hero .in{position:relative;max-width:740px;margin:0 auto;}
+  .hero .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);
+    padding:6px 15px;border-radius:99px;font-size:0.8rem;font-weight:600;letter-spacing:.2px;color:#dbe2ff;margin-bottom:20px;}
+  .hero .badge .dot{width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 0 3px rgba(52,211,153,.25);}
+  .hero h1{font-size:2.5rem;font-weight:900;line-height:1.12;margin-bottom:16px;letter-spacing:-0.025em;}
+  .hero p{font-size:1.1rem;line-height:1.65;color:#c7cfee;max-width:600px;margin:0 auto 26px;}
+  .hero .cta{display:inline-flex;flex-wrap:wrap;gap:10px;justify-content:center;}
+  .hero .cta a{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:10px;font-weight:700;font-size:.92rem;transition:transform .12s,box-shadow .15s,background .15s;}
+  .hero .cta .primary{background:#fff;color:#1e2a78;} .hero .cta .primary:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,.18);}
+  .hero .cta .ghost{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.22);} .hero .cta .ghost:hover{background:rgba(255,255,255,.18);}
+  .hero .cta svg{width:17px;height:17px;}
+
+  /* Content */
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px;}
+  section{padding:44px 0 4px;}
+  .sec-h{display:flex;align-items:center;gap:13px;margin-bottom:22px;}
+  .sec-h .bar{width:4px;height:30px;border-radius:3px;background:linear-gradient(var(--indigo),var(--blue));flex-shrink:0;}
+  .sec-h h2{font-size:1.3rem;color:var(--g900);font-weight:800;letter-spacing:-.01em;line-height:1.2;}
+  .sec-h .sub{display:block;font-size:.84rem;color:var(--g400);font-weight:500;margin-top:1px;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:18px;}
+  .card{display:flex;flex-direction:column;border:1px solid var(--g200);border-radius:16px;padding:22px;background:#fff;
+    transition:transform .14s,box-shadow .16s,border-color .16s;}
+  .card:hover{transform:translateY(-3px);box-shadow:0 14px 30px -8px rgba(15,23,42,.16);border-color:#dbe4f0;}
+  .card .ico{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+  .card .ico svg{width:24px;height:24px;stroke-width:1.8;}
+  .card h3{font-size:1.06rem;color:var(--g900);font-weight:800;margin-bottom:6px;letter-spacing:-.01em;}
+  .card p{font-size:0.89rem;color:var(--g500);line-height:1.62;flex:1;}
+  .card .go{margin-top:14px;font-size:0.86rem;font-weight:700;color:var(--indigo);display:inline-flex;align-items:center;gap:5px;}
+  .card .go svg{width:15px;height:15px;transition:transform .15s;}
+  .card:hover .go svg{transform:translateX(3px);}
+
+  .ico.blue{background:#eff6ff;color:#2563eb;}
+  .ico.green{background:#ecfdf5;color:#059669;}
+  .ico.amber{background:#fffbeb;color:#d97706;}
+  .ico.rose{background:#fff1f2;color:#e11d48;}
+  .ico.violet{background:#f5f3ff;color:#7c3aed;}
+  .ico.sky{background:#f0f9ff;color:#0284c7;}
+  .ico.teal{background:#f0fdfa;color:#0d9488;}
+  .ico.slate{background:#f1f5f9;color:#475569;}
+
+  /* Featured card */
+  .card.feat{position:relative;overflow:hidden;border:none;color:#fff;
+    background:linear-gradient(135deg,#4f46e5 0%,#6d28d9 100%);box-shadow:0 14px 30px -10px rgba(79,70,229,.5);}
+  .card.feat::after{content:"";position:absolute;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.08);top:-50px;right:-40px;}
+  .card.feat h3{color:#fff;} .card.feat p{color:rgba(255,255,255,.88);} .card.feat .go{color:#fff;}
+  .card.feat .ico{background:rgba(255,255,255,.16);color:#fff;}
+  .card.feat:hover{box-shadow:0 18px 36px -10px rgba(79,70,229,.6);}
+
+  /* Note */
+  .note{display:flex;gap:12px;align-items:flex-start;background:var(--g50);border:1px solid var(--g200);border-radius:14px;
+    padding:16px 18px;color:var(--g600);font-size:0.88rem;line-height:1.6;margin:36px 0 0;}
+  .note svg{width:20px;height:20px;color:var(--g400);flex-shrink:0;margin-top:1px;}
+
+  footer{padding:34px 0;border-top:1px solid var(--g100);text-align:center;color:var(--g400);font-size:0.82rem;margin-top:36px;}
+  footer .tf{font-weight:800;background:linear-gradient(135deg,var(--red),var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  footer a{color:var(--g500);margin:0 6px;}
+
+  @media(max-width:640px){ .hero{padding:46px 20px 50px;} .hero h1{font-size:1.85rem;} .hero p{font-size:1rem;} section{padding:34px 0 4px;} }
 </style>
 </head>
 <body>
 <header>
   <div class="nav">
     <a class="brand" href="/"><img src="/logo.svg" alt="Vietnam - Korea Logistics" /><b>Vietnam - Korea Logistics</b></a>
-    <nav class="top-nav"><a href="/">Mã bưu điện</a><a href="/tracking">Mã thông quan</a><a href="/tools">Tiện ích</a><a href="/nguoi-viet-o-han" class="active">Người Việt ở Hàn</a></nav>
+    <nav class="top-nav">
+      <a href="/">Mã bưu điện</a>
+      <a href="/tracking">Mã thông quan</a>
+      <a href="/tools">Tiện ích</a>
+      <a href="/nguoi-viet-o-han" class="active">Người Việt ở Hàn</a>
+    </nav>
   </div>
 </header>
 
 <div class="hero">
   <div class="in">
-    <span class="badge">🇻🇳 ↔ 🇰🇷 Cho người 20–30 sang Hàn lập nghiệp</span>
+    <span class="badge"><span class="dot"></span> Dành cho người Việt 20–30 sang Hàn lập nghiệp</span>
     <h1>Người Việt ở Hàn</h1>
     <p>Mọi thứ bạn cần khi sang Hàn — visa, tên tiếng Hàn, đổi size, mua hàng, tỷ giá Won và gửi đồ về Việt Nam. Tất cả ở một nơi, miễn phí.</p>
+    <div class="cta">
+      <a class="primary" href="/ten-tieng-han">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h12"/><path d="M9 3v2"/><path d="M11 5c0 4-3 7-7 8"/><path d="M7 8c1.5 2 4 3.5 6 4"/><path d="m13 21 4-9 4 9"/><path d="M14.5 17h5"/></svg>
+        Xem tên tiếng Hàn của bạn
+      </a>
+      <a class="ghost" href="/tools">Tỷ giá &amp; tiện ích</a>
+    </div>
   </div>
 </div>
 
 <div class="wrap">
 
   <section>
-    <div class="sec-h"><h2>🧳 Trước khi sang</h2><span>Chuẩn bị cho chuyến đi</span></div>
+    <div class="sec-h"><span class="bar"></span><h2>Trước khi sang<span class="sub">Chuẩn bị cho chuyến đi</span></h2></div>
     <div class="grid">
       <a class="card" href="/travel-korea">
-        <div class="ico b1">🛂</div>
+        <div class="ico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.6 2.6 4 6 4 9s-1.4 6.4-4 9c-2.6-2.6-4-6-4-9s1.4-6.4 4-9Z"/></svg></div>
         <h3>Visa &amp; du lịch</h3>
         <p>Người Việt cần visa hay K-ETA? Tiền tệ, SIM, ổ cắm, thời tiết các mùa — cẩm nang từ A–Z.</p>
-        <div class="go">Xem ngay →</div>
+        <span class="go">Xem ngay <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
       </a>
       <a class="card feat" href="/ten-tieng-han">
-        <div class="ico">🇰🇷</div>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h12"/><path d="M9 3v2"/><path d="M11 5c0 4-3 7-7 8"/><path d="M7 8c1.5 2 4 3.5 6 4"/><path d="m13 21 4-9 4 9"/><path d="M14.5 17h5"/></svg></div>
         <h3>Tên tiếng Hàn của bạn</h3>
         <p>Nhập tên Việt, ra ngay tên Hàn + Hán tự để dùng làm tài khoản, tự giới thiệu, đặt biệt danh.</p>
-        <div class="go">Thử ngay →</div>
+        <span class="go">Thử ngay <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
       </a>
       <a class="card" href="/size-korea">
-        <div class="ico b3">👟</div>
+        <div class="ico violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg></div>
         <h3>Đổi size quần áo &amp; giày</h3>
         <p>Quy đổi size giày/áo quần Hàn ↔ Việt để mua online hay tại cửa hàng không bị nhầm.</p>
-        <div class="go">Đổi size →</div>
+        <span class="go">Đổi size <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
       </a>
     </div>
   </section>
 
   <section>
-    <div class="sec-h"><h2>🏠 Khi ở Hàn</h2><span>Sinh hoạt & mua sắm</span></div>
+    <div class="sec-h"><span class="bar"></span><h2>Khi ở Hàn<span class="sub">Sinh hoạt &amp; mua sắm</span></h2></div>
     <div class="grid">
       <a class="card" href="/tools">
-        <div class="ico b2">💱</div>
+        <div class="ico green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg></div>
         <h3>Tỷ giá Won &amp; tiện ích</h3>
         <p>Tỷ giá Won ↔ VND (kèm giá ngân hàng VCB), tính cước, lịch nghỉ Hàn, giờ Hàn realtime, ước thuế.</p>
-        <div class="go">Mở tiện ích →</div>
+        <span class="go">Mở tiện ích <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
       </a>
       <a class="card" href="/shopping-korea">
-        <div class="ico b4">🛍️</div>
+        <div class="ico rose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
         <h3>Mua hàng Hàn</h3>
         <p>Mua mỹ phẩm, thời trang, đồ điện tử Hàn — cách săn sale, ship nội địa và gửi về Việt Nam.</p>
-        <div class="go">Xem cách mua →</div>
+        <span class="go">Xem cách mua <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
       </a>
       <a class="card" href="/food-korea">
-        <div class="ico b3">🍜</div>
+        <div class="ico amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Z"/><path d="M21 15v7"/></svg></div>
         <h3>Đồ ăn &amp; thực phẩm</h3>
         <p>Quy định mang/gửi thực phẩm, đồ ăn Hàn phổ biến và lưu ý khi gửi đồ ăn về Việt Nam.</p>
-        <div class="go">Tìm hiểu →</div>
+        <span class="go">Tìm hiểu <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
       </a>
     </div>
   </section>
 
   <section>
-    <div class="sec-h"><h2>📦 Gửi đồ &amp; logistics</h2><span>Kết nối Việt – Hàn</span></div>
+    <div class="sec-h"><span class="bar"></span><h2>Gửi đồ &amp; logistics<span class="sub">Kết nối Việt – Hàn</span></h2></div>
     <div class="grid">
       <a class="card" href="/">
-        <div class="ico b1">📮</div>
+        <div class="ico sky"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
         <h3>Tra mã bưu điện Hàn</h3>
         <p>Nhập địa chỉ Hàn Quốc, lấy ngay mã bưu điện 5 số để điền vận đơn, đặt hàng, gửi bưu phẩm.</p>
-        <div class="go">Tra mã →</div>
+        <span class="go">Tra mã <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
       </a>
       <a class="card" href="/tracking">
-        <div class="ico b6">🚢</div>
+        <div class="ico teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/><path d="m7.5 4.3 9 5.1"/></svg></div>
         <h3>Theo dõi thông quan</h3>
         <p>Tra tiến trình thông quan hàng nhập về Hàn theo số vận đơn (HAWB) từ Hải quan Hàn Quốc.</p>
-        <div class="go">Theo dõi →</div>
+        <span class="go">Theo dõi <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
       </a>
       <a class="card" href="/customs-guide">
-        <div class="ico b5">📖</div>
+        <div class="ico slate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3Z"/></svg></div>
         <h3>Thuật ngữ thông quan</h3>
         <p>Giải nghĩa các trạng thái hải quan (반출완료, 수입신고수리…) bằng tiếng Việt dễ hiểu.</p>
-        <div class="go">Xem từ điển →</div>
+        <span class="go">Xem từ điển <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
       </a>
     </div>
   </section>
 
-  <div class="note">📌 Một số thông tin (visa, thuế, quy định nhập khẩu) thay đổi theo thời điểm và từng đối tượng. Hãy luôn kiểm tra nguồn chính thức (Đại sứ quán Hàn Quốc, Hải quan) trước khi quyết định.</div>
+  <div class="note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+    <span>Một số thông tin (visa, thuế, quy định nhập khẩu) thay đổi theo thời điểm và từng đối tượng. Hãy luôn kiểm tra nguồn chính thức (Đại sứ quán Hàn Quốc, Hải quan) trước khi quyết định.</span>
+  </div>
 
 </div>
 

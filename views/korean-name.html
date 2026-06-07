@@ -12,9 +12,13 @@
 <meta property="og:title" content="Tên tiếng Hàn của bạn là gì? Đổi tên Việt sang tên Hàn Quốc" />
 <meta property="og:description" content="Nhập tên tiếng Việt → ra tên tiếng Hàn (Hán-Hàn + phiên âm). Công cụ vui, miễn phí." />
 <meta property="og:url" content="__BASE__/ten-tieng-han" />
-<meta property="og:image" content="__BASE__/logo.png" />
+<meta property="og:image" content="__BASE__/og.svg" />
 <meta property="og:site_name" content="Vietnam - Korea Logistics" />
 <meta property="og:locale" content="vi_VN" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Noto+Serif+KR:wght@500;700;900&display=swap" rel="stylesheet" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231e3a8a'/><path d='M23 73 L77 50 L23 27 L23 45 L62 50 L23 55 Z' transform='rotate(-30 50 50)' fill='white'/><circle cx='76' cy='25' r='8' fill='%23ef4444'/><circle cx='76' cy='25' r='3.2' fill='white'/></svg>" />
 <script type="application/ld+json">
 { "@context":"https://schema.org","@type":"WebApplication","name":"Tên tiếng Hàn của bạn","url":"__BASE__/ten-tieng-han","applicationCategory":"EntertainmentApplication","operatingSystem":"Web","inLanguage":"vi","description":"Đổi tên tiếng Việt sang tên tiếng Hàn theo nghĩa Hán-Hàn và phiên âm.","offers":{"@type":"Offer","price":"0","priceCurrency":"VND"} }
@@ -44,22 +48,36 @@
   .in-row input:focus{border-color:var(--p1);background:#fff;}
   .go{border:none;border-radius:11px;padding:0 30px;font-size:1rem;font-weight:800;color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--p1),var(--p2));}
   .go:active{transform:translateY(1px);}
-  .result{display:none;margin-top:18px;}
-  .result.show{display:block;}
-  .card-main{background:linear-gradient(150deg,#faf5ff,#fdf2f8);border:1px solid #f0d9ff;border-radius:16px;padding:26px 20px;text-align:center;}
-  .badge{display:inline-block;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--p1);background:#f3e8ff;border:1px solid #e9d5ff;border-radius:99px;padding:3px 12px;margin-bottom:12px;}
-  .han{font-size:3rem;font-weight:800;color:#581c87;line-height:1.1;letter-spacing:2px;}
-  .roman{font-size:1.2rem;font-weight:700;color:var(--p2);margin-top:6px;}
-  .hanja{font-size:1rem;color:var(--muted);margin-top:4px;letter-spacing:3px;}
-  .phon-card{margin-top:12px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-align:center;}
-  .phon-card .lbl{font-size:.76rem;color:var(--muted2);margin-bottom:3px;}
-  .phon-card .phon{font-size:1.5rem;font-weight:800;color:var(--blue);}
-  .btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px;}
-  .btn2{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:9px 16px;font-size:.86rem;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;}
+  .feats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:22px;}
+  .feats span{font-size:.78rem;font-weight:700;color:var(--p1);background:#f3e8ff;border:1px solid #ecd9ff;border-radius:99px;padding:5px 12px;}
+  .result{display:none;margin-top:20px;}
+  .result.show{display:block;animation:pop .35s ease;}
+  @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:none;}}
+  /* Thẻ tên cao cấp (cũng là preview của ảnh tải về) */
+  .namecard{position:relative;overflow:hidden;border-radius:22px;padding:34px 24px 30px;text-align:center;color:#fff;
+    background:linear-gradient(150deg,#3b2a7a 0%,#4f2d8f 52%,#7c2d6b 100%);box-shadow:0 22px 46px -14px rgba(79,45,143,.6);}
+  .namecard::before{content:"";position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.07);top:-110px;right:-90px;}
+  .namecard::after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.06);bottom:-100px;left:-70px;}
+  .namecard>*{position:relative;}
+  .namecard .lbl{font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:14px;}
+  .namecard .han{font-family:'Noto Serif KR',serif;font-size:3.6rem;font-weight:900;line-height:1.08;letter-spacing:4px;color:#fff;}
+  .namecard .roman{font-size:1.45rem;font-weight:800;color:#fcd34d;margin-top:10px;}
+  .namecard .hanja{font-family:'Noto Serif KR',serif;font-size:1.1rem;color:rgba(255,255,255,.6);margin-top:6px;letter-spacing:5px;}
+  .namecard .div{width:120px;height:1px;background:rgba(255,255,255,.25);margin:20px auto;}
+  .namecard .phon{font-size:1.55rem;font-weight:800;color:#fff;}
+  .namecard .phon-lbl{font-size:.74rem;color:rgba(255,255,255,.6);margin-top:3px;}
+  .namecard .src{font-size:.74rem;color:rgba(255,255,255,.5);margin-top:18px;}
+  .btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px;}
+  .btn-primary{border:none;border-radius:11px;padding:12px 22px;font-size:.92rem;font-weight:800;color:#fff;cursor:pointer;font-family:inherit;
+    background:linear-gradient(135deg,var(--p1),var(--p2));box-shadow:0 8px 20px -6px rgba(124,58,237,.5);display:inline-flex;align-items:center;gap:7px;}
+  .btn-primary:active{transform:translateY(1px);}
+  .btn2{border:1.5px solid var(--line);background:#fff;border-radius:11px;padding:11px 18px;font-size:.88rem;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;}
   .btn2:hover{border-color:var(--p1);color:var(--p1);}
-  .note{font-size:.78rem;color:var(--muted2);text-align:center;margin-top:16px;}
-  .ex{font-size:.82rem;color:var(--muted);text-align:center;margin-top:10px;}
-  .ex a{color:var(--p1);text-decoration:none;cursor:pointer;}
+  .share-hint{font-size:.84rem;color:var(--muted);text-align:center;margin-top:14px;}
+  .share-hint b{color:var(--p1);}
+  .note{font-size:.78rem;color:var(--muted2);text-align:center;margin-top:14px;}
+  .ex{font-size:.82rem;color:var(--muted);text-align:center;margin-top:12px;}
+  .ex a{color:var(--p1);text-decoration:none;cursor:pointer;font-weight:600;}
   footer{margin-top:30px;text-align:center;font-size:.78rem;color:var(--muted2);}
   footer .tf{font-weight:800;background:linear-gradient(135deg,var(--red),var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
   footer a{color:var(--blue);text-decoration:none;margin:0 5px;}
@@ -81,9 +99,10 @@
 
 <div class="wrap">
 
-  <div class="eyebrow">Vui · Miễn phí</div>
+  <div class="eyebrow">Vui · Miễn phí · 3 giây</div>
   <h1>Tên tiếng Hàn của bạn là gì? 🇰🇷</h1>
-  <p class="lead">Nhập tên tiếng Việt → ra ngay tên Hàn của bạn theo <b>nghĩa Hán-Hàn</b> và <b>phiên âm</b>.</p>
+  <p class="lead">Nhập tên tiếng Việt → nhận ngay tên Hàn đẹp (<b>Hán-Hàn</b> + <b>phiên âm</b>) và <b>tải thẻ tên về khoe</b>.</p>
+  <div class="feats"><span>✦ Hán tự chuẩn</span><span>✦ Phiên âm cách đọc</span><span>✦ Tải ảnh khoe ngay</span></div>
 
   <div class="panel">
     <div class="in-row">
@@ -173,24 +192,27 @@ function gen(){
   const r = generate(name);
   const res = document.getElementById('result');
   res.innerHTML = `
-    <div class="card-main">
-      <div class="badge">Tên Hàn của bạn</div>
+    <div class="namecard">
+      <div class="lbl">Tên tiếng Hàn của bạn</div>
       <div class="han">${esc(r.han)}</div>
       <div class="roman">${esc(r.roman)}</div>
       ${r.hanja ? `<div class="hanja">${esc(r.hanja)}</div>` : ''}
-    </div>
-    <div class="phon-card">
-      <div class="lbl">Phiên âm cách đọc</div>
+      <div class="div"></div>
       <div class="phon">${esc(r.phon)}</div>
+      <div class="phon-lbl">phiên âm cách đọc</div>
+      <div class="src">${esc(loc())}/ten-tieng-han</div>
     </div>
     <div class="btn-row">
-      <button class="btn2" onclick="copyResult(this)">📋 Sao chép</button>
-      <button class="btn2" onclick="copyLink(this)">🔗 Chia sẻ</button>
+      <button class="btn-primary" onclick="downloadCard(this)">⬇ Tải ảnh khoe</button>
+      <button class="btn2" onclick="shareNative(this)">↗ Chia sẻ</button>
+      <button class="btn2" onclick="copyLink(this)">🔗 Copy link</button>
     </div>
+    <p class="share-hint">Khoe tên Hàn của bạn cho bạn bè — hoặc <b>thử tên người ấy</b> 👀</p>
     <p class="note">⚠️ Chỉ để vui — một âm tiếng Việt có thể ứng nhiều chữ Hán, kết quả mang tính tương đối.</p>`;
   res.classList.add('show');
   const u = new URL(location.href); u.searchParams.set('name', name); history.replaceState(null,'',u);
 }
+function loc(){ return location.host; }
 function quick(n){ document.getElementById('nameIn').value=n; gen(); }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
@@ -218,6 +240,69 @@ function copyLink(el){
   copyText(u.toString(), el, '✓ Đã copy link');
 }
 function flash(el, t){ if (!el) return; const o = el.textContent; el.textContent = t; setTimeout(() => { el.textContent = o; }, 1500); }
+function slug(s){ return (noAccent(s).replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')) || 'ten-han'; }
+function hanSize(s){ const n=[...s].length; return n<=2?256:n<=3?208:n<=4?166:n<=5?136:116; }
+
+async function ensureFonts(r){
+  try{
+    if(document.fonts && document.fonts.load){
+      await Promise.all([
+        document.fonts.load("900 200px 'Noto Serif KR'", r.han || '한'),
+        document.fonts.load("500 50px 'Noto Serif KR'", r.hanja || '字'),
+        document.fonts.load("800 76px 'Noto Sans KR'", (r.phon||'') + (r.roman||'') + 'Tên Việt cách đọc phiên âm')
+      ]);
+      await document.fonts.ready;
+    }
+  }catch(e){ /* dùng font hệ thống nếu lỗi */ }
+}
+
+async function downloadCard(el){
+  if(!LAST) return;
+  if(el) flash(el, '⏳ Đang tạo...');
+  const r = generate(LAST);
+  await ensureFonts(r);
+  const W=1080, H=1350, c=document.createElement('canvas'); c.width=W; c.height=H;
+  const x=c.getContext('2d');
+  const g=x.createLinearGradient(0,0,W,H); g.addColorStop(0,'#3b2a7a'); g.addColorStop(.52,'#4f2d8f'); g.addColorStop(1,'#7c2d6b');
+  x.fillStyle=g; x.fillRect(0,0,W,H);
+  x.fillStyle='rgba(255,255,255,.06)';
+  x.beginPath(); x.arc(905,170,260,0,7); x.fill();
+  x.beginPath(); x.arc(170,1205,235,0,7); x.fill();
+  // viền trang trí
+  x.strokeStyle='rgba(255,255,255,.18)'; x.lineWidth=2; roundRect(x,40,40,W-80,H-80,28); x.stroke();
+  x.textAlign='center';
+  x.fillStyle='rgba(255,255,255,.7)'; x.font="700 32px 'Noto Sans KR',sans-serif";
+  x.fillText('TÊN TIẾNG HÀN CỦA BẠN', W/2, 225);
+  x.fillStyle='#ffffff'; x.font="900 "+hanSize(r.han)+"px 'Noto Serif KR',serif";
+  x.fillText(r.han, W/2, 505);
+  x.fillStyle='#fcd34d'; x.font="800 72px 'Noto Sans KR',sans-serif";
+  x.fillText(r.roman, W/2, 625);
+  if(r.hanja){ x.fillStyle='rgba(255,255,255,.6)'; x.font="500 50px 'Noto Serif KR',serif"; x.fillText(r.hanja.split('').join('  '), W/2, 705); }
+  x.strokeStyle='rgba(255,255,255,.28)'; x.lineWidth=2; x.beginPath(); x.moveTo(W/2-150,805); x.lineTo(W/2+150,805); x.stroke();
+  x.fillStyle='#ffffff'; x.font="800 78px 'Noto Sans KR',sans-serif"; x.fillText(r.phon, W/2, 910);
+  x.fillStyle='rgba(255,255,255,.6)'; x.font="400 34px 'Noto Sans KR',sans-serif"; x.fillText('phiên âm cách đọc', W/2, 960);
+  x.fillStyle='rgba(255,255,255,.85)'; x.font="700 42px 'Noto Sans KR',sans-serif"; x.fillText('Tên Việt: ' + LAST, W/2, 1135);
+  x.fillStyle='rgba(255,255,255,.62)'; x.font="700 32px 'Noto Sans KR',sans-serif"; x.fillText(location.host + '/ten-tieng-han', W/2, 1268);
+  c.toBlob(function(b){
+    if(!b){ return; }
+    const url=URL.createObjectURL(b); const a=document.createElement('a');
+    a.href=url; a.download='ten-tieng-han-'+slug(LAST)+'.png'; document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 1500);
+  }, 'image/png');
+}
+function roundRect(x,X,Y,w,h,r){ x.beginPath(); x.moveTo(X+r,Y); x.arcTo(X+w,Y,X+w,Y+h,r); x.arcTo(X+w,Y+h,X,Y+h,r); x.arcTo(X,Y+h,X,Y,r); x.arcTo(X,Y,X+w,Y,r); x.closePath(); }
+
+async function shareNative(el){
+  if(!LAST) return;
+  const r=generate(LAST);
+  const url=location.origin+'/ten-tieng-han?name='+encodeURIComponent(LAST);
+  const text='Tên tiếng Hàn của mình là '+r.han+' ('+r.roman+')! Tìm tên Hàn của bạn 👇';
+  if(navigator.share){
+    try{ await navigator.share({ title:'Tên tiếng Hàn của bạn', text:text, url:url }); return; }
+    catch(e){ if(e && e.name==='AbortError') return; }
+  }
+  window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(url),'_blank','noopener,width=640,height=560');
+}
 
 // Mở link chia sẻ ?name=...
 (function(){

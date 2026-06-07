@@ -181,6 +181,15 @@
   .badge { display:inline-block; padding:6px 13px; border-radius:8px; font-size:.83rem; font-weight:700; }
   .badge.blue { color:var(--blue); background:var(--blue-light); }
   .badge.green { color:var(--green); background:var(--green-light); }
+  .badge.gray { color:#9a3412; background:#ffedd5; }
+  tr.row-nf td { background:#fffaf5; }
+  /* Hộp cảnh báo mã không có kết quả */
+  .nf-box { margin:0 0 14px; background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:13px 15px; }
+  .nf-box h4 { font-size:.88rem; color:#9a3412; font-weight:800; margin:0 0 9px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .nf-box .nf-list { display:flex; flex-wrap:wrap; gap:6px; max-height:150px; overflow:auto; }
+  .nf-box .nf-code { font-size:.8rem; font-family:ui-monospace,Consolas,monospace; background:#fff; border:1px solid #fed7aa; border-radius:6px; padding:3px 8px; color:#7c2d12; }
+  .nf-box .nf-copy { font-size:.78rem; font-weight:700; color:#9a3412; background:#ffedd5; border:1px solid #fdba74; border-radius:8px; padding:6px 12px; cursor:pointer; font-family:inherit; white-space:nowrap; }
+  .nf-box .nf-copy:hover { background:#fed7aa; }
   .batch-empty { padding:36px; text-align:center; color:var(--muted2); }
   .progress-mini { color:var(--muted); font-size:.86rem; padding:12px 16px; display:none; }
   /* Robot quét + thanh tiến trình */
@@ -286,6 +295,7 @@
         </div>
       </div>
       <div class="progress-mini" id="batchProgress"></div>
+      <div class="nf-box hidden" id="notFoundBox"></div>
       <div class="tbl-wrap">
         <table>
           <thead><tr>
@@ -335,6 +345,7 @@ const LANGS = {
     login:'Đăng nhập', logout:'Đăng xuất', needLogin:'Tra cứu đơn lẻ thì miễn phí. Upload Excel hàng loạt cần đăng nhập.',
     shareBtn:'Chia sẻ', shareCopied:'Đã copy link!',
     allDates:'Tất cả ngày', allStatus:'Tất cả trạng thái', allSheets:'Tất cả sheet', countUnit:'vận đơn',
+    noResult:'Không có kết quả', nfTitle:'vận đơn không có kết quả thông quan', nfCopy:'Copy mã',
     batchEmptyTitle:'Danh sách vận đơn',
     uploadPrompt:'📄 Chưa có dữ liệu — tải lên file Excel (cột HAWB) để quét toàn bộ vận đơn.',
     subBranch:'Vận đơn nhánh', released:'Đã xuất kho',
@@ -364,6 +375,7 @@ const LANGS = {
     login:'Log in', logout:'Log out', needLogin:'Single lookup is free. Batch Excel upload requires login.',
     shareBtn:'Share', shareCopied:'Link copied!',
     allDates:'All dates', allStatus:'All statuses', allSheets:'All sheets', countUnit:'B/Ls',
+    noResult:'No result', nfTitle:'B/Ls with no clearance result', nfCopy:'Copy codes',
     batchEmptyTitle:'B/L list',
     uploadPrompt:'📄 No data yet — upload an Excel file (HAWB column) to scan all B/Ls.',
     subBranch:'House B/L', released:'Released',
@@ -393,6 +405,7 @@ const LANGS = {
     login:'로그인', logout:'로그아웃', needLogin:'단건 조회는 무료입니다. 엑셀 대량 조회는 로그인이 필요합니다.',
     shareBtn:'공유', shareCopied:'링크 복사됨!',
     allDates:'전체 날짜', allStatus:'전체 상태', allSheets:'전체 시트', countUnit:'건',
+    noResult:'결과 없음', nfTitle:'건 통관결과 없음', nfCopy:'코드 복사',
     batchEmptyTitle:'운송장 목록',
     uploadPrompt:'📄 데이터 없음 — 엑셀 파일(HAWB 열)을 업로드하면 전체 운송장을 조회합니다.',
     subBranch:'House B/L', released:'반출완료',
@@ -761,14 +774,16 @@ function renderBatch() {
   if (!rows.length) { body.innerHTML = ''; empty.textContent = t('emptyFilter'); empty.classList.remove('hidden'); return; }
   empty.classList.add('hidden');
   body.innerHTML = rows.map(r => {
-    const isOut = r.stage === 5;
-    return `<tr>
+    const nf = (r.stage == null);                 // không có kết quả từ Hải quan
+    const cls = nf ? 'gray' : (r.stage === 5 ? 'green' : 'blue');
+    const label = nf ? t('noResult') : stageLabel(r.stage);
+    return `<tr${nf ? ' class="row-nf"' : ''}>
       <td class="muted">${esc(r.sheet || '')}</td>
       <td>${esc(r.mbl || '—')}</td>
       <td class="hawb">${esc(r.hawb)}</td>
       <td>${esc(fmtDate(r.date))}</td>
-      <td>${esc(r.weight)}</td>
-      <td><span class="badge ${isOut ? 'green' : 'blue'}">${stageLabel(r.stage)}</span></td>
+      <td>${esc(r.weight || (nf ? '—' : ''))}</td>
+      <td><span class="badge ${cls}">${esc(label)}</span></td>
     </tr>`;
   }).join('');
 }
@@ -873,6 +888,7 @@ function scanBotHTML() {
 async function scanAll() {
   SHEETS = (workbook.SheetNames || []).map(parseSheetMeta).filter(s => s.rows.length);
   if (!SHEETS.length) { alert(t('noHawb', currentFile)); return; }
+  NOTFOUND = []; renderNotFound();   // xoá cảnh báo cũ trước khi quét
 
   // Gom HAWB duy nhất trên mọi sheet → chỉ gọi Hải quan 1 lần cho mỗi số
   const uniq = [...new Set([].concat(...SHEETS.map(s => s.rows.map(r => r.hawb))))];
@@ -893,27 +909,54 @@ async function scanAll() {
   for (let i = 0; i < uniq.length; i++) {
     const h = uniq[i];
     const d = await fetchReal(h);
-    if (d) { info[h] = { mbl: d.mbl || '', stage: d.stage, date: d.date, weight: d.weight }; await new Promise(r => setTimeout(r, 120)); }
-    else {
-      const seed = [...h].reduce((a, c) => a + c.charCodeAt(0), 0);
-      info[h] = { mbl: '', stage: seed % 6, date: '', weight: `${(((seed * 7) % 190) / 10 + 2).toFixed(1)} kg` };
-    }
+    if (d) { info[h] = { found: true, mbl: d.mbl || '', stage: d.stage, date: d.date, weight: d.weight }; await new Promise(r => setTimeout(r, 120)); }
+    else { info[h] = { found: false }; }   // không có kết quả từ Hải quan — KHÔNG bịa dữ liệu
     setProg(i + 1, uniq.length);
   }
   prog.style.display = 'none';
   prog.innerHTML = '';
 
-  // Lưu kết quả tra cứu (dùng khi xuất file) + dựng danh sách hiển thị
+  // Lưu kết quả tra cứu (dùng khi xuất file) + dựng danh sách hiển thị + gom mã không có kết quả
   LOOKUP = info;
   const rows = [];
+  NOTFOUND = [];
   SHEETS.forEach(s => {
     s.rows.forEach(r => {
       const it = info[r.hawb] || {};
-      const mbl = r.mblSrc || it.mbl || '';        // giữ số gốc nếu đã có, nếu trống thì lấy số tra được
-      rows.push({ sheet: s.name, hawb: r.hawb, mbl, date: r.date || it.date || '', weight: r.weight || it.weight || '', stage: it.stage });
+      const found = !!it.found;
+      const mbl = r.mblSrc || (found ? it.mbl : '') || '';
+      if (!mbl) NOTFOUND.push({ sheet: s.name, hawb: r.hawb });   // không tra được M B/L
+      rows.push({
+        sheet: s.name, hawb: r.hawb, mbl, found: found || !!r.mblSrc,
+        date: r.date || (found ? it.date : '') || '', weight: r.weight || (found ? it.weight : '') || '',
+        stage: found ? it.stage : null,
+      });
     });
   });
+  renderNotFound();
   setBatch(rows, `${currentFile} · ${SHEETS.length} sheet · ${rows.length} ${t('countUnit')}`);
+}
+
+// Danh sách mã không có kết quả + hộp cảnh báo
+let NOTFOUND = [];
+function renderNotFound() {
+  const box = document.getElementById('notFoundBox');
+  if (!NOTFOUND.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+  const multi = SHEETS.length > 1;
+  box.classList.remove('hidden');
+  box.innerHTML = `<h4><span>⚠️ ${NOTFOUND.length} ${t('nfTitle')}</span>
+      <button class="nf-copy" onclick="copyNotFound(this)">📋 ${t('nfCopy')}</button></h4>
+    <div class="nf-list">${NOTFOUND.map(x => `<span class="nf-code"${multi ? ` title="${esc(x.sheet)}"` : ''}>${esc(x.hawb)}</span>`).join('')}</div>`;
+}
+function copyNotFound(el) {
+  const txt = NOTFOUND.map(x => x.hawb).join('\n');
+  const done = () => { if (el) { const o = el.textContent; el.textContent = '✓'; setTimeout(() => el.textContent = o, 1400); } };
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(done).catch(() => fallbackCopyNF(txt, done));
+  else fallbackCopyNF(txt, done);
+}
+function fallbackCopyNF(txt, cb) {
+  const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.top = '-9999px';
+  document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); if (cb) cb();
 }
 
 function rescan() { if (workbook) scanAll(); }

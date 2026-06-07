@@ -12,7 +12,7 @@
   <meta property="og:image" content="__BASE__/og.svg" />
   <meta property="og:url" content="__BASE__/" />
   <meta name="twitter:card" content="summary_large_image" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%231e40af'/><text x='12' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='%23d42126'>V</text><text x='54' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='white'>H</text></svg>" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231e3a8a'/><path d='M23 73 L77 50 L23 27 L23 45 L62 50 L23 55 Z' transform='rotate(-30 50 50)' fill='white'/><circle cx='76' cy='25' r='8' fill='%23ef4444'/><circle cx='76' cy='25' r='3.2' fill='white'/></svg>" />
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root {
@@ -87,6 +87,13 @@
     }
 
     .topbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    /* ── Menu điều hướng header ── */
+    .top-nav { display:flex; align-items:center; gap:2px; flex-wrap:wrap; }
+    .top-nav a { font-size:0.86rem; font-weight:600; color:var(--gray-600); text-decoration:none; padding:7px 12px; border-radius:8px; transition:background .14s,color .14s; white-space:nowrap; }
+    .top-nav a:hover { background:var(--gray-100); color:var(--blue); }
+    .top-nav a.active { color:var(--blue); background:#eff6ff; font-weight:800; }
+    @media (max-width:880px){ .top-nav { order:3; width:100%; justify-content:center; border-top:1px solid var(--gray-200); padding-top:8px; } }
 
     /* ── User chip ── */
     .user-chip {
@@ -598,12 +605,19 @@
   <!-- Top bar -->
   <div class="topbar">
     <div class="brand-area">
-      <img src="/logo.png" alt="Vietnam - Korea Logistics" />
+      <img src="/logo.svg" alt="Vietnam - Korea Logistics" />
       <div class="brand-text">
         <div class="brand-name" data-i18n="brandName">Vietnam - Korea Logistics</div>
         <div class="brand-sub" data-i18n="brandSub">Tra Mã Bưu Điện Hàn Quốc</div>
       </div>
     </div>
+
+    <nav class="top-nav">
+      <a href="/" class="active" data-i18n="navPostal">Mã bưu điện</a>
+      <a href="/tracking" data-i18n="navCustoms">Mã thông quan</a>
+      <a href="/tools" data-i18n="navTools">Tiện ích</a>
+      <a href="/nguoi-viet-o-han" data-i18n="navHub">Người Việt ở Hàn</a>
+    </nav>
 
     <div class="topbar-right">
       <div class="user-chip" id="userChip" style="display:none">
@@ -954,6 +968,7 @@ const LANGS = {
     postalEyebrow: 'Tra cứu mã bưu điện', postalTitle: 'Tìm mã bưu điện từ địa chỉ Hàn Quốc',
     postalLead: 'Nhập danh sách địa chỉ Hàn Quốc, hệ thống tự trả về mã bưu điện 5 số — tra thủ công hoặc upload Excel hàng loạt.',
     toolsLink: '🧰 Tiện ích: Tỷ giá Won · Tính cước · Lịch lễ Hàn Quốc · Mã sân bay',
+    navPostal: 'Mã bưu điện', navCustoms: 'Mã thông quan',
     exploreLbl: 'Khám phá:', navHub: 'Người Việt ở Hàn', navTools: 'Tiện ích', navName: 'Tên tiếng Hàn', navSize: 'Đổi size', navTravel: 'Du lịch Hàn', navShop: 'Mua hàng Hàn', navGuide: 'Hướng dẫn thông quan',
     footColTools: 'Công cụ', footColUtil: 'Tiện ích', footColGuide: 'Cẩm nang', footColAbout: 'Về chúng tôi',
     cargoKeyLabel: 'UNI-PASS Open API Key (관세청)', cargoGetKey: 'Đăng ký key UNI-PASS →',
@@ -1043,6 +1058,7 @@ const LANGS = {
     postalEyebrow: 'Postal code lookup', postalTitle: 'Find Korean postal codes from an address',
     postalLead: 'Enter a list of Korean addresses and get the 5-digit postal code — manual lookup or batch Excel upload.',
     toolsLink: '🧰 Tools: KRW rate · Chargeable weight · Korea holidays · Airport codes',
+    navPostal: 'Postal code', navCustoms: 'Customs',
     exploreLbl: 'Explore:', navHub: 'Vietnamese in Korea', navTools: 'Tools', navName: 'Korean name', navSize: 'Size convert', navTravel: 'Korea travel', navShop: 'Buy from Korea', navGuide: 'Customs guide',
     footColTools: 'Tools', footColUtil: 'Utilities', footColGuide: 'Guides', footColAbout: 'About',
     cargoKeyLabel: 'UNI-PASS Open API Key (Korea Customs)', cargoGetKey: 'Register UNI-PASS key →',
@@ -1132,6 +1148,7 @@ const LANGS = {
     postalEyebrow: '우편번호 조회', postalTitle: '한국 주소로 우편번호 찾기',
     postalLead: '한국 주소 목록을 입력하면 5자리 우편번호를 자동으로 반환합니다 — 수동 조회 또는 엑셀 대량 업로드.',
     toolsLink: '🧰 도구: 환율 · 운임중량 · 한국 공휴일 · 공항코드',
+    navPostal: '우편번호', navCustoms: '통관조회',
     exploreLbl: '둘러보기:', navHub: '한국 거주 베트남인', navTools: '도구', navName: '한국 이름', navSize: '사이즈 변환', navTravel: '한국 여행', navShop: '한국 직구', navGuide: '통관 가이드',
     footColTools: '도구', footColUtil: '유틸리티', footColGuide: '가이드', footColAbout: '회사 정보',
     cargoKeyLabel: 'UNI-PASS Open API 키 (관세청)', cargoGetKey: 'UNI-PASS 키 신청 →',

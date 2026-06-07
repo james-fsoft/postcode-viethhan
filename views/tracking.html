@@ -25,7 +25,7 @@
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:title" content="__TITLE__" />
 <meta name="twitter:description" content="__DESC__" />
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%231e40af'/><text x='12' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='%23d42126'>V</text><text x='54' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='white'>H</text></svg>" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231e3a8a'/><path d='M23 73 L77 50 L23 27 L23 45 L62 50 L23 55 Z' transform='rotate(-30 50 50)' fill='white'/><circle cx='76' cy='25' r='8' fill='%23ef4444'/><circle cx='76' cy='25' r='3.2' fill='white'/></svg>" />
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -70,6 +70,12 @@
   .nav-home { font-size:.82rem; font-weight:600; color:var(--blue); text-decoration:none;
     border:1.5px solid var(--line); background:#fff; padding:8px 16px; border-radius:99px; transition:all .15s; }
   .nav-home:hover { border-color:var(--blue); }
+  /* Menu điều hướng header (đồng bộ với trang mã bưu điện) */
+  .top-nav { display:flex; align-items:center; gap:2px; flex-wrap:wrap; }
+  .top-nav a { font-size:.86rem; font-weight:600; color:var(--muted); text-decoration:none; padding:7px 12px; border-radius:8px; transition:background .14s,color .14s; white-space:nowrap; }
+  .top-nav a:hover { background:#f1f5f9; color:var(--blue); }
+  .top-nav a.active { color:var(--blue); background:#eff6ff; font-weight:800; }
+  @media (max-width:880px){ .top-nav { order:3; width:100%; justify-content:center; border-top:1px solid var(--line); padding-top:8px; } }
   .user-chip { display:flex; align-items:center; gap:8px; background:#fff; border:1px solid var(--line);
     border-radius:99px; padding:4px 12px 4px 5px; box-shadow:var(--shadow); }
   .user-avatar { width:26px; height:26px; border-radius:50%; background:linear-gradient(135deg,var(--red),var(--blue));
@@ -196,12 +202,18 @@
   <!-- Top bar -->
   <div class="topbar">
     <div class="brand-area">
-      <img src="/logo.png" alt="Vietnam - Korea Logistics" />
+      <img src="/logo.svg" alt="Vietnam - Korea Logistics" />
       <div class="brand-text">
         <div class="brand-name">Vietnam - Korea Logistics</div>
         <div class="brand-sub" data-i18n="brandSub">Tra Cứu Thông Quan Hàn Quốc</div>
       </div>
     </div>
+    <nav class="top-nav">
+      <a href="/" data-i18n="navPostal">Mã bưu điện</a>
+      <a href="/tracking" class="active" data-i18n="navCustoms">Mã thông quan</a>
+      <a href="/tools" data-i18n="navTools">Tiện ích</a>
+      <a href="/nguoi-viet-o-han" data-i18n="navHub">Người Việt ở Hàn</a>
+    </nav>
     <div class="topbar-right">
       <div class="user-chip" id="userChip" style="display:none">
         <span class="user-avatar" id="userAvatar">U</span>
@@ -217,7 +229,6 @@
       </select>
       <button class="btn-login-top" id="loginBtn" onclick="location.href='/login'" style="display:none" data-i18n="login">Đăng nhập</button>
       <button class="btn-logout" id="logoutBtn" onclick="logout()" style="display:none" data-i18n="logout">Đăng xuất</button>
-      <a class="nav-home" href="/" data-i18n="navHome">← Tra mã bưu điện</a>
     </div>
   </div>
 
@@ -291,6 +302,7 @@
 const LANGS = {
   vi: {
     brandSub:'Tra Cứu Thông Quan Hàn Quốc', navHome:'← Tra mã bưu điện',
+    navPostal:'Mã bưu điện', navCustoms:'Mã thông quan', navTools:'Tiện ích', navHub:'Người Việt ở Hàn',
     eyebrow1:'Tra cứu đơn lẻ', h1a:'Tra cứu tức thì bằng số vận đơn',
     lead1:'Nhập số vận đơn nhánh (HAWB / H B/L) hoặc mã quản lý hàng hóa. Hệ thống truy vấn trực tiếp Hải quan Hàn Quốc (UNI-PASS) và hiển thị đầy đủ tiến trình thông quan.',
     searchPh:'Nhập số vận đơn / mã quản lý hàng (vd: 304433643476)', btnSearch:'Tra cứu',
@@ -319,6 +331,7 @@ const LANGS = {
   },
   en: {
     brandSub:'Korea Customs Clearance', navHome:'← Postal code lookup',
+    navPostal:'Postal code', navCustoms:'Customs', navTools:'Tools', navHub:'Vietnamese in Korea',
     eyebrow1:'Single lookup', h1a:'Instant lookup by B/L number',
     lead1:'Enter the house bill number (HAWB / H B/L) or cargo management number. Queries Korea Customs (UNI-PASS) directly and shows the full clearance progress.',
     searchPh:'Enter B/L / cargo number (e.g. 304433643476)', btnSearch:'Look up',
@@ -347,6 +360,7 @@ const LANGS = {
   },
   ko: {
     brandSub:'한국 통관조회', navHome:'← 우편번호 조회',
+    navPostal:'우편번호', navCustoms:'통관조회', navTools:'도구', navHub:'한국 거주 베트남인',
     eyebrow1:'단건 조회', h1a:'운송장 번호로 즉시 조회',
     lead1:'HAWB(House B/L) 또는 화물관리번호를 입력하세요. 관세청(UNI-PASS)에서 직접 조회해 통관 진행 단계를 보여줍니다.',
     searchPh:'운송장 / 화물관리번호 입력 (예: 304433643476)', btnSearch:'조회',

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ' *)",
+      "Bash(PORT=4058 node server.js)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} %{content_type}\\\\n\" http://localhost:4058/logo.svg)",
+      "Bash(curl -s http://localhost:4058/)",
+      "Bash(curl -s http://localhost:4058/tracking)"
+    ]
+  }
+}

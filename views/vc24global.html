@@ -264,6 +264,7 @@
           <input type="file" id="fileInput" class="hidden" accept=".xlsx,.xls,.csv" onchange="onFile(event)" />
           <button class="btn-up" data-i18n="btnUpload" onclick="tryUpload()">⬆ Upload Excel</button>
           <button class="btn-ghost" data-i18n="btnRescan" onclick="rescan()">↻ Quét lại</button>
+          <button class="btn-ghost" data-i18n="btnDownload" onclick="exportResult()">⬇ Tải kết quả</button>
         </div>
       </div>
       <div class="progress-mini" id="batchProgress"></div>
@@ -308,7 +309,7 @@ const LANGS = {
     searchPh:'Nhập số vận đơn / mã quản lý hàng (vd: 304433643476)', btnSearch:'Tra cứu',
     eyebrow2:'Tra cứu hàng loạt', h1b:'Quét toàn bộ danh sách kho một lần',
     lead2:'Tải lên danh sách Excel và quét toàn bộ vận đơn cùng lúc — thay vì tra từng số trên website.',
-    btnUpload:'⬆ Upload Excel', btnRescan:'↻ Quét lại',
+    btnUpload:'⬆ Upload Excel', btnRescan:'↻ Quét lại', btnDownload:'⬇ Tải kết quả', noExport:'Chưa có kết quả để tải. Hãy upload và quét file trước.',
     colMbl:'Vận đơn chủ', colHawb:'Vận đơn', colArrival:'Ngày đến', colWeight:'Trọng lượng', colStatus:'Trạng thái thông quan',
     emptyFilter:'Không có vận đơn nào khớp bộ lọc.',
     footerTagline:'Giải pháp logistics Việt - Hàn', footerAbout:'Giới thiệu', footerPostal:'Tra mã bưu điện',
@@ -337,7 +338,7 @@ const LANGS = {
     searchPh:'Enter B/L / cargo number (e.g. 304433643476)', btnSearch:'Look up',
     eyebrow2:'Batch lookup', h1b:'Scan an entire warehouse list at once',
     lead2:'Upload an Excel list (like the Yongma cold-storage file) and scan every B/L at once — instead of looking up one by one.',
-    btnUpload:'⬆ Upload Excel', btnRescan:'↻ Rescan',
+    btnUpload:'⬆ Upload Excel', btnRescan:'↻ Rescan', btnDownload:'⬇ Download result', noExport:'No result to download yet. Please upload and scan a file first.',
     colMbl:'Master B/L', colHawb:'B/L', colArrival:'Arrival', colWeight:'Weight', colStatus:'Clearance status',
     emptyFilter:'No B/L matches the filter.',
     footerTagline:'Vietnam - Korea logistics solution', footerAbout:'About', footerPostal:'Postal code lookup',
@@ -366,7 +367,7 @@ const LANGS = {
     searchPh:'운송장 / 화물관리번호 입력 (예: 304433643476)', btnSearch:'조회',
     eyebrow2:'대량 조회', h1b:'창고 리스트 전체를 한 번에 조회',
     lead2:'엑셀 목록(욜마 냉동창고 파일 등)을 업로드하면 모든 운송장을 한 번에 조회합니다 — 하나씩 조회할 필요 없이.',
-    btnUpload:'⬆ 엑셀 업로드', btnRescan:'↻ 다시 조회',
+    btnUpload:'⬆ 엑셀 업로드', btnRescan:'↻ 다시 조회', btnDownload:'⬇ 결과 다운로드', noExport:'다운로드할 결과가 없습니다. 먼저 파일을 업로드하고 조회하세요.',
     colMbl:'M B/L', colHawb:'운송장', colArrival:'입항일', colWeight:'중량', colStatus:'통관진행상태',
     emptyFilter:'필터에 맞는 운송장이 없습니다.',
     footerTagline:'베트남-한국 물류 솔루션', footerAbout:'소개', footerPostal:'우편번호 조회',
@@ -787,13 +788,17 @@ function parseSheet(sheetName) {
   const aoa = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header:1, defval:'' });
   let hi = -1; const col = {};
   for (let i = 0; i < aoa.length; i++) {
-    const row = aoa[i].map(c => String(c).trim().toUpperCase());
-    const j = row.indexOf('HAWB');
+    const rowU = aoa[i].map(c => String(c).trim().toUpperCase());
+    const rowN = rowU.map(c => c.replace(/[\s./]/g,''));   // bỏ khoảng trắng/dấu chấm/gạch chéo
+    const j = rowU.indexOf('HAWB');
     if (j >= 0) {
       hi = i; col.hawb = j;
-      col.date = row.indexOf('DATE');
-      col.pcs  = row.indexOf('PCS');
-      col.wt   = row.findIndex(c => c === 'WT' || c === 'WEIGHT');
+      col.date = rowU.indexOf('DATE');
+      col.pcs  = rowU.indexOf('PCS');
+      col.wt   = rowU.findIndex(c => c === 'WT' || c === 'WEIGHT');
+      col.mbl  = rowN.indexOf('MBL');                       // "M B/L" → "MBL"
+      col.no   = rowN.indexOf('NO');                        // "No." → "NO"
+      col.bigo = rowU.indexOf('비고');
       break;
     }
   }
@@ -805,12 +810,24 @@ function parseSheet(sheetName) {
     }));
     return recs;
   }
+  const cv = (row, k) => (col[k] >= 0 ? String(row[col[k]] ?? '').trim() : '');
   for (let i = hi + 1; i < aoa.length; i++) {
     const row = aoa[i];
     const hawb = String(row[col.hawb] ?? '').replace(/\s/g,'');
     if (!/^\d{9,13}$/.test(hawb)) continue;
-    const wt = col.wt >= 0 ? String(row[col.wt] ?? '').trim() : '';
-    recs.push({ hawb, date: parseDateCell(col.date >= 0 ? row[col.date] : '', sheetName), weight: wt ? `${wt} kg` : '' });
+    const wt = cv(row, 'wt');
+    recs.push({
+      hawb,
+      date: parseDateCell(col.date >= 0 ? row[col.date] : '', sheetName),
+      weight: wt ? `${wt} kg` : '',
+      // giữ nguyên giá trị gốc để xuất lại đúng format file của công ty
+      mblSrc: cv(row, 'mbl').replace(/\s/g, ''),
+      pcs:    cv(row, 'pcs'),
+      bigo:   cv(row, 'bigo'),
+      no:     cv(row, 'no'),
+      dateSrc: cv(row, 'date'),
+      wtSrc:   wt,
+    });
   }
   return recs;
 }
@@ -840,7 +857,13 @@ async function scanRecords(recs, label) {
       stage = seed % 6;
       if (!rec.weight) rec.weight = `${(((seed * 7) % 190) / 10 + 2).toFixed(1)} kg`;
     }
-    rows.push({ hawb:rec.hawb, mbl, date:rec.date, weight:rec.weight, stage });
+    rows.push({
+      hawb: rec.hawb,
+      mbl: mbl || rec.mblSrc || '',     // ưu tiên M B/L tra được từ Hải quan
+      date: rec.date, weight: rec.weight, stage,
+      pcs: rec.pcs || '', bigo: rec.bigo || '', no: rec.no || '',
+      dateSrc: rec.dateSrc || '', wtSrc: rec.wtSrc || '',
+    });
   }
   prog.style.display = 'none';
   setBatch(rows, label);
@@ -848,6 +871,32 @@ async function scanRecords(recs, label) {
 
 function rescan() {
   if (workbook) parseAndScan(document.getElementById('sheetSelect').value || workbook.SheetNames[0]);
+}
+
+// Xuất Excel kết quả — giữ format file VC24 Global, điền M B/L tra được + cột trạng thái
+function exportResult() {
+  if (!batchRows.length) { alert(t('noExport')); return; }
+  const header = ['No.', 'M B/L', 'HAWB', 'DATE', 'PCS', 'WT', '비고', '통관상태 / Trạng thái'];
+  const aoa = [header];
+  batchRows.forEach((r, i) => {
+    aoa.push([
+      r.no || (i + 1),
+      r.mbl || '',
+      r.hawb,
+      r.dateSrc || fmtDate(r.date),
+      r.pcs || '',
+      r.wtSrc || String(r.weight || '').replace(/\s*kg$/i, ''),
+      r.bigo || '',
+      stageLabel(r.stage),
+    ]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{ wch:5 }, { wch:16 }, { wch:16 }, { wch:12 }, { wch:6 }, { wch:8 }, { wch:14 }, { wch:22 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'VC24 Global');
+  const stamp = new Date().toISOString().slice(0, 10);
+  const base = String(currentFile || 'vc24global').replace(/\.[^.]+$/, '');
+  XLSX.writeFile(wb, `${base}_ket-qua_${stamp}.xlsx`);
 }
 
 // ── Đăng nhập (tra đơn lẻ miễn phí; upload Excel cần login) ───────────────────

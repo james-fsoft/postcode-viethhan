@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="'Segoe UI',Arial,sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1e3a8a"/>
+      <stop offset="0.55" stop-color="#1e40af"/>
+      <stop offset="1" stop-color="#3730a3"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#d42126"/>
+      <stop offset="1" stop-color="#db2777"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- decorative circles -->
+  <circle cx="1050" cy="120" r="220" fill="#ffffff" opacity="0.05"/>
+  <circle cx="120" cy="560" r="180" fill="#ffffff" opacity="0.05"/>
+  <!-- logo mark -->
+  <rect x="80" y="90" width="92" height="92" rx="20" fill="#0f1f5c"/>
+  <text x="98" y="158" font-size="58" font-weight="900" fill="#d42126">V</text>
+  <text x="132" y="158" font-size="58" font-weight="900" fill="#ffffff">H</text>
+  <text x="190" y="135" font-size="34" font-weight="700" fill="#ffffff">Vietnam – Korea Logistics</text>
+  <text x="190" y="170" font-size="22" fill="#cbd5e1">__BASE_HOST__</text>
+  <!-- title -->
+  <text x="80" y="320" font-size="72" font-weight="900" fill="#ffffff">Công cụ &amp; tiện ích</text>
+  <text x="80" y="405" font-size="72" font-weight="900" fill="#ffffff">logistics <tspan fill="#fca5a5">Việt – Hàn</tspan></text>
+  <text x="80" y="470" font-size="30" fill="#dbeafe">Mã bưu điện · Thông quan · Tỷ giá Won · Cẩm nang ở Hàn</text>
+  <!-- accent bar -->
+  <rect x="80" y="430" width="0" height="0" fill="url(#accent)"/>
+  <!-- trust pills -->
+  <g font-size="24" font-weight="700" fill="#ffffff">
+    <rect x="80" y="520" width="250" height="56" rx="28" fill="#ffffff" opacity="0.12"/>
+    <text x="105" y="557" opacity="1">🏛️ Dữ liệu Chính phủ</text>
+    <rect x="350" y="520" width="170" height="56" rx="28" fill="#ffffff" opacity="0.12"/>
+    <text x="375" y="557">⚡ Real-time</text>
+    <rect x="540" y="520" width="160" height="56" rx="28" fill="#ffffff" opacity="0.12"/>
+    <text x="565" y="557">🆓 Miễn phí</text>
+    <rect x="720" y="520" width="210" height="56" rx="28" fill="#ffffff" opacity="0.12"/>
+    <text x="745" y="557">🌐 Việt·Anh·Hàn</text>
+  </g>
+</svg>

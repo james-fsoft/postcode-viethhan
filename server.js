@@ -147,6 +147,11 @@ function requireAuth(req, res, next) {
 
 // ── Public assets ─────────────────────────────────────────────────────────────
 app.get('/logo.png', (req, res) => res.sendFile(path.join(__dirname, 'logo.png')));
+app.get('/og.svg', (req, res) => {
+  let svg = fs.readFileSync(path.join(__dirname, 'views', 'og.svg'), 'utf8')
+    .split('__BASE_HOST__').join(BASE_URL.replace(/^https?:\/\//, ''));
+  res.set('Cache-Control', 'public, max-age=86400').type('image/svg+xml').send(svg);
+});
 
 // ── Public routes ─────────────────────────────────────────────────────────────
 app.get('/login', (req, res) => {

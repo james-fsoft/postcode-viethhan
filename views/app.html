@@ -3,7 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vietnam - Korea Logistics – Tra Mã Bưu Điện</title>
+  <title>Vietnam - Korea Logistics – Tra Mã Bưu Điện, Thông Quan & Tiện Ích</title>
+  <meta name="description" content="Bộ công cụ logistics Việt – Hàn miễn phí: tra mã bưu điện Hàn Quốc, theo dõi thông quan, tỷ giá Won, đổi size, tên tiếng Hàn và cẩm nang cho người Việt ở Hàn." />
+  <link rel="canonical" href="__BASE__/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Vietnam – Korea Logistics: công cụ & tiện ích Việt – Hàn" />
+  <meta property="og:description" content="Tra mã bưu điện, theo dõi thông quan, tỷ giá Won và cẩm nang cho người Việt ở Hàn — tất cả miễn phí." />
+  <meta property="og:image" content="__BASE__/og.svg" />
+  <meta property="og:url" content="__BASE__/" />
+  <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%231e40af'/><text x='12' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='%23d42126'>V</text><text x='54' y='72' font-family='Arial Black,sans-serif' font-size='58' font-weight='900' fill='white'>H</text></svg>" />
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
@@ -238,6 +246,22 @@
     .foot-bottom{text-align:center;margin-top:22px;padding-top:16px;border-top:1px solid var(--gray-100);font-size:0.8rem;color:var(--gray-400);}
     .foot-bottom .tf-brand{font-weight:800;background:linear-gradient(135deg,var(--red),var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
     @media(max-width:640px){ .foot-grid{grid-template-columns:1fr 1fr;} }
+    /* Hero trang chủ */
+    .home-hero{text-align:center;padding:6px 0 20px;}
+    .home-hero h1{font-size:2rem;font-weight:800;color:var(--gray-900);letter-spacing:-0.02em;margin-bottom:8px;line-height:1.2;}
+    .home-hero .hh-sub{color:var(--gray-500);font-size:1.02rem;max-width:620px;margin:0 auto 16px;}
+    .trust-band{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 18px;}
+    .trust-band span{display:inline-flex;align-items:center;gap:6px;font-size:0.85rem;color:var(--gray-600);}
+    .trust-band b{color:var(--gray-900);font-weight:700;}
+    @media(max-width:640px){ .home-hero h1{font-size:1.5rem;} }
+    /* Banner Tên tiếng Hàn (viral, trẻ) */
+    .name-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;text-decoration:none;
+      background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;border-radius:14px;padding:13px 18px;margin-bottom:20px;
+      box-shadow:0 6px 20px rgba(124,58,237,0.22);transition:transform .12s,box-shadow .15s;}
+    .name-banner:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(124,58,237,0.32);}
+    .name-banner .nb-emoji{font-size:1.5rem;flex-shrink:0;}
+    .name-banner .nb-text{font-size:0.95rem;font-weight:600;flex:1;min-width:180px;} .name-banner .nb-text b{font-weight:800;}
+    .name-banner .nb-go{background:rgba(255,255,255,0.22);border-radius:99px;padding:6px 15px;font-weight:800;font-size:0.85rem;white-space:nowrap;}
 
     /* ── Tiêu đề công cụ (đồng bộ trang thông quan) ── */
     .sec-head { margin:6px 0 16px; }
@@ -597,6 +621,18 @@
     </div>
   </div>
 
+  <!-- Hero: giới thiệu nhanh + dải tin cậy -->
+  <div class="home-hero">
+    <h1 data-i18n="heroTitle">Bộ công cụ & tiện ích logistics Việt – Hàn</h1>
+    <p class="hh-sub" data-i18n="heroSub">Tra mã bưu điện, theo dõi thông quan, tỷ giá Won và cẩm nang cho người Việt ở Hàn — tất cả miễn phí.</p>
+    <div class="trust-band">
+      <span>🏛️ <b data-i18n="tbData">Dữ liệu Chính phủ Hàn Quốc</b></span>
+      <span>⚡ <b data-i18n="tbRealtime">Real-time</b></span>
+      <span>🆓 <b data-i18n="tbFree">Miễn phí</b></span>
+      <span>🌐 <b data-i18n="tbLang">Việt · Anh · Hàn</b></span>
+    </div>
+  </div>
+
   <!-- 2 công cụ: Mã bưu điện & Mã thông quan -->
   <div class="tool-nav">
     <div class="tool-card postal active">
@@ -628,6 +664,13 @@
     </a>
   </div>
 
+  <!-- Banner viral: Tên tiếng Hàn -->
+  <a class="name-banner" href="/ten-tieng-han">
+    <span class="nb-emoji">🇰🇷</span>
+    <span class="nb-text"><b data-i18n="nbTitle">Tên tiếng Hàn của bạn là gì?</b> <span data-i18n="nbSub">— nhập tên Việt, ra ngay tên Hàn + Hán tự</span></span>
+    <span class="nb-go" data-i18n="nbGo">Thử ngay →</span>
+  </a>
+
   <!-- Thanh khám phá: dẫn người dùng tới các công cụ & cẩm nang -->
   <div class="explore">
     <span class="ex-lbl" data-i18n="exploreLbl">Khám phá:</span>
@@ -642,7 +685,7 @@
   <!-- Tiêu đề công cụ (đồng bộ trang thông quan) -->
   <div class="sec-head">
     <div class="sec-eyebrow" data-i18n="postalEyebrow">Tra cứu mã bưu điện</div>
-    <h1 class="sec-title" data-i18n="postalTitle">Tìm mã bưu điện từ địa chỉ Hàn Quốc</h1>
+    <h2 class="sec-title" data-i18n="postalTitle">Tìm mã bưu điện từ địa chỉ Hàn Quốc</h2>
     <p class="sec-lead" data-i18n="postalLead">Nhập danh sách địa chỉ Hàn Quốc, hệ thống tự trả về mã bưu điện 5 số — tra thủ công hoặc upload Excel hàng loạt.</p>
   </div>
 
@@ -900,6 +943,10 @@ const LANGS = {
     toolPostalDesc: 'Tìm mã bưu điện 5 số từ địa chỉ Hàn Quốc — để điền vận đơn, giao hàng.',
     toolCustomsDesc: 'Tra tiến trình thông quan hàng nhập theo số vận đơn (HAWB) từ Hải quan Hàn Quốc.',
     toolActive: 'Đang dùng', toolOpen: 'Mở →',
+    heroTitle: 'Bộ công cụ & tiện ích logistics Việt – Hàn',
+    heroSub: 'Tra mã bưu điện, theo dõi thông quan, tỷ giá Won và cẩm nang cho người Việt ở Hàn — tất cả miễn phí.',
+    tbData: 'Dữ liệu Chính phủ Hàn Quốc', tbRealtime: 'Cập nhật real-time', tbFree: 'Miễn phí', tbLang: 'Việt · Anh · Hàn',
+    nbTitle: 'Tên tiếng Hàn của bạn là gì?', nbSub: '— nhập tên Việt, ra ngay tên Hàn + Hán tự', nbGo: 'Thử ngay →',
     postalEyebrow: 'Tra cứu mã bưu điện', postalTitle: 'Tìm mã bưu điện từ địa chỉ Hàn Quốc',
     postalLead: 'Nhập danh sách địa chỉ Hàn Quốc, hệ thống tự trả về mã bưu điện 5 số — tra thủ công hoặc upload Excel hàng loạt.',
     toolsLink: '🧰 Tiện ích: Tỷ giá Won · Tính cước · Lịch lễ Hàn Quốc · Mã sân bay',
@@ -985,6 +1032,10 @@ const LANGS = {
     toolPostalDesc: 'Find the 5-digit Korean postal code from an address — for shipping labels & delivery.',
     toolCustomsDesc: 'Track import customs clearance progress by B/L number (HAWB) from Korea Customs.',
     toolActive: 'In use', toolOpen: 'Open →',
+    heroTitle: 'Vietnam – Korea logistics tools & utilities',
+    heroSub: 'Korean postal codes, customs tracking, KRW rate and guides for Vietnamese in Korea — all free.',
+    tbData: 'Korean government data', tbRealtime: 'Real-time updates', tbFree: 'Free', tbLang: 'VI · EN · KO',
+    nbTitle: 'What is your Korean name?', nbSub: '— enter your Vietnamese name, get a Korean name + Hanja', nbGo: 'Try now →',
     postalEyebrow: 'Postal code lookup', postalTitle: 'Find Korean postal codes from an address',
     postalLead: 'Enter a list of Korean addresses and get the 5-digit postal code — manual lookup or batch Excel upload.',
     toolsLink: '🧰 Tools: KRW rate · Chargeable weight · Korea holidays · Airport codes',
@@ -1070,6 +1121,10 @@ const LANGS = {
     toolPostalDesc: '한국 주소로 5자리 우편번호를 찾습니다 — 운송장 작성·배송용.',
     toolCustomsDesc: '운송장 번호(HAWB)로 한국 수입 통관 진행정보를 조회합니다.',
     toolActive: '사용 중', toolOpen: '열기 →',
+    heroTitle: '베트남–한국 물류 도구 & 유틸리티',
+    heroSub: '우편번호 조회, 통관조회, 환율, 한국 거주 베트남인 가이드 — 모두 무료.',
+    tbData: '한국 정부 데이터', tbRealtime: '실시간 업데이트', tbFree: '무료', tbLang: 'VI · EN · KO',
+    nbTitle: '당신의 한국 이름은?', nbSub: '— 베트남 이름을 입력하면 한국 이름 + 한자', nbGo: '바로 시작 →',
     postalEyebrow: '우편번호 조회', postalTitle: '한국 주소로 우편번호 찾기',
     postalLead: '한국 주소 목록을 입력하면 5자리 우편번호를 자동으로 반환합니다 — 수동 조회 또는 엑셀 대량 업로드.',
     toolsLink: '🧰 도구: 환율 · 운임중량 · 한국 공휴일 · 공항코드',

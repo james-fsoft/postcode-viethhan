@@ -22,6 +22,12 @@ usersEnv.split(',').forEach(pair => {
 
 const JWT_SECRET = process.env.SESSION_SECRET || 'vh-logistics-change-this-secret';
 const COOKIE = 'vh_token';
+// Để trống = chỉ dùng trên domain hiện tại. Đặt '.transflash.app' để dùng CHUNG đăng nhập
+// giữa các subdomain (vd app.transflash.app + ketoan.transflash.app) — đăng nhập 1 lần.
+const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
+function authCookieOpts(extra = {}) {
+  return { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', domain: COOKIE_DOMAIN, ...extra };
+}
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -141,7 +147,7 @@ function requireAuth(req, res, next) {
   if (req.headers.accept?.includes('application/json')) {
     return res.status(401).json({ ok: false, message: 'Unauthorized' });
   }
-  res.clearCookie(COOKIE);
+  res.clearCookie(COOKIE, authCookieOpts());
   res.redirect('/login');
 }
 
@@ -170,19 +176,14 @@ app.post('/api/login', (req, res) => {
     const expiresIn = remember === 'true' ? '30d' : '12h';
     const maxAge    = remember === 'true' ? 30 * 86400 * 1000 : 12 * 3600 * 1000;
     const token = jwt.sign({ username }, JWT_SECRET, { expiresIn });
-    res.cookie(COOKIE, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge,
-    });
+    res.cookie(COOKIE, token, authCookieOpts({ maxAge }));
     return res.json({ ok: true });
   }
   return res.status(401).json({ ok: false, message: 'Invalid credentials' });
 });
 
 app.post('/api/logout', (req, res) => {
-  res.clearCookie(COOKIE);
+  res.clearCookie(COOKIE, authCookieOpts());
   res.json({ ok: true });
 });
 

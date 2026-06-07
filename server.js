@@ -418,6 +418,7 @@ app.get('/size-korea',     (req, res) => sendTpl(res, 'size-korea.html'));
 app.get('/travel-korea',   (req, res) => sendTpl(res, 'travel-korea.html'));
 app.get('/shopping-korea', (req, res) => sendTpl(res, 'shopping-korea.html'));
 app.get('/ten-tieng-han',  (req, res) => sendTpl(res, 'korean-name.html'));
+app.get('/nguoi-viet-o-han', (req, res) => sendTpl(res, 'nguoi-viet-o-han.html'));
 
 // ── Trang tra cứu thông quan (UNI-PASS) — SEO đa ngôn ngữ (vi/en/ko) ──────────
 const TRACKING_SEO = {
@@ -453,7 +454,7 @@ app.get('/tracking', (req, res) => {
 const SITE = BASE_URL;
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(
-    `User-agent: *\nAllow: /\nAllow: /about\nAllow: /tracking\nAllow: /tracking-info\nAllow: /customs-guide\nAllow: /tools\nAllow: /pccc\nAllow: /food-korea\nAllow: /import-guide\nAllow: /size-korea\nAllow: /travel-korea\nAllow: /shopping-korea\nAllow: /ten-tieng-han\nDisallow: /api/\nDisallow: /shipping\nDisallow: /login\n\nSitemap: ${SITE}/sitemap.xml\n`
+    `User-agent: *\nAllow: /\nAllow: /about\nAllow: /tracking\nAllow: /tracking-info\nAllow: /customs-guide\nAllow: /tools\nAllow: /pccc\nAllow: /food-korea\nAllow: /import-guide\nAllow: /size-korea\nAllow: /travel-korea\nAllow: /shopping-korea\nAllow: /ten-tieng-han\nAllow: /nguoi-viet-o-han\nDisallow: /api/\nDisallow: /shipping\nDisallow: /login\n\nSitemap: ${SITE}/sitemap.xml\n`
   );
 });
 app.get('/sitemap.xml', (req, res) => {
@@ -484,6 +485,7 @@ app.get('/sitemap.xml', (req, res) => {
     `  <url><loc>${SITE}/travel-korea</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>\n` +
     `  <url><loc>${SITE}/shopping-korea</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>\n` +
     `  <url><loc>${SITE}/ten-tieng-han</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>\n` +
+    `  <url><loc>${SITE}/nguoi-viet-o-han</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>\n` +
     `</urlset>\n`
   );
 });

@@ -237,6 +237,8 @@
     .explore a{display:inline-flex;align-items:center;gap:5px;font-size:0.83rem;font-weight:600;color:var(--gray-700);
       text-decoration:none;background:#fff;border:1.5px solid var(--gray-200);border-radius:99px;padding:7px 13px;transition:all .15s;}
     .explore a:hover{border-color:var(--blue);color:var(--blue);}
+    .explore a.ex-hot{background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;border-color:transparent;font-weight:800;}
+    .explore a.ex-hot:hover{color:#fff;box-shadow:0 4px 14px rgba(124,58,237,0.3);}
     /* Footer kiểu sitemap */
     .site-footer{margin-top:40px;border-top:1px solid var(--gray-200);padding-top:26px;}
     .foot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px 20px;}
@@ -674,6 +676,7 @@
   <!-- Thanh khám phá: dẫn người dùng tới các công cụ & cẩm nang -->
   <div class="explore">
     <span class="ex-lbl" data-i18n="exploreLbl">Khám phá:</span>
+    <a href="/nguoi-viet-o-han" class="ex-hot">🇻🇳 <span data-i18n="navHub">Người Việt ở Hàn</span></a>
     <a href="/tools">🧰 <span data-i18n="navTools">Tiện ích</span></a>
     <a href="/ten-tieng-han">🇰🇷 <span data-i18n="navName">Tên tiếng Hàn</span></a>
     <a href="/size-korea">👟 <span data-i18n="navSize">Đổi size</span></a>
@@ -837,6 +840,7 @@
       </div>
       <div class="foot-col">
         <h4 data-i18n="footColGuide">Cẩm nang</h4>
+        <a href="/nguoi-viet-o-han">Người Việt ở Hàn</a>
         <a href="/customs-guide">Hướng dẫn thông quan</a>
         <a href="/pccc">Mã thông quan cá nhân (PCCC)</a>
         <a href="/import-guide">Quy trình XNK Việt - Hàn</a>
@@ -950,7 +954,7 @@ const LANGS = {
     postalEyebrow: 'Tra cứu mã bưu điện', postalTitle: 'Tìm mã bưu điện từ địa chỉ Hàn Quốc',
     postalLead: 'Nhập danh sách địa chỉ Hàn Quốc, hệ thống tự trả về mã bưu điện 5 số — tra thủ công hoặc upload Excel hàng loạt.',
     toolsLink: '🧰 Tiện ích: Tỷ giá Won · Tính cước · Lịch lễ Hàn Quốc · Mã sân bay',
-    exploreLbl: 'Khám phá:', navTools: 'Tiện ích', navName: 'Tên tiếng Hàn', navSize: 'Đổi size', navTravel: 'Du lịch Hàn', navShop: 'Mua hàng Hàn', navGuide: 'Hướng dẫn thông quan',
+    exploreLbl: 'Khám phá:', navHub: 'Người Việt ở Hàn', navTools: 'Tiện ích', navName: 'Tên tiếng Hàn', navSize: 'Đổi size', navTravel: 'Du lịch Hàn', navShop: 'Mua hàng Hàn', navGuide: 'Hướng dẫn thông quan',
     footColTools: 'Công cụ', footColUtil: 'Tiện ích', footColGuide: 'Cẩm nang', footColAbout: 'Về chúng tôi',
     cargoKeyLabel: 'UNI-PASS Open API Key (관세청)', cargoGetKey: 'Đăng ký key UNI-PASS →',
     cargoLabel: 'Tra cứu trạng thái thông quan hàng nhập',
@@ -1039,7 +1043,7 @@ const LANGS = {
     postalEyebrow: 'Postal code lookup', postalTitle: 'Find Korean postal codes from an address',
     postalLead: 'Enter a list of Korean addresses and get the 5-digit postal code — manual lookup or batch Excel upload.',
     toolsLink: '🧰 Tools: KRW rate · Chargeable weight · Korea holidays · Airport codes',
-    exploreLbl: 'Explore:', navTools: 'Tools', navName: 'Korean name', navSize: 'Size convert', navTravel: 'Korea travel', navShop: 'Buy from Korea', navGuide: 'Customs guide',
+    exploreLbl: 'Explore:', navHub: 'Vietnamese in Korea', navTools: 'Tools', navName: 'Korean name', navSize: 'Size convert', navTravel: 'Korea travel', navShop: 'Buy from Korea', navGuide: 'Customs guide',
     footColTools: 'Tools', footColUtil: 'Utilities', footColGuide: 'Guides', footColAbout: 'About',
     cargoKeyLabel: 'UNI-PASS Open API Key (Korea Customs)', cargoGetKey: 'Register UNI-PASS key →',
     cargoLabel: 'Track import cargo clearance status',
@@ -1128,7 +1132,7 @@ const LANGS = {
     postalEyebrow: '우편번호 조회', postalTitle: '한국 주소로 우편번호 찾기',
     postalLead: '한국 주소 목록을 입력하면 5자리 우편번호를 자동으로 반환합니다 — 수동 조회 또는 엑셀 대량 업로드.',
     toolsLink: '🧰 도구: 환율 · 운임중량 · 한국 공휴일 · 공항코드',
-    exploreLbl: '둘러보기:', navTools: '도구', navName: '한국 이름', navSize: '사이즈 변환', navTravel: '한국 여행', navShop: '한국 직구', navGuide: '통관 가이드',
+    exploreLbl: '둘러보기:', navHub: '한국 거주 베트남인', navTools: '도구', navName: '한국 이름', navSize: '사이즈 변환', navTravel: '한국 여행', navShop: '한국 직구', navGuide: '통관 가이드',
     footColTools: '도구', footColUtil: '유틸리티', footColGuide: '가이드', footColAbout: '회사 정보',
     cargoKeyLabel: 'UNI-PASS Open API 키 (관세청)', cargoGetKey: 'UNI-PASS 키 신청 →',
     cargoLabel: '수입화물 통관진행정보 조회',

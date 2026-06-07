@@ -223,6 +223,21 @@
       padding:11px 16px;text-decoration:none;color:var(--gray-600);font-size:0.88rem;transition:all .15s;}
     .tools-link:hover{border-color:var(--blue);box-shadow:var(--shadow);}
     .tools-link .ar{color:var(--blue);font-weight:800;}
+    /* Thanh khám phá */
+    .explore{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+    .explore .ex-lbl{font-size:0.82rem;color:var(--gray-500);font-weight:700;}
+    .explore a{display:inline-flex;align-items:center;gap:5px;font-size:0.83rem;font-weight:600;color:var(--gray-700);
+      text-decoration:none;background:#fff;border:1.5px solid var(--gray-200);border-radius:99px;padding:7px 13px;transition:all .15s;}
+    .explore a:hover{border-color:var(--blue);color:var(--blue);}
+    /* Footer kiểu sitemap */
+    .site-footer{margin-top:40px;border-top:1px solid var(--gray-200);padding-top:26px;}
+    .foot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px 20px;}
+    .foot-col h4{font-size:0.76rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--gray-400);margin-bottom:9px;font-weight:800;}
+    .foot-col a{display:block;font-size:0.85rem;color:var(--gray-600);text-decoration:none;padding:3px 0;cursor:pointer;}
+    .foot-col a:hover{color:var(--blue);}
+    .foot-bottom{text-align:center;margin-top:22px;padding-top:16px;border-top:1px solid var(--gray-100);font-size:0.8rem;color:var(--gray-400);}
+    .foot-bottom .tf-brand{font-weight:800;background:linear-gradient(135deg,var(--red),var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+    @media(max-width:640px){ .foot-grid{grid-template-columns:1fr 1fr;} }
 
     /* ── Tiêu đề công cụ (đồng bộ trang thông quan) ── */
     .sec-head { margin:6px 0 16px; }
@@ -613,8 +628,16 @@
     </a>
   </div>
 
-  <!-- Link tới trang Tiện ích -->
-  <a class="tools-link" href="/tools"><span data-i18n="toolsLink">🧰 Tiện ích: Tỷ giá Won · Tính cước · Lịch lễ Hàn Quốc · Mã sân bay</span> <span class="ar">→</span></a>
+  <!-- Thanh khám phá: dẫn người dùng tới các công cụ & cẩm nang -->
+  <div class="explore">
+    <span class="ex-lbl" data-i18n="exploreLbl">Khám phá:</span>
+    <a href="/tools">🧰 <span data-i18n="navTools">Tiện ích</span></a>
+    <a href="/ten-tieng-han">🇰🇷 <span data-i18n="navName">Tên tiếng Hàn</span></a>
+    <a href="/size-korea">👟 <span data-i18n="navSize">Đổi size</span></a>
+    <a href="/travel-korea">✈️ <span data-i18n="navTravel">Du lịch Hàn</span></a>
+    <a href="/shopping-korea">🛍️ <span data-i18n="navShop">Mua hàng Hàn</span></a>
+    <a href="/customs-guide">📋 <span data-i18n="navGuide">Hướng dẫn thông quan</span></a>
+  </div>
 
   <!-- Tiêu đề công cụ (đồng bộ trang thông quan) -->
   <div class="sec-head">
@@ -752,17 +775,43 @@
     </div>
   </div>
 
-  <!-- Footer -->
-  <footer class="app-footer">
-    <span class="tf-brand">Transflash</span>
-    <span class="tf-dot">•</span>
-    <span data-i18n="footerText">Giải pháp logistics Việt - Hàn</span>
-    <span class="tf-dot">•</span>
-    <a href="/about" class="footer-support" data-i18n="footerAbout">Giới thiệu</a>
-    <span class="tf-dot">•</span>
-    <a href="#" class="footer-support" onclick="openPlanModal('upgrade'); return false;" data-i18n="footerSupport">Liên hệ hỗ trợ</a>
-    <span class="tf-dot">•</span>
-    <span>© 2026</span>
+  <!-- Footer kiểu sitemap -->
+  <footer class="site-footer">
+    <div class="foot-grid">
+      <div class="foot-col">
+        <h4 data-i18n="footColTools">Công cụ</h4>
+        <a href="/">Tra mã bưu điện</a>
+        <a href="/tracking">Tra cứu thông quan</a>
+        <a href="/size-korea">Đổi size Hàn</a>
+        <a href="/ten-tieng-han">Tên tiếng Hàn</a>
+      </div>
+      <div class="foot-col">
+        <h4 data-i18n="footColUtil">Tiện ích</h4>
+        <a href="/tools">Tỷ giá Won (Vietcombank)</a>
+        <a href="/tools">Tính cước / tính thuế</a>
+        <a href="/tools">Lịch nghỉ lễ Hàn Quốc</a>
+        <a href="/tools">Mã sân bay / cảng</a>
+      </div>
+      <div class="foot-col">
+        <h4 data-i18n="footColGuide">Cẩm nang</h4>
+        <a href="/customs-guide">Hướng dẫn thông quan</a>
+        <a href="/pccc">Mã thông quan cá nhân (PCCC)</a>
+        <a href="/import-guide">Quy trình XNK Việt - Hàn</a>
+        <a href="/food-korea">Xuất thực phẩm sang Hàn</a>
+        <a href="/travel-korea">Du lịch Hàn Quốc</a>
+        <a href="/shopping-korea">Mua hàng Hàn về VN</a>
+      </div>
+      <div class="foot-col">
+        <h4 data-i18n="footColAbout">Về chúng tôi</h4>
+        <a href="/about" data-i18n="footerAbout">Giới thiệu</a>
+        <a href="/tracking-info">Giải pháp cho doanh nghiệp</a>
+        <a href="mailto:support@transflash.app">support@transflash.app</a>
+        <a onclick="openPlanModal('upgrade'); return false;" data-i18n="footerSupport">Liên hệ hỗ trợ</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span class="tf-brand">Transflash</span> · <span data-i18n="footerText">Giải pháp logistics Việt - Hàn</span> · © 2026
+    </div>
   </footer>
 
 </div>
@@ -854,6 +903,8 @@ const LANGS = {
     postalEyebrow: 'Tra cứu mã bưu điện', postalTitle: 'Tìm mã bưu điện từ địa chỉ Hàn Quốc',
     postalLead: 'Nhập danh sách địa chỉ Hàn Quốc, hệ thống tự trả về mã bưu điện 5 số — tra thủ công hoặc upload Excel hàng loạt.',
     toolsLink: '🧰 Tiện ích: Tỷ giá Won · Tính cước · Lịch lễ Hàn Quốc · Mã sân bay',
+    exploreLbl: 'Khám phá:', navTools: 'Tiện ích', navName: 'Tên tiếng Hàn', navSize: 'Đổi size', navTravel: 'Du lịch Hàn', navShop: 'Mua hàng Hàn', navGuide: 'Hướng dẫn thông quan',
+    footColTools: 'Công cụ', footColUtil: 'Tiện ích', footColGuide: 'Cẩm nang', footColAbout: 'Về chúng tôi',
     cargoKeyLabel: 'UNI-PASS Open API Key (관세청)', cargoGetKey: 'Đăng ký key UNI-PASS →',
     cargoLabel: 'Tra cứu trạng thái thông quan hàng nhập',
     cargoTypeCarg: 'Số quản lý hàng hóa (화물관리번호)', cargoTypeMbl: 'Master B/L (M B/L)', cargoTypeHbl: 'House B/L (H B/L)',
@@ -937,6 +988,8 @@ const LANGS = {
     postalEyebrow: 'Postal code lookup', postalTitle: 'Find Korean postal codes from an address',
     postalLead: 'Enter a list of Korean addresses and get the 5-digit postal code — manual lookup or batch Excel upload.',
     toolsLink: '🧰 Tools: KRW rate · Chargeable weight · Korea holidays · Airport codes',
+    exploreLbl: 'Explore:', navTools: 'Tools', navName: 'Korean name', navSize: 'Size convert', navTravel: 'Korea travel', navShop: 'Buy from Korea', navGuide: 'Customs guide',
+    footColTools: 'Tools', footColUtil: 'Utilities', footColGuide: 'Guides', footColAbout: 'About',
     cargoKeyLabel: 'UNI-PASS Open API Key (Korea Customs)', cargoGetKey: 'Register UNI-PASS key →',
     cargoLabel: 'Track import cargo clearance status',
     cargoTypeCarg: 'Cargo mgmt no. (화물관리번호)', cargoTypeMbl: 'Master B/L (M B/L)', cargoTypeHbl: 'House B/L (H B/L)',
@@ -1020,6 +1073,8 @@ const LANGS = {
     postalEyebrow: '우편번호 조회', postalTitle: '한국 주소로 우편번호 찾기',
     postalLead: '한국 주소 목록을 입력하면 5자리 우편번호를 자동으로 반환합니다 — 수동 조회 또는 엑셀 대량 업로드.',
     toolsLink: '🧰 도구: 환율 · 운임중량 · 한국 공휴일 · 공항코드',
+    exploreLbl: '둘러보기:', navTools: '도구', navName: '한국 이름', navSize: '사이즈 변환', navTravel: '한국 여행', navShop: '한국 직구', navGuide: '통관 가이드',
+    footColTools: '도구', footColUtil: '유틸리티', footColGuide: '가이드', footColAbout: '회사 정보',
     cargoKeyLabel: 'UNI-PASS Open API 키 (관세청)', cargoGetKey: 'UNI-PASS 키 신청 →',
     cargoLabel: '수입화물 통관진행정보 조회',
     cargoTypeCarg: '화물관리번호', cargoTypeMbl: 'Master B/L (M B/L)', cargoTypeHbl: 'House B/L (H B/L)',

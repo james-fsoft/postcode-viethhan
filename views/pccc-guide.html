@@ -34,7 +34,8 @@
   body{font-family:'Segoe UI','Noto Sans KR',Arial,sans-serif;color:var(--g700);line-height:1.75;background:#fff;}
   .wrap{max-width:760px;margin:0 auto;padding:0 18px;}
   a{color:var(--blue);}
-  header{border-bottom:1px solid var(--g200);background:#fff;position:sticky;top:0;z-index:10;}
+  header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(8px);-webkit-backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid var(--g200);transition:box-shadow .2s;}
+  header.scrolled{box-shadow:0 4px 16px -6px rgba(15,23,42,.18);}
   .nav{max-width:760px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
   .brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
   .brand img{height:36px;}
@@ -150,5 +151,6 @@
     </p>
   </div>
 </footer>
+<script>(function(){var h=document.querySelector("header");if(h)addEventListener("scroll",function(){h.classList.toggle("scrolled",window.scrollY>4);},{passive:true});})();</script>
 </body>
 </html>

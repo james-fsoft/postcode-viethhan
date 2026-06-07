@@ -53,12 +53,16 @@
   body {
     background:var(--bg); color:var(--text);
     font-family:'Segoe UI','Noto Sans KR',Arial,sans-serif;
-    min-height:100vh; line-height:1.5; padding:20px 16px 56px;
+    min-height:100vh; line-height:1.5; padding:0 0 56px;
   }
-  .wrap { max-width:1080px; margin:0 auto; }
+  .wrap { max-width:1080px; margin:0 auto; padding:26px 16px 0; }
 
-  /* topbar */
-  .topbar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:28px; }
+  /* Header tách rời, dính khi cuộn */
+  .site-header { position:sticky; top:0; z-index:50; background:rgba(255,255,255,.85);
+    backdrop-filter:saturate(180%) blur(8px); -webkit-backdrop-filter:saturate(180%) blur(8px);
+    border-bottom:1px solid var(--line); transition:box-shadow .2s; }
+  .site-header.scrolled { box-shadow:0 4px 16px -6px rgba(15,23,42,.18); }
+  .topbar { max-width:1080px; margin:0 auto; padding:9px 16px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
   .brand-area { display:flex; align-items:center; gap:12px; }
   .brand-area img { height:44px; width:auto; display:block; }
   .brand-name { font-size:1rem; font-weight:800; color:var(--blue); letter-spacing:.2px; }
@@ -197,9 +201,7 @@
 </style>
 </head>
 <body>
-<div class="wrap">
-
-  <!-- Top bar -->
+<header class="site-header">
   <div class="topbar">
     <div class="brand-area">
       <img src="/logo.svg" alt="Vietnam - Korea Logistics" />
@@ -231,7 +233,9 @@
       <button class="btn-logout" id="logoutBtn" onclick="logout()" style="display:none" data-i18n="logout">Đăng xuất</button>
     </div>
   </div>
+</header>
 
+<div class="wrap">
   <!-- ══ Section 1: Đơn lẻ ══ -->
   <div class="section">
     <div class="eyebrow" data-i18n="eyebrow1">Tra cứu đơn lẻ</div>
@@ -895,6 +899,7 @@ function tryUpload() {
   const q = new URLSearchParams(location.search).get('q');
   if (q) { document.getElementById('searchInput').value = q; doSearch(); }
 })();
+(function(){var h=document.querySelector('.site-header');if(h)addEventListener('scroll',function(){h.classList.toggle('scrolled',window.scrollY>4);},{passive:true});})();
 </script>
 </body>
 </html>

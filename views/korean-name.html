@@ -24,9 +24,11 @@
     --p1:#7c3aed; --p2:#db2777; --text:#0f172a; --muted:#64748b; --muted2:#94a3b8; --line:#e2e8f0; --bg:#f1f5f9; }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Segoe UI','Noto Sans KR',Arial,sans-serif;color:var(--text);line-height:1.6;
-    background:radial-gradient(1000px 500px at 80% -10%,rgba(124,58,237,.08),transparent 60%),var(--bg);min-height:100vh;padding:20px 16px 56px;}
-  .wrap{max-width:620px;margin:0 auto;}
-  .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px;}
+    background:radial-gradient(1000px 500px at 80% -10%,rgba(124,58,237,.08),transparent 60%),var(--bg);min-height:100vh;padding:0 0 56px;}
+  .wrap{max-width:620px;margin:0 auto;padding:26px 16px 0;}
+  .site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(8px);-webkit-backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid var(--line);transition:box-shadow .2s;}
+  .site-header.scrolled{box-shadow:0 4px 16px -6px rgba(15,23,42,.18);}
+  .topbar{max-width:620px;margin:0 auto;padding:9px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
   .brand{display:flex;align-items:center;gap:10px;text-decoration:none;} .brand img{height:40px;} .brand b{font-size:.98rem;color:var(--blue);font-weight:800;}
   .nav-home{font-size:.82rem;font-weight:600;color:var(--blue);text-decoration:none;border:1.5px solid var(--line);background:#fff;padding:8px 16px;border-radius:99px;}
   .top-nav{display:flex;align-items:center;gap:2px;flex-wrap:wrap;}
@@ -65,7 +67,7 @@
 </style>
 </head>
 <body>
-<div class="wrap">
+<header class="site-header">
   <div class="topbar">
     <a class="brand" href="/"><img src="/logo.svg" alt="Vietnam - Korea Logistics" /><b>Vietnam - Korea Logistics</b></a>
     <nav class="top-nav">
@@ -75,6 +77,9 @@
       <a href="/nguoi-viet-o-han">Người Việt ở Hàn</a>
     </nav>
   </div>
+</header>
+
+<div class="wrap">
 
   <div class="eyebrow">Vui · Miễn phí</div>
   <h1>Tên tiếng Hàn của bạn là gì? 🇰🇷</h1>
@@ -219,6 +224,7 @@ function flash(el, t){ if (!el) return; const o = el.textContent; el.textContent
   const n = new URLSearchParams(location.search).get('name');
   if(n){ document.getElementById('nameIn').value=n; gen(); }
 })();
+(function(){var h=document.querySelector('.site-header');if(h)addEventListener('scroll',function(){h.classList.toggle('scrolled',window.scrollY>4);},{passive:true});})();
 </script>
 </body>
 </html>

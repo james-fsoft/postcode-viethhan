@@ -29,7 +29,8 @@
   svg{display:block;}
 
   /* Header */
-  header{border-bottom:1px solid var(--g200);background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(8px);position:sticky;top:0;z-index:20;}
+  header{border-bottom:1px solid var(--g200);background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(8px);-webkit-backdrop-filter:saturate(180%) blur(8px);position:sticky;top:0;z-index:50;transition:box-shadow .2s;}
+  header.scrolled{box-shadow:0 4px 16px -6px rgba(15,23,42,.18);}
   .nav{max-width:1000px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
   .brand{display:flex;align-items:center;gap:10px;} .brand img{height:34px;} .brand b{font-size:0.95rem;color:var(--blue);font-weight:800;letter-spacing:-.01em;}
   .top-nav{display:flex;align-items:center;gap:2px;flex-wrap:wrap;}
@@ -221,5 +222,6 @@
     </p>
   </div>
 </footer>
+<script>(function(){var h=document.querySelector("header");if(h)addEventListener("scroll",function(){h.classList.toggle("scrolled",window.scrollY>4);},{passive:true});})();</script>
 </body>
 </html>

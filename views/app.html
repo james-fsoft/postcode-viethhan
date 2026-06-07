@@ -42,18 +42,24 @@
       font-family: 'Segoe UI', 'Noto Sans KR', Arial, sans-serif;
       background: #f1f5f9;
       min-height: 100vh;
-      padding: 20px 16px 48px;
+      padding: 0 0 48px;
       color: var(--gray-700);
     }
 
-    .container { max-width: 920px; margin: 0 auto; }
+    .container { max-width: 920px; margin: 0 auto; padding: 26px 16px 0; }
 
-    /* ── Top bar ── */
+    /* ── Header tách rời, dính khi cuộn ── */
+    .site-header { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,.85);
+      backdrop-filter: saturate(180%) blur(8px); -webkit-backdrop-filter: saturate(180%) blur(8px);
+      border-bottom: 1px solid var(--gray-200); transition: box-shadow .2s; }
+    .site-header.scrolled { box-shadow: 0 4px 16px -6px rgba(15,23,42,.18); }
     .topbar {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 9px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
       flex-wrap: wrap;
       gap: 12px;
     }
@@ -600,9 +606,7 @@
   </style>
 </head>
 <body>
-<div class="container">
-
-  <!-- Top bar -->
+<header class="site-header">
   <div class="topbar">
     <div class="brand-area">
       <img src="/logo.svg" alt="Vietnam - Korea Logistics" />
@@ -636,7 +640,9 @@
       <button class="btn-logout" id="logoutBtn" onclick="logout()"><span data-i18n="btnLogout">Đăng xuất</span></button>
     </div>
   </div>
+</header>
 
+<div class="container">
   <!-- Hero: giới thiệu nhanh + dải tin cậy -->
   <div class="home-hero">
     <h1 data-i18n="heroTitle">Bộ công cụ & tiện ích logistics Việt – Hàn</h1>
@@ -2086,6 +2092,7 @@ function applyAccessUI() {
   }
 
 })();
+(function(){var h=document.querySelector('.site-header');if(h)addEventListener('scroll',function(){h.classList.toggle('scrolled',window.scrollY>4);},{passive:true});})();
 </script>
 </body>
 </html>

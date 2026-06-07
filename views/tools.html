@@ -23,9 +23,11 @@
     --text:#0f172a; --muted:#64748b; --muted2:#94a3b8; --line:#e2e8f0; --line2:#cbd5e1; --bg:#f1f5f9;
     --shadow:0 1px 4px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05); }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:var(--bg);color:var(--text);font-family:'Segoe UI','Noto Sans KR',Arial,sans-serif;line-height:1.55;min-height:100vh;padding:20px 16px 56px;}
-  .wrap{max-width:1000px;margin:0 auto;}
-  .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px;}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI','Noto Sans KR',Arial,sans-serif;line-height:1.55;min-height:100vh;padding:0 0 56px;}
+  .wrap{max-width:1000px;margin:0 auto;padding:26px 16px 0;}
+  .site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(8px);-webkit-backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid var(--line);transition:box-shadow .2s;}
+  .site-header.scrolled{box-shadow:0 4px 16px -6px rgba(15,23,42,.18);}
+  .topbar{max-width:1000px;margin:0 auto;padding:9px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
   .brand{display:flex;align-items:center;gap:12px;text-decoration:none;}
   .brand img{height:42px;}
   .brand .bn{font-size:1rem;font-weight:800;color:var(--blue);}
@@ -100,8 +102,7 @@
 </style>
 </head>
 <body>
-<div class="wrap">
-
+<header class="site-header">
   <div class="topbar">
     <a class="brand" href="/">
       <img src="/logo.svg" alt="Vietnam - Korea Logistics" />
@@ -123,10 +124,11 @@
       </select>
       <button class="btn-login-top" id="loginBtn" onclick="location.href='/login'" style="display:none" data-i18n="login">Đăng nhập</button>
       <button class="btn-logout" id="logoutBtn" onclick="logout()" style="display:none" data-i18n="logout">Đăng xuất</button>
-      <a class="nav-home" href="/" data-i18n="navHome">← Trang chính</a>
     </div>
   </div>
+</header>
 
+<div class="wrap">
   <div class="eyebrow" data-i18n="eyebrow">Tiện ích</div>
   <h1 data-i18n="h1">Tiện ích logistics Việt - Hàn</h1>
   <p class="lead" data-i18n="lead">Mấy thứ dân Việt - Hàn cần mỗi ngày: tỷ giá Won, tính cước, lịch lễ Hàn Quốc, mã sân bay/cảng.</p>
@@ -471,6 +473,7 @@ function tickClock(){
   loadHolidays();
   tickClock(); setInterval(tickClock,1000);
 })();
+(function(){var h=document.querySelector('.site-header');if(h)addEventListener('scroll',function(){h.classList.toggle('scrolled',window.scrollY>4);},{passive:true});})();
 </script>
 </body>
 </html>

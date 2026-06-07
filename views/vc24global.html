@@ -36,7 +36,7 @@
   "provider": { "@type": "Organization", "name": "Vietnam - Korea Logistics", "url": "__BASE__/" }
 }
 </script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <style>
   :root {
     --red:#d42126; --blue:#1e40af; --blue-mid:#1d4ed8; --blue-light:#eff6ff;
@@ -842,6 +842,7 @@ function parseSheetMeta(name) {
 }
 
 let SHEETS = [];
+let LOOKUP = {};   // hawb -> { mbl, stage, date, weight } sau khi tra Hải quan
 
 // Robot đang quét (SVG động) + thanh %
 function scanBotHTML() {
@@ -902,15 +903,13 @@ async function scanAll() {
   prog.style.display = 'none';
   prog.innerHTML = '';
 
-  // Ghi M B/L vào đúng ô (chỉ điền ô trống) + dựng danh sách hiển thị
+  // Lưu kết quả tra cứu (dùng khi xuất file) + dựng danh sách hiển thị
+  LOOKUP = info;
   const rows = [];
   SHEETS.forEach(s => {
     s.rows.forEach(r => {
       const it = info[r.hawb] || {};
       const mbl = r.mblSrc || it.mbl || '';        // giữ số gốc nếu đã có, nếu trống thì lấy số tra được
-      if (s.col.mbl >= 0 && !r.mblSrc && it.mbl) { // CHỈ điền ô đang trống, không sửa dữ liệu khác
-        s.ws[XLSX.utils.encode_cell({ r: r.r, c: s.col.mbl })] = { t: 's', v: it.mbl };
-      }
       rows.push({ sheet: s.name, hawb: r.hawb, mbl, date: r.date || it.date || '', weight: r.weight || it.weight || '', stage: it.stage });
     });
   });
@@ -919,13 +918,109 @@ async function scanAll() {
 
 function rescan() { if (workbook) scanAll(); }
 
-// Tải kết quả: CHÍNH file gốc (đủ mọi sheet) — chỉ cột M B/L được điền thêm, dữ liệu khác giữ nguyên
+// Tải kết quả: giữ nguyên dữ liệu mọi sheet, THÊM cột M B/L (vàng) đã điền số, HAWB hiện đủ, có định dạng
 function exportResult() {
   if (!workbook || !SHEETS.length) { alert(t('noExport')); return; }
+  const byName = {}; SHEETS.forEach(s => byName[s.name] = s);
+  const out = XLSX.utils.book_new();
+  (workbook.SheetNames || []).forEach(name => {
+    const ws = byName[name] ? buildStyledSheet(byName[name]) : workbook.Sheets[name];
+    XLSX.utils.book_append_sheet(out, ws, name.slice(0, 31));
+  });
   const stamp = new Date().toISOString().slice(0, 10);
   const base = String(currentFile || 'vc24global').replace(/\.[^.]+$/, '');
-  XLSX.writeFile(workbook, `${base}_M-B-L_${stamp}.xlsx`);
+  XLSX.writeFile(out, `${base}_M-B-L_${stamp}.xlsx`);
 }
+
+// Dựng lại 1 sheet: chèn/điền cột M B/L + ép HAWB hiện đủ số + tô màu (vàng M B/L, header xanh, TOTAL cam)
+function buildStyledSheet(s) {
+  const aoa = XLSX.utils.sheet_to_json(s.ws, { header: 1, defval: '', raw: true });
+  // Tìm hàng tiêu đề + vị trí cột
+  let hi = -1, c = {};
+  for (let i = 0; i < aoa.length; i++) {
+    const U = aoa[i].map(x => String(x).trim().toUpperCase());
+    const N = U.map(x => x.replace(/[\s./]/g, ''));
+    const j = U.indexOf('HAWB');
+    if (j >= 0) { hi = i; c.hawb = j; c.mbl = N.indexOf('MBL'); break; }
+  }
+  if (hi < 0) return XLSX.utils.aoa_to_sheet(aoa);
+
+  // Chưa có cột M B/L → chèn ngay TRƯỚC cột HAWB
+  let mblCol;
+  if (c.mbl >= 0) { mblCol = c.mbl; }
+  else {
+    mblCol = c.hawb;
+    aoa.forEach((row, ri) => { while (row.length < mblCol) row.push(''); row.splice(mblCol, 0, ri === hi ? 'M B/L' : ''); });
+    c.hawb += 1;
+  }
+
+  // Điền M B/L + đánh dấu dòng dữ liệu (để ép HAWB hiện đủ số)
+  const dataRows = [];
+  for (let i = hi + 1; i < aoa.length; i++) {
+    const hawb = String(aoa[i][c.hawb] ?? '').replace(/\s/g, '');
+    if (!/^\d{9,13}$/.test(hawb)) continue;
+    dataRows.push({ i, hawb });
+    const cur = String(aoa[i][mblCol] ?? '').trim();
+    const looked = (LOOKUP[hawb] && LOOKUP[hawb].mbl) || '';
+    aoa[i][mblCol] = cur || looked || '';
+  }
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const lastC = Math.max(...aoa.map(r => r.length)) - 1;
+  const enc = (r, col) => XLSX.utils.encode_cell({ r, c: col });
+
+  // HAWB hiện đủ số (number + format '0', không còn 3.04E+11)
+  dataRows.forEach(({ i, hawb }) => {
+    ws[enc(i, c.hawb)] = { t: 'n', v: Number(hawb), z: '0', s: STY.dataC };
+  });
+
+  // Viền + canh giữa cho mọi ô trong vùng dữ liệu
+  for (let r = hi; r < aoa.length; r++) {
+    for (let col = 0; col <= lastC; col++) {
+      const a = enc(r, col);
+      if (!ws[a]) ws[a] = { t: 's', v: '' };
+      if (!ws[a].s) ws[a].s = STY.data;
+    }
+  }
+  // Hàng tiêu đề bảng (header) — nền xanh nhạt, đậm
+  for (let col = 0; col <= lastC; col++) { const a = enc(hi, col); if (ws[a]) ws[a].s = STY.head; }
+  // Cột M B/L — nền vàng
+  for (let r = hi + 1; r < aoa.length; r++) { const a = enc(r, mblCol); if (ws[a]) ws[a].s = (a && isTotalRow(aoa[r])) ? STY.total : STY.mbl; }
+  // HAWB number format giữ canh giữa
+  dataRows.forEach(({ i }) => { ws[enc(i, c.hawb)].s = STY.dataC; });
+  // Dòng TOTAL — nền cam, đậm
+  for (let r = hi + 1; r < aoa.length; r++) {
+    if (isTotalRow(aoa[r])) for (let col = 0; col <= lastC; col++) { const a = enc(r, col); if (ws[a]) ws[a].s = STY.total; }
+  }
+  // Tiêu đề trên cùng (vd "냉동화물 PCS / WT") — gộp ô, canh giữa
+  const merges = [];
+  for (let r = 0; r < hi; r++) {
+    if (aoa[r].some(x => String(x).trim() !== '')) {
+      merges.push({ s: { r, c: 0 }, e: { r, c: lastC } });
+      const a = enc(r, 0); if (ws[a]) ws[a].s = STY.title;
+    }
+  }
+  if (merges.length) ws['!merges'] = merges;
+
+  // Độ rộng cột
+  const w = []; for (let col = 0; col <= lastC; col++) w.push({ wch: col === mblCol || col === c.hawb ? 16 : 11 });
+  ws['!cols'] = w;
+  return ws;
+}
+function isTotalRow(row) { return row.some(x => String(x).trim().toUpperCase() === 'TOTAL'); }
+
+// Bộ style cho file xuất (xlsx-js-style)
+const _bd = { style: 'thin', color: { rgb: 'D4D4D4' } };
+const _border = { top: _bd, bottom: _bd, left: _bd, right: _bd };
+const _center = { horizontal: 'center', vertical: 'center' };
+const STY = {
+  data:  { border: _border, alignment: _center },
+  dataC: { border: _border, alignment: _center },
+  head:  { border: _border, alignment: _center, font: { bold: true, color: { rgb: '1F2A44' } }, fill: { fgColor: { rgb: 'DDEBF7' } } },
+  mbl:   { border: _border, alignment: _center, font: { color: { rgb: '7A6A00' } }, fill: { fgColor: { rgb: 'FFFF00' } } },
+  total: { border: _border, alignment: _center, font: { bold: true }, fill: { fgColor: { rgb: 'FCE4D6' } } },
+  title: { alignment: _center, font: { bold: true, sz: 12 }, fill: { fgColor: { rgb: 'FDF2E9' } } },
+};
 
 // ── Đăng nhập (tra đơn lẻ miễn phí; upload Excel cần login) ───────────────────
 let IS_GUEST = true;

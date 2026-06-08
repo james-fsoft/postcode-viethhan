@@ -545,6 +545,19 @@ app.post('/api/vc24/edit', requireAuth, requireVC24, async (req, res) => {
   res.json({ ok: true });
 });
 
+// Lưu cả 1 dòng (sửa từ popup) — chỉ ghi các trường được phép
+app.post('/api/vc24/save', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: false, redis: false });
+  const { key, row } = req.body || {};
+  if (!key || !row || typeof row !== 'object') return res.json({ ok: false, message: 'bad' });
+  const o = await vcLoadOrders();
+  const cur = o.rows.find(r => keyOf(r) === key);
+  if (!cur) return res.json({ ok: false, message: 'not found' });
+  for (const f of VC24_EDITABLE) { if (Object.prototype.hasOwnProperty.call(row, f)) cur[f] = row[f]; }
+  await vcSaveOrders(o);
+  res.json({ ok: true });
+});
+
 // Xóa 1 đơn — bắt buộc đúng mật khẩu tài khoản
 app.post('/api/vc24/delete', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });

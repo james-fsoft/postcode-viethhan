@@ -51,11 +51,18 @@
   td.r,th.r{text-align:right;} td.num{font-variant-numeric:tabular-nums;}
   td.ed{cursor:cell;} td.ed:hover{background:var(--blue-l);box-shadow:inset 0 0 0 1px var(--blue);}
   .cell-input{width:100%;min-width:80px;font-family:inherit;font-size:.82rem;padding:4px 6px;border:1.5px solid var(--blue);border-radius:6px;outline:none;background:#fff;}
+  tbody tr.rowclick{cursor:pointer;} tbody tr.rowclick:hover td{background:var(--blue-l);}
+  .tbl-wrap td{max-width:240px;overflow:hidden;text-overflow:ellipsis;}
+  .ef{width:100%;font-family:inherit;font-size:.88rem;padding:8px 10px;border:1.5px solid var(--g200);border-radius:8px;outline:none;background:#fff;}
+  .ef:focus{border-color:var(--blue);} textarea.ef{resize:vertical;}
   .pill{display:inline-block;font-size:.72rem;font-weight:700;border-radius:99px;padding:2px 9px;}
   .pill.paid{background:var(--green-l);color:var(--green);} .pill.owe{background:#fff1f2;color:#e11d48;}
   .pill.reg{background:var(--g100);color:var(--g600);}
   .del{border:1px solid #fecaca;background:#fff;color:#dc2626;border-radius:7px;padding:3px 8px;cursor:pointer;font-size:.85rem;}
   .del:hover{background:#fee2e2;}
+  .pager{display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px;}
+  .pager select{font-family:inherit;font-size:.8rem;padding:5px 8px;border:1.5px solid var(--g200);border-radius:8px;}
+  .btn:disabled,.btn.sm:disabled{opacity:.4;cursor:default;border-color:var(--g200);color:var(--g400);}
   .empty{padding:40px;text-align:center;color:var(--g400);}
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:16px;}
   .stat{background:#fff;border:1px solid var(--g200);border-radius:14px;padding:16px;}
@@ -127,25 +134,26 @@
 
     <div class="panel" id="listPanel" style="display:none;margin-top:16px;">
       <div class="filters">
-        <input class="grow" id="q" placeholder="🔎 Tìm: mã KH, người nhận, SĐT, mã kiện, địa chỉ, ghi chú…" oninput="applyFilters()" />
-        <select id="fCust" onchange="applyFilters()"><option value="">Tất cả khách hàng</option></select>
-        <select id="fRegion" onchange="applyFilters()"><option value="">Tất cả khu vực</option></select>
-        <select id="fPay" onchange="applyFilters()"><option value="">Tất cả TT</option><option value="owe">Chưa thu</option><option value="paid">Đã thu</option></select>
+        <input class="grow" id="q" placeholder="🔎 Tìm: mã KH, người nhận, SĐT, mã kiện, địa chỉ, ghi chú…" oninput="onSearch()" />
+        <select id="fCust" onchange="filterChanged()"><option value="">Tất cả khách hàng</option></select>
+        <select id="fRegion" onchange="filterChanged()"><option value="">Tất cả khu vực</option></select>
+        <select id="fPay" onchange="filterChanged()"><option value="">Tất cả TT</option><option value="owe">Chưa thu</option><option value="paid">Đã thu</option></select>
       </div>
       <div class="small muted" id="listSummary" style="margin-bottom:10px;"></div>
-      <div class="small muted" style="margin-bottom:8px;">💡 Bấm vào ô bất kỳ (trừ Mã kiện) để sửa — tự lưu online.</div>
+      <div class="small muted" style="margin-bottom:8px;">💡 Bấm vào 1 dòng để mở cửa sổ sửa/xóa — tự lưu online. Phân trang để chạy nhanh trên mọi máy.</div>
       <div class="tbl-wrap">
         <table>
           <thead><tr>
             <th>Ngày về</th><th>Mã kiện</th><th>Trạng thái hàng</th><th>Mã KH</th><th>Check TT</th>
             <th>SĐT gửi / GC</th><th>Người nhận</th><th>SĐT nhận</th><th>Địa chỉ</th><th>Khu vực</th>
             <th class="r">KG</th><th class="r">Đơn giá</th><th class="r">Tiền Won (₩)</th><th class="r">Tiền VND (₫)</th>
-            <th>NV giao</th><th class="r">Phụ phí</th><th>Ghi chú</th><th></th>
+            <th>NV giao</th><th class="r">Phụ phí</th><th>Ghi chú</th>
           </tr></thead>
           <tbody id="listBody"></tbody>
         </table>
         <div class="empty" id="listEmpty">Chưa có dữ liệu — hãy thêm file lên.</div>
       </div>
+      <div class="pager" id="listPager"></div>
     </div>
   </div>
 
@@ -202,6 +210,15 @@
   </div>
 </div>
 
+<div class="modal" id="editModal">
+  <div class="modal-box" style="max-width:660px">
+    <div class="modal-bar"><h3 id="editTitle">Sửa đơn</h3>
+      <div style="display:flex;gap:8px"><button class="btn primary" onclick="saveEdit()">💾 Lưu</button><button class="btn" onclick="closeEdit()">Đóng</button></div>
+    </div>
+    <div style="padding:18px" id="editBody"></div>
+  </div>
+</div>
+
 <div class="modal" id="invoiceModal">
   <div class="modal-box">
     <div class="modal-bar no-print"><h3>Hóa đơn / Yêu cầu thanh toán</h3>
@@ -225,6 +242,8 @@ function fmtKg(n){ return n?(Number(n).toLocaleString('vi-VN',{maximumFractionDi
 function paid(r){ return noVN(r.pay)==='DA TT'; }
 
 let ROWS=[], CFG={}, REDIS=false, CUSTS=[], FILTERED=[], CUST_SEL='';
+let PAGE=1, PAGE_SIZE=100, LIST_ROWS=[];   // phân trang để máy không lag khi nhiều data
+let _searchT=null;
 const CFG_KEYS=['name','tax','addr','phone','email','bank','acc','holder','memo'];
 const PAY_OPTS=['ĐÃ TT','CHƯA TT','ĐÃ NHẮC','ĐÃ GỬI TT','ĐÃ NHẬP FILE',''];
 
@@ -335,49 +354,64 @@ async function parseWB(wb, fname){
   }catch(e){ alert('Lỗi khi gửi dữ liệu lên server.'); }
 }
 
-/* ---------- Sửa ô (lưu online) ---------- */
-function ed(key,field,type,display,align){
-  return `<td class="ed${align==='r'?' r':''}" data-k="${escA(key)}" data-f="${field}" data-t="${type}" onclick="editCell(this)">${display||'<span class="muted">—</span>'}</td>`;
+/* ---------- Hàng hiển thị trơn (nhẹ) — click để mở popup sửa cả dòng ---------- */
+const EDIT_FIELDS=[
+  ['date','Ngày về','t'],['cust','Mã khách hàng','t'],['status','Trạng thái hàng','t'],['pay','Check TT (thanh toán)','pay'],
+  ['rcv','Người nhận','t'],['rcvPh','SĐT người nhận','t'],['region','Khu vực','t'],['staff','NV giao','t'],
+  ['weight','Khối lượng (KG)','num'],['price','Đơn giá (₩)','num'],['won','Thành tiền Won (₩)','num'],
+  ['vnd','Thành tiền VND (₫)','num'],['phuPhi','Phụ phí','num'],
+  ['addr','Địa chỉ người nhận','area'],['note','SĐT người gửi / Ghi chú','area'],['ghiChu','Ghi chú','area']
+];
+let EDIT_KEY='';
+function listRowHTML(r){
+  return `<tr class="rowclick" onclick="openEdit('${escJs(r.key)}')">
+    <td>${esc(r.date)}</td><td style="font-weight:700">${esc(r.pkg)}</td><td>${esc(r.status)}</td>
+    <td><b>${esc(r.cust)}</b></td><td><span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span></td>
+    <td>${esc(r.note)}</td><td>${esc(r.rcv)}</td><td>${esc(r.rcvPh)}</td><td>${esc(r.addr)}</td>
+    <td>${r.region?'<span class="pill reg">'+esc(r.region)+'</span>':''}</td>
+    <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.price)}</td>
+    <td class="r num">${fmtWon(r.won)}</td><td class="r num">${fmtVnd(r.vnd)}</td>
+    <td>${esc(r.staff)}</td><td class="r num">${fmtVnd(r.phuPhi)}</td><td>${esc(r.ghiChu)}</td>
+  </tr>`;
 }
-function editCell(td){
-  if(td.querySelector('input,select')) return;
-  const k=td.dataset.k, f=td.dataset.f, t=td.dataset.t;
-  const row=ROWS.find(r=>r.key===k); if(!row) return;
-  const cur=row[f];
-  let editor;
-  if(t==='pay'){
-    editor=document.createElement('select'); editor.className='cell-input';
-    PAY_OPTS.forEach(o=>{ const op=document.createElement('option'); op.value=o; op.textContent=o||'(trống)'; if(noVN(o)===noVN(cur||''))op.selected=true; editor.appendChild(op); });
-  }else{
-    editor=document.createElement('input'); editor.className='cell-input';
-    editor.value = (t==='num') ? (cur?cur:'') : (cur==null?'':cur);
-  }
-  td.innerHTML=''; td.appendChild(editor); editor.focus(); if(editor.select)editor.select();
-  let done=false;
-  const commit=()=>{ if(done)return; done=true; let v=editor.value;
-    if(t==='num') v=(f==='weight')?weight(v):money(v);
-    commitEdit(k,f,v); };
-  editor.addEventListener('blur',commit);
-  editor.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();editor.blur();} else if(e.key==='Escape'){done=true; applyFilters(); if(CUST_SEL)renderCust();} });
-  if(t==='pay') editor.addEventListener('change',()=>editor.blur());
+function openEdit(key){
+  const r=ROWS.find(x=>x.key===key); if(!r) return; EDIT_KEY=key;
+  $('editTitle').textContent='Sửa đơn — Mã kiện '+(r.pkg||key);
+  $('editBody').innerHTML='<div class="grid2">'+EDIT_FIELDS.map(([f,lab,t])=>{
+    const v=r[f]==null?'':r[f];
+    let inp;
+    if(t==='pay') inp=`<select id="ef_${f}" class="ef">${PAY_OPTS.map(o=>`<option value="${escA(o)}"${noVN(o)===noVN(v)?' selected':''}>${o||'(trống)'}</option>`).join('')}</select>`;
+    else if(t==='area') inp=`<textarea id="ef_${f}" class="ef" rows="2">${esc(v)}</textarea>`;
+    else inp=`<input id="ef_${f}" class="ef" value="${escA((t==='num'&&!v)?'':v)}" ${t==='num'?'inputmode="numeric"':''} />`;
+    const wide=(t==='area')?' style="grid-column:1/-1"':'';
+    return `<div class="field"${wide}><label>${lab}</label>${inp}</div>`;
+  }).join('')+'</div>'+
+    `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:10px;flex-wrap:wrap">
+       <button class="btn" style="border-color:#fecaca;color:#dc2626" onclick="deleteCur()">🗑 Xóa đơn này</button>
+       <span class="small muted">Mã kiện là khóa duy nhất — không sửa được.</span>
+     </div>`;
+  $('editModal').classList.add('show');
 }
-function commitEdit(k,f,v){
-  const row=ROWS.find(r=>r.key===k); if(!row) return;
-  row[f]=v;
+function closeEdit(){ $('editModal').classList.remove('show'); EDIT_KEY=''; }
+function saveEdit(){
+  const k=EDIT_KEY, r=ROWS.find(x=>x.key===k); if(!r){ closeEdit(); return; }
+  const patch={};
+  EDIT_FIELDS.forEach(([f,lab,t])=>{ const el=$('ef_'+f); if(!el)return; let v=el.value;
+    if(t==='num') v=(f==='weight')?weight(v):money(v); else v=String(v).trim();
+    r[f]=v; patch[f]=v; });
+  closeEdit();
   applyFilters(); renderDebt(); if(CUST_SEL) renderCust();
-  if(REDIS){ fetch('/api/vc24/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k,field:f,value:v})}).catch(()=>{}); }
+  if(REDIS){ fetch('/api/vc24/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k,row:patch})}).catch(()=>{}); }
 }
-
-/* ---------- Xóa (mật khẩu + xác nhận) ---------- */
-async function deleteRow(k){
-  const row=ROWS.find(r=>r.key===k); if(!row) return;
+async function deleteCur(){
+  const k=EDIT_KEY, row=ROWS.find(r=>r.key===k); if(!row) return;
   if(!confirm(`Bạn có CHẮC CHẮN muốn xóa đơn "${row.pkg||k}" (KH: ${row.cust||'-'})?\nHành động này KHÔNG hoàn tác.`)) return;
   if(!REDIS){ alert('Chưa bật lưu trữ server — không xóa được.'); return; }
   const pw=prompt('Nhập MẬT KHẨU tài khoản để xác nhận xóa:'); if(pw==null||pw==='') return;
   try{
     const r=await fetch('/api/vc24/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k,password:pw})}).then(x=>x.json());
     if(!r.ok){ alert(r.reason==='password'?'❌ Sai mật khẩu — không xóa.':'Xóa không thành công.'); return; }
-    ROWS=ROWS.filter(x=>x.key!==k);
+    ROWS=ROWS.filter(x=>x.key!==k); closeEdit();
     rebuildAll($('fileInfo').textContent.replace(/ · \d+ đơn$/,''));
   }catch(e){ alert('Lỗi khi xóa.'); }
 }
@@ -401,38 +435,31 @@ function currentFilter(){
   });
 }
 function applyFilters(){
-  const rows=currentFilter(), body=$('listBody'), empty=$('listEmpty');
-  if(!rows.length){ body.innerHTML=''; empty.style.display='block'; empty.textContent=ROWS.length?'Không có đơn khớp bộ lọc.':'Chưa có dữ liệu — hãy thêm file lên.'; }
-  else{ empty.style.display='none';
-    body.innerHTML=rows.map(r=>{
-      const pd=`<span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span>`;
-      const reg=r.region?`<span class="pill reg">${esc(r.region)}</span>`:'';
-      return `<tr>
-        ${ed(r.key,'date','t',esc(r.date))}
-        <td style="font-weight:700">${esc(r.pkg)}</td>
-        ${ed(r.key,'status','t',esc(r.status))}
-        ${ed(r.key,'cust','t','<b>'+esc(r.cust)+'</b>')}
-        ${ed(r.key,'pay','pay',pd)}
-        ${ed(r.key,'note','t',esc(r.note))}
-        ${ed(r.key,'rcv','t',esc(r.rcv))}
-        ${ed(r.key,'rcvPh','t',esc(r.rcvPh))}
-        ${ed(r.key,'addr','t',esc(r.addr))}
-        ${ed(r.key,'region','t',reg)}
-        ${ed(r.key,'weight','num',fmtKg(r.weight),'r')}
-        ${ed(r.key,'price','num',fmtWon(r.price),'r')}
-        ${ed(r.key,'won','num',fmtWon(r.won),'r')}
-        ${ed(r.key,'vnd','num',fmtVnd(r.vnd),'r')}
-        ${ed(r.key,'staff','t',esc(r.staff))}
-        ${ed(r.key,'phuPhi','num',fmtVnd(r.phuPhi),'r')}
-        ${ed(r.key,'ghiChu','t',esc(r.ghiChu))}
-        <td><button class="del" onclick="deleteRow('${escJs(r.key)}')" title="Xóa đơn (cần mật khẩu)">🗑</button></td>
-      </tr>`;
-    }).join('');
+  LIST_ROWS=currentFilter();
+  const total=LIST_ROWS.length, body=$('listBody'), empty=$('listEmpty');
+  if(!total){ body.innerHTML=''; empty.style.display='block'; empty.textContent=ROWS.length?'Không có đơn khớp bộ lọc.':'Chưa có dữ liệu — hãy thêm file lên.'; $('listPager').innerHTML=''; }
+  else{
+    empty.style.display='none';
+    const pages=Math.max(1,Math.ceil(total/PAGE_SIZE)); if(PAGE>pages)PAGE=pages; if(PAGE<1)PAGE=1;
+    const start=(PAGE-1)*PAGE_SIZE, pageRows=LIST_ROWS.slice(start,start+PAGE_SIZE);
+    body.innerHTML=pageRows.map(listRowHTML).join('');
+    renderPager(total,pages,start,pageRows.length);
   }
-  const owe=rows.filter(r=>!paid(r));
-  $('listSummary').innerHTML=`Hiện <b>${rows.length}</b> đơn · Chưa thu <b>${owe.length}</b> — <b style="color:#e11d48">₩${sum(owe,'won').toLocaleString('vi-VN')}</b>`+
+  const owe=LIST_ROWS.filter(r=>!paid(r));
+  $('listSummary').innerHTML=`Khớp <b>${total}</b> đơn · Chưa thu <b>${owe.length}</b> — <b style="color:#e11d48">₩${sum(owe,'won').toLocaleString('vi-VN')}</b>`+
     (sum(owe,'vnd')||sum(owe,'phuPhi')?` · <b style="color:#e11d48">${(sum(owe,'vnd')+sum(owe,'phuPhi')).toLocaleString('vi-VN')} ₫</b>`:'');
 }
+function renderPager(total,pages,start,shown){
+  $('listPager').innerHTML=`
+    <button class="btn sm" ${PAGE<=1?'disabled':''} onclick="gotoPage(${PAGE-1})">« Trước</button>
+    <span class="small">Trang <b>${PAGE}</b>/${pages} · ${start+1}–${start+shown}/${total} đơn</span>
+    <button class="btn sm" ${PAGE>=pages?'disabled':''} onclick="gotoPage(${PAGE+1})">Sau »</button>
+    <select onchange="setPageSize(this.value)">${[50,100,200,500].map(n=>`<option value="${n}"${n===PAGE_SIZE?' selected':''}>${n}/trang</option>`).join('')}</select>`;
+}
+function gotoPage(n){ PAGE=n; applyFilters(); const w=$('listBody').closest('.tbl-wrap'); if(w)w.scrollTop=0; }
+function setPageSize(n){ PAGE_SIZE=+n; PAGE=1; applyFilters(); }
+function filterChanged(){ PAGE=1; applyFilters(); }
+function onSearch(){ clearTimeout(_searchT); _searchT=setTimeout(()=>{ PAGE=1; applyFilters(); },220); }
 
 /* ---------- Công nợ ---------- */
 function customerAgg(){
@@ -491,12 +518,12 @@ function renderCust(){
   const owe=rows.filter(r=>!paid(r)); const oweVnd=sum(owe,'vnd')+sum(owe,'phuPhi');
   $('custSummary').innerHTML=stat('Tổng đơn',rows.length,'','')+stat('Đơn chưa thu',owe.length,owe.length?'owe':'','')+
     stat('Còn nợ (Won)','₩'+sum(owe,'won').toLocaleString('vi-VN'),'owe','')+stat('Còn nợ (VND)',oweVnd?oweVnd.toLocaleString('vi-VN')+' ₫':'—','owe','gồm phụ phí');
-  $('custBody').innerHTML=rows.map(r=>`<tr>
-    ${ed(r.key,'date','t',esc(r.date))}<td style="font-weight:700">${esc(r.pkg)}</td>
-    ${ed(r.key,'pay','pay','<span class="pill '+(paid(r)?'paid':'owe')+'">'+esc(r.pay||'—')+'</span>')}
-    ${ed(r.key,'rcv','t',esc(r.rcv))}${ed(r.key,'region','t',r.region?'<span class="pill reg">'+esc(r.region)+'</span>':'')}
-    ${ed(r.key,'weight','num',fmtKg(r.weight),'r')}${ed(r.key,'won','num',fmtWon(r.won),'r')}
-    ${ed(r.key,'phuPhi','num',fmtVnd(r.phuPhi),'r')}${ed(r.key,'vnd','num',fmtVnd(r.vnd),'r')}${ed(r.key,'ghiChu','t',esc(r.ghiChu))}
+  $('custBody').innerHTML=rows.map(r=>`<tr class="rowclick" onclick="openEdit('${escJs(r.key)}')">
+    <td>${esc(r.date)}</td><td style="font-weight:700">${esc(r.pkg)}</td>
+    <td><span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span></td>
+    <td>${esc(r.rcv)}</td><td>${r.region?'<span class="pill reg">'+esc(r.region)+'</span>':''}</td>
+    <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.won)}</td>
+    <td class="r num">${fmtVnd(r.phuPhi)}</td><td class="r num">${fmtVnd(r.vnd)}</td><td>${esc(r.ghiChu)}</td>
   </tr>`).join('');
 }
 
@@ -554,6 +581,7 @@ function openInvoice(cust,onlyOwe){
 }
 function closeInvoice(){ $('invoiceModal').classList.remove('show'); }
 $('invoiceModal').addEventListener('click',e=>{ if(e.target.id==='invoiceModal') closeInvoice(); });
+$('editModal').addEventListener('click',e=>{ if(e.target.id==='editModal') closeEdit(); });
 
 /* ---------- Thông tin công ty ---------- */
 function loadCfgLocal(){ try{ CFG=JSON.parse(localStorage.getItem('vc24_cfg')||'{}'); }catch(e){ CFG={}; } CFG_KEYS.forEach(k=>{ const el=$('cfg_'+k); if(el)el.value=CFG[k]||''; }); }

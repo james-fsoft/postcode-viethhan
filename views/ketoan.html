@@ -38,7 +38,10 @@
   .filters input,.filters select{font-family:inherit;font-size:.85rem;padding:9px 11px;border:1.5px solid var(--g200);border-radius:9px;background:#fff;color:var(--g700);outline:none;}
   .filters input:focus,.filters select:focus{border-color:var(--blue);}
   .filters .grow{flex:1;min-width:200px;}
-  .combo{position:relative;} .combo input{width:100%;}
+  .combo{position:relative;} .combo input{width:100%;padding-right:36px;}
+  .combo-caret{position:absolute;right:5px;top:50%;transform:translateY(-50%);border:none;background:none;color:var(--g400);font-size:1rem;line-height:1;cursor:pointer;padding:6px 8px;border-radius:6px;}
+  .combo-caret:hover{background:var(--g100);color:var(--g700);}
+  .combo-item.sel{background:var(--blue-l);color:var(--blue);font-weight:800;}
   .combo-list{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--g200);border-radius:10px;max-height:300px;overflow:auto;box-shadow:0 10px 30px rgba(15,23,42,.16);z-index:40;display:none;}
   .combo-list.show{display:block;}
   .combo-item{padding:9px 12px;cursor:pointer;font-size:.86rem;color:var(--g700);border-bottom:1px solid var(--g100);}
@@ -208,7 +211,8 @@
     <div class="panel">
       <div class="filters">
         <div class="combo grow">
-          <input type="text" id="custPick" autocomplete="off" placeholder="🔎 Gõ để tìm / chọn khách hàng…" oninput="comboFilter()" onfocus="comboFilter()" onkeydown="comboKey(event)" />
+          <input type="text" id="custPick" autocomplete="off" placeholder="🔎 Gõ để tìm hoặc bấm ▾ để chọn khách hàng…" oninput="comboFilter()" onfocus="comboFocus()" onkeydown="comboKey(event)" />
+          <button type="button" class="combo-caret" onclick="comboToggle()" tabindex="-1" title="Xổ danh sách">▾</button>
           <div class="combo-list" id="custList"></div>
         </div>
         <button class="btn" id="custPayBtn" onclick="openPay(CUST_SEL)" style="display:none;border-color:#86efac;color:var(--green)">💵 Thu tiền</button>
@@ -617,13 +621,16 @@ function invoiceCust(c,o){ CUST_SEL=c; openInvoice(c,o); }
 
 /* ---------- Theo khách hàng (combobox search) ---------- */
 function buildCustomerPicker(){ CUSTS=uniq(ROWS.map(r=>r.cust)).sort((a,b)=>a.localeCompare(b,'vi')); if(CUST_SEL&&!CUSTS.includes(CUST_SEL)){CUST_SEL='';$('custPick').value='';} }
-function comboFilter(){
-  const q=noVN($('custPick').value); FILTERED=q?CUSTS.filter(c=>noVN(c).includes(q)):CUSTS.slice();
+function renderComboList(){
   const list=$('custList');
-  list.innerHTML=FILTERED.length?FILTERED.slice(0,150).map((c,i)=>`<div class="combo-item" onmousedown="comboPick(${i})">${esc(c)}</div>`).join('')
-    :'<div class="combo-item" style="color:var(--g400);cursor:default">(không có KH khớp)</div>';
+  list.innerHTML=FILTERED.length
+    ? FILTERED.slice(0,300).map((c,i)=>`<div class="combo-item${c===CUST_SEL?' sel':''}" onmousedown="comboPick(${i})">${esc(c)}</div>`).join('')
+    : '<div class="combo-item" style="color:var(--g400);cursor:default">(không có KH khớp)</div>';
   list.classList.add('show');
 }
+function comboFilter(){ const q=noVN($('custPick').value); FILTERED=q?CUSTS.filter(c=>noVN(c).includes(q)):CUSTS.slice(); renderComboList(); }
+function comboFocus(){ $('custPick').select(); FILTERED=CUSTS.slice(); renderComboList(); }   // bấm vào ô: chọn hết chữ + xổ TOÀN BỘ để dễ đổi
+function comboToggle(){ const l=$('custList'); if(l.classList.contains('show')){ l.classList.remove('show'); } else { $('custPick').focus(); comboFocus(); } }
 function comboPick(i){ const c=FILTERED[i]; if(c==null)return; CUST_SEL=c; $('custPick').value=c; $('custList').classList.remove('show'); renderCust(); }
 function comboKey(e){ if(e.key==='Enter'){e.preventDefault(); if(FILTERED.length)comboPick(0);} else if(e.key==='Escape'){$('custList').classList.remove('show');} }
 document.addEventListener('click',e=>{ if(!e.target.closest('.combo')){ const l=$('custList'); if(l)l.classList.remove('show'); } });

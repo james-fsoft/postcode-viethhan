@@ -55,6 +55,14 @@
   .tbl-wrap td{max-width:240px;overflow:hidden;text-overflow:ellipsis;}
   .ef{width:100%;font-family:inherit;font-size:.88rem;padding:8px 10px;border:1.5px solid var(--g200);border-radius:8px;outline:none;background:#fff;}
   .ef:focus{border-color:var(--blue);} textarea.ef{resize:vertical;}
+  /* Popup sửa: gọn, co theo màn hình */
+  #editModal .modal-box{max-height:90vh;display:flex;flex-direction:column;}
+  #editBody{overflow:auto;padding:16px 18px;}
+  .efgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:8px 12px;}
+  .efgrid .field{margin-bottom:0;} .efgrid .field.wide{grid-column:1/-1;}
+  #editBody label{font-size:.72rem;font-weight:700;margin-bottom:2px;}
+  #editBody .ef{padding:6px 9px;font-size:.84rem;}
+  #editBody textarea.ef{min-height:42px;}
   .pill{display:inline-block;font-size:.72rem;font-weight:700;border-radius:99px;padding:2px 9px;}
   .pill.paid{background:var(--green-l);color:var(--green);} .pill.owe{background:#fff1f2;color:#e11d48;}
   .pill.reg{background:var(--g100);color:var(--g600);}
@@ -215,7 +223,7 @@
     <div class="modal-bar"><h3 id="editTitle">Sửa đơn</h3>
       <div style="display:flex;gap:8px"><button class="btn primary" onclick="saveEdit()">💾 Lưu</button><button class="btn" onclick="closeEdit()">Đóng</button></div>
     </div>
-    <div style="padding:18px" id="editBody"></div>
+    <div id="editBody"></div>
   </div>
 </div>
 
@@ -236,9 +244,9 @@ function escJs(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/
 function noVN(s){ return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/gi,'d').toUpperCase().replace(/\s+/g,' ').trim(); }
 function money(s){ if(typeof s==='number') return Math.round(s); const neg=/^-/.test(String(s).trim()); const d=String(s==null?'':s).replace(/[^\d]/g,''); const n=d?parseInt(d,10):0; return neg?-n:n; }
 function weight(s){ if(typeof s==='number')return s; const t=String(s||'').replace(/[^\d.,]/g,'').replace(',','.'); const n=parseFloat(t); return isNaN(n)?0:n; }
-function fmtWon(n){ return n?('₩'+Number(n).toLocaleString('vi-VN')):'<span class="muted">—</span>'; }
-function fmtVnd(n){ return n?(Number(n).toLocaleString('vi-VN')+' ₫'):'<span class="muted">—</span>'; }
-function fmtKg(n){ return n?(Number(n).toLocaleString('vi-VN',{maximumFractionDigits:2})+' kg'):'<span class="muted">—</span>'; }
+function fmtWon(n){ return n?('₩'+Number(n).toLocaleString('en-US')):'<span class="muted">—</span>'; }
+function fmtVnd(n){ return n?(Number(n).toLocaleString('en-US')+' ₫'):'<span class="muted">—</span>'; }
+function fmtKg(n){ return n?(Number(n).toLocaleString('en-US',{maximumFractionDigits:2})+' kg'):'<span class="muted">—</span>'; }
 function paid(r){ return noVN(r.pay)==='DA TT'; }
 
 let ROWS=[], CFG={}, REDIS=false, CUSTS=[], FILTERED=[], CUST_SEL='';
@@ -269,7 +277,7 @@ async function loadServerData(){
     else loadCfgLocal();
     if(Array.isArray(d.rows) && d.rows.length){
       ROWS = d.rows; ROWS.forEach((r,i)=>{ if(!r.key) r.key=r.pkg||('row'+i); });
-      const when=d.uploadedAt?(' · cập nhật '+new Date(d.uploadedAt).toLocaleString('vi-VN')):'';
+      const when=d.uploadedAt?(' · cập nhật '+new Date(d.uploadedAt).toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})):'';
       rebuildAll(`${esc(d.fileName||'Dữ liệu đã lưu')}${when}`);
     }
   }catch(e){ REDIS=false; loadCfgLocal(); }
@@ -356,12 +364,14 @@ async function parseWB(wb, fname){
 
 /* ---------- Hàng hiển thị trơn (nhẹ) — click để mở popup sửa cả dòng ---------- */
 const EDIT_FIELDS=[
-  ['date','Ngày về','t'],['cust','Mã khách hàng','t'],['status','Trạng thái hàng','t'],['pay','Check TT (thanh toán)','pay'],
-  ['rcv','Người nhận','t'],['rcvPh','SĐT người nhận','t'],['region','Khu vực','t'],['staff','NV giao','t'],
-  ['weight','Khối lượng (KG)','num'],['price','Đơn giá (₩)','num'],['won','Thành tiền Won (₩)','num'],
-  ['vnd','Thành tiền VND (₫)','num'],['phuPhi','Phụ phí','num'],
-  ['addr','Địa chỉ người nhận','area'],['note','SĐT người gửi / Ghi chú','area'],['ghiChu','Ghi chú','area']
+  ['date','Ngày về','t'],['cust','Mã khách hàng','t'],['status','Trạng thái hàng','t'],['pay','Check TT','pay'],
+  ['region','Khu vực','t'],['staff','NV giao','t'],['rcv','Người nhận','t'],['rcvPh','SĐT người nhận','t'],
+  ['weight','Khối lượng (KG)','num'],['price','Đơn giá (₩)','money'],['won','Thành tiền Won (₩)','money'],
+  ['vnd','Thành tiền VND (₫)','money'],['phuPhi','Phụ phí (₫)','money'],
+  ['note','SĐT gửi / Ghi chú','t'],['ghiChu','Ghi chú','t'],['addr','Địa chỉ người nhận','area']
 ];
+function grp(s){ const neg=/^-/.test(String(s).trim()); const d=String(s==null?'':s).replace(/[^\d]/g,''); const n=d?Number(d).toLocaleString('en-US'):''; return n&&neg?('-'+n):n; }
+function onMoneyInput(el){ const end=el.value.length-el.selectionStart; el.value=grp(el.value); let pos=el.value.length-end; if(pos<0)pos=0; try{el.setSelectionRange(pos,pos);}catch(e){} }
 let EDIT_KEY='';
 function listRowHTML(r){
   return `<tr class="rowclick" onclick="openEdit('${escJs(r.key)}')">
@@ -377,13 +387,14 @@ function listRowHTML(r){
 function openEdit(key){
   const r=ROWS.find(x=>x.key===key); if(!r) return; EDIT_KEY=key;
   $('editTitle').textContent='Sửa đơn — Mã kiện '+(r.pkg||key);
-  $('editBody').innerHTML='<div class="grid2">'+EDIT_FIELDS.map(([f,lab,t])=>{
+  $('editBody').innerHTML='<div class="efgrid">'+EDIT_FIELDS.map(([f,lab,t])=>{
     const v=r[f]==null?'':r[f];
     let inp;
     if(t==='pay') inp=`<select id="ef_${f}" class="ef">${PAY_OPTS.map(o=>`<option value="${escA(o)}"${noVN(o)===noVN(v)?' selected':''}>${o||'(trống)'}</option>`).join('')}</select>`;
     else if(t==='area') inp=`<textarea id="ef_${f}" class="ef" rows="2">${esc(v)}</textarea>`;
-    else inp=`<input id="ef_${f}" class="ef" value="${escA((t==='num'&&!v)?'':v)}" ${t==='num'?'inputmode="numeric"':''} />`;
-    const wide=(t==='area')?' style="grid-column:1/-1"':'';
+    else if(t==='money') inp=`<input id="ef_${f}" class="ef" inputmode="numeric" value="${escA(v?grp(v):'')}" oninput="onMoneyInput(this)" />`;
+    else inp=`<input id="ef_${f}" class="ef" value="${escA(v)}" ${t==='num'?'inputmode="decimal"':''} />`;
+    const wide=(t==='area')?' class="wide"':'';
     return `<div class="field"${wide}><label>${lab}</label>${inp}</div>`;
   }).join('')+'</div>'+
     `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:10px;flex-wrap:wrap">
@@ -397,7 +408,7 @@ function saveEdit(){
   const k=EDIT_KEY, r=ROWS.find(x=>x.key===k); if(!r){ closeEdit(); return; }
   const patch={};
   EDIT_FIELDS.forEach(([f,lab,t])=>{ const el=$('ef_'+f); if(!el)return; let v=el.value;
-    if(t==='num') v=(f==='weight')?weight(v):money(v); else v=String(v).trim();
+    if(t==='money') v=money(v); else if(t==='num') v=weight(v); else v=String(v).trim();
     r[f]=v; patch[f]=v; });
   closeEdit();
   applyFilters(); renderDebt(); if(CUST_SEL) renderCust();
@@ -446,8 +457,8 @@ function applyFilters(){
     renderPager(total,pages,start,pageRows.length);
   }
   const owe=LIST_ROWS.filter(r=>!paid(r));
-  $('listSummary').innerHTML=`Khớp <b>${total}</b> đơn · Chưa thu <b>${owe.length}</b> — <b style="color:#e11d48">₩${sum(owe,'won').toLocaleString('vi-VN')}</b>`+
-    (sum(owe,'vnd')||sum(owe,'phuPhi')?` · <b style="color:#e11d48">${(sum(owe,'vnd')+sum(owe,'phuPhi')).toLocaleString('vi-VN')} ₫</b>`:'');
+  $('listSummary').innerHTML=`Khớp <b>${total}</b> đơn · Chưa thu <b>${owe.length}</b> — <b style="color:#e11d48">₩${sum(owe,'won').toLocaleString('en-US')}</b>`+
+    (sum(owe,'vnd')||sum(owe,'phuPhi')?` · <b style="color:#e11d48">${(sum(owe,'vnd')+sum(owe,'phuPhi')).toLocaleString('en-US')} ₫</b>`:'');
 }
 function renderPager(total,pages,start,shown){
   $('listPager').innerHTML=`
@@ -476,9 +487,9 @@ function renderDebt(){
   $('debtStats').innerHTML=
     stat('Tổng đơn',ROWS.length,'','')+
     stat('Số khách hàng',agg.length,'','')+
-    stat('Còn nợ (Won)','₩'+sum(owe,'won').toLocaleString('vi-VN'),'owe',owe.length+' đơn chưa thu')+
-    stat('Còn nợ (VND)',oweVnd?oweVnd.toLocaleString('vi-VN')+' ₫':'—','owe','gồm phụ phí')+
-    stat('Đã thu (Won)','₩'+sum(pd,'won').toLocaleString('vi-VN'),'paid',pd.length+' đơn đã thu');
+    stat('Còn nợ (Won)','₩'+sum(owe,'won').toLocaleString('en-US'),'owe',owe.length+' đơn chưa thu')+
+    stat('Còn nợ (VND)',oweVnd?oweVnd.toLocaleString('en-US')+' ₫':'—','owe','gồm phụ phí')+
+    stat('Đã thu (Won)','₩'+sum(pd,'won').toLocaleString('en-US'),'paid',pd.length+' đơn đã thu');
   let list=agg.slice(); const q=noVN($('qDebt').value); if(q)list=list.filter(a=>noVN(a.cust).includes(q));
   list.sort((a,b)=> $('debtSort').value==='name'? a.cust.localeCompare(b.cust,'vi') : (b.oweWon+b.oweVnd)-(a.oweWon+a.oweVnd));
   const body=$('debtBody'), empty=$('debtEmpty');
@@ -487,8 +498,8 @@ function renderDebt(){
     body.innerHTML=list.map(a=>`<tr>
       <td><b>${esc(a.cust)}</b></td><td class="r">${a.total}</td>
       <td class="r">${a.owe?`<b style="color:#e11d48">${a.owe}</b>`:'0'}</td>
-      <td class="r num">${a.oweWon?`<b style="color:#e11d48">₩${a.oweWon.toLocaleString('vi-VN')}</b>`:'—'}</td>
-      <td class="r num">${a.oweVnd?`<b style="color:#e11d48">${a.oweVnd.toLocaleString('vi-VN')} ₫</b>`:'—'}</td>
+      <td class="r num">${a.oweWon?`<b style="color:#e11d48">₩${a.oweWon.toLocaleString('en-US')}</b>`:'—'}</td>
+      <td class="r num">${a.oweVnd?`<b style="color:#e11d48">${a.oweVnd.toLocaleString('en-US')} ₫</b>`:'—'}</td>
       <td class="r"><button class="btn sm" onclick="gotoCust('${escJs(a.cust)}')">Xem</button>${a.owe?` <button class="btn sm" onclick="invoiceCust('${escJs(a.cust)}',true)">🧾</button>`:''}</td>
     </tr>`).join('');
   }
@@ -517,7 +528,7 @@ function renderCust(){
   if(!has){ $('custSummary').innerHTML=''; return; }
   const owe=rows.filter(r=>!paid(r)); const oweVnd=sum(owe,'vnd')+sum(owe,'phuPhi');
   $('custSummary').innerHTML=stat('Tổng đơn',rows.length,'','')+stat('Đơn chưa thu',owe.length,owe.length?'owe':'','')+
-    stat('Còn nợ (Won)','₩'+sum(owe,'won').toLocaleString('vi-VN'),'owe','')+stat('Còn nợ (VND)',oweVnd?oweVnd.toLocaleString('vi-VN')+' ₫':'—','owe','gồm phụ phí');
+    stat('Còn nợ (Won)','₩'+sum(owe,'won').toLocaleString('en-US'),'owe','')+stat('Còn nợ (VND)',oweVnd?oweVnd.toLocaleString('en-US')+' ₫':'—','owe','gồm phụ phí');
   $('custBody').innerHTML=rows.map(r=>`<tr class="rowclick" onclick="openEdit('${escJs(r.key)}')">
     <td>${esc(r.date)}</td><td style="font-weight:700">${esc(r.pkg)}</td>
     <td><span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span></td>
@@ -537,7 +548,7 @@ function openInvoice(cust,onlyOwe){
   const now=new Date(), dd=String(now.getDate()).padStart(2,'0'), mm=String(now.getMonth()+1).padStart(2,'0');
   const invNo='HD-'+noVN(cust).replace(/[^A-Z0-9]/g,'').slice(0,10)+'-'+now.getFullYear()+mm+dd;
   const co=CFG||{}; const ln=(v,fb)=>v?esc(v):`<span style="color:#aaa">${fb}</span>`;
-  const nf=n=>Number(n||0).toLocaleString('vi-VN');
+  const nf=n=>Number(n||0).toLocaleString('en-US');
   $('invoiceDoc').innerHTML=`
     <div class="inv-top">
       <div><div class="co-name">${ln(co.name,'VC24 GLOBAL')}</div>
@@ -553,10 +564,10 @@ function openInvoice(cust,onlyOwe){
         ${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.date)}</td><td>${esc(r.pkg)}</td><td>${esc(r.rcv)}</td><td>${esc(r.region)}</td>
           <td style="text-align:right">${r.weight?nf(r.weight):''}</td>
           <td style="text-align:right">${r.won?'₩'+nf(r.won):''}</td>
-          <td style="text-align:right">${r.phuPhi?nf(r.phuPhi):''}</td>
+          <td style="text-align:right">${r.phuPhi?nf(r.phuPhi)+' ₫':''}</td>
           <td style="text-align:right">${r.vnd?nf(r.vnd)+' ₫':''}</td></tr>`).join('')}
         <tr class="tot-row"><td colspan="6" style="text-align:right">TỔNG (${rows.length} đơn)</td>
-          <td style="text-align:right">${totWon?'₩'+nf(totWon):''}</td><td style="text-align:right">${totPhi?nf(totPhi):''}</td><td style="text-align:right">${totVnd?nf(totVnd)+' ₫':''}</td></tr>
+          <td style="text-align:right">${totWon?'₩'+nf(totWon):''}</td><td style="text-align:right">${totPhi?nf(totPhi)+' ₫':''}</td><td style="text-align:right">${totVnd?nf(totVnd)+' ₫':''}</td></tr>
       </tbody>
     </table>
     <div class="pay-box">

@@ -85,6 +85,10 @@
   .bar-val{width:230px;flex-shrink:0;text-align:right;font-weight:800;font-size:.85rem;color:#e11d48;}
   .bar-val .ccy{font-size:.66rem;color:var(--g400);font-weight:700;}
   .bar-val .bar-sub{font-size:.72rem;color:var(--g500);font-weight:600;white-space:normal;}
+  .bar-track.stacked{display:flex;}
+  .bar-seg{height:100%;} .bar-seg.green{background:linear-gradient(90deg,#16a34a,#22c55e);cursor:pointer;} .bar-seg.green:hover{filter:brightness(1.1);}
+  .bar-seg.red{background:linear-gradient(90deg,#fb7185,#e11d48);}
+  .bar-paid{font-size:.78rem;font-weight:800;color:var(--green);cursor:pointer;} .bar-paid:hover{text-decoration:underline;}
   @media(max-width:640px){ .bar-name{width:100px;} .bar-val{width:150px;font-size:.78rem;} }
   /* Chart tổng quan thu/nợ */
   .sumline{font-size:.95rem;color:var(--g700);margin-bottom:12px;}
@@ -350,7 +354,7 @@ function creditOf(c){ return (LEDGER[c] && Number(LEDGER[c].credit)) || 0; }
 function historyOf(c){ return (LEDGER[c] && Array.isArray(LEDGER[c].history)) ? LEDGER[c].history : []; }
 function paidWonOf(c){ return ROWS.filter(r=>r.cust===c && paid(r)).reduce((s,r)=>s+(Number(r.won)||0),0) + creditOf(c); }
 let SHOW_PAID=false;   // mặc định chỉ hiện số ĐANG NỢ; bật để hiện số ĐÃ TRẢ
-function togglePaidView(){ SHOW_PAID=!SHOW_PAID; if(CUST_SEL) renderCust(); refreshCD(); }
+function togglePaidView(){ SHOW_PAID=!SHOW_PAID; if(CUST_SEL) renderCust(); refreshCD(); renderDash(); }
 function paidToggleHTML(){ return `<label class="toggle" onclick="togglePaidView()"><span class="tg-track ${SHOW_PAID?'on':''}"><span class="tg-knob"></span></span><span>${SHOW_PAID?'Đang hiện số đã trả':'Hiện số tiền đã trả'}</span></label>`; }
 let CH_CUST='';
 function showCustHistory(cust){ CH_CUST=cust; renderCustHist(); $('custHistModal').classList.add('show'); }
@@ -417,13 +421,24 @@ function renderDash(){
       <span onclick="showHistory()" style="cursor:pointer"><i class="dot green"></i> Đã thu (KRW): <b style="color:var(--green)">₩${totalPaidWon.toLocaleString('en-US')}</b>${totalPaidVnd?` · <b style="color:var(--green)">${totalPaidVnd.toLocaleString('en-US')} ₫</b>`:''} <span class="muted">— bấm xem lịch sử ›</span></span>
       <span><i class="dot red"></i> Còn nợ (KRW): <b style="color:#e11d48">₩${totalOweWon.toLocaleString('en-US')}</b>${totalOweVnd?` · <b style="color:#e11d48">${totalOweVnd.toLocaleString('en-US')} ₫</b>`:''}</span>
     </div>`;
-  const top=aggOwe.slice(0,20), maxV=top.length?top[0].oweWon:1;
-  $('dashBars').innerHTML=top.length?top.map(a=>`<div class="bar-row" onclick="openPay('${escJs(a.cust)}')" title="Bấm để thu tiền">
-    <div class="bar-name">${esc(a.cust)}</div>
-    <div class="bar-track"><div class="bar-fill" style="width:${Math.max(3,a.oweWon/maxV*100).toFixed(1)}%"></div></div>
-    <div class="bar-val">₩${a.oweWon.toLocaleString('en-US')} <span class="ccy">KRW</span>
-      <div class="bar-sub">${a.oweVnd?a.oweVnd.toLocaleString('en-US')+' ₫ VND · ':''}${a.owe} đơn</div></div>
-  </div>`).join(''):'<div class="empty">Không còn khoản nợ nào 🎉</div>';
+  const top=aggOwe.slice(0,20), sp=SHOW_PAID;
+  const maxV=top.length?(sp?Math.max(...top.map(a=>a.paidWon+a.credit+a.oweWon)):top[0].oweWon):1;
+  const barsHTML=top.length?top.map(a=>{
+    const paidC=a.paidWon+a.credit, owe=a.oweWon;
+    const track=sp
+      ? `<div class="bar-track stacked">
+           <div class="bar-seg green" style="width:${(paidC/maxV*100).toFixed(1)}%" onclick="event.stopPropagation();showCustHistory('${escJs(a.cust)}')" title="Đã thu — bấm xem hóa đơn đã trả"></div>
+           <div class="bar-seg red" style="width:${(owe/maxV*100).toFixed(1)}%"></div></div>`
+      : `<div class="bar-track"><div class="bar-fill" style="width:${Math.max(3,owe/maxV*100).toFixed(1)}%"></div></div>`;
+    const val=sp
+      ? `<div style="color:#e11d48">₩${owe.toLocaleString('en-US')} <span class="ccy">nợ</span></div>
+         <div class="bar-paid" onclick="event.stopPropagation();showCustHistory('${escJs(a.cust)}')" title="Bấm xem hóa đơn đã trả">▸ đã thu ₩${paidC.toLocaleString('en-US')}</div>
+         <div class="bar-sub">${a.owe} đơn nợ</div>`
+      : `₩${owe.toLocaleString('en-US')} <span class="ccy">KRW</span>
+         <div class="bar-sub">${a.oweVnd?a.oweVnd.toLocaleString('en-US')+' ₫ VND · ':''}${a.owe} đơn</div>`;
+    return `<div class="bar-row" onclick="openPay('${escJs(a.cust)}')" title="Bấm để thu tiền"><div class="bar-name">${esc(a.cust)}</div>${track}<div class="bar-val">${val}</div></div>`;
+  }).join(''):'<div class="empty">Không còn khoản nợ nào 🎉</div>';
+  $('dashBars').innerHTML=`<div style="margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">${paidToggleHTML()}<span class="small muted">Bật để thấy phần ĐÃ THU (xanh) — bấm phần xanh để xem hóa đơn đã trả</span></div>`+barsHTML;
   const rg={}; ROWS.forEach(r=>{ if(paid(r))return; const k=r.region||'(khác)'; rg[k]=(rg[k]||0)+(Number(r.won)||0); });
   const rgArr=Object.entries(rg).sort((a,b)=>b[1]-a[1]), rgMax=rgArr.length?rgArr[0][1]:1;
   $('dashRegion').innerHTML=rgArr.length?rgArr.map(([k,v])=>`<div class="bar-row" onclick="filterRegion('${escJs(k)}')" title="Bấm để lọc danh sách">

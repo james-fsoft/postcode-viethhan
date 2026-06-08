@@ -95,6 +95,13 @@
   .paylegend{display:flex;gap:22px;flex-wrap:wrap;margin-top:13px;font-size:.86rem;}
   .paylegend .dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:middle;}
   .paylegend .dot.green{background:#22c55e;} .paylegend .dot.red{background:#e11d48;}
+  /* Công tắc hiện số đã trả */
+  .toggle{display:inline-flex;align-items:center;gap:9px;cursor:pointer;user-select:none;font-size:.9rem;font-weight:700;color:var(--g700);background:#fff;border:1.5px solid var(--g200);border-radius:99px;padding:6px 15px 6px 7px;transition:border-color .15s,background .15s;}
+  .toggle:hover{border-color:var(--green);background:var(--green-l);}
+  .tg-track{width:40px;height:23px;border-radius:99px;background:var(--g300);position:relative;transition:background .15s;flex-shrink:0;}
+  .tg-track.on{background:var(--green);}
+  .tg-knob{position:absolute;top:2.5px;left:2.5px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:left .15s;}
+  .tg-track.on .tg-knob{left:19px;}
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:16px;}
   .stat{background:#fff;border:1px solid var(--g200);border-radius:14px;padding:16px;overflow:hidden;min-width:0;}
   .stat .lab{font-size:.78rem;color:var(--g500);font-weight:600;margin-bottom:6px;}
@@ -344,6 +351,7 @@ function historyOf(c){ return (LEDGER[c] && Array.isArray(LEDGER[c].history)) ? 
 function paidWonOf(c){ return ROWS.filter(r=>r.cust===c && paid(r)).reduce((s,r)=>s+(Number(r.won)||0),0) + creditOf(c); }
 let SHOW_PAID=false;   // mặc định chỉ hiện số ĐANG NỢ; bật để hiện số ĐÃ TRẢ
 function togglePaidView(){ SHOW_PAID=!SHOW_PAID; if(CUST_SEL) renderCust(); refreshCD(); }
+function paidToggleHTML(){ return `<label class="toggle" onclick="togglePaidView()"><span class="tg-track ${SHOW_PAID?'on':''}"><span class="tg-knob"></span></span><span>${SHOW_PAID?'Đang hiện số đã trả':'Hiện số tiền đã trả'}</span></label>`; }
 let CH_CUST='';
 function showCustHistory(cust){ CH_CUST=cust; renderCustHist(); $('custHistModal').classList.add('show'); }
 function closeCustHist(){ $('custHistModal').classList.remove('show'); }
@@ -488,7 +496,7 @@ function renderCD(){
   $('cdTitle').innerHTML=`👤 ${esc(cust)} <span style="font-weight:600;color:var(--g400);font-size:.85rem">— ${rows.length} đơn`+(owe.length?`, nợ <b style="color:#e11d48">₩${oweWon.toLocaleString('en-US')}</b>`:`, <b style="color:var(--green)">đã thu hết</b>`)+`</span>`;
   $('cdPayBtn').style.display=owe.length?'inline-flex':'none';
   $('cdBody').innerHTML=`
-    <div style="margin-bottom:8px"><button class="btn sm" onclick="togglePaidView()">${SHOW_PAID?'🙈 Ẩn số đã trả':'👁 Hiện số đã trả'}</button></div>
+    <div style="margin-bottom:10px">${paidToggleHTML()}</div>
     <div class="stats" style="margin-bottom:12px">
       ${stat('Tổng đơn',rows.length,'','')}${stat('Đơn chưa thu',owe.length,owe.length?'owe':'','')}${stat('Còn nợ (KRW)','₩'+oweWon.toLocaleString('en-US'),'owe','')}${SHOW_PAID?`<div class="stat" style="cursor:pointer;border-color:#86efac" onclick="showCustHistory('${escJs(cust)}')"><div class="lab">💰 Đã trả (KRW) — lịch sử ›</div><div class="val paid">₩${paidWonOf(cust).toLocaleString('en-US')}</div></div>`:''}
     </div>
@@ -813,7 +821,7 @@ function renderCust(){
   const owe=rows.filter(r=>!paid(r)); const oweVnd=sum(owe,'vnd')+sum(owe,'phuPhi');
   const oweWonC=Math.max(0,sum(owe,'won')-creditOf(c)), paidWonC=paidWonOf(c);
   $('custSummary').innerHTML=
-    `<div style="grid-column:1/-1;margin-bottom:-2px"><button class="btn sm" onclick="togglePaidView()">${SHOW_PAID?'🙈 Ẩn số đã trả':'👁 Hiện số đã trả'}</button></div>`+
+    `<div style="grid-column:1/-1;margin-bottom:-2px">${paidToggleHTML()}</div>`+
     stat('Tổng đơn',rows.length,'','')+stat('Đơn chưa thu',owe.length,owe.length?'owe':'','')+
     stat('Còn nợ (KRW)','₩'+oweWonC.toLocaleString('en-US'),'owe', oweVnd?(oweVnd.toLocaleString('en-US')+' ₫ (VND)'):'')+
     (SHOW_PAID?`<div class="stat" style="cursor:pointer;border-color:#86efac" onclick="showCustHistory('${escJs(c)}')"><div class="lab">💰 Đã trả (KRW) — bấm xem lịch sử ›</div><div class="val paid">₩${paidWonC.toLocaleString('en-US')}</div></div>`:'');

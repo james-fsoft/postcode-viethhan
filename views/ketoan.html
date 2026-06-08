@@ -97,6 +97,7 @@
   .btn.sm{padding:5px 10px;font-size:.78rem;}
   .modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:flex-start;justify-content:center;padding:24px 14px;z-index:100;overflow:auto;}
   .modal.show{display:flex;}
+  #custDetailModal{z-index:90;} #editModal{z-index:120;} #payModal,#invoiceModal{z-index:110;}
   .modal-box{background:#fff;border-radius:14px;max-width:880px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.3);}
   .modal-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--g200);position:sticky;top:0;background:#fff;border-radius:14px 14px 0 0;}
   .modal-bar h3{font-size:1rem;font-weight:800;color:var(--g900);}
@@ -256,6 +257,20 @@
   </div>
 </div>
 
+<div class="modal" id="custDetailModal">
+  <div class="modal-box" style="max-width:1040px">
+    <div class="modal-bar">
+      <h3 id="cdTitle">Chi tiết đơn</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="cdPayBtn" onclick="cdPay()" style="border-color:#86efac;color:var(--green)">💵 Thu tiền</button>
+        <button class="btn" onclick="cdInvoice()">🧾 Hóa đơn</button>
+        <button class="btn" onclick="closeCustDetail()">Đóng</button>
+      </div>
+    </div>
+    <div style="padding:14px 18px" id="cdBody"></div>
+  </div>
+</div>
+
 <div class="modal" id="payModal">
   <div class="modal-box" style="max-width:520px">
     <div class="modal-bar"><h3 id="payTitle">Thu tiền</h3><button class="btn" onclick="closePay()">Đóng</button></div>
@@ -340,16 +355,45 @@ function openPay(cust,msg){
     <button id="payConfirm" class="btn primary" style="width:100%;justify-content:center" disabled onclick="confirmPay()">✅ Xác nhận thu tiền</button>
     `:'<div class="small" style="color:var(--green);font-weight:700;margin-top:6px">✓ Khách này đã thanh toán hết.</div>'}
     <div class="small" id="payMsg" style="margin-top:12px;color:var(--g700)">${msg||''}</div>
-    <div style="margin-top:14px;text-align:right"><button class="btn sm" onclick="closePay();gotoCust('${escJs(cust)}')">Xem chi tiết đơn của khách →</button></div>`;
+    <div style="margin-top:14px;text-align:right"><button class="btn sm" onclick="closePay();showCustDetail('${escJs(cust)}')">Xem chi tiết đơn của khách →</button></div>`;
   $('payModal').classList.add('show');
 }
 function updatePayBtn(){ const b=$('payConfirm'); if(b) b.disabled = !($('payChk') && $('payChk').checked); }
 function closePay(){ $('payModal').classList.remove('show'); }
 $('payModal').addEventListener('click',e=>{ if(e.target.id==='payModal') closePay(); });
+
+/* ---------- Modal chi tiết đơn của khách (riêng, dễ đóng/quay lại) ---------- */
+let CD_CUST='';
+function showCustDetail(cust){ CD_CUST=cust; renderCD(); $('custDetailModal').classList.add('show'); }
+function closeCustDetail(){ $('custDetailModal').classList.remove('show'); }
+function cdPay(){ openPay(CD_CUST); }
+function cdInvoice(){ openInvoice(CD_CUST,true); }
+function refreshCD(){ if($('custDetailModal').classList.contains('show')) renderCD(); }
+$('custDetailModal').addEventListener('click',e=>{ if(e.target.id==='custDetailModal') closeCustDetail(); });
+function renderCD(){
+  const cust=CD_CUST, rows=ROWS.filter(r=>r.cust===cust);
+  const owe=rows.filter(r=>!paid(r)), oweWon=sum(owe,'won');
+  $('cdTitle').innerHTML=`👤 ${esc(cust)} <span style="font-weight:600;color:var(--g400);font-size:.85rem">— ${rows.length} đơn`+(owe.length?`, nợ <b style="color:#e11d48">₩${oweWon.toLocaleString('en-US')}</b>`:`, <b style="color:var(--green)">đã thu hết</b>`)+`</span>`;
+  $('cdPayBtn').style.display=owe.length?'inline-flex':'none';
+  $('cdBody').innerHTML=`
+    <div class="stats" style="margin-bottom:12px">
+      ${stat('Tổng đơn',rows.length,'','')}${stat('Đơn chưa thu',owe.length,owe.length?'owe':'','')}${stat('Còn nợ (Won)','₩'+oweWon.toLocaleString('en-US'),'owe','')}
+    </div>
+    <div class="small muted" style="margin-bottom:6px">💡 Bấm 1 dòng để sửa.</div>
+    <div class="tbl-wrap" style="max-height:52vh">
+      <table><thead><tr><th>Ngày về</th><th>Mã kiện</th><th>Check TT</th><th>Người nhận</th><th>Địa chỉ</th><th>Khu vực</th><th class="r">KG</th><th class="r">Tiền Won (₩)</th><th class="r">Phụ phí</th><th>Ghi chú</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr class="rowclick" onclick="openEdit('${escJs(r.key)}')">
+        <td>${esc(r.date)}</td><td style="font-weight:700">${esc(r.pkg)}</td>
+        <td><span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span></td>
+        <td>${esc(r.rcv)}</td><td>${esc(r.addr)}</td><td>${r.region?'<span class="pill reg">'+esc(r.region)+'</span>':''}</td>
+        <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.won)}</td><td class="r num">${fmtVnd(r.phuPhi)}</td><td>${esc(r.ghiChu)}</td>
+      </tr>`).join('')}</tbody></table>
+    </div>`;
+}
 async function setPaid(keys){
   if(!keys.length) return;
   const set=new Set(keys); ROWS.forEach(r=>{ if(set.has(r.key)) r.pay='ĐÃ TT'; });
-  applyFilters(); renderDebt(); renderDash(); if(CUST_SEL) renderCust();
+  applyFilters(); renderDebt(); renderDash(); if(CUST_SEL) renderCust(); refreshCD();
   if(REDIS){ try{ await fetch('/api/vc24/bulkpay',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys,pay:'ĐÃ TT'})}); }catch(e){} }
 }
 async function confirmPay(){
@@ -522,7 +566,7 @@ function saveEdit(){
     if(t==='money') v=money(v); else if(t==='num') v=weight(v); else v=String(v).trim();
     r[f]=v; patch[f]=v; });
   closeEdit();
-  applyFilters(); renderDebt(); if(CUST_SEL) renderCust();
+  applyFilters(); renderDebt(); renderDash(); if(CUST_SEL) renderCust(); refreshCD();
   if(REDIS){ fetch('/api/vc24/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k,row:patch})}).catch(()=>{}); }
 }
 async function deleteCur(){
@@ -534,7 +578,7 @@ async function deleteCur(){
     const r=await fetch('/api/vc24/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k,password:pw})}).then(x=>x.json());
     if(!r.ok){ alert(r.reason==='password'?'❌ Sai mật khẩu — không xóa.':'Xóa không thành công.'); return; }
     ROWS=ROWS.filter(x=>x.key!==k); closeEdit();
-    rebuildAll($('fileInfo').textContent.replace(/ · \d+ đơn$/,''));
+    rebuildAll($('fileInfo').textContent.replace(/ · \d+ đơn$/,'')); refreshCD();
   }catch(e){ alert('Lỗi khi xóa.'); }
 }
 

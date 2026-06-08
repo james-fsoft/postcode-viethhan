@@ -497,7 +497,8 @@ function requireVC24(req, res, next) {
   if (userFromReq(req) !== 'vhpro') return res.status(403).json({ ok: false, message: 'forbidden' });
   next();
 }
-const VK = { orders: 'vc24:ketoan:orders', cfg: 'vc24:ketoan:cfg' };
+const VK = { orders: 'vc24:ketoan:orders', cfg: 'vc24:ketoan:cfg', ledger: 'vc24:ketoan:ledger' };
+const isPaidPay = p => String(p || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toUpperCase().trim() === 'DA TT';
 const VC24_EDITABLE = new Set(['date','status','cust','pay','note','rcv','rcvPh','addr','region','weight','price','won','vnd','phuPhi','ghiChu','staff','paidDate']);
 const keyOf = r => r && (r.key || r.pkg);
 const VC_EMPTY = () => ({ rows: [], fileName: '', uploadedAt: null });
@@ -521,9 +522,34 @@ const vcSaveOrders = o => redisSet(VK.orders, vcPack(o));   // trả về true/f
 
 app.get('/api/vc24/data', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: true, redis: false, rows: [], cfg: {} });
-  const [o, cfg] = await Promise.all([vcLoadOrders(), redisGet(VK.cfg)]);
+  const [o, cfg, ledg] = await Promise.all([vcLoadOrders(), redisGet(VK.cfg), redisGet(VK.ledger)]);
   let c = {}; try { c = cfg ? JSON.parse(cfg) : {}; } catch { /* ok */ }
-  res.json({ ok: true, redis: true, rows: o.rows, fileName: o.fileName, uploadedAt: o.uploadedAt, cfg: c });
+  let ledger = {}; try { ledger = ledg ? JSON.parse(ledg) : {}; } catch { /* ok */ }
+  res.json({ ok: true, redis: true, rows: o.rows, fileName: o.fileName, uploadedAt: o.uploadedAt, cfg: c, ledger });
+});
+
+// Thu tiền theo SỐ TIỀN (hỗ trợ trả từng phần) + ghi lịch sử
+app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: false, redis: false });
+  const { cust, amount, date } = req.body || {};
+  const amt = Math.round(Number(amount) || 0);
+  if (!cust || amt <= 0) return res.json({ ok: false, message: 'bad' });
+  const o = await vcLoadOrders();
+  let ledger = {}; try { const s = await redisGet(VK.ledger); if (s) ledger = JSON.parse(s); } catch { /* ok */ }
+  const led = ledger[cust] || { credit: 0, history: [] };
+  let credit = (Number(led.credit) || 0) + amt;
+  // gạch nợ dần các đơn chưa thu (cũ nhất trước) khi đủ tiền
+  const unpaid = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay)).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  let marked = 0;
+  for (const r of unpaid) { const w = Number(r.won) || 0; if (w > 0 && credit >= w) { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); credit -= w; marked++; } }
+  led.credit = credit;
+  led.history = led.history || [];
+  led.history.push({ date: String(date || ''), amount: amt, marked, at: new Date().toISOString() });
+  ledger[cust] = led;
+  const s1 = await vcSaveOrders(o);
+  const s2 = await redisSet(VK.ledger, JSON.stringify(ledger));
+  if (!s1 || !s2) return res.json({ ok: false, reason: 'save' });
+  res.json({ ok: true, marked, credit });
 });
 
 // Upload = GỘP theo Mã kiện (key). Trùng -> bỏ qua, báo lại danh sách trùng.

@@ -558,6 +558,18 @@ app.post('/api/vc24/save', requireAuth, requireVC24, async (req, res) => {
   res.json({ ok: true });
 });
 
+// Cập nhật trạng thái thanh toán cho NHIỀU đơn cùng lúc (thu tiền)
+app.post('/api/vc24/bulkpay', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: false, redis: false });
+  const { keys, pay } = req.body || {};
+  if (!Array.isArray(keys) || !keys.length) return res.json({ ok: false, message: 'no keys' });
+  const set = new Set(keys); const val = String(pay == null ? 'ĐÃ TT' : pay);
+  const o = await vcLoadOrders(); let n = 0;
+  o.rows.forEach(r => { if (set.has(keyOf(r))) { r.pay = val; n++; } });
+  await vcSaveOrders(o);
+  res.json({ ok: true, updated: n });
+});
+
 // Xóa 1 đơn — bắt buộc đúng mật khẩu tài khoản
 app.post('/api/vc24/delete', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });

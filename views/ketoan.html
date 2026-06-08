@@ -72,6 +72,14 @@
   .pager select{font-family:inherit;font-size:.8rem;padding:5px 8px;border:1.5px solid var(--g200);border-radius:8px;}
   .btn:disabled,.btn.sm:disabled{opacity:.4;cursor:default;border-color:var(--g200);color:var(--g400);}
   .empty{padding:40px;text-align:center;color:var(--g400);}
+  .bar-row{display:flex;align-items:center;gap:12px;padding:8px 6px;cursor:pointer;border-bottom:1px solid var(--g100);border-radius:8px;}
+  .bar-row:hover{background:var(--blue-l);}
+  .bar-name{width:210px;flex-shrink:0;font-weight:700;font-size:.85rem;color:var(--g900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .bar-track{flex:1;min-width:60px;background:var(--g100);border-radius:8px;height:20px;overflow:hidden;}
+  .bar-fill{height:100%;background:linear-gradient(90deg,#6366f1,#e11d48);border-radius:8px;}
+  .bar-val{width:160px;flex-shrink:0;text-align:right;font-weight:800;font-size:.85rem;color:#e11d48;}
+  .bar-val .bar-sub{font-size:.72rem;color:var(--g400);font-weight:600;}
+  @media(max-width:640px){ .bar-name{width:110px;} .bar-val{width:115px;font-size:.78rem;} }
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:16px;}
   .stat{background:#fff;border:1px solid var(--g200);border-radius:14px;padding:16px;}
   .stat .lab{font-size:.78rem;color:var(--g500);font-weight:600;margin-bottom:6px;}
@@ -125,6 +133,7 @@
   <div class="tabs">
     <button class="active" data-tab="list" onclick="tab('list')">📋 Danh sách &amp; lọc</button>
     <button data-tab="debt" onclick="tab('debt')">📊 Công nợ</button>
+    <button data-tab="dash" onclick="tab('dash')">📈 Phân bố nợ</button>
     <button data-tab="cust" onclick="tab('cust')">👤 Theo khách hàng</button>
     <button data-tab="cfg" onclick="tab('cfg')">⚙️ Thông tin công ty</button>
   </div>
@@ -181,6 +190,18 @@
     </div>
   </div>
 
+  <div class="tab-pane" id="tab-dash">
+    <div class="stats" id="dashTop"></div>
+    <div class="panel">
+      <div class="ph"><h2>Ai đang nợ bao nhiêu (theo Won)</h2><span class="small muted">Bấm 1 thanh để thu tiền cho khách đó</span></div>
+      <div id="dashBars"></div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h2>Nợ theo khu vực</h2><span class="small muted">Bấm để lọc danh sách theo khu vực</span></div>
+      <div id="dashRegion"></div>
+    </div>
+  </div>
+
   <div class="tab-pane" id="tab-cust">
     <div class="panel">
       <div class="filters">
@@ -227,6 +248,13 @@
   </div>
 </div>
 
+<div class="modal" id="payModal">
+  <div class="modal-box" style="max-width:520px">
+    <div class="modal-bar"><h3 id="payTitle">Thu tiền</h3><button class="btn" onclick="closePay()">Đóng</button></div>
+    <div style="padding:18px" id="payBody"></div>
+  </div>
+</div>
+
 <div class="modal" id="invoiceModal">
   <div class="modal-box">
     <div class="modal-bar no-print"><h3>Hóa đơn / Yêu cầu thanh toán</h3>
@@ -259,6 +287,76 @@ function tab(name){
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('show', p.id==='tab-'+name));
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
   if(name==='debt') renderDebt();
+  if(name==='dash') renderDash();
+}
+let PAY_CUST='';
+function renderDash(){
+  const agg=customerAgg().filter(a=>a.oweWon>0).sort((a,b)=>b.oweWon-a.oweWon);
+  const totalOwe=agg.reduce((s,a)=>s+a.oweWon,0);
+  const top=agg.slice(0,20), maxV=top.length?top[0].oweWon:1;
+  const top5=agg.slice(0,5).reduce((s,a)=>s+a.oweWon,0);
+  $('dashTop').innerHTML=
+    stat('Tổng còn nợ (Won)','₩'+totalOwe.toLocaleString('en-US'),'owe',agg.length+' khách còn nợ')+
+    stat('Nợ nhiều nhất', top[0]?esc(top[0].cust):'—', top[0]?'owe':'', top[0]?('₩'+top[0].oweWon.toLocaleString('en-US')):'')+
+    stat('Top 5 KH chiếm', totalOwe?Math.round(top5/totalOwe*100)+'%':'—','','tổng nợ');
+  $('dashBars').innerHTML=top.length?top.map(a=>`<div class="bar-row" onclick="openPay('${escJs(a.cust)}')" title="Bấm để thu tiền">
+    <div class="bar-name">${esc(a.cust)}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${Math.max(3,a.oweWon/maxV*100).toFixed(1)}%"></div></div>
+    <div class="bar-val">₩${a.oweWon.toLocaleString('en-US')}<div class="bar-sub">${a.owe} đơn</div></div>
+  </div>`).join(''):'<div class="empty">Không còn khoản nợ nào 🎉</div>';
+  const rg={}; ROWS.forEach(r=>{ if(paid(r))return; const k=r.region||'(khác)'; rg[k]=(rg[k]||0)+(Number(r.won)||0); });
+  const rgArr=Object.entries(rg).sort((a,b)=>b[1]-a[1]), rgMax=rgArr.length?rgArr[0][1]:1;
+  $('dashRegion').innerHTML=rgArr.length?rgArr.map(([k,v])=>`<div class="bar-row" onclick="filterRegion('${escJs(k)}')" title="Bấm để lọc danh sách">
+    <div class="bar-name">${esc(k)}</div>
+    <div class="bar-track"><div class="bar-fill" style="background:linear-gradient(90deg,#0ea5e9,#6366f1);width:${Math.max(3,v/rgMax*100).toFixed(1)}%"></div></div>
+    <div class="bar-val" style="color:var(--blue)">₩${v.toLocaleString('en-US')}</div>
+  </div>`).join(''):'<div class="empty">—</div>';
+}
+function filterRegion(r){ tab('list'); $('fRegion').value=r; $('fPay').value='owe'; filterChanged(); }
+
+/* ---------- Thu tiền ---------- */
+function openPay(cust,msg){
+  PAY_CUST=cust;
+  const unpaid=ROWS.filter(r=>r.cust===cust && !paid(r));
+  const oweWon=sum(unpaid,'won');
+  $('payTitle').textContent='Thu tiền — '+cust;
+  $('payBody').innerHTML=`
+    <div class="small muted" style="margin-bottom:4px">${unpaid.length} đơn chưa thu · còn nợ (Won)</div>
+    <div style="font-size:1.5rem;font-weight:800;color:#e11d48;margin-bottom:14px">₩${oweWon.toLocaleString('en-US')}</div>
+    ${unpaid.length?`<button class="btn primary" style="width:100%;justify-content:center;margin-bottom:14px" onclick="payAll()">✅ Đánh dấu ĐÃ TRẢ HẾT (${unpaid.length} đơn)</button>
+    <div class="small muted" style="margin:6px 0 6px">— hoặc nhập số tiền đã thu (₩) —</div>
+    <div style="display:flex;gap:8px">
+      <input id="payAmt" class="ef" inputmode="numeric" placeholder="VD: 5,000,000" oninput="onMoneyInput(this)" style="flex:1" />
+      <button class="btn primary" onclick="payAmount()">Ghi nhận</button>
+    </div>`:'<div class="small" style="color:var(--green);font-weight:700">✓ Khách này đã thanh toán hết.</div>'}
+    <div class="small" id="payMsg" style="margin-top:12px;color:var(--g700)">${msg||''}</div>
+    <div style="margin-top:14px;text-align:right"><button class="btn sm" onclick="gotoCust('${escJs(cust)}');closePay()">Xem chi tiết đơn →</button></div>`;
+  $('payModal').classList.add('show');
+}
+function closePay(){ $('payModal').classList.remove('show'); }
+$('payModal').addEventListener('click',e=>{ if(e.target.id==='payModal') closePay(); });
+async function setPaid(keys){
+  if(!keys.length) return;
+  const set=new Set(keys); ROWS.forEach(r=>{ if(set.has(r.key)) r.pay='ĐÃ TT'; });
+  applyFilters(); renderDebt(); renderDash(); if(CUST_SEL) renderCust();
+  if(REDIS){ try{ await fetch('/api/vc24/bulkpay',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys,pay:'ĐÃ TT'})}); }catch(e){} }
+}
+async function payAll(){
+  const unpaid=ROWS.filter(r=>r.cust===PAY_CUST && !paid(r));
+  if(!unpaid.length){ return; }
+  if(!confirm(`Đánh dấu TẤT CẢ ${unpaid.length} đơn của "${PAY_CUST}" là ĐÃ TT?`)) return;
+  await setPaid(unpaid.map(r=>r.key));
+  openPay(PAY_CUST,'✅ Đã đánh dấu trả hết.');
+}
+async function payAmount(){
+  const amt=money($('payAmt').value);
+  const unpaid=ROWS.filter(r=>r.cust===PAY_CUST && !paid(r)).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  if(!amt){ $('payMsg').textContent='⚠️ Nhập số tiền hợp lệ.'; return; }
+  let rem=amt; const keys=[]; let used=0;
+  for(const r of unpaid){ const w=Number(r.won)||0; if(w<=rem){ keys.push(r.key); rem-=w; used+=w; } else break; }
+  if(!keys.length){ $('payMsg').innerHTML='⚠️ Số tiền chưa đủ trả đơn nhỏ nhất chưa thu (₩'+(unpaid[0]?(Number(unpaid[0].won)||0).toLocaleString('en-US'):'0')+').'; return; }
+  await setPaid(keys);
+  openPay(PAY_CUST, `✅ Đã ghi nhận <b>${keys.length}</b> đơn (₩${used.toLocaleString('en-US')}).`+(rem>0?` Còn dư ₩${rem.toLocaleString('en-US')} (chưa đủ trả đơn tiếp theo).`:''));
 }
 async function logout(){ try{ await fetch('/api/logout',{method:'POST'});}catch(e){} location.reload(); }
 
@@ -495,12 +593,12 @@ function renderDebt(){
   const body=$('debtBody'), empty=$('debtEmpty');
   if(!list.length){ body.innerHTML=''; empty.style.display='block'; }
   else{ empty.style.display='none';
-    body.innerHTML=list.map(a=>`<tr>
+    body.innerHTML=list.map(a=>`<tr class="rowclick" onclick="openPay('${escJs(a.cust)}')" title="Bấm để thu tiền">
       <td><b>${esc(a.cust)}</b></td><td class="r">${a.total}</td>
       <td class="r">${a.owe?`<b style="color:#e11d48">${a.owe}</b>`:'0'}</td>
       <td class="r num">${a.oweWon?`<b style="color:#e11d48">₩${a.oweWon.toLocaleString('en-US')}</b>`:'—'}</td>
       <td class="r num">${a.oweVnd?`<b style="color:#e11d48">${a.oweVnd.toLocaleString('en-US')} ₫</b>`:'—'}</td>
-      <td class="r"><button class="btn sm" onclick="gotoCust('${escJs(a.cust)}')">Xem</button>${a.owe?` <button class="btn sm" onclick="invoiceCust('${escJs(a.cust)}',true)">🧾</button>`:''}</td>
+      <td class="r"><button class="btn sm" onclick="event.stopPropagation();gotoCust('${escJs(a.cust)}')">Xem</button>${a.owe?` <button class="btn sm" onclick="event.stopPropagation();invoiceCust('${escJs(a.cust)}',true)">🧾</button>`:''}</td>
     </tr>`).join('');
   }
 }

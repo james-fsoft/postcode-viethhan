@@ -496,33 +496,68 @@ function requireVC24(req, res, next) {
   if (userFromReq(req) !== 'vhpro') return res.status(403).json({ ok: false, message: 'forbidden' });
   next();
 }
-const VK = { orders: 'vc24:ketoan:orders', pay: 'vc24:ketoan:pay', cfg: 'vc24:ketoan:cfg' };
+const VK = { orders: 'vc24:ketoan:orders', cfg: 'vc24:ketoan:cfg' };
+const VC24_EDITABLE = new Set(['date','status','cust','pay','note','rcv','rcvPh','addr','region','weight','price','won','vnd','phuPhi','ghiChu','staff']);
+const keyOf = r => r && (r.key || r.pkg);
+async function vcLoadOrders() {
+  const s = await redisGet(VK.orders);
+  try { const o = s ? JSON.parse(s) : null; return (o && Array.isArray(o.rows)) ? o : { rows: [], fileName: '', uploadedAt: null }; }
+  catch { return { rows: [], fileName: '', uploadedAt: null }; }
+}
+const vcSaveOrders = o => redisSet(VK.orders, JSON.stringify(o));
 
 app.get('/api/vc24/data', requireAuth, requireVC24, async (req, res) => {
-  if (!useRedis) return res.json({ ok: true, redis: false, data: null, pay: {}, cfg: {} });
-  const [orders, pay, cfg] = await Promise.all([redisGet(VK.orders), redisGet(VK.pay), redisGet(VK.cfg)]);
-  const safe = (s, d) => { try { return s ? JSON.parse(s) : d; } catch { return d; } };
-  res.json({ ok: true, redis: true, data: safe(orders, null), pay: safe(pay, {}), cfg: safe(cfg, {}) });
+  if (!useRedis) return res.json({ ok: true, redis: false, rows: [], cfg: {} });
+  const [o, cfg] = await Promise.all([vcLoadOrders(), redisGet(VK.cfg)]);
+  let c = {}; try { c = cfg ? JSON.parse(cfg) : {}; } catch { /* ok */ }
+  res.json({ ok: true, redis: true, rows: o.rows, fileName: o.fileName, uploadedAt: o.uploadedAt, cfg: c });
 });
 
+// Upload = GỘP theo Mã kiện (key). Trùng -> bỏ qua, báo lại danh sách trùng.
 app.post('/api/vc24/upload', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
   const { fileName, rows } = req.body || {};
   if (!Array.isArray(rows)) return res.json({ ok: false, message: 'no rows' });
-  const payload = JSON.stringify({ fileName: String(fileName || ''), uploadedAt: new Date().toISOString(), rows });
-  const ok = await redisSet(VK.orders, payload);
-  res.json({ ok });
+  const o = await vcLoadOrders();
+  const existing = new Set(o.rows.map(keyOf).filter(Boolean));
+  let added = 0; const dup = [];
+  for (const r of rows) {
+    const k = keyOf(r);
+    if (k && existing.has(k)) { dup.push(k); continue; }
+    if (k) existing.add(k);
+    o.rows.push(r); added++;
+  }
+  o.fileName = String(fileName || o.fileName || ''); o.uploadedAt = new Date().toISOString();
+  await vcSaveOrders(o);
+  res.json({ ok: true, added, dup, total: o.rows.length });
 });
 
-app.post('/api/vc24/pay', requireAuth, requireVC24, async (req, res) => {
+// Sửa 1 ô dữ liệu (lưu online)
+app.post('/api/vc24/edit', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
-  const { pkg, paid } = req.body || {};
-  if (!pkg) return res.json({ ok: false, message: 'no pkg' });
-  let map = {}; try { const cur = await redisGet(VK.pay); if (cur) map = JSON.parse(cur); } catch { /* ok */ }
-  if (paid === null || paid === undefined) delete map[pkg];
-  else map[pkg] = { paid: !!paid, at: new Date().toISOString() };
-  const ok = await redisSet(VK.pay, JSON.stringify(map));
-  res.json({ ok, pay: map[pkg] || null });
+  const { key, field, value } = req.body || {};
+  if (!key || !VC24_EDITABLE.has(field)) return res.json({ ok: false, message: 'bad field' });
+  const o = await vcLoadOrders();
+  const row = o.rows.find(r => keyOf(r) === key);
+  if (!row) return res.json({ ok: false, message: 'not found' });
+  row[field] = value;
+  await vcSaveOrders(o);
+  res.json({ ok: true });
+});
+
+// Xóa 1 đơn — bắt buộc đúng mật khẩu tài khoản
+app.post('/api/vc24/delete', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: false, redis: false });
+  const { key, password } = req.body || {};
+  const user = userFromReq(req);
+  if (!password || password !== USERS[user]) return res.json({ ok: false, reason: 'password' });
+  if (!key) return res.json({ ok: false });
+  const o = await vcLoadOrders();
+  const before = o.rows.length;
+  o.rows = o.rows.filter(r => keyOf(r) !== key);
+  if (o.rows.length === before) return res.json({ ok: false, reason: 'notfound' });
+  await vcSaveOrders(o);
+  res.json({ ok: true });
 });
 
 app.post('/api/vc24/cfg', requireAuth, requireVC24, async (req, res) => {

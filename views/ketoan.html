@@ -54,6 +54,8 @@
   .pill{display:inline-block;font-size:.72rem;font-weight:700;border-radius:99px;padding:2px 9px;}
   .pill.paid{background:var(--green-l);color:var(--green);} .pill.owe{background:#fff1f2;color:#e11d48;}
   .pill.reg{background:var(--g100);color:var(--g600);}
+  .paycell{cursor:pointer;user-select:none;} .paycell:hover .pill{filter:brightness(.96);box-shadow:0 0 0 2px rgba(79,70,229,.25);}
+  .ovk{font-size:.72rem;color:var(--indigo);font-weight:800;}
   .empty{padding:40px;text-align:center;color:var(--g400);}
   /* Stat cards */
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:16px;}
@@ -130,6 +132,7 @@
   <div class="tab-pane show" id="tab-list">
     <div class="panel" id="uploadPanel">
       <div class="ph"><h2>Tải file đơn hàng</h2><span class="small muted" id="fileInfo"></span></div>
+      <div class="small" id="storeBadge" style="margin-bottom:12px;"></div>
       <div class="drop" id="drop" onclick="document.getElementById('file').click()">
         <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="onFile(event)" />
         <div style="font-size:1.6rem;margin-bottom:6px;">📄⬆️</div>
@@ -252,6 +255,9 @@ function fmtKg(n){ return n?(n.toLocaleString('vi-VN',{maximumFractionDigits:2})
 
 let ROWS = [];          // dữ liệu đã parse
 let CFG = {};
+let PAYMAP = {};        // key -> {paid,at} : trạng thái thu tự đánh dấu (override)
+let REDIS = false;      // có lưu trữ server hay không
+function escJs(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 
 function tab(name){
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('show', p.id==='tab-'+name));
@@ -265,8 +271,34 @@ async function logout(){ try{ await fetch('/api/logout',{method:'POST'});}catch(
   try{ const c=await fetch('/api/config').then(r=>r.json());
     if(c && c.username){ $('userChip').style.display='flex'; $('uAv').textContent=String(c.username).charAt(0); $('uName').textContent=c.username; }
   }catch(e){}
-  loadCfg();
+  await loadServerData();
 })();
+
+async function loadServerData(){
+  try{
+    const d = await fetch('/api/vc24/data').then(r=>r.json());
+    REDIS = !!d.redis;
+    PAYMAP = d.pay || {};
+    if(d.cfg && Object.keys(d.cfg).length){ CFG=d.cfg; CFG_KEYS.forEach(k=>{const el=$('cfg_'+k); if(el)el.value=CFG[k]||'';}); }
+    else loadCfg();
+    if(d.data && Array.isArray(d.data.rows) && d.data.rows.length){
+      ROWS = d.data.rows;
+      ROWS.forEach((r,idx)=>{ if(!r.key) r.key=r.pkg||('row'+idx); if(r.payExcel===undefined) r.payExcel=!!r.paid; });
+      applyPay();
+      const when = d.data.uploadedAt ? (' · lưu lúc '+new Date(d.data.uploadedAt).toLocaleString('vi-VN')) : '';
+      $('fileInfo').textContent = `${esc(d.data.fileName||'(dữ liệu đã lưu)')} · ${ROWS.length} đơn${when}`;
+      $('listPanel').style.display='block';
+      buildFilters(); applyFilters(); renderDebt(); buildCustomerPicker();
+    }
+  }catch(e){ REDIS=false; loadCfg(); }
+  updateStoreBadge();
+}
+function updateStoreBadge(){
+  const b=$('storeBadge'); if(!b) return;
+  b.innerHTML = REDIS
+    ? '<span style="color:var(--green);font-weight:700">💾 Lưu trên server</span> — dữ liệu &amp; trạng thái thu được giữ lại, không cần upload lại.'
+    : '<span style="color:var(--amber);font-weight:700">⚠️ Lưu tạm</span> — chưa bật lưu trữ server, dữ liệu chỉ trong phiên này.';
+}
 
 /* ---------- Đọc file ---------- */
 function onFile(ev){
@@ -321,7 +353,7 @@ function parseWB(wb, fname){
       const payRaw = get('pay');
       all.push({
         sheet:name, date:get('date'), pkg, status:get('status'), cust,
-        pay:payRaw, paid: noVN(payRaw)==='DA TT',
+        pay:payRaw, payExcel: noVN(payRaw)==='DA TT',
         note:get('note'), rcv:get('rcv'), rcvPh:get('rcvPh'), addr:get('addr'),
         region:get('region'), weight:weight(get('weight')), price:money(get('price')),
         won, vnd,
@@ -330,13 +362,32 @@ function parseWB(wb, fname){
     }
   });
   if(!all.length){ alert('Không đọc được dòng dữ liệu nào. Kiểm tra file có đúng các cột (Mã khách hàng, Người nhận, Khu vực…) không.'); return; }
+  all.forEach((r,idx)=>{ r.key = r.pkg || ('row'+idx+'_'+(r.cust||'')); });
   ROWS = all;
+  applyPay();
   $('fileInfo').textContent = `${esc(fname)} · ${sheets} sheet · ${all.length} đơn`;
   $('listPanel').style.display='block';
   buildFilters();
   applyFilters();
   renderDebt();
   buildCustomerPicker();
+  saveOrders(fname);   // lưu lên server (nếu bật Redis)
+}
+
+function applyPay(){
+  ROWS.forEach(r=>{ const ov=PAYMAP[r.key]; r.over=!!ov; r.paid = ov ? !!ov.paid : !!r.payExcel; });
+}
+async function saveOrders(fname){
+  if(!REDIS) return;
+  try{ await fetch('/api/vc24/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileName:fname, rows:ROWS})}); }catch(e){}
+}
+async function togglePay(key){
+  const r = ROWS.find(x=>x.key===key); if(!r) return;
+  const np = !r.paid;
+  PAYMAP[key] = { paid:np, at:new Date().toISOString() };
+  applyPay();
+  applyFilters(); renderDebt(); if($('custPick').value) renderCust();
+  if(REDIS){ try{ await fetch('/api/vc24/pay',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pkg:key, paid:np})}); }catch(e){} }
 }
 
 /* ---------- Bộ lọc + bảng danh sách ---------- */
@@ -370,7 +421,7 @@ function applyFilters(){
     empty.style.display='none';
     body.innerHTML = rows.map(r=>`<tr>
       <td>${esc(r.date)}</td><td>${esc(r.pkg)}</td><td><b>${esc(r.cust)}</b></td>
-      <td><span class="pill ${r.paid?'paid':'owe'}">${esc(r.pay||(r.paid?'Đã TT':'Chưa TT'))}</span></td>
+      <td class="paycell" onclick="togglePay('${escJs(r.key)}')" title="Bấm để đánh dấu đã/chưa thu — gốc: ${esc(r.pay||'-')}"><span class="pill ${r.paid?'paid':'owe'}">${r.paid?'Đã thu':'Chưa thu'}</span>${r.over?' <span class="ovk">✎</span>':''}</td>
       <td>${esc(r.rcv)}</td><td>${esc(r.rcvPh)}</td>
       <td><span class="pill reg">${esc(r.region)}</span></td>
       <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.price)}</td>
@@ -445,7 +496,7 @@ function renderCust(){
     ${stat('Còn nợ (VND)', fmtVnd(sum(owe,'vnd')), 'owe','')}`;
   $('custBody').innerHTML = rows.map(r=>`<tr>
     <td>${esc(r.date)}</td><td>${esc(r.pkg)}</td>
-    <td><span class="pill ${r.paid?'paid':'owe'}">${esc(r.pay||(r.paid?'Đã TT':'Chưa TT'))}</span></td>
+    <td class="paycell" onclick="togglePay('${escJs(r.key)}')" title="Bấm để đánh dấu đã/chưa thu — gốc: ${esc(r.pay||'-')}"><span class="pill ${r.paid?'paid':'owe'}">${r.paid?'Đã thu':'Chưa thu'}</span>${r.over?' <span class="ovk">✎</span>':''}</td>
     <td>${esc(r.rcv)}</td><td><span class="pill reg">${esc(r.region)}</span></td>
     <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.won)}</td><td class="r num">${fmtVnd(r.vnd)}</td>
   </tr>`).join('');
@@ -519,6 +570,7 @@ function loadCfg(){
 function saveCfg(){
   CFG={}; CFG_KEYS.forEach(k=>{ CFG[k]=$('cfg_'+k).value.trim(); });
   localStorage.setItem('vc24_cfg', JSON.stringify(CFG));
+  if(REDIS){ try{ fetch('/api/vc24/cfg',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cfg:CFG})}); }catch(e){} }
   const s=$('cfgSaved'); s.style.display='inline'; setTimeout(()=>s.style.display='none',1800);
 }
 (function(){var h=document.querySelector('.site-header');if(h)addEventListener('scroll',function(){h.classList.toggle('scrolled',window.scrollY>4);},{passive:true});})();

@@ -29,8 +29,8 @@ function authCookieOpts(extra = {}) {
   return { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', domain: COOKIE_DOMAIN, ...extra };
 }
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '12mb' }));   // 12mb: đủ cho dữ liệu kế toán VC24 upload
+app.use(express.urlencoded({ extended: true, limit: '12mb' }));
 app.use(cookieParser());
 
 // ── Helper: gọi HTTP/HTTPS, tự follow redirect, trả về JSON ─────────────────
@@ -316,6 +316,29 @@ async function redisCmd(...parts) {
   const data = await getJson(url, { Authorization: `Bearer ${UPSTASH_TOKEN}` });
   return data.result;
 }
+// Lưu/đọc chuỗi lớn (JSON) — dùng POST body để không vướng giới hạn độ dài URL
+async function redisSet(key, value) {
+  if (!useRedis) return false;
+  try {
+    const r = await fetch(`${UPSTASH_URL}/set/${encodeURIComponent(key)}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+      body: String(value),
+    });
+    return r.ok;
+  } catch { return false; }
+}
+async function redisGet(key) {
+  if (!useRedis) return null;
+  try {
+    const r = await fetch(`${UPSTASH_URL}/get/${encodeURIComponent(key)}`, {
+      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j.result;
+  } catch { return null; }
+}
 async function getUsage(user) {
   if (useRedis) return parseInt(await redisCmd('get', `usage:${user}`) || '0', 10);
   return memUsage.get(user) || 0;
@@ -466,6 +489,47 @@ app.get('/vc24global', requireAuth, (req, res) => {
 app.get('/vc24/ke-toan', requireAuth, (req, res) => {
   if (userFromReq(req) !== 'vhpro') return res.redirect('/');
   sendTpl(res, 'ketoan.html');
+});
+
+// ── API lưu trữ dữ liệu kế toán VC24 (Redis) — chỉ account 'vhpro' ───────────
+function requireVC24(req, res, next) {
+  if (userFromReq(req) !== 'vhpro') return res.status(403).json({ ok: false, message: 'forbidden' });
+  next();
+}
+const VK = { orders: 'vc24:ketoan:orders', pay: 'vc24:ketoan:pay', cfg: 'vc24:ketoan:cfg' };
+
+app.get('/api/vc24/data', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: true, redis: false, data: null, pay: {}, cfg: {} });
+  const [orders, pay, cfg] = await Promise.all([redisGet(VK.orders), redisGet(VK.pay), redisGet(VK.cfg)]);
+  const safe = (s, d) => { try { return s ? JSON.parse(s) : d; } catch { return d; } };
+  res.json({ ok: true, redis: true, data: safe(orders, null), pay: safe(pay, {}), cfg: safe(cfg, {}) });
+});
+
+app.post('/api/vc24/upload', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: false, redis: false });
+  const { fileName, rows } = req.body || {};
+  if (!Array.isArray(rows)) return res.json({ ok: false, message: 'no rows' });
+  const payload = JSON.stringify({ fileName: String(fileName || ''), uploadedAt: new Date().toISOString(), rows });
+  const ok = await redisSet(VK.orders, payload);
+  res.json({ ok });
+});
+
+app.post('/api/vc24/pay', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: false, redis: false });
+  const { pkg, paid } = req.body || {};
+  if (!pkg) return res.json({ ok: false, message: 'no pkg' });
+  let map = {}; try { const cur = await redisGet(VK.pay); if (cur) map = JSON.parse(cur); } catch { /* ok */ }
+  if (paid === null || paid === undefined) delete map[pkg];
+  else map[pkg] = { paid: !!paid, at: new Date().toISOString() };
+  const ok = await redisSet(VK.pay, JSON.stringify(map));
+  res.json({ ok, pay: map[pkg] || null });
+});
+
+app.post('/api/vc24/cfg', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: false, redis: false });
+  const cfg = (req.body && req.body.cfg) || {};
+  const ok = await redisSet(VK.cfg, JSON.stringify(cfg));
+  res.json({ ok });
 });
 
 // ── robots.txt + sitemap.xml (cho Google index) ──────────────────────────────

@@ -44,6 +44,12 @@
   .filters input,.filters select{font-family:inherit;font-size:.85rem;padding:9px 11px;border:1.5px solid var(--g200);border-radius:9px;background:#fff;color:var(--g700);outline:none;}
   .filters input:focus,.filters select:focus{border-color:var(--blue);}
   .filters .grow{flex:1;min-width:200px;}
+  .combo{position:relative;} .combo input{width:100%;}
+  .combo-list{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--g200);border-radius:10px;max-height:300px;overflow:auto;box-shadow:0 10px 30px rgba(15,23,42,.16);z-index:40;display:none;}
+  .combo-list.show{display:block;}
+  .combo-item{padding:9px 12px;cursor:pointer;font-size:.86rem;color:var(--g700);border-bottom:1px solid var(--g100);}
+  .combo-item:last-child{border-bottom:none;}
+  .combo-item:hover{background:var(--blue-l);color:var(--blue);}
   /* Table */
   .tbl-wrap{overflow:auto;border:1px solid var(--g200);border-radius:12px;max-height:70vh;}
   table{width:100%;border-collapse:collapse;font-size:.83rem;white-space:nowrap;}
@@ -185,9 +191,12 @@
   <div class="tab-pane" id="tab-cust">
     <div class="panel">
       <div class="filters">
-        <select class="grow" id="custPick" onchange="renderCust()"><option value="">— Chọn khách hàng —</option></select>
-        <button class="btn primary" id="custInvoiceBtn" onclick="openInvoice(document.getElementById('custPick').value, true)" style="display:none">🧾 Xuất hóa đơn (đơn chưa thu)</button>
-        <button class="btn" id="custInvoiceAllBtn" onclick="openInvoice(document.getElementById('custPick').value, false)" style="display:none">🧾 Hóa đơn tất cả đơn</button>
+        <div class="combo grow">
+          <input type="text" id="custPick" autocomplete="off" placeholder="🔎 Gõ để tìm / chọn khách hàng…" oninput="comboFilter()" onfocus="comboFilter()" onkeydown="comboKey(event)" />
+          <div class="combo-list" id="custList"></div>
+        </div>
+        <button class="btn primary" id="custInvoiceBtn" onclick="invoiceSel(true)" style="display:none">🧾 Xuất hóa đơn (đơn chưa thu)</button>
+        <button class="btn" id="custInvoiceAllBtn" onclick="invoiceSel(false)" style="display:none">🧾 Hóa đơn tất cả đơn</button>
       </div>
       <div id="custSummary" class="stats"></div>
       <div class="tbl-wrap" id="custTblWrap" style="display:none">
@@ -472,15 +481,35 @@ function renderDebt(){
   }
 }
 function stat(lab,val,cls,sub){ return `<div class="stat"><div class="lab">${lab}</div><div class="val ${cls||''}">${val}</div>${sub?`<div class="sub">${sub}</div>`:''}</div>`; }
-function gotoCust(c){ tab('cust'); $('custPick').value=c; renderCust(); }
+function gotoCust(c){ tab('cust'); CUST_SEL=c; $('custPick').value=c; $('custList').classList.remove('show'); renderCust(); }
 
 /* ---------- Theo khách hàng ---------- */
+let CUSTS = [], FILTERED = [], CUST_SEL = '';
 function buildCustomerPicker(){
-  const custs = uniq(ROWS.map(r=>r.cust)).sort((a,b)=>a.localeCompare(b,'vi'));
-  $('custPick').innerHTML = '<option value="">— Chọn khách hàng —</option>' + custs.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  CUSTS = uniq(ROWS.map(r=>r.cust)).sort((a,b)=>a.localeCompare(b,'vi'));
+  if(CUST_SEL && !CUSTS.includes(CUST_SEL)){ CUST_SEL=''; $('custPick').value=''; }
 }
+function comboFilter(){
+  const q = noVN($('custPick').value);
+  FILTERED = q ? CUSTS.filter(c=>noVN(c).includes(q)) : CUSTS.slice();
+  const list = $('custList');
+  list.innerHTML = FILTERED.length
+    ? FILTERED.slice(0,150).map((c,i)=>`<div class="combo-item" onmousedown="comboPick(${i})">${esc(c)}</div>`).join('')
+    : '<div class="combo-item" style="color:var(--g400);cursor:default">(không có khách hàng khớp)</div>';
+  list.classList.add('show');
+}
+function comboPick(i){
+  const c = FILTERED[i]; if(c==null) return;
+  CUST_SEL = c; $('custPick').value = c; $('custList').classList.remove('show'); renderCust();
+}
+function comboKey(e){
+  if(e.key==='Enter'){ e.preventDefault(); if(FILTERED.length) comboPick(0); }
+  else if(e.key==='Escape'){ $('custList').classList.remove('show'); }
+}
+function invoiceSel(onlyOwe){ openInvoice(CUST_SEL, onlyOwe); }
+document.addEventListener('click', e=>{ if(!e.target.closest('.combo')){ const l=$('custList'); if(l) l.classList.remove('show'); } });
 function renderCust(){
-  const c=$('custPick').value;
+  const c=CUST_SEL;
   const rows=ROWS.filter(r=>r.cust===c);
   const has=!!c && rows.length;
   $('custInvoiceBtn').style.display = has?'inline-flex':'none';

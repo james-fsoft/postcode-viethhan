@@ -62,7 +62,9 @@
   .efgrid .field{margin-bottom:0;} .efgrid .field.wide{grid-column:1/-1;}
   #editBody label{font-size:.72rem;font-weight:700;margin-bottom:2px;}
   #editBody .ef{padding:6px 9px;font-size:.84rem;}
-  #editBody textarea.ef{min-height:42px;}
+  #editBody textarea.ef{min-height:66px;font-size:.9rem;line-height:1.45;}
+  .paychk{display:flex;align-items:flex-start;gap:9px;font-size:.88rem;color:var(--g700);margin:14px 0;cursor:pointer;background:var(--g50);border:1px solid var(--g200);border-radius:10px;padding:11px 13px;}
+  .paychk input{margin-top:2px;width:17px;height:17px;flex-shrink:0;cursor:pointer;}
   .pill{display:inline-block;font-size:.72rem;font-weight:700;border-radius:99px;padding:2px 9px;}
   .pill.paid{background:var(--green-l);color:var(--green);} .pill.owe{background:#fff1f2;color:#e11d48;}
   .pill.reg{background:var(--g100);color:var(--g600);}
@@ -81,9 +83,9 @@
   .bar-val .bar-sub{font-size:.72rem;color:var(--g400);font-weight:600;}
   @media(max-width:640px){ .bar-name{width:110px;} .bar-val{width:115px;font-size:.78rem;} }
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:16px;}
-  .stat{background:#fff;border:1px solid var(--g200);border-radius:14px;padding:16px;}
+  .stat{background:#fff;border:1px solid var(--g200);border-radius:14px;padding:16px;overflow:hidden;min-width:0;}
   .stat .lab{font-size:.78rem;color:var(--g500);font-weight:600;margin-bottom:6px;}
-  .stat .val{font-size:1.4rem;font-weight:800;color:var(--g900);letter-spacing:-.02em;}
+  .stat .val{font-size:clamp(1rem,1.9vw,1.4rem);font-weight:800;color:var(--g900);letter-spacing:-.02em;line-height:1.18;overflow-wrap:anywhere;word-break:break-word;}
   .stat .val.owe{color:#e11d48;} .stat .val.paid{color:var(--green);}
   .stat .sub{font-size:.76rem;color:var(--g400);margin-top:3px;}
   .btn{font-family:inherit;font-size:.84rem;font-weight:700;border-radius:9px;padding:8px 14px;cursor:pointer;border:1.5px solid var(--g200);background:#fff;color:var(--g700);display:inline-flex;align-items:center;gap:6px;}
@@ -209,9 +211,11 @@
           <input type="text" id="custPick" autocomplete="off" placeholder="🔎 Gõ để tìm / chọn khách hàng…" oninput="comboFilter()" onfocus="comboFilter()" onkeydown="comboKey(event)" />
           <div class="combo-list" id="custList"></div>
         </div>
+        <button class="btn" id="custPayBtn" onclick="openPay(CUST_SEL)" style="display:none;border-color:#86efac;color:var(--green)">💵 Thu tiền</button>
         <button class="btn primary" id="custInvoiceBtn" onclick="invoiceSel(true)" style="display:none">🧾 Hóa đơn (đơn chưa thu)</button>
         <button class="btn" id="custInvoiceAllBtn" onclick="invoiceSel(false)" style="display:none">🧾 Hóa đơn tất cả</button>
       </div>
+      <h2 id="custHead" style="font-size:1.2rem;font-weight:800;color:var(--g900);margin:4px 0 14px;display:none"></h2>
       <div id="custSummary" class="stats"></div>
       <div class="tbl-wrap" id="custTblWrap" style="display:none">
         <table>
@@ -322,17 +326,20 @@ function openPay(cust,msg){
   $('payTitle').textContent='Thu tiền — '+cust;
   $('payBody').innerHTML=`
     <div class="small muted" style="margin-bottom:4px">${unpaid.length} đơn chưa thu · còn nợ (Won)</div>
-    <div style="font-size:1.5rem;font-weight:800;color:#e11d48;margin-bottom:14px">₩${oweWon.toLocaleString('en-US')}</div>
-    ${unpaid.length?`<button class="btn primary" style="width:100%;justify-content:center;margin-bottom:14px" onclick="payAll()">✅ Đánh dấu ĐÃ TRẢ HẾT (${unpaid.length} đơn)</button>
-    <div class="small muted" style="margin:6px 0 6px">— hoặc nhập số tiền đã thu (₩) —</div>
-    <div style="display:flex;gap:8px">
-      <input id="payAmt" class="ef" inputmode="numeric" placeholder="VD: 5,000,000" oninput="onMoneyInput(this)" style="flex:1" />
-      <button class="btn primary" onclick="payAmount()">Ghi nhận</button>
-    </div>`:'<div class="small" style="color:var(--green);font-weight:700">✓ Khách này đã thanh toán hết.</div>'}
+    <div style="font-size:1.5rem;font-weight:800;color:#e11d48;margin-bottom:6px">₩${oweWon.toLocaleString('en-US')}</div>
+    ${unpaid.length?`
+    <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Số tiền đã nhận (₩)</span></label>
+    <input id="payAmt" class="ef" inputmode="numeric" value="${oweWon.toLocaleString('en-US')}" oninput="onMoneyInput(this)" style="font-size:1.05rem;font-weight:700" />
+    <div class="small muted" style="margin-top:5px">Mặc định = toàn bộ nợ (₩${oweWon.toLocaleString('en-US')}). Sửa lại nếu khách trả ÍT hơn.</div>
+    <label class="paychk"><input type="checkbox" id="payChk" onchange="updatePayBtn()" />
+      <span>Tôi xác nhận đã nhận <b>đúng số tiền nhập ở trên</b> từ khách <b>${esc(cust)}</b>.</span></label>
+    <button id="payConfirm" class="btn primary" style="width:100%;justify-content:center" disabled onclick="confirmPay()">✅ Xác nhận thu tiền</button>
+    `:'<div class="small" style="color:var(--green);font-weight:700;margin-top:6px">✓ Khách này đã thanh toán hết.</div>'}
     <div class="small" id="payMsg" style="margin-top:12px;color:var(--g700)">${msg||''}</div>
-    <div style="margin-top:14px;text-align:right"><button class="btn sm" onclick="gotoCust('${escJs(cust)}');closePay()">Xem chi tiết đơn →</button></div>`;
+    <div style="margin-top:14px;text-align:right"><button class="btn sm" onclick="closePay();gotoCust('${escJs(cust)}')">Xem chi tiết đơn của khách →</button></div>`;
   $('payModal').classList.add('show');
 }
+function updatePayBtn(){ const b=$('payConfirm'); if(b) b.disabled = !($('payChk') && $('payChk').checked); }
 function closePay(){ $('payModal').classList.remove('show'); }
 $('payModal').addEventListener('click',e=>{ if(e.target.id==='payModal') closePay(); });
 async function setPaid(keys){
@@ -341,22 +348,24 @@ async function setPaid(keys){
   applyFilters(); renderDebt(); renderDash(); if(CUST_SEL) renderCust();
   if(REDIS){ try{ await fetch('/api/vc24/bulkpay',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys,pay:'ĐÃ TT'})}); }catch(e){} }
 }
-async function payAll(){
-  const unpaid=ROWS.filter(r=>r.cust===PAY_CUST && !paid(r));
-  if(!unpaid.length){ return; }
-  if(!confirm(`Đánh dấu TẤT CẢ ${unpaid.length} đơn của "${PAY_CUST}" là ĐÃ TT?`)) return;
-  await setPaid(unpaid.map(r=>r.key));
-  openPay(PAY_CUST,'✅ Đã đánh dấu trả hết.');
-}
-async function payAmount(){
+async function confirmPay(){
   const amt=money($('payAmt').value);
   const unpaid=ROWS.filter(r=>r.cust===PAY_CUST && !paid(r)).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
-  if(!amt){ $('payMsg').textContent='⚠️ Nhập số tiền hợp lệ.'; return; }
+  const oweWon=sum(unpaid,'won');
+  if(!amt){ $('payMsg').innerHTML='⚠️ Nhập số tiền hợp lệ.'; return; }
+  if(amt>=oweWon){
+    if(!confirm(`Xác nhận khách "${PAY_CUST}" đã thanh toán ĐỦ ₩${oweWon.toLocaleString('en-US')} (${unpaid.length} đơn)?\nTất cả đơn sẽ chuyển sang ĐÃ TT.`)) return;
+    await setPaid(unpaid.map(r=>r.key));
+    openPay(PAY_CUST, `✅ Đã thu đủ ₩${oweWon.toLocaleString('en-US')} — ${unpaid.length} đơn chuyển sang Đã TT.`);
+    return;
+  }
+  // trả một phần: phân bổ FIFO theo ngày
   let rem=amt; const keys=[]; let used=0;
   for(const r of unpaid){ const w=Number(r.won)||0; if(w<=rem){ keys.push(r.key); rem-=w; used+=w; } else break; }
-  if(!keys.length){ $('payMsg').innerHTML='⚠️ Số tiền chưa đủ trả đơn nhỏ nhất chưa thu (₩'+(unpaid[0]?(Number(unpaid[0].won)||0).toLocaleString('en-US'):'0')+').'; return; }
+  if(!keys.length){ $('payMsg').innerHTML='⚠️ Số tiền chưa đủ trả đơn nhỏ nhất chưa thu (₩'+(Number(unpaid[0].won)||0).toLocaleString('en-US')+'). Hãy nhập số lớn hơn.'; return; }
+  if(!confirm(`Khách trả ₩${amt.toLocaleString('en-US')} (ít hơn tổng nợ ₩${oweWon.toLocaleString('en-US')}).\nSẽ ghi nhận ${keys.length} đơn (₩${used.toLocaleString('en-US')}) là Đã TT. Tiếp tục?`)) return;
   await setPaid(keys);
-  openPay(PAY_CUST, `✅ Đã ghi nhận <b>${keys.length}</b> đơn (₩${used.toLocaleString('en-US')}).`+(rem>0?` Còn dư ₩${rem.toLocaleString('en-US')} (chưa đủ trả đơn tiếp theo).`:''));
+  openPay(PAY_CUST, `✅ Đã ghi nhận <b>${keys.length}</b> đơn (₩${used.toLocaleString('en-US')}).`+(rem>0?` Còn dư ₩${rem.toLocaleString('en-US')} chưa đủ trả đơn tiếp theo (giữ chưa thu).`:''));
 }
 async function logout(){ try{ await fetch('/api/logout',{method:'POST'});}catch(e){} location.reload(); }
 
@@ -623,6 +632,11 @@ function renderCust(){
   const c=CUST_SEL, rows=ROWS.filter(r=>r.cust===c), has=!!c&&rows.length;
   $('custInvoiceBtn').style.display=has?'inline-flex':'none'; $('custInvoiceAllBtn').style.display=has?'inline-flex':'none';
   $('custTblWrap').style.display=has?'block':'none'; $('custEmpty').style.display=has?'none':'block';
+  const owe0=has?rows.filter(r=>!paid(r)):[];
+  $('custPayBtn').style.display=(has&&owe0.length)?'inline-flex':'none';
+  const ch=$('custHead');
+  if(has){ ch.style.display='block'; ch.innerHTML=`👤 ${esc(c)} <span style="font-weight:600;color:var(--g400);font-size:.9rem">— ${rows.length} đơn`+(owe0.length?`, còn nợ <b style="color:#e11d48">₩${sum(owe0,'won').toLocaleString('en-US')}</b>`:`, <b style="color:var(--green)">đã thu hết</b>`)+`</span>`; }
+  else ch.style.display='none';
   if(!has){ $('custSummary').innerHTML=''; return; }
   const owe=rows.filter(r=>!paid(r)); const oweVnd=sum(owe,'vnd')+sum(owe,'phuPhi');
   $('custSummary').innerHTML=stat('Tổng đơn',rows.length,'','')+stat('Đơn chưa thu',owe.length,owe.length?'owe':'','')+

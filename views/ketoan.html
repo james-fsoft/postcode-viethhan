@@ -770,8 +770,7 @@ function openInvoice(cust,onlyOwe){
         <tr><td>Tiền hàng (KRW):</td><td class="r">₩${nf(totWon)}</td></tr>
         ${totVnd?`<tr><td>Thành tiền (VND):</td><td class="r">${nf(totVnd)} ₫</td></tr>`:''}
         <tr><td>Phụ phí (VND):</td><td class="r">${nf(totPhi)} ₫</td></tr>
-        <tr class="grand"><td>TỔNG THANH TOÁN (VND):</td><td class="r">${nf(grandVnd)} ₫</td></tr>
-        <tr><td colspan="2" style="font-size:.78rem;color:#777;text-align:right">+ Tiền hàng Won: ₩${nf(totWon)}</td></tr>
+        <tr class="grand"><td>TỔNG THANH TOÁN:</td><td class="r"><div>₩${nf(totWon)}</div><div>${nf(grandVnd)} ₫</div></td></tr>
       </table>
     </div>
     <div class="note">Kính đề nghị Quý khách thanh toán số tiền trên. Cảm ơn Quý khách đã sử dụng dịch vụ của ${esc(co.name||'VC24 Global')}.<br>

@@ -279,6 +279,11 @@
       <button class="btn primary" onclick="saveCfg()">💾 Lưu thông tin</button>
       <span class="small" id="cfgSaved" style="margin-left:10px;color:var(--green);font-weight:700;display:none">✓ Đã lưu</span>
     </div>
+    <div class="panel" style="max-width:680px;border-color:#fecaca;background:#fff8f8;margin-top:16px">
+      <div class="ph"><h2 style="color:#dc2626">⚠️ Vùng nguy hiểm</h2></div>
+      <p class="small" style="color:var(--g600);margin-bottom:12px">Xóa <b>TOÀN BỘ</b> kiện hàng + công nợ + lịch sử thu tiền của VC24. <b style="color:#dc2626">KHÔNG THỂ HỒI PHỤC.</b></p>
+      <button class="btn" style="border-color:#fca5a5;color:#dc2626;background:#fff" onclick="resetData()">🗑 Reset toàn bộ dữ liệu</button>
+    </div>
   </div>
 </div>
 
@@ -919,6 +924,20 @@ $('editModal').addEventListener('click',e=>{ if(e.target.id==='editModal') close
 
 /* ---------- Thông tin công ty ---------- */
 function loadCfgLocal(){ try{ CFG=JSON.parse(localStorage.getItem('vc24_cfg')||'{}'); }catch(e){ CFG={}; } CFG_KEYS.forEach(k=>{ const el=$('cfg_'+k); if(el)el.value=CFG[k]||''; }); }
+async function resetData(){
+  if(!REDIS){ alert('Chưa bật lưu trữ server.'); return; }
+  if(!confirm('⚠️ XÓA TOÀN BỘ dữ liệu kế toán?\n\nTất cả KIỆN HÀNG + CÔNG NỢ + LỊCH SỬ THU sẽ bị xóa.\n\n❗ HÀNH ĐỘNG NÀY KHÔNG THỂ HỒI PHỤC.\n\nBạn có CHẮC CHẮN muốn xóa?')) return;
+  const pw=prompt('Bước 1/3 — Nhập MẬT KHẨU đăng nhập để xác nhận:'); if(pw==null||pw==='') return;
+  const txt=prompt('Bước 2/3 — Để chắc chắn, hãy GÕ ĐÚNG dòng sau:\n\ntôi đồng ý xóa'); if(txt==null) return;
+  if(noVN(txt)!=='TOI DONG Y XOA'){ alert('❌ Bạn gõ chưa đúng "tôi đồng ý xóa". Đã HỦY, không xóa gì cả.'); return; }
+  if(!confirm('Bước 3/3 — NHẮC LẠI LẦN CUỐI:\n\nToàn bộ dữ liệu sẽ bị xóa VĨNH VIỄN, KHÔNG thể khôi phục.\n\nĐồng ý xóa ngay bây giờ?')) return;
+  try{
+    const res=await fetch('/api/vc24/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw,confirm:txt})}).then(r=>r.json());
+    if(!res.ok){ alert(res.reason==='password'?'❌ Sai mật khẩu — KHÔNG xóa.':(res.reason==='confirm'?'❌ Xác nhận không đúng — KHÔNG xóa.':'Xóa không thành công.')); return; }
+    alert('✅ Đã xóa toàn bộ dữ liệu kế toán. Trang sẽ tải lại.');
+    location.reload();
+  }catch(e){ alert('Lỗi khi xóa.'); }
+}
 function saveCfg(){
   CFG={}; CFG_KEYS.forEach(k=>{ CFG[k]=$('cfg_'+k).value.trim(); });
   localStorage.setItem('vc24_cfg',JSON.stringify(CFG));

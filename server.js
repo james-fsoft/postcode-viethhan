@@ -632,6 +632,19 @@ app.post('/api/vc24/delete', requireAuth, requireVC24, async (req, res) => {
   res.json({ ok: saved, reason: saved ? undefined : 'save' });
 });
 
+// XÓA TOÀN BỘ dữ liệu (kiện hàng + công nợ) — mật khẩu + xác nhận chính xác
+app.post('/api/vc24/reset', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: false, redis: false });
+  const { password, confirm } = req.body || {};
+  const user = userFromReq(req);
+  if (!password || password !== USERS[user]) return res.json({ ok: false, reason: 'password' });
+  const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toUpperCase().replace(/\s+/g, ' ').trim();
+  if (norm(confirm) !== 'TOI DONG Y XOA') return res.json({ ok: false, reason: 'confirm' });
+  const s1 = await vcSaveOrders({ rows: [], fileName: '', uploadedAt: null });
+  const s2 = await redisSet(VK.ledger, '{}');
+  res.json({ ok: s1 && s2 });
+});
+
 app.post('/api/vc24/cfg', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
   const cfg = (req.body && req.body.cfg) || {};

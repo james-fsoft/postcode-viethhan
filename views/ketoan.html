@@ -107,7 +107,7 @@
   .btn.sm{padding:5px 10px;font-size:.78rem;}
   .modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:flex-start;justify-content:center;padding:24px 14px;z-index:100;overflow:auto;}
   .modal.show{display:flex;}
-  #custDetailModal{z-index:90;} #editModal{z-index:120;} #payModal,#invoiceModal{z-index:110;}
+  #custDetailModal{z-index:90;} #editModal{z-index:120;} #payModal,#invoiceModal{z-index:110;} #custHistModal,#histModal{z-index:130;}
   .modal-box{background:#fff;border-radius:14px;max-width:880px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.3);}
   .modal-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--g200);position:sticky;top:0;background:#fff;border-radius:14px 14px 0 0;}
   .modal-bar h3{font-size:1rem;font-weight:800;color:var(--g900);}
@@ -276,6 +276,13 @@
   </div>
 </div>
 
+<div class="modal" id="custHistModal">
+  <div class="modal-box" style="max-width:560px">
+    <div class="modal-bar"><h3 id="chTitle">Lịch sử thu</h3><button class="btn" onclick="closeCustHist()">Đóng</button></div>
+    <div style="padding:16px 18px" id="chBody"></div>
+  </div>
+</div>
+
 <div class="modal" id="histModal">
   <div class="modal-box" style="max-width:680px">
     <div class="modal-bar"><h3>🧾 Lịch sử thu tiền (tất cả khách)</h3><button class="btn" onclick="closeHist()">Đóng</button></div>
@@ -334,6 +341,39 @@ let _searchT=null;
 let LEDGER={};   // sổ thanh toán: { [cust]: { credit, history:[{date,amount,marked}] } }
 function creditOf(c){ return (LEDGER[c] && Number(LEDGER[c].credit)) || 0; }
 function historyOf(c){ return (LEDGER[c] && Array.isArray(LEDGER[c].history)) ? LEDGER[c].history : []; }
+function paidWonOf(c){ return ROWS.filter(r=>r.cust===c && paid(r)).reduce((s,r)=>s+(Number(r.won)||0),0) + creditOf(c); }
+let SHOW_PAID=false;   // mặc định chỉ hiện số ĐANG NỢ; bật để hiện số ĐÃ TRẢ
+function togglePaidView(){ SHOW_PAID=!SHOW_PAID; if(CUST_SEL) renderCust(); refreshCD(); }
+let CH_CUST='';
+function showCustHistory(cust){ CH_CUST=cust; renderCustHist(); $('custHistModal').classList.add('show'); }
+function closeCustHist(){ $('custHistModal').classList.remove('show'); }
+function renderCustHist(){
+  const cust=CH_CUST, hist=historyOf(cust);
+  const total=hist.reduce((s,h)=>s+(Number(h.amount)||0),0);
+  $('chTitle').textContent='Lịch sử thu — '+cust;
+  $('chBody').innerHTML=hist.length?`
+    <div class="small" style="margin-bottom:10px">Tổng đã ghi nhận thu: <b style="color:var(--green);font-size:1.05rem">₩${total.toLocaleString('en-US')}</b> <span class="muted">· ${hist.length} lần · bấm 1 dòng để xem đơn đã thanh toán</span></div>
+    <div style="border:1px solid var(--g200);border-radius:10px;overflow:hidden">
+    ${hist.map((h,idx)=>({h,idx})).reverse().map(({h,idx})=>`
+      <div style="border-bottom:1px solid var(--g100)">
+        <div class="rowclick" onclick="toggleHistOrders(${idx})" style="display:flex;justify-content:space-between;gap:10px;padding:10px 12px;cursor:pointer;align-items:center">
+          <span><b>${fmtPaidDate(h.date)}</b> <span class="muted">· gạch ${h.marked||0} đơn ${(h.keys&&h.keys.length)?'▸':''}</span></span>
+          <b style="color:var(--green)">₩${(Number(h.amount)||0).toLocaleString('en-US')}</b>
+        </div>
+        <div id="histOrders_${idx}" style="display:none;padding:0 12px 10px"></div>
+      </div>`).join('')}
+    </div>`
+    :'<div class="empty">Khách này chưa có lần thu tiền nào được ghi nhận.</div>';
+}
+function toggleHistOrders(idx){
+  const box=$('histOrders_'+idx); if(!box) return;
+  if(box.style.display!=='none'){ box.style.display='none'; return; }
+  const h=historyOf(CH_CUST)[idx], keys=(h&&h.keys)||[];
+  const orders=keys.map(k=>ROWS.find(r=>r.key===k)).filter(Boolean);
+  box.innerHTML=orders.length?`<div class="tbl-wrap" style="max-height:220px"><table><thead><tr><th>Ngày về</th><th>Mã kiện</th><th>Người nhận</th><th class="r">Tiền Won</th></tr></thead><tbody>${orders.map(r=>`<tr><td>${esc(r.date)}</td><td style="font-weight:700">${esc(r.pkg)}</td><td>${esc(r.rcv)}</td><td class="r num">${fmtWon(r.won)}</td></tr>`).join('')}</tbody></table></div>`
+    :'<div class="small muted" style="padding:4px 0">Không có thông tin đơn (đơn có thể đã bị sửa/xóa).</div>';
+  box.style.display='block';
+}
 const CFG_KEYS=['name','tax','addr','phone','email','bank','acc','holder','memo'];
 const PAY_OPTS=['ĐÃ TT','CHƯA TT','ĐÃ NHẮC','ĐÃ GỬI TT','ĐÃ NHẬP FILE',''];
 
@@ -401,6 +441,7 @@ function showHistory(){
 }
 function closeHist(){ $('histModal').classList.remove('show'); }
 $('histModal').addEventListener('click',e=>{ if(e.target.id==='histModal') closeHist(); });
+$('custHistModal').addEventListener('click',e=>{ if(e.target.id==='custHistModal') closeCustHist(); });
 
 /* ---------- Thu tiền ---------- */
 function openPay(cust,msg){
@@ -447,8 +488,9 @@ function renderCD(){
   $('cdTitle').innerHTML=`👤 ${esc(cust)} <span style="font-weight:600;color:var(--g400);font-size:.85rem">— ${rows.length} đơn`+(owe.length?`, nợ <b style="color:#e11d48">₩${oweWon.toLocaleString('en-US')}</b>`:`, <b style="color:var(--green)">đã thu hết</b>`)+`</span>`;
   $('cdPayBtn').style.display=owe.length?'inline-flex':'none';
   $('cdBody').innerHTML=`
+    <div style="margin-bottom:8px"><button class="btn sm" onclick="togglePaidView()">${SHOW_PAID?'🙈 Ẩn số đã trả':'👁 Hiện số đã trả'}</button></div>
     <div class="stats" style="margin-bottom:12px">
-      ${stat('Tổng đơn',rows.length,'','')}${stat('Đơn chưa thu',owe.length,owe.length?'owe':'','')}${stat('Còn nợ (Won)','₩'+oweWon.toLocaleString('en-US'),'owe','')}
+      ${stat('Tổng đơn',rows.length,'','')}${stat('Đơn chưa thu',owe.length,owe.length?'owe':'','')}${stat('Còn nợ (KRW)','₩'+oweWon.toLocaleString('en-US'),'owe','')}${SHOW_PAID?`<div class="stat" style="cursor:pointer;border-color:#86efac" onclick="showCustHistory('${escJs(cust)}')"><div class="lab">💰 Đã trả (KRW) — lịch sử ›</div><div class="val paid">₩${paidWonOf(cust).toLocaleString('en-US')}</div></div>`:''}
     </div>
     <div class="small muted" style="margin-bottom:6px">💡 Bấm 1 dòng để sửa.</div>
     <div class="tbl-wrap" style="max-height:52vh">
@@ -769,8 +811,12 @@ function renderCust(){
   else ch.style.display='none';
   if(!has){ $('custSummary').innerHTML=''; return; }
   const owe=rows.filter(r=>!paid(r)); const oweVnd=sum(owe,'vnd')+sum(owe,'phuPhi');
-  $('custSummary').innerHTML=stat('Tổng đơn',rows.length,'','')+stat('Đơn chưa thu',owe.length,owe.length?'owe':'','')+
-    stat('Còn nợ (Won)','₩'+Math.max(0,sum(owe,'won')-creditOf(c)).toLocaleString('en-US'),'owe','')+stat('Còn nợ (VND)',oweVnd?oweVnd.toLocaleString('en-US')+' ₫':'—','owe','gồm phụ phí');
+  const oweWonC=Math.max(0,sum(owe,'won')-creditOf(c)), paidWonC=paidWonOf(c);
+  $('custSummary').innerHTML=
+    `<div style="grid-column:1/-1;margin-bottom:-2px"><button class="btn sm" onclick="togglePaidView()">${SHOW_PAID?'🙈 Ẩn số đã trả':'👁 Hiện số đã trả'}</button></div>`+
+    stat('Tổng đơn',rows.length,'','')+stat('Đơn chưa thu',owe.length,owe.length?'owe':'','')+
+    stat('Còn nợ (KRW)','₩'+oweWonC.toLocaleString('en-US'),'owe', oweVnd?(oweVnd.toLocaleString('en-US')+' ₫ (VND)'):'')+
+    (SHOW_PAID?`<div class="stat" style="cursor:pointer;border-color:#86efac" onclick="showCustHistory('${escJs(c)}')"><div class="lab">💰 Đã trả (KRW) — bấm xem lịch sử ›</div><div class="val paid">₩${paidWonC.toLocaleString('en-US')}</div></div>`:'');
   $('custBody').innerHTML=rows.map(r=>`<tr class="rowclick" onclick="openEdit('${escJs(r.key)}')">
     <td>${esc(r.date)}</td><td style="font-weight:700">${esc(r.pkg)}</td>
     <td><span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span></td>

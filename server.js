@@ -540,11 +540,11 @@ app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   let credit = (Number(led.credit) || 0) + amt;
   // gạch nợ dần các đơn chưa thu (cũ nhất trước) khi đủ tiền
   const unpaid = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay)).sort((a, b) => String(a.date).localeCompare(String(b.date)));
-  let marked = 0;
-  for (const r of unpaid) { const w = Number(r.won) || 0; if (w > 0 && credit >= w) { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); credit -= w; marked++; } }
+  let marked = 0; const markedKeys = [];
+  for (const r of unpaid) { const w = Number(r.won) || 0; if (w > 0 && credit >= w) { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); credit -= w; marked++; markedKeys.push(keyOf(r)); } }
   led.credit = credit;
   led.history = led.history || [];
-  led.history.push({ date: String(date || ''), amount: amt, marked, at: new Date().toISOString() });
+  led.history.push({ date: String(date || ''), amount: amt, marked, keys: markedKeys, at: new Date().toISOString() });
   ledger[cust] = led;
   const s1 = await vcSaveOrders(o);
   const s2 = await redisSet(VK.ledger, JSON.stringify(ledger));

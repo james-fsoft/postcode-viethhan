@@ -167,7 +167,7 @@
       <div class="tbl-wrap">
         <table>
           <thead><tr>
-            <th>Ngày về</th><th>Mã kiện</th><th>Trạng thái hàng</th><th>Mã KH</th><th>Check TT</th>
+            <th>Ngày về</th><th>Mã kiện</th><th>Trạng thái hàng</th><th>Mã KH</th><th>Check TT</th><th>Ngày thu</th>
             <th>SĐT gửi / GC</th><th>Người nhận</th><th>SĐT nhận</th><th>Địa chỉ</th><th>Khu vực</th>
             <th class="r">KG</th><th class="r">Đơn giá</th><th class="r">Tiền Won (₩)</th><th class="r">Tiền VND (₫)</th>
             <th>NV giao</th><th class="r">Phụ phí</th><th>Ghi chú</th>
@@ -224,7 +224,7 @@
       <div id="custSummary" class="stats"></div>
       <div class="tbl-wrap" id="custTblWrap" style="display:none">
         <table>
-          <thead><tr><th>Ngày về</th><th>Mã kiện</th><th>Check TT</th><th>Người nhận</th><th>Khu vực</th><th class="r">KG</th><th class="r">Tiền Won (₩)</th><th class="r">Phụ phí</th><th class="r">Tiền VND (₫)</th><th>Ghi chú</th></tr></thead>
+          <thead><tr><th>Ngày về</th><th>Mã kiện</th><th>Check TT</th><th>Ngày thu</th><th>Người nhận</th><th>Khu vực</th><th class="r">KG</th><th class="r">Tiền Won (₩)</th><th class="r">Phụ phí</th><th class="r">Tiền VND (₫)</th><th>Ghi chú</th></tr></thead>
           <tbody id="custBody"></tbody>
         </table>
       </div>
@@ -299,6 +299,8 @@ function fmtWon(n){ return n?('₩'+Number(n).toLocaleString('en-US')):'<span cl
 function fmtVnd(n){ return n?(Number(n).toLocaleString('en-US')+' ₫'):'<span class="muted">—</span>'; }
 function fmtKg(n){ return n?(Number(n).toLocaleString('en-US',{maximumFractionDigits:2})+' kg'):'<span class="muted">—</span>'; }
 function paid(r){ return noVN(r.pay)==='DA TT'; }
+function todayISO(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function fmtPaidDate(s){ if(!s)return '<span class="muted">—</span>'; const m=String(s).match(/(\d{4})-(\d{1,2})-(\d{1,2})/); return m?(m[3].padStart(2,'0')+'/'+m[2].padStart(2,'0')+'/'+m[1]):esc(s); }
 
 let ROWS=[], CFG={}, REDIS=false, CUSTS=[], FILTERED=[], CUST_SEL='';
 let PAGE=1, PAGE_SIZE=100, LIST_ROWS=[];   // phân trang để máy không lag khi nhiều data
@@ -350,6 +352,8 @@ function openPay(cust,msg){
     <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Số tiền đã nhận (₩)</span></label>
     <input id="payAmt" class="ef" inputmode="numeric" value="${oweWon.toLocaleString('en-US')}" oninput="onMoneyInput(this)" style="font-size:1.05rem;font-weight:700" />
     <div class="small muted" style="margin-top:5px">Mặc định = toàn bộ nợ (₩${oweWon.toLocaleString('en-US')}). Sửa lại nếu khách trả ÍT hơn.</div>
+    <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Ngày nhận thanh toán</span></label>
+    <input type="date" id="payDate" class="ef" value="${todayISO()}" />
     <label class="paychk"><input type="checkbox" id="payChk" onchange="updatePayBtn()" />
       <span>Tôi xác nhận đã nhận <b>đúng số tiền nhập ở trên</b> từ khách <b>${esc(cust)}</b>.</span></label>
     <button id="payConfirm" class="btn primary" style="width:100%;justify-content:center" disabled onclick="confirmPay()">✅ Xác nhận thu tiền</button>
@@ -381,39 +385,41 @@ function renderCD(){
     </div>
     <div class="small muted" style="margin-bottom:6px">💡 Bấm 1 dòng để sửa.</div>
     <div class="tbl-wrap" style="max-height:52vh">
-      <table><thead><tr><th>Ngày về</th><th>Mã kiện</th><th>Check TT</th><th>Người nhận</th><th>Địa chỉ</th><th>Khu vực</th><th class="r">KG</th><th class="r">Tiền Won (₩)</th><th class="r">Phụ phí</th><th>Ghi chú</th></tr></thead>
+      <table><thead><tr><th>Ngày về</th><th>Mã kiện</th><th>Check TT</th><th>Ngày thu</th><th>Người nhận</th><th>Địa chỉ</th><th>Khu vực</th><th class="r">KG</th><th class="r">Tiền Won (₩)</th><th class="r">Phụ phí</th><th>Ghi chú</th></tr></thead>
       <tbody>${rows.map(r=>`<tr class="rowclick" onclick="openEdit('${escJs(r.key)}')">
         <td>${esc(r.date)}</td><td style="font-weight:700">${esc(r.pkg)}</td>
         <td><span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span></td>
+        <td>${paid(r)?fmtPaidDate(r.paidDate):'<span class="muted">—</span>'}</td>
         <td>${esc(r.rcv)}</td><td>${esc(r.addr)}</td><td>${r.region?'<span class="pill reg">'+esc(r.region)+'</span>':''}</td>
         <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.won)}</td><td class="r num">${fmtVnd(r.phuPhi)}</td><td>${esc(r.ghiChu)}</td>
       </tr>`).join('')}</tbody></table>
     </div>`;
 }
-async function setPaid(keys){
+async function setPaid(keys, paidDate){
   if(!keys.length) return;
-  const set=new Set(keys); ROWS.forEach(r=>{ if(set.has(r.key)) r.pay='ĐÃ TT'; });
+  const set=new Set(keys); ROWS.forEach(r=>{ if(set.has(r.key)){ r.pay='ĐÃ TT'; if(paidDate) r.paidDate=paidDate; } });
   applyFilters(); renderDebt(); renderDash(); if(CUST_SEL) renderCust(); refreshCD();
-  if(REDIS){ try{ await fetch('/api/vc24/bulkpay',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys,pay:'ĐÃ TT'})}); }catch(e){} }
+  if(REDIS){ try{ await fetch('/api/vc24/bulkpay',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys,pay:'ĐÃ TT',paidDate:paidDate||''})}); }catch(e){} }
 }
 async function confirmPay(){
   const amt=money($('payAmt').value);
+  const pdate=($('payDate')&&$('payDate').value)||todayISO();
+  const dstr=fmtPaidDate(pdate);
   const unpaid=ROWS.filter(r=>r.cust===PAY_CUST && !paid(r)).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
   const oweWon=sum(unpaid,'won');
   if(!amt){ $('payMsg').innerHTML='⚠️ Nhập số tiền hợp lệ.'; return; }
   if(amt>=oweWon){
-    if(!confirm(`Xác nhận khách "${PAY_CUST}" đã thanh toán ĐỦ ₩${oweWon.toLocaleString('en-US')} (${unpaid.length} đơn)?\nTất cả đơn sẽ chuyển sang ĐÃ TT.`)) return;
-    await setPaid(unpaid.map(r=>r.key));
-    openPay(PAY_CUST, `✅ Đã thu đủ ₩${oweWon.toLocaleString('en-US')} — ${unpaid.length} đơn chuyển sang Đã TT.`);
+    if(!confirm(`Xác nhận khách "${PAY_CUST}" đã thanh toán ĐỦ ₩${oweWon.toLocaleString('en-US')} (${unpaid.length} đơn) ngày ${dstr}?\nTất cả đơn sẽ chuyển sang ĐÃ TT.`)) return;
+    await setPaid(unpaid.map(r=>r.key), pdate);
+    openPay(PAY_CUST, `✅ Đã thu đủ ₩${oweWon.toLocaleString('en-US')} — ${unpaid.length} đơn (ngày ${dstr}).`);
     return;
   }
-  // trả một phần: phân bổ FIFO theo ngày
   let rem=amt; const keys=[]; let used=0;
   for(const r of unpaid){ const w=Number(r.won)||0; if(w<=rem){ keys.push(r.key); rem-=w; used+=w; } else break; }
   if(!keys.length){ $('payMsg').innerHTML='⚠️ Số tiền chưa đủ trả đơn nhỏ nhất chưa thu (₩'+(Number(unpaid[0].won)||0).toLocaleString('en-US')+'). Hãy nhập số lớn hơn.'; return; }
-  if(!confirm(`Khách trả ₩${amt.toLocaleString('en-US')} (ít hơn tổng nợ ₩${oweWon.toLocaleString('en-US')}).\nSẽ ghi nhận ${keys.length} đơn (₩${used.toLocaleString('en-US')}) là Đã TT. Tiếp tục?`)) return;
-  await setPaid(keys);
-  openPay(PAY_CUST, `✅ Đã ghi nhận <b>${keys.length}</b> đơn (₩${used.toLocaleString('en-US')}).`+(rem>0?` Còn dư ₩${rem.toLocaleString('en-US')} chưa đủ trả đơn tiếp theo (giữ chưa thu).`:''));
+  if(!confirm(`Khách trả ₩${amt.toLocaleString('en-US')} ngày ${dstr} (ít hơn tổng nợ ₩${oweWon.toLocaleString('en-US')}).\nSẽ ghi nhận ${keys.length} đơn (₩${used.toLocaleString('en-US')}) là Đã TT. Tiếp tục?`)) return;
+  await setPaid(keys, pdate);
+  openPay(PAY_CUST, `✅ Đã ghi nhận <b>${keys.length}</b> đơn (₩${used.toLocaleString('en-US')}) ngày ${dstr}.`+(rem>0?` Còn dư ₩${rem.toLocaleString('en-US')} (giữ chưa thu).`:''));
 }
 async function logout(){ try{ await fetch('/api/logout',{method:'POST'});}catch(e){} location.reload(); }
 
@@ -523,6 +529,7 @@ const EDIT_FIELDS=[
   ['region','Khu vực','t'],['staff','NV giao','t'],['rcv','Người nhận','t'],['rcvPh','SĐT người nhận','t'],
   ['weight','Khối lượng (KG)','num'],['price','Đơn giá (₩)','money'],['won','Thành tiền Won (₩)','money'],
   ['vnd','Thành tiền VND (₫)','money'],['phuPhi','Phụ phí (₫)','money'],
+  ['paidDate','Ngày nhận TT','date'],
   ['note','SĐT gửi / Ghi chú','t'],['ghiChu','Ghi chú','t'],['addr','Địa chỉ người nhận','area']
 ];
 function grp(s){ const neg=/^-/.test(String(s).trim()); const d=String(s==null?'':s).replace(/[^\d]/g,''); const n=d?Number(d).toLocaleString('en-US'):''; return n&&neg?('-'+n):n; }
@@ -532,6 +539,7 @@ function listRowHTML(r){
   return `<tr class="rowclick" onclick="openEdit('${escJs(r.key)}')">
     <td>${esc(r.date)}</td><td style="font-weight:700">${esc(r.pkg)}</td><td>${esc(r.status)}</td>
     <td><b>${esc(r.cust)}</b></td><td><span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span></td>
+    <td>${paid(r)?fmtPaidDate(r.paidDate):'<span class="muted">—</span>'}</td>
     <td>${esc(r.note)}</td><td>${esc(r.rcv)}</td><td>${esc(r.rcvPh)}</td><td>${esc(r.addr)}</td>
     <td>${r.region?'<span class="pill reg">'+esc(r.region)+'</span>':''}</td>
     <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.price)}</td>
@@ -548,6 +556,7 @@ function openEdit(key){
     if(t==='pay') inp=`<select id="ef_${f}" class="ef">${PAY_OPTS.map(o=>`<option value="${escA(o)}"${noVN(o)===noVN(v)?' selected':''}>${o||'(trống)'}</option>`).join('')}</select>`;
     else if(t==='area') inp=`<textarea id="ef_${f}" class="ef" rows="2">${esc(v)}</textarea>`;
     else if(t==='money') inp=`<input id="ef_${f}" class="ef" inputmode="numeric" value="${escA(v?grp(v):'')}" oninput="onMoneyInput(this)" />`;
+    else if(t==='date') inp=`<input type="date" id="ef_${f}" class="ef" value="${escA(v)}" />`;
     else inp=`<input id="ef_${f}" class="ef" value="${escA(v)}" ${t==='num'?'inputmode="decimal"':''} />`;
     const wide=(t==='area')?' class="wide"':'';
     return `<div class="field"${wide}><label>${lab}</label>${inp}</div>`;
@@ -695,6 +704,7 @@ function renderCust(){
   $('custBody').innerHTML=rows.map(r=>`<tr class="rowclick" onclick="openEdit('${escJs(r.key)}')">
     <td>${esc(r.date)}</td><td style="font-weight:700">${esc(r.pkg)}</td>
     <td><span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span></td>
+    <td>${paid(r)?fmtPaidDate(r.paidDate):'<span class="muted">—</span>'}</td>
     <td>${esc(r.rcv)}</td><td>${r.region?'<span class="pill reg">'+esc(r.region)+'</span>':''}</td>
     <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.won)}</td>
     <td class="r num">${fmtVnd(r.phuPhi)}</td><td class="r num">${fmtVnd(r.vnd)}</td><td>${esc(r.ghiChu)}</td>

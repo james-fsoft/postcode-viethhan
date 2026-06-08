@@ -497,7 +497,7 @@ function requireVC24(req, res, next) {
   next();
 }
 const VK = { orders: 'vc24:ketoan:orders', cfg: 'vc24:ketoan:cfg' };
-const VC24_EDITABLE = new Set(['date','status','cust','pay','note','rcv','rcvPh','addr','region','weight','price','won','vnd','phuPhi','ghiChu','staff']);
+const VC24_EDITABLE = new Set(['date','status','cust','pay','note','rcv','rcvPh','addr','region','weight','price','won','vnd','phuPhi','ghiChu','staff','paidDate']);
 const keyOf = r => r && (r.key || r.pkg);
 async function vcLoadOrders() {
   const s = await redisGet(VK.orders);
@@ -561,11 +561,11 @@ app.post('/api/vc24/save', requireAuth, requireVC24, async (req, res) => {
 // Cập nhật trạng thái thanh toán cho NHIỀU đơn cùng lúc (thu tiền)
 app.post('/api/vc24/bulkpay', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
-  const { keys, pay } = req.body || {};
+  const { keys, pay, paidDate } = req.body || {};
   if (!Array.isArray(keys) || !keys.length) return res.json({ ok: false, message: 'no keys' });
   const set = new Set(keys); const val = String(pay == null ? 'ĐÃ TT' : pay);
   const o = await vcLoadOrders(); let n = 0;
-  o.rows.forEach(r => { if (set.has(keyOf(r))) { r.pay = val; n++; } });
+  o.rows.forEach(r => { if (set.has(keyOf(r))) { r.pay = val; if (paidDate != null) r.paidDate = String(paidDate); n++; } });
   await vcSaveOrders(o);
   res.json({ ok: true, updated: n });
 });

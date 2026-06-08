@@ -539,10 +539,12 @@ async function confirmPay(){
   const dstr=fmtPaidDate(pdate);
   if(!amt||amt<=0){ $('payMsg').innerHTML='⚠️ Nhập số tiền hợp lệ.'; return; }
   if(!REDIS){ alert('Chưa bật lưu trữ server — không ghi nhận được.'); return; }
-  if(!confirm(`Ghi nhận khách "${PAY_CUST}" trả ₩${amt.toLocaleString('en-US')} ngày ${dstr}?`)) return;
+  const owe=Math.max(0,sum(ROWS.filter(r=>r.cust===PAY_CUST&&!paid(r)),'won')-creditOf(PAY_CUST));
+  const settleAll=amt>=owe;   // trả đủ/đủ-hơn -> gạch sạch
+  if(!confirm(`Ghi nhận khách "${PAY_CUST}" trả ₩${amt.toLocaleString('en-US')} ngày ${dstr}?`+(settleAll?'\n(Trả ĐỦ — sẽ gạch hết đơn còn nợ.)':''))) return;
   const btn=$('payConfirm'); if(btn) btn.disabled=true;
   try{
-    const res=await fetch('/api/vc24/payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,amount:amt,date:pdate})}).then(r=>r.json());
+    const res=await fetch('/api/vc24/payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,amount:amt,date:pdate,settleAll})}).then(r=>r.json());
     if(!res.ok){ alert(res.reason==='save'?'❌ Lưu thất bại (kho dữ liệu quá lớn).':'Ghi nhận thất bại.'); if(btn)btn.disabled=false; return; }
     await loadServerData();
     openPay(PAY_CUST, `✅ Đã ghi nhận trả ₩${amt.toLocaleString('en-US')} ngày ${dstr}.`+(res.marked?` Gạch ${res.marked} đơn (Đã TT).`:' Chưa đủ gạch đơn — cộng vào tiền đã trả trước.')+(res.credit>0?` Dư ₩${Number(res.credit).toLocaleString('en-US')}.`:''));

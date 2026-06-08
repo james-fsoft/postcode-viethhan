@@ -531,17 +531,24 @@ app.get('/api/vc24/data', requireAuth, requireVC24, async (req, res) => {
 // Thu tiền theo SỐ TIỀN (hỗ trợ trả từng phần) + ghi lịch sử
 app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
-  const { cust, amount, date } = req.body || {};
+  const { cust, amount, date, settleAll } = req.body || {};
   const amt = Math.round(Number(amount) || 0);
   if (!cust || amt <= 0) return res.json({ ok: false, message: 'bad' });
   const o = await vcLoadOrders();
   let ledger = {}; try { const s = await redisGet(VK.ledger); if (s) ledger = JSON.parse(s); } catch { /* ok */ }
   const led = ledger[cust] || { credit: 0, history: [] };
   let credit = (Number(led.credit) || 0) + amt;
-  // gạch nợ dần các đơn chưa thu (cũ nhất trước) khi đủ tiền
   const unpaid = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay)).sort((a, b) => String(a.date).localeCompare(String(b.date)));
   let marked = 0; const markedKeys = [];
-  for (const r of unpaid) { const w = Number(r.won) || 0; if (w > 0 && credit >= w) { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); credit -= w; marked++; markedKeys.push(keyOf(r)); } }
+  if (settleAll) {
+    // Trả đủ/đủ-hơn -> gạch SẠCH mọi đơn (tránh sót vài đồng do số quá lớn mất chính xác)
+    const totalUnpaid = unpaid.reduce((s, r) => s + (Number(r.won) || 0), 0);
+    unpaid.forEach(r => { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); marked++; markedKeys.push(keyOf(r)); });
+    credit = Math.max(0, credit - totalUnpaid);
+  } else {
+    // Trả từng phần: gạch nợ dần các đơn cũ nhất khi đủ tiền
+    for (const r of unpaid) { const w = Number(r.won) || 0; if (w > 0 && credit >= w) { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); credit -= w; marked++; markedKeys.push(keyOf(r)); } }
+  }
   led.credit = credit;
   led.history = led.history || [];
   led.history.push({ date: String(date || ''), amount: amt, marked, keys: markedKeys, at: new Date().toISOString() });

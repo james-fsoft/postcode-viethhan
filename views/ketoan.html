@@ -146,7 +146,12 @@
 
   <div class="tab-pane show" id="tab-list">
     <div class="panel" id="uploadPanel">
-      <div class="ph"><h2>Dữ liệu đơn hàng</h2><span class="small muted" id="fileInfo"></span></div>
+      <div class="ph"><h2>Dữ liệu đơn hàng</h2>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <button class="btn sm" onclick="downloadTemplate()">⬇ Tải file mẫu (đúng định dạng)</button>
+          <span class="small muted" id="fileInfo"></span>
+        </div>
+      </div>
       <div class="drop" id="drop" onclick="document.getElementById('file').click()">
         <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="onFile(event)" />
         <div style="font-size:1.4rem;margin-bottom:4px;">📄⬆️</div>
@@ -462,6 +467,16 @@ function onFile(ev){ const f=ev.target.files[0]; if(!f) return; readFile(f); ev.
 $('drop').addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(f) readFile(f); });
 function readFile(f){ const rd=new FileReader(); rd.onload=e=>{ const wb=XLSX.read(e.target.result,{type:'array'}); parseWB(wb,f.name); }; rd.readAsArrayBuffer(f); }
 
+function downloadTemplate(){
+  const headers=['NGÀY VỀ','MÃ KIỆN','TRẠNG THÁI HÀNG','MÃ KHÁCH HÀNG','CHECK TT','SĐT NGƯỜI GỬI/ GHI CHÚ','NGƯỜI NHẬN','SĐT NGƯỜI NHẬN','ĐỊA CHỈ NGƯỜI NHẬN','KHU VỰC','무게 (KG)','ĐƠN GIÁ','THÀNH TIỀN WON','THÀNH TIỀN VND','NV GIAO','PHỤ PHÍ','Ghi chú'];
+  const sample=['01-06-2026','0106M1554','HÀNG VỀ TRUNG TÂM','288- QUANG FL','CHƯA TT','','Nguyễn Văn A','0901234567','75 ngõ 68 Triều Khúc, Hà Nội','HN',6.25,9190,57438,'','J&T','',''];
+  const aoa=[headers,sample];
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=headers.map(h=>({wch:Math.max(10,h.length+2)}));
+  for(let c=0;c<headers.length;c++){ const a=XLSX.utils.encode_cell({r:0,c}); if(ws[a]) ws[a].s={font:{bold:true},fill:{fgColor:{rgb:'DDEBF7'}},alignment:{horizontal:'center'},border:{bottom:{style:'thin',color:{rgb:'9CB3D4'}}}}; }
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Mẫu upload');
+  XLSX.writeFile(wb,'VC24_mau_upload.xlsx');
+}
 function findCol(H, ...keys){ for(let i=0;i<H.length;i++){ if(keys.every(k=>H[i].includes(k))) return i; } return -1; }
 function detect(H){
   const c={};
@@ -512,7 +527,7 @@ async function parseWB(wb, fname){
   }
   try{
     const res=await fetch('/api/vc24/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileName:fname,rows:uniqRows})}).then(r=>r.json());
-    if(!res.ok){ alert('Lưu lên server thất bại.'); return; }
+    if(!res.ok){ alert(res.reason==='save' ? '❌ Lưu lên server THẤT BẠI — kho dữ liệu quá lớn so với giới hạn lưu trữ. Dữ liệu MỚI chưa được lưu.\n\nĐã đọc được '+uniqRows.length+' dòng từ file. Hãy báo để nâng cấp lưu trữ.' : 'Lưu lên server thất bại.'); return; }
     await loadServerData();
     let m;
     if(res.added===0) m='⚠️ Không thêm đơn nào — TẤT CẢ mã kiện đã có trong hệ thống (không up lại lần 2).';

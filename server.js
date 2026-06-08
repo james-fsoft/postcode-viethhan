@@ -6,6 +6,7 @@ const path = require('path');
 const fs   = require('fs');
 const https = require('https');
 const http  = require('http');
+const zlib  = require('zlib');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -499,12 +500,24 @@ function requireVC24(req, res, next) {
 const VK = { orders: 'vc24:ketoan:orders', cfg: 'vc24:ketoan:cfg' };
 const VC24_EDITABLE = new Set(['date','status','cust','pay','note','rcv','rcvPh','addr','region','weight','price','won','vnd','phuPhi','ghiChu','staff','paidDate']);
 const keyOf = r => r && (r.key || r.pkg);
-async function vcLoadOrders() {
-  const s = await redisGet(VK.orders);
-  try { const o = s ? JSON.parse(s) : null; return (o && Array.isArray(o.rows)) ? o : { rows: [], fileName: '', uploadedAt: null }; }
-  catch { return { rows: [], fileName: '', uploadedAt: null }; }
+const VC_EMPTY = () => ({ rows: [], fileName: '', uploadedAt: null });
+// Nén (gzip→base64) để khối dữ liệu nhỏ hơn nhiều lần, tránh vượt giới hạn ghi của Redis
+function vcPack(o) {
+  const json = JSON.stringify(o);
+  try { return 'gz:' + zlib.gzipSync(Buffer.from(json, 'utf8')).toString('base64'); }
+  catch { return json; }
 }
-const vcSaveOrders = o => redisSet(VK.orders, JSON.stringify(o));
+function vcUnpack(s) {
+  if (!s) return VC_EMPTY();
+  try {
+    const json = (typeof s === 'string' && s.startsWith('gz:'))
+      ? zlib.gunzipSync(Buffer.from(s.slice(3), 'base64')).toString('utf8') : s;
+    const o = JSON.parse(json);
+    return (o && Array.isArray(o.rows)) ? o : VC_EMPTY();
+  } catch { return VC_EMPTY(); }
+}
+async function vcLoadOrders() { return vcUnpack(await redisGet(VK.orders)); }
+const vcSaveOrders = o => redisSet(VK.orders, vcPack(o));   // trả về true/false (ghi thành công?)
 
 app.get('/api/vc24/data', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: true, redis: false, rows: [], cfg: {} });
@@ -528,7 +541,8 @@ app.post('/api/vc24/upload', requireAuth, requireVC24, async (req, res) => {
     o.rows.push(r); added++;
   }
   o.fileName = String(fileName || o.fileName || ''); o.uploadedAt = new Date().toISOString();
-  await vcSaveOrders(o);
+  const saved = await vcSaveOrders(o);
+  if (!saved) return res.json({ ok: false, reason: 'save', message: 'Lưu thất bại — kho dữ liệu có thể đã quá lớn.' });
   res.json({ ok: true, added, dup, total: o.rows.length });
 });
 
@@ -541,8 +555,8 @@ app.post('/api/vc24/edit', requireAuth, requireVC24, async (req, res) => {
   const row = o.rows.find(r => keyOf(r) === key);
   if (!row) return res.json({ ok: false, message: 'not found' });
   row[field] = value;
-  await vcSaveOrders(o);
-  res.json({ ok: true });
+  const saved = await vcSaveOrders(o);
+  res.json({ ok: saved, reason: saved ? undefined : 'save' });
 });
 
 // Lưu cả 1 dòng (sửa từ popup) — chỉ ghi các trường được phép
@@ -554,8 +568,8 @@ app.post('/api/vc24/save', requireAuth, requireVC24, async (req, res) => {
   const cur = o.rows.find(r => keyOf(r) === key);
   if (!cur) return res.json({ ok: false, message: 'not found' });
   for (const f of VC24_EDITABLE) { if (Object.prototype.hasOwnProperty.call(row, f)) cur[f] = row[f]; }
-  await vcSaveOrders(o);
-  res.json({ ok: true });
+  const saved = await vcSaveOrders(o);
+  res.json({ ok: saved, reason: saved ? undefined : 'save' });
 });
 
 // Cập nhật trạng thái thanh toán cho NHIỀU đơn cùng lúc (thu tiền)
@@ -566,8 +580,8 @@ app.post('/api/vc24/bulkpay', requireAuth, requireVC24, async (req, res) => {
   const set = new Set(keys); const val = String(pay == null ? 'ĐÃ TT' : pay);
   const o = await vcLoadOrders(); let n = 0;
   o.rows.forEach(r => { if (set.has(keyOf(r))) { r.pay = val; if (paidDate != null) r.paidDate = String(paidDate); n++; } });
-  await vcSaveOrders(o);
-  res.json({ ok: true, updated: n });
+  const saved = await vcSaveOrders(o);
+  res.json({ ok: saved, updated: n, reason: saved ? undefined : 'save' });
 });
 
 // Xóa 1 đơn — bắt buộc đúng mật khẩu tài khoản
@@ -581,8 +595,8 @@ app.post('/api/vc24/delete', requireAuth, requireVC24, async (req, res) => {
   const before = o.rows.length;
   o.rows = o.rows.filter(r => keyOf(r) !== key);
   if (o.rows.length === before) return res.json({ ok: false, reason: 'notfound' });
-  await vcSaveOrders(o);
-  res.json({ ok: true });
+  const saved = await vcSaveOrders(o);
+  res.json({ ok: saved, reason: saved ? undefined : 'save' });
 });
 
 app.post('/api/vc24/cfg', requireAuth, requireVC24, async (req, res) => {

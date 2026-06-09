@@ -615,6 +615,29 @@ app.post('/api/vc24/surcharge', requireAuth, requireVC24, async (req, res) => {
   res.json({ ok: true });
 });
 
+// Sửa 1 dòng lịch sử thanh toán — ghi log (thời điểm + lý do) ngay trong dòng đó
+app.post('/api/vc24/payment-edit', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: false, redis: false });
+  const { cust, at, amount, date, reason } = req.body || {};
+  if (!cust || !at || !String(reason || '').trim()) return res.json({ ok: false, reason: 'bad' });
+  let ledger = {}; try { const s = await redisGet(VK.ledger); if (s) ledger = JSON.parse(s); } catch { /* ok */ }
+  const led = ledger[cust];
+  if (!led || !Array.isArray(led.history)) return res.json({ ok: false, reason: 'notfound' });
+  const e = led.history.find(h => h.at === at);
+  if (!e) return res.json({ ok: false, reason: 'notfound' });
+  const oldAmt = Number(e.amount) || 0, oldDate = e.date || '';
+  const newAmt = Math.round(Number(amount) || 0), newDate = String(date || e.date || '');
+  led.credit = (Number(led.credit) || 0) + (newAmt - oldAmt); // điều chỉnh dư theo chênh lệch
+  e.amount = newAmt; e.date = newDate;
+  e.edits = e.edits || [];
+  e.edits.push({ at: new Date().toISOString(), by: userFromReq(req), oldAmount: oldAmt, newAmount: newAmt, oldDate, newDate, reason: String(reason).slice(0, 300) });
+  ledger[cust] = led;
+  const ok = await redisSet(VK.ledger, JSON.stringify(ledger));
+  if (!ok) return res.json({ ok: false, reason: 'save' });
+  await vcLog('payment-edit', `Sửa lịch sử thu ${cust}: ₩${oldAmt.toLocaleString('en-US')}→₩${newAmt.toLocaleString('en-US')} — ${String(reason).slice(0, 120)}`);
+  res.json({ ok: true });
+});
+
 // Upload = GỘP theo Mã kiện (key). Trùng -> bỏ qua, báo lại danh sách trùng.
 app.post('/api/vc24/upload', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });

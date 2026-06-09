@@ -1009,7 +1009,9 @@ function openEdit(key,src){
     let inp;
     if(t==='pay') inp=`<select id="ef_${f}" class="ef">${PAY_OPTS.map(o=>`<option value="${escA(o)}"${noVN(o)===noVN(v)?' selected':''}>${o||'(trống)'}</option>`).join('')}</select>`;
     else if(t==='area') inp=`<textarea id="ef_${f}" class="ef" rows="2">${esc(v)}</textarea>`;
-    else if(t==='money') inp=`<input id="ef_${f}" class="ef" inputmode="numeric" value="${escA(v?grp(v):'')}" oninput="onMoneyInput(this)" />`;
+    else if(t==='money'){ inp=`<input id="ef_${f}" class="ef" inputmode="numeric" value="${escA(v?grp(v):'')}" oninput="onMoneyInput(this)" />`;
+      if(f==='won') inp=`<div style="display:flex;gap:6px;align-items:center">${inp}<button type="button" class="btn sm" onclick="calcWon()" title="Tự nhân: Khối lượng × Đơn giá" style="white-space:nowrap;border-color:#a5b4fc;color:#4f46e5">✖️ Tự nhân</button></div>`;
+    }
     else if(t==='date') inp=`<input type="date" id="ef_${f}" class="ef" value="${escA(v)}" />`;
     else inp=`<input id="ef_${f}" class="ef" value="${escA(v)}" ${t==='num'?'inputmode="decimal"':''} />`;
     const wide=(t==='area')?' class="wide"':'';
@@ -1020,6 +1022,13 @@ function openEdit(key,src){
        <span class="small muted">Mã kiện là khóa duy nhất — không sửa được.</span>
      </div>`;
   $('editModal').classList.add('show');
+}
+function calcWon(){
+  const w=$('ef_weight')?weight($('ef_weight').value):0;
+  const p=$('ef_price')?money($('ef_price').value):0;
+  if(!w||!p){ alert('Cần có Khối lượng (KG) và Đơn giá (₩) để tự nhân.'); return; }
+  const won=Math.round(w*p);
+  const el=$('ef_won'); if(el){ el.value=won?grp(String(won)):''; el.focus(); }
 }
 function closeEdit(){ $('editModal').classList.remove('show'); EDIT_KEY=''; }
 function saveEdit(){

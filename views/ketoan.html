@@ -274,9 +274,13 @@
       <div class="grid2"><div class="field"><label>Tên công ty</label><input id="cfg_name" placeholder="VC24 GLOBAL" /></div><div class="field"><label>Mã số thuế</label><input id="cfg_tax" /></div></div>
       <div class="field"><label>Địa chỉ</label><input id="cfg_addr" /></div>
       <div class="grid2"><div class="field"><label>Điện thoại</label><input id="cfg_phone" /></div><div class="field"><label>Email / Website</label><input id="cfg_email" /></div></div>
-      <h2 style="font-size:.92rem;margin:8px 0 10px;color:var(--g700);">Tài khoản nhận thanh toán</h2>
-      <div class="grid2"><div class="field"><label>Ngân hàng</label><input id="cfg_bank" /></div><div class="field"><label>Số tài khoản</label><input id="cfg_acc" /></div></div>
-      <div class="grid2"><div class="field"><label>Chủ tài khoản</label><input id="cfg_holder" /></div><div class="field"><label>Ghi chú chuyển khoản</label><input id="cfg_memo" /></div></div>
+      <h2 style="font-size:.92rem;margin:8px 0 8px;color:var(--g700);">🇻🇳 Tài khoản nhận VND</h2>
+      <div class="grid2"><div class="field"><label>Ngân hàng</label><input id="cfg_bank" /></div><div class="field"><label>Số tài khoản (VND)</label><input id="cfg_acc" /></div></div>
+      <div class="field"><label>Chủ tài khoản</label><input id="cfg_holder" /></div>
+      <h2 style="font-size:.92rem;margin:14px 0 8px;color:var(--g700);">🇰🇷 Tài khoản nhận Won (KRW)</h2>
+      <div class="grid2"><div class="field"><label>Ngân hàng (Hàn Quốc)</label><input id="cfg_bankWon" /></div><div class="field"><label>Số tài khoản (Won)</label><input id="cfg_accWon" /></div></div>
+      <div class="field"><label>Chủ tài khoản</label><input id="cfg_holderWon" /></div>
+      <div class="field"><label>Ghi chú chuyển khoản (chung)</label><input id="cfg_memo" /></div>
       <button class="btn primary" onclick="saveCfg()">💾 Lưu thông tin</button>
       <span class="small" id="cfgSaved" style="margin-left:10px;color:var(--green);font-weight:700;display:none">✓ Đã lưu</span>
     </div>
@@ -398,7 +402,7 @@ function toggleHistOrders(idx){
     :'<div class="small muted" style="padding:4px 0">Không có thông tin đơn (đơn có thể đã bị sửa/xóa).</div>';
   box.style.display='block';
 }
-const CFG_KEYS=['name','tax','addr','phone','email','bank','acc','holder','memo'];
+const CFG_KEYS=['name','tax','addr','phone','email','bank','acc','holder','bankWon','accWon','holderWon','memo'];
 const PAY_OPTS=['ĐÃ TT','CHƯA TT','ĐÃ NHẮC','ĐÃ GỬI TT','ĐÃ NHẬP FILE',''];
 
 function tab(name){
@@ -902,10 +906,10 @@ function openInvoice(cust,onlyOwe){
     </table>
     <div class="pay-box">
       <div class="bank">
-        <div style="font-size:.74rem;text-transform:uppercase;color:#888;font-weight:700;margin-bottom:4px;">Thông tin thanh toán</div>
-        <div><b>Ngân hàng:</b> ${ln(co.bank,'(đang cập nhật)')}</div>
-        <div><b>Số TK:</b> ${ln(co.acc,'(đang cập nhật)')}</div>
-        <div><b>Chủ TK:</b> ${ln(co.holder,'(đang cập nhật)')}</div>
+        <div style="font-size:.74rem;text-transform:uppercase;color:#888;font-weight:700;margin-bottom:5px;">Thông tin thanh toán</div>
+        ${(co.bank||co.acc||co.holder)?`<div style="margin-bottom:7px"><b>🇻🇳 TK nhận VND:</b><br>Ngân hàng: ${ln(co.bank,'(cập nhật)')}<br>Số TK: <b>${ln(co.acc,'(cập nhật)')}</b> · Chủ TK: ${ln(co.holder,'(cập nhật)')}</div>`:''}
+        ${(co.bankWon||co.accWon||co.holderWon)?`<div style="margin-bottom:7px"><b>🇰🇷 TK nhận Won (KRW):</b><br>Ngân hàng: ${ln(co.bankWon,'(cập nhật)')}<br>Số TK: <b>${ln(co.accWon,'(cập nhật)')}</b> · Chủ TK: ${ln(co.holderWon,'(cập nhật)')}</div>`:''}
+        ${(!(co.bank||co.acc||co.holder||co.bankWon||co.accWon||co.holderWon))?`<div style="color:#aaa;margin-bottom:7px">(Tài khoản nhận thanh toán: đang cập nhật)</div>`:''}
         <div><b>Nội dung CK:</b> ${co.memo?esc(co.memo):esc(cust)}</div>
       </div>
       <table class="sumtbl">

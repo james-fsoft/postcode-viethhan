@@ -699,11 +699,7 @@ app.get('/', (req, res) => {
 
 // ── Trang xử lý file vận đơn — chỉ gói Pro / Enterprise ──────────────────────
 app.get('/shipping', requireAuth, (req, res) => {
-  const username = userFromReq(req);
-  const plan = getPlan(username);
-  if (plan.name !== 'pro' && plan.name !== 'enterprise') {
-    return res.redirect('/');   // không đủ quyền → về trang chính
-  }
+  if (userFromReq(req) !== 'vhpro') return res.redirect('/');   // chỉ account VC24 (vhpro)
   sendPage(res, 'views', 'shipping.html');
 });
 

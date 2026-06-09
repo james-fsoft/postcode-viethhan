@@ -93,6 +93,8 @@
     }
 
     .topbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .vc24-link { display:inline-flex; align-items:center; gap:6px; font-size:0.82rem; font-weight:700; color:#4f46e5; background:#eef2ff; border:1.5px solid #e0e7ff; border-radius:99px; padding:7px 14px; text-decoration:none; transition:background .15s,color .15s,border-color .15s; }
+    .vc24-link:hover { background:#4f46e5; color:#fff; border-color:#4f46e5; }
 
     /* ── Menu điều hướng header ── */
     .top-nav { display:flex; align-items:center; gap:2px; flex-wrap:wrap; }
@@ -624,6 +626,7 @@
     </nav>
 
     <div class="topbar-right">
+      <a id="vc24Btn" href="/vc24global-main" class="vc24-link" style="display:none">🏢 VC24 Global</a>
       <div class="user-chip" id="userChip" style="display:none">
         <span class="user-avatar" id="userAvatar">U</span>
         <span class="user-meta">
@@ -1936,6 +1939,8 @@ let CONFIG_LOADED = false;
 function updateUserChip() {
   const chip = document.getElementById('userChip');
   if (!chip || !CONFIG_LOADED) return;
+  const vc = document.getElementById('vc24Btn');
+  if (vc) vc.style.display = (!IS_GUEST && USERNAME === 'vhpro') ? 'inline-flex' : 'none';
   if (IS_GUEST || !USERNAME) { chip.style.display = 'none'; return; }
   chip.style.display = 'flex';
   document.getElementById('userAvatar').textContent = USERNAME.charAt(0);

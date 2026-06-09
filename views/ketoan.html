@@ -113,6 +113,7 @@
   .stat .val.owe{color:#e11d48;} .stat .val.paid{color:var(--green);}
   .stat .sub{font-size:.76rem;color:var(--g400);margin-top:3px;}
   .btn{font-family:inherit;font-size:.84rem;font-weight:700;border-radius:9px;padding:8px 14px;cursor:pointer;border:1.5px solid var(--g200);background:#fff;color:var(--g700);display:inline-flex;align-items:center;gap:6px;}
+  .btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
   .btn:hover{border-color:var(--blue);color:var(--blue);}
   .btn.primary{background:linear-gradient(135deg,var(--indigo),#7c3aed);color:#fff;border:none;} .btn.primary:hover{color:#fff;filter:brightness(1.05);}
   .btn.sm{padding:5px 10px;font-size:.78rem;}
@@ -176,26 +177,47 @@
   <div class="tab-pane show" id="tab-week">
     <div class="panel">
       <div class="ph"><h2>🗓️ Dữ liệu theo tuần</h2><span class="small muted" id="weekInfo"></span></div>
-      <div class="filters">
-        <select id="weekSel" onchange="weekChanged()" style="font-weight:700;min-width:240px"></select>
-        <input class="grow" id="qWeek" placeholder="🔎 Tìm trong tuần: mã KH, người nhận, SĐT, mã kiện…" oninput="onWeekSearch()" />
-        <select id="fPayWeek" onchange="renderWeek()"><option value="">Tất cả TT</option><option value="owe">Chưa thu</option><option value="paid">Đã thu</option></select>
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+        <select id="weekSel" onchange="weekChanged()" class="ef" style="font-weight:700;min-width:240px;width:auto"></select>
+        <button class="btn sm active" id="wvOrders" onclick="setWeekView('orders')">📋 Đơn hàng</button>
+        <button class="btn sm" id="wvDebt" onclick="setWeekView('debt')">📊 Công nợ tuần</button>
       </div>
       <div class="small muted" id="weekSummary" style="margin-bottom:10px;"></div>
-      <div class="small muted" style="margin-bottom:8px;">💡 Mỗi tuần upload 1 file. Chọn tuần để xem lại. Bấm 1 dòng để sửa/xóa (tự lưu online).</div>
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr>
-            <th>Ngày về</th><th>Mã kiện</th><th>Trạng thái hàng</th><th>Mã KH</th><th>Check TT</th><th>Ngày thu</th>
-            <th>SĐT gửi / GC</th><th>Người nhận</th><th>SĐT nhận</th><th>Địa chỉ</th><th>Khu vực</th>
-            <th class="r">KG</th><th class="r">Đơn giá</th><th class="r">Tiền Won (₩)</th><th class="r">Tiền VND (₫)</th>
-            <th>NV giao</th><th class="r">Phụ phí</th><th>Ghi chú</th>
-          </tr></thead>
-          <tbody id="weekBody"></tbody>
-        </table>
-        <div class="empty" id="weekEmpty">Chưa có dữ liệu tuần này.</div>
+      <!-- View: Đơn hàng -->
+      <div id="weekOrdersView">
+        <div class="filters">
+          <input class="grow" id="qWeek" placeholder="🔎 Tìm trong tuần: mã KH, người nhận, SĐT, mã kiện…" oninput="onWeekSearch()" />
+          <select id="fPayWeek" onchange="renderWeek()"><option value="">Tất cả TT</option><option value="owe">Chưa thu</option><option value="paid">Đã thu</option></select>
+        </div>
+        <div class="small muted" style="margin-bottom:8px;">💡 Mỗi tuần upload 1 file. Bấm 1 dòng để sửa/xóa (tự lưu online).</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Ngày về</th><th>Mã kiện</th><th>Trạng thái hàng</th><th>Mã KH</th><th>Check TT</th><th>Ngày thu</th>
+              <th>SĐT gửi / GC</th><th>Người nhận</th><th>SĐT nhận</th><th>Địa chỉ</th><th>Khu vực</th>
+              <th class="r">KG</th><th class="r">Đơn giá</th><th class="r">Tiền Won (₩)</th><th class="r">Tiền VND (₫)</th>
+              <th>NV giao</th><th class="r">Phụ phí</th><th>Ghi chú</th>
+            </tr></thead>
+            <tbody id="weekBody"></tbody>
+          </table>
+          <div class="empty" id="weekEmpty">Chưa có dữ liệu tuần này.</div>
+        </div>
+        <div class="pager" id="weekPager"></div>
       </div>
-      <div class="pager" id="weekPager"></div>
+      <!-- View: Công nợ tuần -->
+      <div id="weekDebtView" style="display:none">
+        <div class="stats" id="weekDebtStats" style="margin-bottom:12px"></div>
+        <div class="filters"><input class="grow" id="qWeekDebt" placeholder="🔎 Tìm khách hàng trong tuần…" oninput="renderWeekDebt()" />
+          <select id="weekDebtSort" onchange="renderWeekDebt()"><option value="owe">Nợ nhiều nhất</option><option value="name">Theo tên KH</option></select></div>
+        <div class="small muted" style="margin-bottom:8px;">Công nợ phát sinh trong tuần này (chưa trừ tiền trả trước chung). Bấm "Xem" để mở chi tiết khách.</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Mã khách hàng</th><th class="r">Tổng đơn</th><th class="r">Đơn chưa thu</th><th class="r">Còn nợ Won (₩)</th><th class="r">Còn nợ VND (₫)</th><th></th></tr></thead>
+            <tbody id="weekDebtBody"></tbody>
+          </table>
+          <div class="empty" id="weekDebtEmpty">Chưa có dữ liệu.</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -529,7 +551,7 @@ function tab(name){
   if(name==='week') renderWeek();
 }
 let EDIT_SOURCE='main';
-let WEEK_SEL='', WPAGE=1, _weekSearchT=null;
+let WEEK_SEL='', WPAGE=1, _weekSearchT=null, WEEK_VIEW='orders';
 let PAY_CUST='';
 function renderDash(){
   const agg=customerAgg();
@@ -742,13 +764,29 @@ function buildWeekPicker(){
   sel.innerHTML=keys.map(k=>`<option value="${escA(k)}"${k===WEEK_SEL?' selected':''}>${esc(k?weekLabel(k):'(chưa rõ tuần)')} · ${g[k].length} đơn</option>`).join('');
 }
 function weekChanged(){ WEEK_SEL=$('weekSel').value; WPAGE=1; renderWeek(); }
-function onWeekSearch(){ clearTimeout(_weekSearchT); _weekSearchT=setTimeout(()=>{ WPAGE=1; renderWeek(); },180); }
-function weekPage(n){ WPAGE=n; renderWeek(); const w=$('weekBody').closest('.tbl-wrap'); if(w)w.scrollTop=0; }
+function onWeekSearch(){ clearTimeout(_weekSearchT); _weekSearchT=setTimeout(()=>{ WPAGE=1; renderWeekOrders(); },180); }
+function weekPage(n){ WPAGE=n; renderWeekOrders(); const w=$('weekBody').closest('.tbl-wrap'); if(w)w.scrollTop=0; }
+function weekRowsAll(){ const g=weekGroups(); return (g[WEEK_SEL]||[]).slice(); }
+function setWeekView(v){
+  WEEK_VIEW=v;
+  $('wvOrders').classList.toggle('active', v==='orders'); $('wvDebt').classList.toggle('active', v==='debt');
+  $('weekOrdersView').style.display = v==='orders'?'block':'none';
+  $('weekDebtView').style.display = v==='debt'?'block':'none';
+  renderWeek();
+}
 function renderWeek(){
   buildWeekPicker();
-  const body=$('weekBody'), empty=$('weekEmpty');
-  if(!body) return;
-  const g=weekGroups(); let rows=(g[WEEK_SEL]||[]).slice();
+  $('weekInfo').textContent = WEEK_SEL ? weekLabel(WEEK_SEL) : '';
+  const all=weekRowsAll(), owe=all.filter(r=>!paid(r));
+  const oweVnd=sum(owe,'vnd')+sum(owe,'phuPhi');
+  $('weekSummary').innerHTML = all.length
+    ? `Tuần này: <b>${all.length}</b> đơn · Chưa thu <b>${owe.length}</b> — còn nợ <b style="color:#e11d48">${oweText(sum(owe,'won'),oweVnd)}</b> · Tổng Won <b>₩${sum(all,'won').toLocaleString('en-US')}</b>`
+    : 'Không có dữ liệu tuần này.';
+  if(WEEK_VIEW==='debt') renderWeekDebt(); else renderWeekOrders();
+}
+function renderWeekOrders(){
+  const body=$('weekBody'), empty=$('weekEmpty'); if(!body) return;
+  let rows=weekRowsAll();
   const q=noVN(($('qWeek').value)||''), fp=$('fPayWeek').value;
   rows=rows.filter(r=>{
     if(fp==='paid' && !paid(r)) return false;
@@ -756,17 +794,36 @@ function renderWeek(){
     if(q){ if(!noVN([r.cust,r.rcv,r.rcvPh,r.pkg,r.addr,r.note,r.ghiChu].join(' ')).includes(q)) return false; }
     return true;
   });
-  $('weekInfo').textContent = WEEK_SEL ? weekLabel(WEEK_SEL) : '';
-  const owe=rows.filter(r=>!paid(r));
-  $('weekSummary').innerHTML = rows.length
-    ? `Tuần này: <b>${rows.length}</b> đơn · Chưa thu <b>${owe.length}</b> — <b style="color:#e11d48">₩${sum(owe,'won').toLocaleString('en-US')}</b> · Tổng Won <b>₩${sum(rows,'won').toLocaleString('en-US')}</b>`
-    : 'Không có đơn khớp.';
   if(!rows.length){ body.innerHTML=''; empty.style.display='block'; $('weekPager').innerHTML=''; return; }
   empty.style.display='none';
   const total=rows.length, pages=Math.max(1,Math.ceil(total/PAGE_SIZE)); if(WPAGE>pages)WPAGE=pages; if(WPAGE<1)WPAGE=1;
   const start=(WPAGE-1)*PAGE_SIZE, pageRows=rows.slice(start,start+PAGE_SIZE);
   body.innerHTML=pageRows.map(r=>rowHTML(r,'main')).join('');
   $('weekPager').innerHTML = pages>1?`<button class="btn sm" ${WPAGE<=1?'disabled':''} onclick="weekPage(${WPAGE-1})">« Trước</button><span class="small">Trang ${WPAGE}/${pages} · ${start+1}–${start+pageRows.length}/${total}</span><button class="btn sm" ${WPAGE>=pages?'disabled':''} onclick="weekPage(${WPAGE+1})">Sau »</button>`:'';
+}
+function renderWeekDebt(){
+  const all=weekRowsAll();
+  const agg=aggregate(all,false);
+  const owe=all.filter(r=>!paid(r)), pd=all.filter(r=>paid(r));
+  const totOweWon=sum(owe,'won'), totOweVnd=sum(owe,'vnd')+sum(owe,'phuPhi');
+  $('weekDebtStats').innerHTML=
+    stat('Tổng đơn',all.length,'','')+
+    stat('Số khách hàng',agg.length,'','')+
+    stat('Còn nợ (Won)','₩'+totOweWon.toLocaleString('en-US'),'owe',owe.length+' đơn chưa thu')+
+    (totOweVnd?stat('Còn nợ (VND)',totOweVnd.toLocaleString('en-US')+' ₫','owe','gồm phụ phí'):'')+
+    stat('Đã thu (Won)','₩'+sum(pd,'won').toLocaleString('en-US'),'paid',pd.length+' đơn đã thu');
+  let list=agg.slice(); const q=noVN(($('qWeekDebt').value)||''); if(q)list=list.filter(a=>noVN(a.cust).includes(q));
+  list.sort((a,b)=> $('weekDebtSort').value==='name'? a.cust.localeCompare(b.cust,'vi') : (b.oweWon+b.oweVnd)-(a.oweWon+a.oweVnd));
+  const body=$('weekDebtBody'), empty=$('weekDebtEmpty');
+  if(!list.length){ body.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  body.innerHTML=list.map(a=>`<tr class="rowclick" onclick="gotoCust('${escJs(a.cust)}')" title="Bấm xem chi tiết khách">
+    <td><b>${esc(a.cust)}</b></td><td class="r">${a.total}</td>
+    <td class="r">${a.owe?`<b style="color:#e11d48">${a.owe}</b>`:'0'}</td>
+    <td class="r num">${a.oweWon?`<b style="color:#e11d48">₩${a.oweWon.toLocaleString('en-US')}</b>`:'—'}</td>
+    <td class="r num">${a.oweVnd?`<b style="color:#e11d48">${a.oweVnd.toLocaleString('en-US')} ₫</b>`:'—'}</td>
+    <td class="r"><button class="btn sm" onclick="event.stopPropagation();showCustDetail('${escJs(a.cust)}')">Xem</button>${a.owe?` <button class="btn sm" onclick="event.stopPropagation();invoiceCust('${escJs(a.cust)}',true)">🧾</button>`:''}</td>
+  </tr>`).join('');
 }
 
 /* ---------- Bản nháp (tab riêng — sửa/xóa được như tổng) ---------- */
@@ -1110,15 +1167,16 @@ function filterChanged(){ PAGE=1; applyFilters(); }
 function onSearch(){ clearTimeout(_searchT); _searchT=setTimeout(()=>{ PAGE=1; applyFilters(); },220); }
 
 /* ---------- Công nợ ---------- */
-function customerAgg(){
+function aggregate(src, applyCredit){
   const m={};
-  ROWS.forEach(r=>{ const k=r.cust||'(không rõ)'; if(!m[k])m[k]={cust:k,total:0,owe:0,oweWon:0,oweVnd:0,paidWon:0,paidVnd:0};
+  (src||[]).forEach(r=>{ const k=r.cust||'(không rõ)'; if(!m[k])m[k]={cust:k,total:0,owe:0,oweWon:0,oweVnd:0,paidWon:0,paidVnd:0};
     const a=m[k]; a.total++; const vnd=(Number(r.vnd)||0)+(Number(r.phuPhi)||0);
     if(paid(r)){ a.paidWon+=Number(r.won)||0; a.paidVnd+=vnd; } else { a.owe++; a.oweWon+=Number(r.won)||0; a.oweVnd+=vnd; }
   });
-  Object.values(m).forEach(a=>{ a.credit=creditOf(a.cust); a.oweWon=Math.max(0,a.oweWon-a.credit); });
+  Object.values(m).forEach(a=>{ if(applyCredit){ a.credit=creditOf(a.cust); a.oweWon=Math.max(0,a.oweWon-a.credit); } else a.credit=0; });
   return Object.values(m);
 }
+function customerAgg(){ return aggregate(ROWS, true); }
 function renderDebt(){
   const agg=customerAgg(), owe=ROWS.filter(r=>!paid(r)), pd=ROWS.filter(r=>paid(r));
   const oweVnd=sum(owe,'vnd')+sum(owe,'phuPhi');

@@ -145,7 +145,7 @@
   .field input{width:100%;font-family:inherit;font-size:.86rem;padding:9px 11px;border:1.5px solid var(--g200);border-radius:9px;outline:none;}
   .field input:focus{border-color:var(--blue);}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;} @media(max-width:600px){ .grid2{grid-template-columns:1fr;} }
-  @media print { body * { visibility:hidden; } #invoiceDoc, #invoiceDoc * { visibility:visible; } #invoiceDoc { position:absolute; left:0; top:0; width:100%; padding:0; } .modal{ position:static; background:none; padding:0; display:block; } .modal-bar, .no-print { display:none !important; } }
+  @media print { body * { visibility:hidden; } #invoiceDoc, #invoiceDoc * { visibility:visible; } #invoiceDoc { position:absolute; left:0; top:0; width:100%; padding:0; } .modal{ position:static; background:none; padding:0; display:block; } .modal-bar, .no-print { display:none !important; } .only-print { display:table-row !important; visibility:visible !important; } }
 </style>
 </head>
 <body>
@@ -233,6 +233,12 @@
           <button class="btn sm" onclick="downloadTemplate()">⬇ Tải file mẫu (đúng định dạng)</button>
           <span class="small muted" id="fileInfo"></span>
         </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding:10px 12px;background:#eff6ff;border:1px solid #dbeafe;border-radius:10px">
+        <label class="small" style="font-weight:700">🗓️ Tuần của file:</label>
+        <input type="week" id="upWeek" class="ef" onchange="upWeekChanged()" oninput="upWeekChanged()" style="width:auto" />
+        <span class="small" style="color:var(--blue);font-weight:700" id="upWeekLabel"></span>
+        <span class="small muted">(mặc định tuần hiện tại — đổi nếu file thuộc tuần khác)</span>
       </div>
       <div class="drop" id="drop" onclick="document.getElementById('file').click()">
         <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="onFile(event)" />
@@ -399,7 +405,8 @@
       <h3 id="cdTitle">Chi tiết đơn</h3>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn" id="cdPayBtn" onclick="cdPay()" style="border-color:#86efac;color:var(--green)">💵 Thu tiền</button>
-        <button class="btn" onclick="cdInvoice()">🧾 Hóa đơn</button>
+        <button class="btn primary" id="cdSelInvBtn" onclick="cdInvoiceSel()" style="display:none">🧾 HĐ mục đã chọn (<span id="cdSelN">0</span>)</button>
+        <button class="btn" onclick="cdInvoice()">🧾 Hóa đơn tất cả</button>
         <button class="btn" onclick="closeCustDetail()">Đóng</button>
       </div>
     </div>
@@ -417,7 +424,7 @@
 <div class="modal" id="invoiceModal">
   <div class="modal-box">
     <div class="modal-bar no-print"><h3>Hóa đơn / Yêu cầu thanh toán</h3>
-      <div style="display:flex;gap:8px;"><button class="btn primary" onclick="window.print()">🖨️ In / Lưu PDF</button><button class="btn" onclick="closeInvoice()">Đóng</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="exportInvoiceXlsx()">⬇️ Tải Excel (full data)</button><button class="btn primary" onclick="window.print()">🖨️ In / Lưu PDF</button><button class="btn" onclick="closeInvoice()">Đóng</button></div>
     </div>
     <div class="inv" id="invoiceDoc"></div>
   </div>
@@ -457,6 +464,8 @@ function isoWeekMonday(y,w){ const jan4=new Date(Date.UTC(y,0,4)); const dow=(ja
 function weekKey(r){ if(r&&/^\d{4}-W\d{2}$/.test(r.week||''))return r.week; const d=parseVNDate(r&&r.date); return d?isoWeekStr(d):''; }
 function weekLabel(wk){ const m=String(wk||'').match(/(\d{4})-W(\d{2})/); if(!m)return wk||'(chưa rõ tuần)'; const y=+m[1],w=+m[2]; const mon=isoWeekMonday(y,w); const sun=new Date(mon); sun.setUTCDate(mon.getUTCDate()+6); const f=d=>String(d.getUTCDate()).padStart(2,'0')+'/'+String(d.getUTCMonth()+1).padStart(2,'0'); return `Tuần ${String(w).padStart(2,'0')}/${y} (${f(mon)}–${f(sun)})`; }
 function suggestWeek(rows){ const cnt={}; (rows||[]).forEach(r=>{ const d=parseVNDate(r&&r.date); if(d){ const k=isoWeekStr(d); cnt[k]=(cnt[k]||0)+1; } }); let best='',bn=0; Object.keys(cnt).forEach(k=>{ if(cnt[k]>bn){bn=cnt[k];best=k;} }); if(best)return best; return isoWeekStr(new Date()); }
+function upWeekChanged(){ const el=$('upWeek'); if(!el)return; const v=el.value; $('upWeekLabel').textContent = /^\d{4}-W\d{2}$/.test(v)?weekLabel(v):''; }
+function initUpWeek(){ const el=$('upWeek'); if(el && !el.value){ el.value=isoWeekStr(new Date()); } upWeekChanged(); }
 function fmtWon(n){ return n?('₩'+Number(n).toLocaleString('en-US')):'<span class="muted">—</span>'; }
 function fmtVnd(n){ return n?(Number(n).toLocaleString('en-US')+' ₫'):'<span class="muted">—</span>'; }
 function fmtKg(n){ return n?(Number(n).toLocaleString('en-US',{maximumFractionDigits:2})+' kg'):'<span class="muted">—</span>'; }
@@ -470,6 +479,8 @@ let _searchT=null;
 let LEDGER={};   // sổ thanh toán: { [cust]: { credit, history:[{date,amount,marked}] } }
 function creditOf(c){ return (LEDGER[c] && Number(LEDGER[c].credit)) || 0; }
 function historyOf(c){ return (LEDGER[c] && Array.isArray(LEDGER[c].history)) ? LEDGER[c].history : []; }
+function surchargeOf(c){ return (LEDGER[c] && Number(LEDGER[c].surcharge)) || 0; }
+function surchargeNoteOf(c){ return (LEDGER[c] && LEDGER[c].surchargeNote) || ''; }
 function paidWonOf(c){ return ROWS.filter(r=>r.cust===c && paid(r)).reduce((s,r)=>s+(Number(r.won)||0),0) + creditOf(c); }
 let DRAFT=null, HIST_LOG=[];   // bản nháp chờ duyệt + nhật ký
 let SHOW_PAID=false;   // mặc định chỉ hiện số ĐANG NỢ; bật để hiện số ĐÃ TRẢ
@@ -622,8 +633,12 @@ function closePay(){ $('payModal').classList.remove('show'); }
 $('payModal').addEventListener('click',e=>{ if(e.target.id==='payModal') closePay(); });
 
 /* ---------- Modal chi tiết đơn của khách (riêng, dễ đóng/quay lại) ---------- */
-let CD_CUST='';
-function showCustDetail(cust){ CD_CUST=cust; renderCD(); $('custDetailModal').classList.add('show'); }
+let CD_CUST='', CD_SEL=new Set();
+function showCustDetail(cust){ CD_CUST=cust; CD_SEL=new Set(); renderCD(); $('custDetailModal').classList.add('show'); }
+function cdToggle(key,el){ if(el.checked)CD_SEL.add(key); else CD_SEL.delete(key); cdUpdateSelBtn(); }
+function cdSelAll(el){ const rows=ROWS.filter(r=>r.cust===CD_CUST); if(el.checked) rows.forEach(r=>CD_SEL.add(r.key)); else CD_SEL.clear(); renderCD(); }
+function cdUpdateSelBtn(){ const b=$('cdSelInvBtn'); if(!b)return; const n=CD_SEL.size; b.style.display=n?'inline-flex':'none'; const c=$('cdSelN'); if(c)c.textContent=n; }
+function cdInvoiceSel(){ const rows=ROWS.filter(r=>r.cust===CD_CUST && CD_SEL.has(r.key)); if(!rows.length){ alert('Hãy tick chọn ít nhất 1 dòng.'); return; } openInvoice(CD_CUST,false,rows); }
 function closeCustDetail(){ $('custDetailModal').classList.remove('show'); }
 function cdPay(){ openPay(CD_CUST); }
 function cdInvoice(){ openInvoice(CD_CUST,true); }
@@ -639,10 +654,11 @@ function renderCD(){
     <div class="stats" style="margin-bottom:12px">
       ${stat('Tổng đơn',rows.length,'','')}${stat('Đơn chưa thu',owe.length,owe.length?'owe':'','')}${stat('Còn nợ (KRW)','₩'+oweWon.toLocaleString('en-US'),'owe','')}${SHOW_PAID?`<div class="stat" style="cursor:pointer;border-color:#86efac" onclick="showCustHistory('${escJs(cust)}')"><div class="lab">💰 Đã trả (KRW) — lịch sử ›</div><div class="val paid">₩${paidWonOf(cust).toLocaleString('en-US')}</div></div>`:''}
     </div>
-    <div class="small muted" style="margin-bottom:6px">💡 Bấm 1 dòng để sửa.</div>
+    <div class="small muted" style="margin-bottom:6px">💡 Bấm 1 dòng để sửa. Tick ô đầu dòng để chọn các mục cần xuất hóa đơn riêng.</div>
     <div class="tbl-wrap" style="max-height:52vh">
-      <table><thead><tr><th>Ngày về</th><th>Mã kiện</th><th>Check TT</th><th>Ngày thu</th><th>Người nhận</th><th>Địa chỉ</th><th>Khu vực</th><th class="r">KG</th><th class="r">Tiền Won (₩)</th><th class="r">Phụ phí</th><th>Ghi chú</th></tr></thead>
+      <table><thead><tr><th style="width:30px"><input type="checkbox" onclick="cdSelAll(this)" title="Chọn tất cả" ${(CD_SEL.size&&CD_SEL.size===rows.length)?'checked':''} /></th><th>Ngày về</th><th>Mã kiện</th><th>Check TT</th><th>Ngày thu</th><th>Người nhận</th><th>Địa chỉ</th><th>Khu vực</th><th class="r">KG</th><th class="r">Tiền Won (₩)</th><th class="r">Phụ phí</th><th>Ghi chú</th></tr></thead>
       <tbody>${rows.map(r=>`<tr class="rowclick" onclick="openEdit('${escJs(r.key)}')">
+        <td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" ${CD_SEL.has(r.key)?'checked':''} onclick="cdToggle('${escJs(r.key)}',this)" /></td>
         <td>${esc(r.date)}</td><td style="font-weight:700">${esc(r.pkg)}</td>
         <td><span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span></td>
         <td>${paid(r)?fmtPaidDate(r.paidDate):'<span class="muted">—</span>'}</td>
@@ -650,6 +666,7 @@ function renderCD(){
         <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.won)}</td><td class="r num">${fmtVnd(r.phuPhi)}</td><td>${esc(r.ghiChu)}</td>
       </tr>`).join('')}</tbody></table>
     </div>`;
+  cdUpdateSelBtn();
 }
 async function confirmPay(){
   const amt=money($('payAmt').value);
@@ -672,6 +689,7 @@ async function logout(){ try{ await fetch('/api/logout',{method:'POST'});}catch(
 
 setTimeout(()=>{ const ov=$('loadOverlay'); if(ov) ov.classList.add('hide'); }, 20000);   // an toàn: không kẹt spinner
 (async function(){
+  initUpWeek();
   // tải song song /api/config và dữ liệu kế toán -> bớt 1 vòng chờ
   const cfgP=fetch('/api/config').then(r=>r.json()).then(c=>{
     if(c && c.username){ $('userChip').style.display='flex'; $('uAv').textContent=String(c.username).charAt(0); $('uName').textContent=c.username; }
@@ -799,7 +817,7 @@ async function saveDraftNow(){
 function commitDraft(){
   if(!DRAFT || !DRAFT.rows.length){ alert('Không có bản nháp.'); return; }
   if(!REDIS){ alert('Chưa bật lưu trữ server.'); return; }
-  $('cmWeek').value = suggestWeek(DRAFT.rows);
+  $('cmWeek').value = (/^\d{4}-W\d{2}$/.test(DRAFT.week||'') ? DRAFT.week : suggestWeek(DRAFT.rows));
   $('cmWeekLabel').textContent = weekLabel($('cmWeek').value);
   $('cmInfo').textContent = `${DRAFT.fileName||'-'} · ${DRAFT.rows.length} đơn`;
   $('cmPw').value=''; $('commitModal').classList.add('show'); setTimeout(()=>$('cmWeek').focus(),50);
@@ -936,8 +954,11 @@ async function parseWB(wb, fname){
   const seen={}, dupInFile=[]; const uniqRows=[];
   incoming.forEach(r=>{ const k=r.pkg; if(k){ if(seen[k]){ dupInFile.push(k); return; } seen[k]=1; } uniqRows.push(r); });
 
+  // Tuần của file: lấy từ ô chọn (mặc định tuần hiện tại)
+  const upW = ($('upWeek') && /^\d{4}-W\d{2}$/.test($('upWeek').value)) ? $('upWeek').value : isoWeekStr(new Date());
+  uniqRows.forEach(r=>{ r.week=upW; });
   // Nạp vào BẢN NHÁP (chế độ check) — CHƯA vào dữ liệu tổng
-  DRAFT={ fileName:fname, at:new Date().toISOString(), rows:uniqRows };
+  DRAFT={ fileName:fname, at:new Date().toISOString(), week:upW, rows:uniqRows };
   DPAGE=1; tab('draft'); renderDraftTab();
   try{ document.getElementById('draftWork').scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
   if(REDIS){
@@ -1160,16 +1181,34 @@ function renderCust(){
 }
 
 /* ---------- Hóa đơn (gồm phụ phí, rõ KRW/VND) ---------- */
-function openInvoice(cust,onlyOwe){
+let INV_CUST='', INV_ROWS=[];
+function openInvoice(cust,onlyOwe,rowsOverride){
   if(!cust){ alert('Hãy chọn khách hàng.'); return; }
-  let rows=ROWS.filter(r=>r.cust===cust); if(onlyOwe) rows=rows.filter(r=>!paid(r));
-  if(!rows.length){ alert('Khách hàng này không có đơn '+(onlyOwe?'chưa thu':'')+'.'); return; }
+  let rows;
+  if(rowsOverride){ rows=rowsOverride.slice(); }
+  else { rows=ROWS.filter(r=>r.cust===cust); if(onlyOwe) rows=rows.filter(r=>!paid(r)); }
+  if(!rows.length){ alert('Không có đơn để xuất hóa đơn.'); return; }
+  INV_CUST=cust; INV_ROWS=rows;
+  renderInvoiceDoc();
+  $('invoiceModal').classList.add('show');
+}
+function invCompute(){
+  const cust=INV_CUST, rows=INV_ROWS;
   const totWon=sum(rows,'won'), totVnd=sum(rows,'vnd'), totPhi=sum(rows,'phuPhi');
-  const grandVnd=totVnd+totPhi;
+  const oweRows=rows.filter(r=>!paid(r)), paidRows=rows.filter(paid);
+  const shownOweWon=sum(oweRows,'won'), shownPaidWon=sum(paidRows,'won');
+  const credit=creditOf(cust);
+  const oweWon=Math.max(0, shownOweWon - credit);
+  const surcharge=surchargeOf(cust), payable=oweWon+surcharge;
+  return {cust,rows,totWon,totVnd,totPhi,oweRows,paidRows,shownOweWon,shownPaidWon,credit,oweWon,surcharge,payable};
+}
+function renderInvoiceDoc(){
+  const cust=INV_CUST, rows=INV_ROWS, X=invCompute();
   const now=new Date(), dd=String(now.getDate()).padStart(2,'0'), mm=String(now.getMonth()+1).padStart(2,'0');
   const invNo='HD-'+noVN(cust).replace(/[^A-Z0-9]/g,'').slice(0,10)+'-'+now.getFullYear()+mm+dd;
   const co=CFG||{}; const ln=(v,fb)=>v?esc(v):`<span style="color:#aaa">${fb}</span>`;
   const nf=n=>Number(n||0).toLocaleString('en-US');
+  const hist=historyOf(cust), surNote=surchargeNoteOf(cust);
   $('invoiceDoc').innerHTML=`
     <div class="inv-top">
       <div><div class="co-name">${ln(co.name,'VC24 GLOBAL')}</div>
@@ -1178,19 +1217,27 @@ function openInvoice(cust,onlyOwe){
         ${co.tax?`<div class="co-line">MST: ${esc(co.tax)}</div>`:''}</div>
       <div class="inv-title"><h1>HÓA ĐƠN</h1><div class="inv-meta">YÊU CẦU THANH TOÁN</div><div class="inv-meta">Số: <b>${esc(invNo)}</b></div><div class="inv-meta">Ngày: ${dd}/${mm}/${now.getFullYear()}</div></div>
     </div>
-    <div class="bill-to"><div class="t">Khách hàng</div><div class="v">${esc(cust)}</div></div>
+    <div class="bill-to"><div class="t">Khách hàng</div><div class="v">${esc(cust)} <span style="font-weight:500;color:#888;font-size:.85rem">— ${rows.length} đơn</span></div></div>
     <table>
-      <thead><tr><th>STT</th><th>Ngày</th><th>Mã kiện</th><th>Người nhận</th><th>Khu vực</th><th style="text-align:right">KG</th><th style="text-align:right">Tiền Won (₩)</th><th style="text-align:right">Phụ phí (₫)</th><th style="text-align:right">Tiền VND (₫)</th></tr></thead>
+      <thead><tr><th>STT</th><th>Ngày</th><th>Mã kiện</th><th>Người nhận</th><th>Khu vực</th><th style="text-align:right">KG</th><th style="text-align:right">Tiền Won (₩)</th><th style="text-align:right">Phụ phí (₫)</th><th style="text-align:right">Tiền VND (₫)</th><th>TT</th></tr></thead>
       <tbody>
         ${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.date)}</td><td>${esc(r.pkg)}</td><td>${esc(r.rcv)}</td><td>${esc(r.region)}</td>
           <td style="text-align:right">${r.weight?nf(r.weight):''}</td>
           <td style="text-align:right">${r.won?'₩'+nf(r.won):''}</td>
           <td style="text-align:right">${r.phuPhi?nf(r.phuPhi)+' ₫':''}</td>
-          <td style="text-align:right">${r.vnd?nf(r.vnd)+' ₫':''}</td></tr>`).join('')}
+          <td style="text-align:right">${r.vnd?nf(r.vnd)+' ₫':''}</td>
+          <td style="font-size:.78rem;color:${paid(r)?'#16a34a':'#dc2626'}">${paid(r)?'Đã TT':'Chưa TT'}</td></tr>`).join('')}
         <tr class="tot-row"><td colspan="6" style="text-align:right">TỔNG (${rows.length} đơn)</td>
-          <td style="text-align:right">${totWon?'₩'+nf(totWon):''}</td><td style="text-align:right">${totPhi?nf(totPhi)+' ₫':''}</td><td style="text-align:right">${totVnd?nf(totVnd)+' ₫':''}</td></tr>
+          <td style="text-align:right">${X.totWon?'₩'+nf(X.totWon):''}</td><td style="text-align:right">${X.totPhi?nf(X.totPhi)+' ₫':''}</td><td style="text-align:right">${X.totVnd?nf(X.totVnd)+' ₫':''}</td><td></td></tr>
       </tbody>
     </table>
+    ${hist.length?`<div class="inv-pay-hist" style="margin-top:14px;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;background:#f8fafc">
+      <div style="font-size:.74rem;text-transform:uppercase;color:#888;font-weight:700;margin-bottom:6px">Lịch sử thanh toán đã nhận</div>
+      <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+        ${hist.slice().reverse().map(h=>`<tr><td style="padding:2px 0">${esc(fmtPaidDate(h.date))}</td><td style="text-align:right;color:#16a34a;font-weight:700">₩${nf(h.amount)}</td><td style="text-align:right;color:#94a3b8;font-size:.78rem">gạch ${h.marked||0} đơn</td></tr>`).join('')}
+        <tr style="border-top:1px solid #e2e8f0"><td style="padding-top:4px;font-weight:700">Tổng đã nhận</td><td style="text-align:right;font-weight:800;color:#16a34a">₩${nf(hist.reduce((s,h)=>s+(Number(h.amount)||0),0))}</td><td></td></tr>
+      </table>
+    </div>`:''}
     <div class="pay-box">
       <div class="bank">
         <div style="font-size:.74rem;text-transform:uppercase;color:#888;font-weight:700;margin-bottom:5px;">Thông tin thanh toán</div>
@@ -1200,15 +1247,75 @@ function openInvoice(cust,onlyOwe){
         <div><b>Nội dung CK:</b> ${co.memo?esc(co.memo):esc(cust)}</div>
       </div>
       <table class="sumtbl">
-        <tr><td>Tiền hàng (KRW):</td><td class="r">₩${nf(totWon)}</td></tr>
-        ${totVnd?`<tr><td>Thành tiền (VND):</td><td class="r">${nf(totVnd)} ₫</td></tr>`:''}
-        <tr><td>Phụ phí (VND):</td><td class="r">${nf(totPhi)} ₫</td></tr>
-        <tr class="grand"><td>TỔNG THANH TOÁN:</td><td class="r"><div>₩${nf(totWon)}</div><div>${nf(grandVnd)} ₫</div></td></tr>
+        <tr><td>Tiền hàng (KRW):</td><td class="r">₩${nf(X.totWon)}</td></tr>
+        ${X.shownPaidWon?`<tr><td>Đã thanh toán (KRW):</td><td class="r" style="color:#16a34a">−₩${nf(X.shownPaidWon)}</td></tr>`:''}
+        ${X.credit>0?`<tr><td>Đã trả trước/dư (KRW):</td><td class="r" style="color:#16a34a">−₩${nf(X.credit)}</td></tr>`:''}
+        <tr><td><b style="color:#dc2626">Còn nợ (KRW):</b></td><td class="r"><b style="color:#dc2626">₩${nf(X.oweWon)}</b></td></tr>
+        <tr class="no-print"><td>Phí phát sinh (KRW):</td><td class="r" style="white-space:nowrap">
+          <input id="invSur" inputmode="numeric" value="${escA(X.surcharge?grp(X.surcharge):'')}" oninput="onMoneyInput(this)" placeholder="0" style="width:120px;text-align:right;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit" />
+          <button class="btn sm" id="invSurBtn" onclick="saveSurcharge()" style="margin-left:6px">💾 Lưu</button></td></tr>
+        <tr class="only-print" style="display:none"><td>Phí phát sinh (KRW):</td><td class="r">₩${nf(X.surcharge)}</td></tr>
+        ${surNote?`<tr><td colspan="2" style="font-size:.78rem;color:#888;padding-top:0">Ghi chú phí: ${esc(surNote)} <button class="btn sm no-print" onclick="editSurNote()" style="margin-left:4px">✎</button></td></tr>`:`<tr class="no-print"><td colspan="2"><button class="btn sm" onclick="editSurNote()">✎ Thêm ghi chú phí phát sinh</button></td></tr>`}
+        <tr class="grand"><td>TỔNG THANH TOÁN:</td><td class="r"><div>₩${nf(X.payable)}</div></td></tr>
       </table>
     </div>
-    <div class="note">Kính đề nghị Quý khách thanh toán số tiền trên. Cảm ơn Quý khách đã sử dụng dịch vụ của ${esc(co.name||'VC24 Global')}.<br>
-      <span style="color:#999">* Tổng VND = Thành tiền VND + Phụ phí. Tiền hàng tính theo Won (₩); nếu cần quy đổi sang VND vui lòng liên hệ.</span></div>`;
-  $('invoiceModal').classList.add('show');
+    <div class="note">Kính đề nghị Quý khách thanh toán số tiền còn nợ <b>₩${nf(X.payable)}</b>. Cảm ơn Quý khách đã sử dụng dịch vụ của ${esc(co.name||'VC24 Global')}.<br>
+      <span style="color:#999">* Còn nợ = Tiền hàng − đã thanh toán − dư + Phí phát sinh. Tiền tính theo Won (₩); cần quy đổi VND vui lòng liên hệ.</span></div>`;
+}
+function editSurNote(){
+  const cur=surchargeNoteOf(INV_CUST);
+  const v=prompt('Ghi chú phí phát sinh (lý do):', cur); if(v==null) return;
+  LEDGER[INV_CUST]=LEDGER[INV_CUST]||{}; LEDGER[INV_CUST].surchargeNote=v;
+  saveSurcharge(true);
+}
+async function saveSurcharge(silent){
+  const cust=INV_CUST; const amt=money($('invSur').value); const note=surchargeNoteOf(cust);
+  if(!REDIS){ alert('Chưa bật lưu trữ server.'); return; }
+  const btn=$('invSurBtn'); if(btn && !silent){ btn.disabled=true; btn.textContent='⏳'; }
+  try{
+    const r=await fetch('/api/vc24/surcharge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust,amount:amt,note})}).then(x=>x.json());
+    if(btn){ btn.disabled=false; btn.textContent='💾 Lưu'; }
+    if(!r.ok){ alert('Lưu phí thất bại.'); return; }
+    LEDGER[cust]=LEDGER[cust]||{}; LEDGER[cust].surcharge=amt; LEDGER[cust].surchargeNote=note;
+    renderInvoiceDoc(); refreshCD(); renderDebt();
+    if(btn && !silent){ btn.textContent='✓ Đã lưu'; setTimeout(()=>{ if($('invSurBtn'))$('invSurBtn').textContent='💾 Lưu'; },1500); }
+  }catch(e){ if(btn){ btn.disabled=false; btn.textContent='💾 Lưu'; } alert('Lỗi khi lưu phí.'); }
+}
+function exportInvoiceXlsx(){
+  if(!INV_ROWS.length){ alert('Không có dữ liệu hóa đơn.'); return; }
+  const cust=INV_CUST, rows=INV_ROWS, co=CFG||{}, X=invCompute();
+  const aoa=[];
+  aoa.push([co.name||'VC24 GLOBAL']);
+  if(co.addr)aoa.push([co.addr]);
+  const l2=[]; if(co.phone)l2.push('ĐT: '+co.phone); if(co.email)l2.push(co.email); if(l2.length)aoa.push([l2.join(' · ')]);
+  if(co.tax)aoa.push(['MST: '+co.tax]);
+  aoa.push([]); aoa.push(['HÓA ĐƠN / YÊU CẦU THANH TOÁN']);
+  aoa.push(['Khách hàng:',cust]); aoa.push(['Ngày xuất:',todayISO()]); aoa.push([]);
+  const head=['STT','Ngày về','Mã kiện','Người nhận','SĐT nhận','Địa chỉ','Khu vực','KG','Đơn giá (₩)','Tiền Won (₩)','Phụ phí (₫)','Tiền VND (₫)','Trạng thái'];
+  aoa.push(head);
+  rows.forEach((r,i)=>aoa.push([i+1,r.date,r.pkg,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.phuPhi)||'',Number(r.vnd)||'',paid(r)?'Đã TT':'Chưa TT']));
+  aoa.push(['','','','','','','TỔNG',sum(rows,'weight')||'','',X.totWon,X.totPhi,X.totVnd,'']);
+  aoa.push([]);
+  const hist=historyOf(cust);
+  if(hist.length){ aoa.push(['LỊCH SỬ THANH TOÁN']); aoa.push(['Ngày','Số tiền (₩)','Số đơn gạch']); hist.forEach(h=>aoa.push([fmtPaidDate(h.date),Number(h.amount)||0,h.marked||0])); aoa.push(['Tổng đã nhận',hist.reduce((s,h)=>s+(Number(h.amount)||0),0),'']); aoa.push([]); }
+  aoa.push(['Tiền hàng (KRW):',X.totWon]);
+  if(X.shownPaidWon) aoa.push(['Đã thanh toán (KRW):',X.shownPaidWon]);
+  if(X.credit>0) aoa.push(['Đã trả trước/dư (KRW):',X.credit]);
+  aoa.push(['Còn nợ (KRW):',X.oweWon]);
+  aoa.push(['Phí phát sinh (KRW):',X.surcharge]);
+  if(surchargeNoteOf(cust)) aoa.push(['Ghi chú phí:',surchargeNoteOf(cust)]);
+  aoa.push(['TỔNG THANH TOÁN (KRW):',X.payable]);
+  aoa.push([]);
+  aoa.push(['TK nhận VND:',[co.bank,co.acc,co.holder].filter(Boolean).join(' · ')]);
+  aoa.push(['TK nhận Won (KRW):',[co.bankWon,co.accWon,co.holderWon].filter(Boolean).join(' · ')]);
+  aoa.push(['Nội dung CK:',co.memo||cust]);
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:5},{wch:12},{wch:12},{wch:18},{wch:14},{wch:34},{wch:10},{wch:8},{wch:12},{wch:14},{wch:12},{wch:14},{wch:10}];
+  const hr=aoa.findIndex(r=>r[0]==='STT');
+  if(hr>=0){ for(let cc=0;cc<head.length;cc++){ const a=XLSX.utils.encode_cell({r:hr,c:cc}); if(ws[a]) ws[a].s={font:{bold:true},fill:{fgColor:{rgb:'DDEBF7'}},alignment:{horizontal:'center'}}; } }
+  const a0=XLSX.utils.encode_cell({r:0,c:0}); if(ws[a0]) ws[a0].s={font:{bold:true,sz:14,color:{rgb:'1E40AF'}}};
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Hóa đơn');
+  XLSX.writeFile(wb,'HoaDon_'+noVN(cust).replace(/[^A-Z0-9]/g,'')+'_'+todayISO()+'.xlsx');
 }
 function closeInvoice(){ $('invoiceModal').classList.remove('show'); }
 $('invoiceModal').addEventListener('click',e=>{ if(e.target.id==='invoiceModal') closeInvoice(); });

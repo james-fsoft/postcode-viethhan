@@ -599,6 +599,22 @@ app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   res.json({ ok: true, marked, credit });
 });
 
+// Phí phát sinh theo khách hàng (KRW) — ghi trên hóa đơn, lưu lại
+app.post('/api/vc24/surcharge', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: false, redis: false });
+  const { cust, amount, note } = req.body || {};
+  if (!cust) return res.json({ ok: false, message: 'bad' });
+  let ledger = {}; try { const s = await redisGet(VK.ledger); if (s) ledger = JSON.parse(s); } catch { /* ok */ }
+  const led = ledger[cust] || { credit: 0, history: [] };
+  led.surcharge = Math.round(Number(amount) || 0);
+  led.surchargeNote = String(note || '').slice(0, 200);
+  ledger[cust] = led;
+  const ok = await redisSet(VK.ledger, JSON.stringify(ledger));
+  if (!ok) return res.json({ ok: false, reason: 'save' });
+  await vcLog('surcharge', `Phí phát sinh ${cust}: ₩${led.surcharge.toLocaleString('en-US')}${led.surchargeNote ? ' (' + led.surchargeNote + ')' : ''}`);
+  res.json({ ok: true });
+});
+
 // Upload = GỘP theo Mã kiện (key). Trùng -> bỏ qua, báo lại danh sách trùng.
 app.post('/api/vc24/upload', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });

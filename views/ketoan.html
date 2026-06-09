@@ -163,7 +163,8 @@
 
 <div class="wrap">
   <div class="tabs">
-    <button class="active" data-tab="list" onclick="tab('list')">📋 Danh sách &amp; lọc</button>
+    <button class="active" data-tab="list" onclick="tab('list')">📦 Dữ liệu tổng</button>
+    <button data-tab="draft" onclick="tab('draft')">📝 Dữ liệu nháp <span id="draftCount" style="display:none;background:#f59e0b;color:#fff;border-radius:99px;padding:1px 8px;font-size:.72rem;margin-left:2px"></span></button>
     <button data-tab="debt" onclick="tab('debt')">📊 Công nợ</button>
     <button data-tab="dash" onclick="tab('dash')">📈 Phân bố nợ</button>
     <button data-tab="cust" onclick="tab('cust')">👤 Theo khách hàng</button>
@@ -172,24 +173,8 @@
   </div>
 
   <div class="tab-pane show" id="tab-list">
-    <div class="panel" id="uploadPanel">
-      <div class="ph"><h2>Dữ liệu đơn hàng</h2>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <button class="btn sm" onclick="downloadTemplate()">⬇ Tải file mẫu (đúng định dạng)</button>
-          <span class="small muted" id="fileInfo"></span>
-        </div>
-      </div>
-      <div class="drop" id="drop" onclick="document.getElementById('file').click()">
-        <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="onFile(event)" />
-        <div style="font-size:1.4rem;margin-bottom:4px;">📄⬆️</div>
-        <div><b>Bấm để thêm file Excel</b> (hoặc kéo thả) — chỉ thêm đơn MỚI, mã kiện trùng sẽ bị bỏ qua.</div>
-      </div>
-      <div class="small" id="storeBadge" style="margin-top:12px;"></div>
-    </div>
-
-    <div class="panel" id="draftPanel" style="display:none;margin-top:16px;border-color:#fde68a;background:#fffdf5;"></div>
-
-    <div class="panel" id="listPanel" style="display:none;margin-top:16px;">
+    <div class="small" id="storeBadge" style="margin-bottom:12px;"></div>
+    <div class="panel" id="listPanel" style="display:none;margin-top:0;">
       <div class="filters">
         <input class="grow" id="q" placeholder="🔎 Tìm: mã KH, người nhận, SĐT, mã kiện, địa chỉ, ghi chú…" oninput="onSearch()" />
         <select id="fCust" onchange="filterChanged()"><option value="">Tất cả khách hàng</option></select>
@@ -211,6 +196,44 @@
         <div class="empty" id="listEmpty">Chưa có dữ liệu — hãy thêm file lên.</div>
       </div>
       <div class="pager" id="listPager"></div>
+    </div>
+  </div>
+
+  <div class="tab-pane" id="tab-draft">
+    <div class="panel" id="uploadPanel">
+      <div class="ph"><h2>Tải file vào nháp</h2>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <button class="btn sm" onclick="downloadTemplate()">⬇ Tải file mẫu (đúng định dạng)</button>
+          <span class="small muted" id="fileInfo"></span>
+        </div>
+      </div>
+      <div class="drop" id="drop" onclick="document.getElementById('file').click()">
+        <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="onFile(event)" />
+        <div style="font-size:1.4rem;margin-bottom:4px;">📄⬆️</div>
+        <div><b>Bấm để tải file Excel</b> (hoặc kéo thả) — dữ liệu vào BẢN NHÁP, kiểm tra/sửa xong mới đẩy lên tổng.</div>
+      </div>
+    </div>
+    <div class="panel" id="draftWork" style="display:none;margin-top:16px;border-color:#fde68a;background:#fffdf8;">
+      <div class="ph"><h2 style="color:#b45309">📝 Bản nháp (chưa vào dữ liệu tổng)</h2><span class="small muted" id="draftInfo"></span></div>
+      <div class="small" id="draftSummary" style="margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="btn primary" onclick="commitDraft()">✅ Đẩy lên dữ liệu tổng (cần mật khẩu)</button>
+        <button class="btn" style="border-color:#fecaca;color:#dc2626" onclick="clearDraft()">🗑 Hủy nháp</button>
+      </div>
+      <div class="small muted" style="margin-bottom:8px">💡 Bấm 1 dòng để sửa/xóa ngay trên nháp — KHÔNG ảnh hưởng dữ liệu tổng.</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Ngày về</th><th>Mã kiện</th><th>Trạng thái hàng</th><th>Mã KH</th><th>Check TT</th><th>Ngày thu</th>
+            <th>SĐT gửi / GC</th><th>Người nhận</th><th>SĐT nhận</th><th>Địa chỉ</th><th>Khu vực</th>
+            <th class="r">KG</th><th class="r">Đơn giá</th><th class="r">Tiền Won (₩)</th><th class="r">Tiền VND (₫)</th>
+            <th>NV giao</th><th class="r">Phụ phí</th><th>Ghi chú</th>
+          </tr></thead>
+          <tbody id="draftBody"></tbody>
+        </table>
+        <div class="empty" id="draftEmpty">Chưa có bản nháp.</div>
+      </div>
+      <div class="pager" id="draftPager"></div>
     </div>
   </div>
 
@@ -419,7 +442,9 @@ function tab(name){
   if(name==='debt') renderDebt();
   if(name==='dash') renderDash();
   if(name==='hist') renderHistory();
+  if(name==='draft') renderDraftTab();
 }
+let EDIT_SOURCE='main';
 let PAY_CUST='';
 function renderDash(){
   const agg=customerAgg();
@@ -607,37 +632,51 @@ function updateStoreBadge(){
 function rebuildAll(label){
   $('listPanel').style.display = ROWS.length?'block':'none';
   $('fileInfo').textContent = ROWS.length ? `${label||''} · ${ROWS.length} đơn` : '';
-  buildFilters(); applyFilters(); renderDebt(); buildCustomerPicker(); if(CUST_SEL) renderCust(); renderDraft();
+  buildFilters(); applyFilters(); renderDebt(); buildCustomerPicker(); if(CUST_SEL) renderCust();
+  updateDraftBadge(); if($('tab-draft') && $('tab-draft').classList.contains('show')) renderDraftTab();
 }
 
-/* ---------- Bản nháp (check trước khi vào tổng) ---------- */
-function renderDraft(){
-  const box=$('draftPanel'); if(!box) return;
-  if(!DRAFT || !DRAFT.rows || !DRAFT.rows.length){ box.style.display='none'; box.innerHTML=''; return; }
+/* ---------- Bản nháp (tab riêng — sửa/xóa được như tổng) ---------- */
+let DPAGE=1, DPSIZE=100;
+function updateDraftBadge(){
+  const b=$('draftCount'); if(!b) return;
+  const n=(DRAFT&&DRAFT.rows)?DRAFT.rows.length:0;
+  if(n){ b.style.display='inline-block'; b.textContent=n; } else b.style.display='none';
+}
+function renderDraftTab(){
+  updateDraftBadge();
+  const work=$('draftWork'); if(!work) return;
+  if(!DRAFT || !DRAFT.rows || !DRAFT.rows.length){ work.style.display='none'; return; }
+  work.style.display='block';
   const existing=new Set(ROWS.map(r=>r.pkg).filter(Boolean));
   let nw=0,dp=0; DRAFT.rows.forEach(r=>{ if(r.pkg && existing.has(r.pkg)) dp++; else nw++; });
-  const preview=DRAFT.rows.slice(0,30);
-  box.style.display='block';
-  box.innerHTML=`
-    <div class="ph"><h2 style="color:var(--amber)">📝 Bản nháp đang chờ duyệt</h2><span class="small muted">${esc(DRAFT.fileName||'')} · ${DRAFT.rows.length} đơn</span></div>
-    <div class="small" style="margin-bottom:10px">Trong nháp: <b style="color:var(--green)">${nw} đơn MỚI</b>${dp?` · <b style="color:#e11d48">${dp} trùng</b> (đã có trong tổng — sẽ bỏ qua)`:''}. <b style="color:var(--amber)">Chưa vào dữ liệu tổng.</b></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-      <button class="btn primary" onclick="commitDraft()">✅ Đẩy lên dữ liệu tổng (cần mật khẩu)</button>
-      <button class="btn" style="border-color:#fecaca;color:#dc2626" onclick="clearDraft()">🗑 Hủy nháp</button>
-    </div>
-    <div class="small muted" style="margin-bottom:6px">Xem trước ${preview.length}/${DRAFT.rows.length} dòng:</div>
-    <div class="tbl-wrap" style="max-height:42vh"><table><thead><tr><th>Ngày</th><th>Mã kiện</th><th>Mã KH</th><th>Người nhận</th><th>Khu vực</th><th class="r">KG</th><th class="r">Tiền Won</th></tr></thead>
-    <tbody>${preview.map(r=>`<tr><td>${esc(r.date)}</td><td style="font-weight:700">${esc(r.pkg)}${(r.pkg&&existing.has(r.pkg))?' <span class="pill owe" style="font-size:.62rem">trùng</span>':''}</td><td>${esc(r.cust)}</td><td>${esc(r.rcv)}</td><td>${esc(r.region)}</td><td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.won)}</td></tr>`).join('')}</tbody></table></div>`;
+  $('draftInfo').textContent=`${DRAFT.fileName||''} · ${DRAFT.rows.length} đơn`;
+  $('draftSummary').innerHTML=`So với dữ liệu tổng: <b style="color:var(--green)">${nw} đơn MỚI</b>${dp?` · <b style="color:#e11d48">${dp} trùng</b> (sẽ bỏ qua khi đẩy lên)`:''}.`;
+  renderDraftList();
 }
+function renderDraftList(){
+  const rows=(DRAFT&&DRAFT.rows)||[];
+  const body=$('draftBody'), empty=$('draftEmpty');
+  if(!rows.length){ body.innerHTML=''; empty.style.display='block'; $('draftPager').innerHTML=''; return; }
+  empty.style.display='none';
+  const total=rows.length, pages=Math.max(1,Math.ceil(total/DPSIZE)); if(DPAGE>pages)DPAGE=pages; if(DPAGE<1)DPAGE=1;
+  const start=(DPAGE-1)*DPSIZE, pageRows=rows.slice(start,start+DPSIZE);
+  body.innerHTML=pageRows.map(r=>rowHTML(r,'draft')).join('');
+  $('draftPager').innerHTML = pages>1?`<button class="btn sm" ${DPAGE<=1?'disabled':''} onclick="draftPage(${DPAGE-1})">« Trước</button><span class="small">Trang ${DPAGE}/${pages} · ${start+1}–${start+pageRows.length}/${total}</span><button class="btn sm" ${DPAGE>=pages?'disabled':''} onclick="draftPage(${DPAGE+1})">Sau »</button>`:'';
+}
+function draftPage(n){ DPAGE=n; renderDraftList(); const w=$('draftBody').closest('.tbl-wrap'); if(w)w.scrollTop=0; }
+function saveDraftToServer(){ updateDraftBadge(); if(REDIS && DRAFT){ try{ fetch('/api/vc24/draft',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileName:DRAFT.fileName,rows:DRAFT.rows})}); }catch(e){} } }
 async function commitDraft(){
   if(!DRAFT || !DRAFT.rows.length){ alert('Không có bản nháp.'); return; }
   if(!REDIS){ alert('Chưa bật lưu trữ server.'); return; }
   if(!confirm('Đẩy bản nháp lên DỮ LIỆU TỔNG?\nFile: '+(DRAFT.fileName||'-')+' · '+DRAFT.rows.length+' đơn.')) return;
   const pw=prompt('Nhập MẬT KHẨU đăng nhập để đẩy lên dữ liệu tổng:'); if(pw==null||pw==='') return;
   try{
+    // đồng bộ mọi chỉnh sửa nháp lên server trước khi đẩy (tránh race)
+    await fetch('/api/vc24/draft',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileName:DRAFT.fileName,rows:DRAFT.rows})}).catch(()=>{});
     const res=await fetch('/api/vc24/commit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})}).then(r=>r.json());
     if(!res.ok){ alert(res.reason==='password'?'❌ Sai mật khẩu — chưa đẩy lên.':(res.reason==='empty'?'Không có bản nháp.':(res.reason==='save'?'❌ Lưu thất bại (kho dữ liệu quá lớn).':'Đẩy lên thất bại.'))); return; }
-    DRAFT=null; await loadServerData();
+    DRAFT=null; await loadServerData(); tab('list');
     alert('✅ Đã đẩy lên dữ liệu tổng: thêm '+res.added+' đơn mới.'+((res.dup&&res.dup.length)?'\n'+res.dup.length+' mã kiện đã có sẵn → bỏ qua.':''));
   }catch(e){ alert('Lỗi khi đẩy lên.'); }
 }
@@ -646,7 +685,7 @@ async function clearDraft(){
   if(!confirm('Hủy bản nháp này? (Dữ liệu tổng KHÔNG bị ảnh hưởng)')) return;
   DRAFT=null;
   if(REDIS){ try{ await fetch('/api/vc24/draft/clear',{method:'POST'}); }catch(e){} }
-  renderDraft();
+  renderDraftTab();
 }
 
 /* ---------- Lịch sử ---------- */
@@ -746,8 +785,8 @@ async function parseWB(wb, fname){
 
   // Nạp vào BẢN NHÁP (chế độ check) — CHƯA vào dữ liệu tổng
   DRAFT={ fileName:fname, at:new Date().toISOString(), rows:uniqRows };
-  tab('list'); renderDraft();
-  try{ document.getElementById('draftPanel').scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
+  DPAGE=1; tab('draft'); renderDraftTab();
+  try{ document.getElementById('draftWork').scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
   if(REDIS){
     try{ const r=await fetch('/api/vc24/draft',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileName:fname,rows:uniqRows})}).then(x=>x.json());
       if(!r.ok) alert('⚠️ Lưu nháp lên server thất bại (có thể file quá lớn). Bản nháp chỉ tạm trong phiên này.');
@@ -771,8 +810,8 @@ const EDIT_FIELDS=[
 function grp(s){ const neg=/^-/.test(String(s).trim()); const d=String(s==null?'':s).replace(/[^\d]/g,''); const n=d?Number(d).toLocaleString('en-US'):''; return n&&neg?('-'+n):n; }
 function onMoneyInput(el){ const end=el.value.length-el.selectionStart; el.value=grp(el.value); let pos=el.value.length-end; if(pos<0)pos=0; try{el.setSelectionRange(pos,pos);}catch(e){} }
 let EDIT_KEY='';
-function listRowHTML(r){
-  return `<tr class="rowclick" onclick="openEdit('${escJs(r.key)}')">
+function rowHTML(r,src){
+  return `<tr class="rowclick" onclick="openEdit('${escJs(r.key)}','${src||'main'}')">
     <td>${esc(r.date)}</td><td style="font-weight:700">${esc(r.pkg)}</td><td>${esc(r.status)}</td>
     <td><b>${esc(r.cust)}</b></td><td><span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span></td>
     <td>${paid(r)?fmtPaidDate(r.paidDate):'<span class="muted">—</span>'}</td>
@@ -783,9 +822,12 @@ function listRowHTML(r){
     <td>${esc(r.staff)}</td><td class="r num">${fmtVnd(r.phuPhi)}</td><td>${esc(r.ghiChu)}</td>
   </tr>`;
 }
-function openEdit(key){
-  const r=ROWS.find(x=>x.key===key); if(!r) return; EDIT_KEY=key;
-  $('editTitle').textContent='Sửa đơn — Mã kiện '+(r.pkg||key);
+function openEdit(key,src){
+  EDIT_SOURCE=(src==='draft')?'draft':'main';
+  const pool=EDIT_SOURCE==='draft'?((DRAFT&&DRAFT.rows)||[]):ROWS;
+  const r=pool.find(x=>x.key===key); if(!r) return; EDIT_KEY=key;
+  $('editTitle').textContent=(EDIT_SOURCE==='draft'?'Sửa đơn nháp — Mã kiện ':'Sửa đơn — Mã kiện ')+(r.pkg||key);
+  $('editBody').dataset.src=EDIT_SOURCE;
   $('editBody').innerHTML='<div class="efgrid">'+EDIT_FIELDS.map(([f,lab,t])=>{
     const v=r[f]==null?'':r[f];
     let inp;
@@ -805,17 +847,27 @@ function openEdit(key){
 }
 function closeEdit(){ $('editModal').classList.remove('show'); EDIT_KEY=''; }
 function saveEdit(){
-  const k=EDIT_KEY, r=ROWS.find(x=>x.key===k); if(!r){ closeEdit(); return; }
+  const k=EDIT_KEY;
+  const pool=EDIT_SOURCE==='draft'?((DRAFT&&DRAFT.rows)||[]):ROWS;
+  const r=pool.find(x=>x.key===k); if(!r){ closeEdit(); return; }
   const patch={};
   EDIT_FIELDS.forEach(([f,lab,t])=>{ const el=$('ef_'+f); if(!el)return; let v=el.value;
     if(t==='money') v=money(v); else if(t==='num') v=weight(v); else v=String(v).trim();
     r[f]=v; patch[f]=v; });
   closeEdit();
+  if(EDIT_SOURCE==='draft'){ renderDraftTab(); saveDraftToServer(); return; }
   applyFilters(); renderDebt(); renderDash(); if(CUST_SEL) renderCust(); refreshCD();
   if(REDIS){ fetch('/api/vc24/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k,row:patch})}).catch(()=>{}); }
 }
 async function deleteCur(){
-  const k=EDIT_KEY, row=ROWS.find(r=>r.key===k); if(!row) return;
+  const k=EDIT_KEY;
+  if(EDIT_SOURCE==='draft'){
+    const row=(DRAFT&&DRAFT.rows||[]).find(x=>x.key===k); if(!row) return;
+    if(!confirm(`Xóa đơn nháp "${row.pkg||k}" khỏi bản nháp? (Dữ liệu tổng không bị ảnh hưởng)`)) return;
+    DRAFT.rows=DRAFT.rows.filter(x=>x.key!==k); closeEdit();
+    renderDraftTab(); saveDraftToServer(); return;
+  }
+  const row=ROWS.find(r=>r.key===k); if(!row) return;
   if(!confirm(`Bạn có CHẮC CHẮN muốn xóa đơn "${row.pkg||k}" (KH: ${row.cust||'-'})?\nHành động này KHÔNG hoàn tác.`)) return;
   if(!REDIS){ alert('Chưa bật lưu trữ server — không xóa được.'); return; }
   const pw=prompt('Nhập MẬT KHẨU tài khoản để xác nhận xóa:'); if(pw==null||pw==='') return;
@@ -853,7 +905,7 @@ function applyFilters(){
     empty.style.display='none';
     const pages=Math.max(1,Math.ceil(total/PAGE_SIZE)); if(PAGE>pages)PAGE=pages; if(PAGE<1)PAGE=1;
     const start=(PAGE-1)*PAGE_SIZE, pageRows=LIST_ROWS.slice(start,start+PAGE_SIZE);
-    body.innerHTML=pageRows.map(listRowHTML).join('');
+    body.innerHTML=pageRows.map(r=>rowHTML(r,'main')).join('');
     renderPager(total,pages,start,pageRows.length);
   }
   const owe=LIST_ROWS.filter(r=>!paid(r));

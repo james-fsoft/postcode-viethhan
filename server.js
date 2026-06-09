@@ -482,6 +482,11 @@ app.get('/tracking', (req, res) => {
 // ── Trang riêng theo công ty — mỗi công ty 1 account + 1 file để tuỳ biến ────
 // VC24 Global: chỉ account 'vhpro' mới vào được. Bản sao của /tracking để sau
 // này sửa format Excel / cách xử lý riêng mà không ảnh hưởng trang chung.
+// Trung tâm điều khiển VC24 (hub) — chỉ account 'vhpro'
+app.get('/vc24global-main', requireAuth, (req, res) => {
+  if (userFromReq(req) !== 'vhpro') return res.redirect('/');
+  sendTpl(res, 'vc24global-main.html');
+});
 app.get('/vc24global', requireAuth, (req, res) => {
   if (userFromReq(req) !== 'vhpro') return res.redirect('/');
   sendTpl(res, 'vc24global.html');
@@ -656,7 +661,7 @@ app.post('/api/vc24/cfg', requireAuth, requireVC24, async (req, res) => {
 const SITE = BASE_URL;
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(
-    `User-agent: *\nAllow: /\nAllow: /about\nAllow: /tracking\nAllow: /tracking-info\nAllow: /customs-guide\nAllow: /tools\nAllow: /pccc\nAllow: /food-korea\nAllow: /import-guide\nAllow: /size-korea\nAllow: /travel-korea\nAllow: /shopping-korea\nAllow: /ten-tieng-han\nAllow: /nguoi-viet-o-han\nDisallow: /api/\nDisallow: /shipping\nDisallow: /vc24global\nDisallow: /vc24/\nDisallow: /login\n\nSitemap: ${SITE}/sitemap.xml\n`
+    `User-agent: *\nAllow: /\nAllow: /about\nAllow: /tracking\nAllow: /tracking-info\nAllow: /customs-guide\nAllow: /tools\nAllow: /pccc\nAllow: /food-korea\nAllow: /import-guide\nAllow: /size-korea\nAllow: /travel-korea\nAllow: /shopping-korea\nAllow: /ten-tieng-han\nAllow: /nguoi-viet-o-han\nDisallow: /api/\nDisallow: /shipping\nDisallow: /vc24global\nDisallow: /vc24/\nDisallow: /login\nDisallow: /vc24global-main\n\nSitemap: ${SITE}/sitemap.xml\n`
   );
 });
 app.get('/sitemap.xml', (req, res) => {

@@ -523,7 +523,19 @@ function requireVC24(req, res, next) {
   if (userFromReq(req) !== 'vhpro') return res.status(403).json({ ok: false, message: 'forbidden' });
   next();
 }
-const VK = { orders: 'vc24:ketoan:orders', cfg: 'vc24:ketoan:cfg', ledger: 'vc24:ketoan:ledger' };
+const VK = { orders: 'vc24:ketoan:orders', cfg: 'vc24:ketoan:cfg', ledger: 'vc24:ketoan:ledger',
+  draft: 'vc24:ketoan:draft', uploads: 'vc24:ketoan:uploads', log: 'vc24:ketoan:log' };
+// nén chung cho mọi JSON
+function gzPack(o) { try { return 'gz:' + zlib.gzipSync(Buffer.from(JSON.stringify(o), 'utf8')).toString('base64'); } catch { return JSON.stringify(o); } }
+function gzUnpack(s, d) { if (!s) return d; try { const j = (typeof s === 'string' && s.startsWith('gz:')) ? zlib.gunzipSync(Buffer.from(s.slice(3), 'base64')).toString('utf8') : s; return JSON.parse(j); } catch { return d; } }
+// Ghi nhật ký thao tác (bounded)
+async function vcLog(action, detail) {
+  if (!useRedis) return;
+  let log = gzUnpack(await redisGet(VK.log), []); if (!Array.isArray(log)) log = [];
+  log.push({ at: new Date().toISOString(), action: String(action || ''), detail: String(detail || '') });
+  if (log.length > 800) log = log.slice(-800);
+  await redisSet(VK.log, gzPack(log));
+}
 const isPaidPay = p => String(p || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toUpperCase().trim() === 'DA TT';
 const VC24_EDITABLE = new Set(['date','status','cust','pay','note','rcv','rcvPh','addr','region','weight','price','won','vnd','phuPhi','ghiChu','staff','paidDate']);
 const keyOf = r => r && (r.key || r.pkg);
@@ -548,10 +560,11 @@ const vcSaveOrders = o => redisSet(VK.orders, vcPack(o));   // trả về true/f
 
 app.get('/api/vc24/data', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: true, redis: false, rows: [], cfg: {} });
-  const [o, cfg, ledg] = await Promise.all([vcLoadOrders(), redisGet(VK.cfg), redisGet(VK.ledger)]);
+  const [o, cfg, ledg, drf] = await Promise.all([vcLoadOrders(), redisGet(VK.cfg), redisGet(VK.ledger), redisGet(VK.draft)]);
   let c = {}; try { c = cfg ? JSON.parse(cfg) : {}; } catch { /* ok */ }
   let ledger = {}; try { ledger = ledg ? JSON.parse(ledg) : {}; } catch { /* ok */ }
-  res.json({ ok: true, redis: true, rows: o.rows, fileName: o.fileName, uploadedAt: o.uploadedAt, cfg: c, ledger });
+  const draft = gzUnpack(drf, null);
+  res.json({ ok: true, redis: true, rows: o.rows, fileName: o.fileName, uploadedAt: o.uploadedAt, cfg: c, ledger, draft });
 });
 
 // Thu tiền theo SỐ TIỀN (hỗ trợ trả từng phần) + ghi lịch sử
@@ -582,6 +595,7 @@ app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   const s1 = await vcSaveOrders(o);
   const s2 = await redisSet(VK.ledger, JSON.stringify(ledger));
   if (!s1 || !s2) return res.json({ ok: false, reason: 'save' });
+  await vcLog('payment', `Thu ₩${amt.toLocaleString('en-US')} của ${cust} (gạch ${marked} đơn)`);
   res.json({ ok: true, marked, credit });
 });
 
@@ -603,6 +617,61 @@ app.post('/api/vc24/upload', requireAuth, requireVC24, async (req, res) => {
   const saved = await vcSaveOrders(o);
   if (!saved) return res.json({ ok: false, reason: 'save', message: 'Lưu thất bại — kho dữ liệu có thể đã quá lớn.' });
   res.json({ ok: true, added, dup, total: o.rows.length });
+});
+
+// ── Lưu BẢN NHÁP (chưa vào dữ liệu tổng) ────────────────────────────────────
+app.post('/api/vc24/draft', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: false, redis: false });
+  const { fileName, rows } = req.body || {};
+  if (!Array.isArray(rows)) return res.json({ ok: false, message: 'no rows' });
+  const ok = await redisSet(VK.draft, gzPack({ fileName: String(fileName || ''), at: new Date().toISOString(), rows }));
+  res.json({ ok, count: rows.length });
+});
+app.post('/api/vc24/draft/clear', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: false, redis: false });
+  const ok = await redisSet(VK.draft, gzPack(null));
+  res.json({ ok });
+});
+
+// ── ĐẨY nháp lên dữ liệu tổng (cần mật khẩu) + lưu lịch sử upload + nhật ký ──
+app.post('/api/vc24/commit', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: false, redis: false });
+  const { password } = req.body || {};
+  const user = userFromReq(req);
+  if (!password || password !== USERS[user]) return res.json({ ok: false, reason: 'password' });
+  const draft = gzUnpack(await redisGet(VK.draft), null);
+  if (!draft || !Array.isArray(draft.rows) || !draft.rows.length) return res.json({ ok: false, reason: 'empty' });
+  const o = await vcLoadOrders();
+  const existing = new Set(o.rows.map(keyOf).filter(Boolean));
+  let added = 0; const dup = [];
+  for (const r of draft.rows) { const k = keyOf(r); if (k && existing.has(k)) { dup.push(k); continue; } if (k) existing.add(k); o.rows.push(r); added++; }
+  o.fileName = draft.fileName || o.fileName || ''; o.uploadedAt = new Date().toISOString();
+  const saved = await vcSaveOrders(o);
+  if (!saved) return res.json({ ok: false, reason: 'save' });
+  const id = Date.now().toString();
+  await redisSet(VK.uploads + ':' + id, gzPack({ id, fileName: draft.fileName, at: new Date().toISOString(), added, rows: draft.rows }));
+  let idx = gzUnpack(await redisGet(VK.uploads), []); if (!Array.isArray(idx)) idx = [];
+  idx.push({ id, fileName: draft.fileName, at: new Date().toISOString(), added, total: draft.rows.length, dup: dup.length });
+  if (idx.length > 60) { for (const d of idx.slice(0, idx.length - 60)) await redisSet(VK.uploads + ':' + d.id, gzPack(null)); idx = idx.slice(-60); }
+  await redisSet(VK.uploads, gzPack(idx));
+  await redisSet(VK.draft, gzPack(null));
+  await vcLog('commit', `Đẩy lên tổng: +${added} đơn${dup.length ? `, ${dup.length} trùng bỏ qua` : ''} (file ${draft.fileName || '-'})`);
+  res.json({ ok: true, added, dup, total: o.rows.length });
+});
+
+// Lịch sử (danh sách upload + nhật ký thao tác)
+app.get('/api/vc24/history', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: true, redis: false, uploads: [], log: [] });
+  const uploads = gzUnpack(await redisGet(VK.uploads), []);
+  const log = gzUnpack(await redisGet(VK.log), []);
+  res.json({ ok: true, uploads: Array.isArray(uploads) ? uploads : [], log: Array.isArray(log) ? log : [] });
+});
+// Lấy lại 1 file đã upload để tải về
+app.get('/api/vc24/upload-file', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: false, redis: false });
+  const rec = gzUnpack(await redisGet(VK.uploads + ':' + String(req.query.id || '')), null);
+  if (!rec) return res.json({ ok: false, message: 'not found' });
+  res.json({ ok: true, fileName: rec.fileName, at: rec.at, rows: rec.rows || [] });
 });
 
 // Sửa 1 ô dữ liệu (lưu online)
@@ -628,6 +697,7 @@ app.post('/api/vc24/save', requireAuth, requireVC24, async (req, res) => {
   if (!cur) return res.json({ ok: false, message: 'not found' });
   for (const f of VC24_EDITABLE) { if (Object.prototype.hasOwnProperty.call(row, f)) cur[f] = row[f]; }
   const saved = await vcSaveOrders(o);
+  if (saved) await vcLog('edit', 'Sửa đơn ' + key);
   res.json({ ok: saved, reason: saved ? undefined : 'save' });
 });
 
@@ -655,6 +725,7 @@ app.post('/api/vc24/delete', requireAuth, requireVC24, async (req, res) => {
   o.rows = o.rows.filter(r => keyOf(r) !== key);
   if (o.rows.length === before) return res.json({ ok: false, reason: 'notfound' });
   const saved = await vcSaveOrders(o);
+  if (saved) await vcLog('delete', 'Xóa đơn ' + key);
   res.json({ ok: saved, reason: saved ? undefined : 'save' });
 });
 
@@ -668,6 +739,8 @@ app.post('/api/vc24/reset', requireAuth, requireVC24, async (req, res) => {
   if (norm(confirm) !== 'TOI DONG Y XOA') return res.json({ ok: false, reason: 'confirm' });
   const s1 = await vcSaveOrders({ rows: [], fileName: '', uploadedAt: null });
   const s2 = await redisSet(VK.ledger, '{}');
+  await redisSet(VK.draft, gzPack(null));
+  if (s1 && s2) await vcLog('reset', 'Xóa TOÀN BỘ dữ liệu kế toán');
   res.json({ ok: s1 && s2 });
 });
 

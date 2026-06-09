@@ -167,6 +167,7 @@
     <button data-tab="debt" onclick="tab('debt')">📊 Công nợ</button>
     <button data-tab="dash" onclick="tab('dash')">📈 Phân bố nợ</button>
     <button data-tab="cust" onclick="tab('cust')">👤 Theo khách hàng</button>
+    <button data-tab="hist" onclick="tab('hist')">📜 Lịch sử</button>
     <button data-tab="cfg" onclick="tab('cfg')">⚙️ Thông tin công ty</button>
   </div>
 
@@ -185,6 +186,8 @@
       </div>
       <div class="small" id="storeBadge" style="margin-top:12px;"></div>
     </div>
+
+    <div class="panel" id="draftPanel" style="display:none;margin-top:16px;border-color:#fde68a;background:#fffdf5;"></div>
 
     <div class="panel" id="listPanel" style="display:none;margin-top:16px;">
       <div class="filters">
@@ -265,6 +268,10 @@
       </div>
       <div class="empty" id="custEmpty">Chọn 1 khách hàng để xem chi tiết &amp; xuất hóa đơn.</div>
     </div>
+  </div>
+
+  <div class="tab-pane" id="tab-hist">
+    <div id="histList"></div>
   </div>
 
   <div class="tab-pane" id="tab-cfg">
@@ -369,6 +376,7 @@ let LEDGER={};   // sổ thanh toán: { [cust]: { credit, history:[{date,amount,
 function creditOf(c){ return (LEDGER[c] && Number(LEDGER[c].credit)) || 0; }
 function historyOf(c){ return (LEDGER[c] && Array.isArray(LEDGER[c].history)) ? LEDGER[c].history : []; }
 function paidWonOf(c){ return ROWS.filter(r=>r.cust===c && paid(r)).reduce((s,r)=>s+(Number(r.won)||0),0) + creditOf(c); }
+let DRAFT=null, HIST_LOG=[];   // bản nháp chờ duyệt + nhật ký
 let SHOW_PAID=false;   // mặc định chỉ hiện số ĐANG NỢ; bật để hiện số ĐÃ TRẢ
 function togglePaidView(){ SHOW_PAID=!SHOW_PAID; if(CUST_SEL) renderCust(); refreshCD(); renderDash(); }
 function paidToggleHTML(){ return `<label class="toggle" onclick="togglePaidView()"><span class="tg-track ${SHOW_PAID?'on':''}"><span class="tg-knob"></span></span><span>${SHOW_PAID?'Đang hiện số đã trả':'Hiện số tiền đã trả'}</span></label>`; }
@@ -410,6 +418,7 @@ function tab(name){
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
   if(name==='debt') renderDebt();
   if(name==='dash') renderDash();
+  if(name==='hist') renderHistory();
 }
 let PAY_CUST='';
 function renderDash(){
@@ -578,6 +587,7 @@ async function loadServerData(){
     const d = await fetch('/api/vc24/data').then(r=>r.json());
     REDIS = !!d.redis;
     LEDGER = d.ledger || {};
+    DRAFT = d.draft || null;
     if(d.cfg && Object.keys(d.cfg).length){ CFG=d.cfg; CFG_KEYS.forEach(k=>{const el=$('cfg_'+k); if(el)el.value=CFG[k]||'';}); }
     else loadCfgLocal();
     if(Array.isArray(d.rows) && d.rows.length){
@@ -597,7 +607,82 @@ function updateStoreBadge(){
 function rebuildAll(label){
   $('listPanel').style.display = ROWS.length?'block':'none';
   $('fileInfo').textContent = ROWS.length ? `${label||''} · ${ROWS.length} đơn` : '';
-  buildFilters(); applyFilters(); renderDebt(); buildCustomerPicker(); if(CUST_SEL) renderCust();
+  buildFilters(); applyFilters(); renderDebt(); buildCustomerPicker(); if(CUST_SEL) renderCust(); renderDraft();
+}
+
+/* ---------- Bản nháp (check trước khi vào tổng) ---------- */
+function renderDraft(){
+  const box=$('draftPanel'); if(!box) return;
+  if(!DRAFT || !DRAFT.rows || !DRAFT.rows.length){ box.style.display='none'; box.innerHTML=''; return; }
+  const existing=new Set(ROWS.map(r=>r.pkg).filter(Boolean));
+  let nw=0,dp=0; DRAFT.rows.forEach(r=>{ if(r.pkg && existing.has(r.pkg)) dp++; else nw++; });
+  const preview=DRAFT.rows.slice(0,30);
+  box.style.display='block';
+  box.innerHTML=`
+    <div class="ph"><h2 style="color:var(--amber)">📝 Bản nháp đang chờ duyệt</h2><span class="small muted">${esc(DRAFT.fileName||'')} · ${DRAFT.rows.length} đơn</span></div>
+    <div class="small" style="margin-bottom:10px">Trong nháp: <b style="color:var(--green)">${nw} đơn MỚI</b>${dp?` · <b style="color:#e11d48">${dp} trùng</b> (đã có trong tổng — sẽ bỏ qua)`:''}. <b style="color:var(--amber)">Chưa vào dữ liệu tổng.</b></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn primary" onclick="commitDraft()">✅ Đẩy lên dữ liệu tổng (cần mật khẩu)</button>
+      <button class="btn" style="border-color:#fecaca;color:#dc2626" onclick="clearDraft()">🗑 Hủy nháp</button>
+    </div>
+    <div class="small muted" style="margin-bottom:6px">Xem trước ${preview.length}/${DRAFT.rows.length} dòng:</div>
+    <div class="tbl-wrap" style="max-height:42vh"><table><thead><tr><th>Ngày</th><th>Mã kiện</th><th>Mã KH</th><th>Người nhận</th><th>Khu vực</th><th class="r">KG</th><th class="r">Tiền Won</th></tr></thead>
+    <tbody>${preview.map(r=>`<tr><td>${esc(r.date)}</td><td style="font-weight:700">${esc(r.pkg)}${(r.pkg&&existing.has(r.pkg))?' <span class="pill owe" style="font-size:.62rem">trùng</span>':''}</td><td>${esc(r.cust)}</td><td>${esc(r.rcv)}</td><td>${esc(r.region)}</td><td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.won)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+async function commitDraft(){
+  if(!DRAFT || !DRAFT.rows.length){ alert('Không có bản nháp.'); return; }
+  if(!REDIS){ alert('Chưa bật lưu trữ server.'); return; }
+  if(!confirm('Đẩy bản nháp lên DỮ LIỆU TỔNG?\nFile: '+(DRAFT.fileName||'-')+' · '+DRAFT.rows.length+' đơn.')) return;
+  const pw=prompt('Nhập MẬT KHẨU đăng nhập để đẩy lên dữ liệu tổng:'); if(pw==null||pw==='') return;
+  try{
+    const res=await fetch('/api/vc24/commit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})}).then(r=>r.json());
+    if(!res.ok){ alert(res.reason==='password'?'❌ Sai mật khẩu — chưa đẩy lên.':(res.reason==='empty'?'Không có bản nháp.':(res.reason==='save'?'❌ Lưu thất bại (kho dữ liệu quá lớn).':'Đẩy lên thất bại.'))); return; }
+    DRAFT=null; await loadServerData();
+    alert('✅ Đã đẩy lên dữ liệu tổng: thêm '+res.added+' đơn mới.'+((res.dup&&res.dup.length)?'\n'+res.dup.length+' mã kiện đã có sẵn → bỏ qua.':''));
+  }catch(e){ alert('Lỗi khi đẩy lên.'); }
+}
+async function clearDraft(){
+  if(!DRAFT) return;
+  if(!confirm('Hủy bản nháp này? (Dữ liệu tổng KHÔNG bị ảnh hưởng)')) return;
+  DRAFT=null;
+  if(REDIS){ try{ await fetch('/api/vc24/draft/clear',{method:'POST'}); }catch(e){} }
+  renderDraft();
+}
+
+/* ---------- Lịch sử ---------- */
+function fmtDT(s){ try{ return new Date(s).toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }catch(e){ return String(s||''); } }
+function actLabel(a){ return ({commit:'Đẩy lên tổng',payment:'Thu tiền',delete:'Xóa đơn',edit:'Sửa đơn',reset:'Xóa toàn bộ'})[a]||a; }
+async function renderHistory(){
+  const box=$('histList'); box.innerHTML='<div class="small muted" style="padding:20px">Đang tải lịch sử…</div>';
+  let d={uploads:[],log:[]}; try{ d=await fetch('/api/vc24/history').then(r=>r.json()); }catch(e){}
+  HIST_LOG=Array.isArray(d.log)?d.log:[];
+  const ups=(Array.isArray(d.uploads)?d.uploads:[]).slice().reverse();
+  const log=HIST_LOG.slice().reverse();
+  box.innerHTML=`
+    <div class="panel"><div class="ph"><h2>📤 Lịch sử upload (đẩy lên tổng)</h2><span class="small muted">${ups.length} lần</span></div>
+      ${ups.length?`<div class="tbl-wrap" style="max-height:42vh"><table><thead><tr><th>Thời gian</th><th>File</th><th class="r">Thêm mới</th><th class="r">Tổng dòng file</th><th></th></tr></thead>
+      <tbody>${ups.map(u=>`<tr><td>${esc(fmtDT(u.at))}</td><td>${esc(u.fileName||'-')}</td><td class="r">${u.added||0}</td><td class="r">${u.total||0}</td><td class="r"><button class="btn sm" onclick="downloadUpload('${escJs(u.id)}','${escJs(u.fileName||'file')}')">⬇ Tải lại file</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Chưa có lần đẩy lên nào.</div>'}
+    </div>
+    <div class="panel" style="margin-top:16px"><div class="ph"><h2>🧾 Nhật ký thao tác</h2>${log.length?'<button class="btn sm" onclick="downloadLog()">⬇ Tải nhật ký (Excel)</button>':''}</div>
+      ${log.length?`<div class="tbl-wrap" style="max-height:48vh"><table><thead><tr><th>Thời gian</th><th>Thao tác</th><th>Chi tiết</th></tr></thead>
+      <tbody>${log.slice(0,600).map(e=>`<tr><td>${esc(fmtDT(e.at))}</td><td><b>${esc(actLabel(e.action))}</b></td><td>${esc(e.detail)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Chưa có thao tác nào.</div>'}
+    </div>`;
+}
+function exportRowsXlsx(rows, base){
+  const headers=['NGÀY VỀ','MÃ KIỆN','TRẠNG THÁI HÀNG','MÃ KHÁCH HÀNG','CHECK TT','SĐT NGƯỜI GỬI/ GHI CHÚ','NGƯỜI NHẬN','SĐT NGƯỜI NHẬN','ĐỊA CHỈ NGƯỜI NHẬN','KHU VỰC','무게 (KG)','ĐƠN GIÁ','THÀNH TIỀN WON','THÀNH TIỀN VND','NV GIAO','PHỤ PHÍ','Ghi chú','NGÀY THU'];
+  const aoa=[headers].concat((rows||[]).map(r=>[r.date,r.pkg,r.status,r.cust,r.pay,r.note,r.rcv,r.rcvPh,r.addr,r.region,r.weight,r.price,r.won,r.vnd,r.staff,r.phuPhi,r.ghiChu,r.paidDate||'']));
+  const ws=XLSX.utils.aoa_to_sheet(aoa); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Dữ liệu'); XLSX.writeFile(wb, base+'.xlsx');
+}
+async function downloadUpload(id,fname){
+  let d; try{ d=await fetch('/api/vc24/upload-file?id='+encodeURIComponent(id)).then(r=>r.json()); }catch(e){}
+  if(!d||!d.ok||!Array.isArray(d.rows)){ alert('Không tải được file (có thể đã bị dọn do quá cũ).'); return; }
+  exportRowsXlsx(d.rows, String(d.fileName||fname||'upload').replace(/\.[^.]+$/,'')+'_taive');
+}
+function downloadLog(){
+  if(!HIST_LOG.length){ alert('Chưa có nhật ký.'); return; }
+  const aoa=[['Thời gian','Thao tác','Chi tiết']].concat(HIST_LOG.map(e=>[fmtDT(e.at),actLabel(e.action),e.detail]));
+  const ws=XLSX.utils.aoa_to_sheet(aoa); ws['!cols']=[{wch:18},{wch:16},{wch:60}];
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Nhật ký'); XLSX.writeFile(wb,'VC24_nhat-ky_'+todayISO()+'.xlsx');
 }
 
 /* ---------- Đọc & GỘP file ---------- */
@@ -659,22 +744,19 @@ async function parseWB(wb, fname){
   const seen={}, dupInFile=[]; const uniqRows=[];
   incoming.forEach(r=>{ const k=r.pkg; if(k){ if(seen[k]){ dupInFile.push(k); return; } seen[k]=1; } uniqRows.push(r); });
 
-  if(!REDIS){
-    ROWS=uniqRows; rebuildAll(esc(fname));
-    let m='(Lưu tạm) Đã nạp '+uniqRows.length+' đơn.'; if(dupInFile.length)m+='\nFile có '+dupInFile.length+' mã kiện trùng nhau (đã bỏ).';
-    alert(m); return;
+  // Nạp vào BẢN NHÁP (chế độ check) — CHƯA vào dữ liệu tổng
+  DRAFT={ fileName:fname, at:new Date().toISOString(), rows:uniqRows };
+  tab('list'); renderDraft();
+  try{ document.getElementById('draftPanel').scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
+  if(REDIS){
+    try{ const r=await fetch('/api/vc24/draft',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileName:fname,rows:uniqRows})}).then(x=>x.json());
+      if(!r.ok) alert('⚠️ Lưu nháp lên server thất bại (có thể file quá lớn). Bản nháp chỉ tạm trong phiên này.');
+    }catch(e){}
   }
-  try{
-    const res=await fetch('/api/vc24/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileName:fname,rows:uniqRows})}).then(r=>r.json());
-    if(!res.ok){ alert(res.reason==='save' ? '❌ Lưu lên server THẤT BẠI — kho dữ liệu quá lớn so với giới hạn lưu trữ. Dữ liệu MỚI chưa được lưu.\n\nĐã đọc được '+uniqRows.length+' dòng từ file. Hãy báo để nâng cấp lưu trữ.' : 'Lưu lên server thất bại.'); return; }
-    await loadServerData();
-    let m;
-    if(res.added===0) m='⚠️ Không thêm đơn nào — TẤT CẢ mã kiện đã có trong hệ thống (không up lại lần 2).';
-    else m='✅ Đã thêm '+res.added+' đơn mới.';
-    if(res.dup && res.dup.length) m+='\n\n⚠️ '+res.dup.length+' mã kiện đã có sẵn → bỏ qua (không thêm lại):\n'+res.dup.slice(0,30).join(', ')+(res.dup.length>30?'…':'');
-    if(dupInFile.length) m+='\n\nLưu ý: trong file có '+dupInFile.length+' dòng trùng mã kiện nhau (chỉ lấy dòng đầu).';
-    alert(m);
-  }catch(e){ alert('Lỗi khi gửi dữ liệu lên server.'); }
+  let m='📥 Đã nạp '+uniqRows.length+' đơn vào BẢN NHÁP để kiểm tra (CHƯA vào dữ liệu tổng).';
+  if(dupInFile.length)m+='\n('+dupInFile.length+' dòng trùng mã kiện ngay trong file đã bỏ.)';
+  m+='\n\nKiểm tra xong, bấm "✅ Đẩy lên dữ liệu tổng" (cần mật khẩu) để chính thức lưu.';
+  alert(m);
 }
 
 /* ---------- Hàng hiển thị trơn (nhẹ) — click để mở popup sửa cả dòng ---------- */

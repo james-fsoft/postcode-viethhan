@@ -216,11 +216,13 @@
     <div class="panel" id="draftWork" style="display:none;margin-top:16px;border-color:#fde68a;background:#fffdf8;">
       <div class="ph"><h2 style="color:#b45309">📝 Bản nháp (chưa vào dữ liệu tổng)</h2><span class="small muted" id="draftInfo"></span></div>
       <div class="small" id="draftSummary" style="margin-bottom:10px"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+        <button class="btn" id="saveDraftBtn" style="border-color:#16a34a;color:#16a34a" onclick="saveDraftNow()">💾 Lưu nháp</button>
         <button class="btn primary" onclick="commitDraft()">✅ Đẩy lên dữ liệu tổng (cần mật khẩu)</button>
         <button class="btn" style="border-color:#fecaca;color:#dc2626" onclick="clearDraft()">🗑 Hủy nháp</button>
+        <span class="small" id="draftSaved" style="color:#16a34a;font-weight:700;display:none">✓ Đã lưu nháp</span>
       </div>
-      <div class="small muted" style="margin-bottom:8px">💡 Bấm 1 dòng để sửa/xóa ngay trên nháp — KHÔNG ảnh hưởng dữ liệu tổng.</div>
+      <div class="small muted" style="margin-bottom:8px">💡 Mọi chỉnh sửa được tự lưu lên server ngay — đăng xuất vào lại vẫn còn. Bấm 1 dòng để sửa/xóa.</div>
       <div class="tbl-wrap">
         <table>
           <thead><tr>
@@ -666,6 +668,18 @@ function renderDraftList(){
 }
 function draftPage(n){ DPAGE=n; renderDraftList(); const w=$('draftBody').closest('.tbl-wrap'); if(w)w.scrollTop=0; }
 function saveDraftToServer(){ updateDraftBadge(); if(REDIS && DRAFT){ try{ fetch('/api/vc24/draft',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileName:DRAFT.fileName,rows:DRAFT.rows})}); }catch(e){} } }
+async function saveDraftNow(){
+  if(!DRAFT || !DRAFT.rows || !DRAFT.rows.length){ alert('Chưa có bản nháp để lưu.'); return; }
+  if(!REDIS){ alert('Chưa bật lưu trữ server — không lưu được.'); return; }
+  const btn=$('saveDraftBtn'), tag=$('draftSaved');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Đang lưu…'; }
+  try{
+    const r=await fetch('/api/vc24/draft',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileName:DRAFT.fileName,rows:DRAFT.rows})}).then(x=>x.json());
+    if(btn){ btn.disabled=false; btn.textContent='💾 Lưu nháp'; }
+    if(r&&r.ok){ updateDraftBadge(); if(tag){ tag.style.display='inline'; clearTimeout(saveDraftNow._t); saveDraftNow._t=setTimeout(()=>{tag.style.display='none';},3000); } }
+    else alert('⚠️ Lưu nháp thất bại (có thể file quá lớn).');
+  }catch(e){ if(btn){ btn.disabled=false; btn.textContent='💾 Lưu nháp'; } alert('Lỗi khi lưu nháp.'); }
+}
 async function commitDraft(){
   if(!DRAFT || !DRAFT.rows.length){ alert('Không có bản nháp.'); return; }
   if(!REDIS){ alert('Chưa bật lưu trữ server.'); return; }

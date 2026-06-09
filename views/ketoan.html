@@ -384,7 +384,16 @@ function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,
 function escA(s){ return esc(s).replace(/"/g,'&quot;'); }
 function escJs(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function noVN(s){ return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/gi,'d').toUpperCase().replace(/\s+/g,' ').trim(); }
-function money(s){ if(typeof s==='number') return Math.round(s); const neg=/^-/.test(String(s).trim()); const d=String(s==null?'':s).replace(/[^\d]/g,''); const n=d?parseInt(d,10):0; return neg?-n:n; }
+function money(s){
+  if(typeof s==='number') return Math.round(s);
+  if(s==null) return 0;
+  let t=String(s).trim(); const neg=/^-/.test(t);
+  t=t.replace(/[^\d.,]/g,'');           // bỏ ký hiệu tiền tệ, giữ chữ số + , .
+  if(!t) return 0;
+  t=t.replace(/,/g,'');                  // ',' là phân tách hàng nghìn → bỏ; '.' là thập phân
+  const n=parseFloat(t);
+  return isNaN(n)?0:(neg?-Math.round(Math.abs(n)):Math.round(n));
+}
 function weight(s){ if(typeof s==='number')return s; const t=String(s||'').replace(/[^\d.,]/g,'').replace(',','.'); const n=parseFloat(t); return isNaN(n)?0:n; }
 // Ngày: nhận số serial Excel hoặc chuỗi → 'DD-MM-YYYY'
 function looksDate(v){ if(typeof v==='number') return v>20000 && v<80000; return /^\s*\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/.test(String(v||'')); }
@@ -794,25 +803,28 @@ async function parseWB(wb, fname){
     if(hi<0) return;
     const H=aoa[hi].map(noVN); const c=detect(H);
     if(c.cust<0 && c.pkg<0 && c.won<0) return; sheets++;
-    // Cột "Ngày về" không có tiêu đề (ô header trống) → dò theo giá trị
-    if(c.date<0){
-      const used=new Set(Object.values(c).filter(x=>x>=0));
-      let ncol=0; for(let i=hi+1;i<Math.min(aoa.length,hi+40);i++){ if(aoa[i]&&aoa[i].length>ncol)ncol=aoa[i].length; }
-      let best=-1,bestHit=0;
-      for(let col=0;col<ncol;col++){ if(used.has(col))continue; let hit=0,tot=0;
-        for(let i=hi+1;i<Math.min(aoa.length,hi+40);i++){ const v=aoa[i]&&aoa[i][col]; if(v===''||v==null)continue; tot++; if(looksDate(v))hit++; }
-        if(tot>=3 && hit/tot>0.6 && hit>bestHit){ bestHit=hit; best=col; } }
-      if(best>=0) c.date=best;
+    // Cột "Ngày về": header có thể trống HOẶC trỏ nhầm cột rỗng → xác thực & dò theo giá trị
+    {
+      const lo=hi+1, hira=Math.min(aoa.length,hi+45);
+      const dateScore=(col)=>{ if(col<0)return -1; let hit=0,tot=0; for(let i=lo;i<hira;i++){ const v=aoa[i]&&aoa[i][col]; if(v===''||v==null)continue; tot++; if(looksDate(v))hit++; } return tot>=3?hit/tot:-1; };
+      if(dateScore(c.date)<0.5){
+        const used=new Set(Object.values(c).filter(x=>x>=0 && x!==c.date));
+        let ncol=0; for(let i=lo;i<hira;i++){ if(aoa[i]&&aoa[i].length>ncol)ncol=aoa[i].length; }
+        let best=-1,bestS=0.5;
+        for(let col=0;col<ncol;col++){ if(used.has(col))continue; const s=dateScore(col); if(s>bestS){ bestS=s; best=col; } }
+        if(best>=0) c.date=best;
+      }
     }
     for(let i=hi+1;i<aoa.length;i++){
       const row=aoa[i]; const get=k=>c[k]>=0?String(row[c[k]]??'').trim():'';
-      const cust=get('cust'), pkg=get('pkg'), won=money(get('won')), vnd=money(get('vnd'));
+      const raw=k=>c[k]>=0?row[c[k]]:'';
+      const cust=get('cust'), pkg=get('pkg'), won=money(raw('won')), vnd=money(raw('vnd'));
       if(!cust && !pkg && !won && !vnd) continue;
       if(noVN(cust)==='TOTAL'||noVN(pkg)==='TOTAL') continue;
       incoming.push({ key:pkg||('row_'+name+'_'+i), sheet:name, date:(c.date>=0?fmtDateCell(row[c.date]):''), pkg, status:get('status'), cust,
         pay:get('pay'), note:get('note'), rcv:get('rcv'), rcvPh:get('rcvPh'), addr:get('addr'),
-        region:get('region'), weight:weight(get('weight')), price:money(get('price')),
-        won, vnd, phuPhi:money(get('phuPhi')), staff:get('staff'), ghiChu:get('ghiChu') });
+        region:get('region'), weight:weight(raw('weight')), price:money(raw('price')),
+        won, vnd, phuPhi:money(raw('phuPhi')), staff:get('staff'), ghiChu:get('ghiChu') });
     }
   });
   if(!incoming.length){ alert('Không đọc được dòng dữ liệu nào. Kiểm tra file có đúng các cột (Mã khách hàng, Người nhận, Khu vực…) không.'); return; }

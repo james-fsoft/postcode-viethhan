@@ -355,6 +355,11 @@ function userFromReq(req) {
   try { return jwt.verify(req.cookies[COOKIE], JWT_SECRET).username; } catch { return null; }
 }
 
+// Trang "trung tâm" riêng theo account. Thêm user mới -> thêm 1 dòng tương ứng.
+const USER_HUBS = {
+  vhpro: { url: '/vc24global-main', label: '🏢 VC24 Global' },
+};
+
 // ── Config endpoint — PUBLIC: khách (chưa login) cũng dùng được ──────────────
 app.get('/api/config', async (req, res) => {
   const username = userFromReq(req);
@@ -384,7 +389,23 @@ app.get('/api/config', async (req, res) => {
     canUpload: true, isGuest: false, used,
     redis: useRedis,
     contact,
+    hub: USER_HUBS[username] || null,
   });
+});
+
+// Script dùng chung: chèn nút nổi dẫn tới "trung tâm" của user (nếu có)
+app.get('/userhub.js', (req, res) => {
+  res.type('application/javascript').set('Cache-Control', 'public, max-age=300').send(
+    `(function(){try{fetch('/api/config').then(function(r){return r.json()}).then(function(c){`
+    + `if(!c||!c.hub||!c.hub.url)return;`
+    + `if(location.pathname===c.hub.url)return;`
+    + `var st=document.createElement('style');`
+    + `st.textContent='#userHubBtn{position:fixed;right:18px;bottom:18px;z-index:60;display:inline-flex;align-items:center;gap:7px;font-family:Segoe UI,Arial,sans-serif;font-size:.85rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#4f46e5,#7c3aed);border:none;border-radius:99px;padding:11px 18px;box-shadow:0 8px 24px -6px rgba(79,70,229,.5);text-decoration:none;transition:transform .14s,box-shadow .16s}#userHubBtn:hover{transform:translateY(-2px);box-shadow:0 12px 30px -6px rgba(79,70,229,.6)}@media print{#userHubBtn{display:none}}';`
+    + `document.head.appendChild(st);`
+    + `var a=document.createElement('a');a.id='userHubBtn';a.href=c.hub.url;a.textContent=c.hub.label||'Trang của tôi';`
+    + `(document.body||document.documentElement).appendChild(a);`
+    + `}).catch(function(){})}catch(e){}})();`
+  );
 });
 
 // ── Đăng ký 1 lượt tra cứu (kiểm tra + tăng đếm phía server) ─────────────────

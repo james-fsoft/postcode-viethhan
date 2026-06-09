@@ -386,6 +386,16 @@ function escJs(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/
 function noVN(s){ return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/gi,'d').toUpperCase().replace(/\s+/g,' ').trim(); }
 function money(s){ if(typeof s==='number') return Math.round(s); const neg=/^-/.test(String(s).trim()); const d=String(s==null?'':s).replace(/[^\d]/g,''); const n=d?parseInt(d,10):0; return neg?-n:n; }
 function weight(s){ if(typeof s==='number')return s; const t=String(s||'').replace(/[^\d.,]/g,'').replace(',','.'); const n=parseFloat(t); return isNaN(n)?0:n; }
+// Ngày: nhận số serial Excel hoặc chuỗi → 'DD-MM-YYYY'
+function looksDate(v){ if(typeof v==='number') return v>20000 && v<80000; return /^\s*\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/.test(String(v||'')); }
+function fmtDateCell(v){
+  if(v==null||v==='') return '';
+  if(typeof v==='number'){ if(v>20000 && v<80000){ const d=new Date(Math.round((v-25569)*86400000)); if(!isNaN(d)){ const dd=String(d.getUTCDate()).padStart(2,'0'),mm=String(d.getUTCMonth()+1).padStart(2,'0'); return `${dd}-${mm}-${d.getUTCFullYear()}`; } } return String(v); }
+  return String(v).trim();
+}
+// Tiền won vượt ngưỡng hợp lý cho 1 kiện hàng → coi là dữ liệu lỗi
+const WON_MAX = 1000000000; // 1 tỷ ₩
+function wonBad(r){ return Number(r&&r.won)>WON_MAX; }
 function fmtWon(n){ return n?('₩'+Number(n).toLocaleString('en-US')):'<span class="muted">—</span>'; }
 function fmtVnd(n){ return n?(Number(n).toLocaleString('en-US')+' ₫'):'<span class="muted">—</span>'; }
 function fmtKg(n){ return n?(Number(n).toLocaleString('en-US',{maximumFractionDigits:2})+' kg'):'<span class="muted">—</span>'; }
@@ -651,8 +661,10 @@ function renderDraftTab(){
   work.style.display='block';
   const existing=new Set(ROWS.map(r=>r.pkg).filter(Boolean));
   let nw=0,dp=0; DRAFT.rows.forEach(r=>{ if(r.pkg && existing.has(r.pkg)) dp++; else nw++; });
+  const bad=DRAFT.rows.filter(wonBad);
   $('draftInfo').textContent=`${DRAFT.fileName||''} · ${DRAFT.rows.length} đơn`;
-  $('draftSummary').innerHTML=`So với dữ liệu tổng: <b style="color:var(--green)">${nw} đơn MỚI</b>${dp?` · <b style="color:#e11d48">${dp} trùng</b> (sẽ bỏ qua khi đẩy lên)`:''}.`;
+  $('draftSummary').innerHTML=`So với dữ liệu tổng: <b style="color:var(--green)">${nw} đơn MỚI</b>${dp?` · <b style="color:#e11d48">${dp} trùng</b> (sẽ bỏ qua khi đẩy lên)`:''}.`
+    + (bad.length?`<div style="margin-top:8px;padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#b91c1c"><b>⚠️ ${bad.length} đơn có Tiền Won bất thường</b> (quá lớn, có thể lỗi từ file gốc): <b>${bad.slice(0,12).map(r=>esc(r.pkg||'?')).join(', ')}${bad.length>12?'…':''}</b>. Bấm vào ô đỏ để sửa lại trước khi đẩy lên tổng.</div>`:'');
   renderDraftList();
 }
 function renderDraftList(){
@@ -782,12 +794,22 @@ async function parseWB(wb, fname){
     if(hi<0) return;
     const H=aoa[hi].map(noVN); const c=detect(H);
     if(c.cust<0 && c.pkg<0 && c.won<0) return; sheets++;
+    // Cột "Ngày về" không có tiêu đề (ô header trống) → dò theo giá trị
+    if(c.date<0){
+      const used=new Set(Object.values(c).filter(x=>x>=0));
+      let ncol=0; for(let i=hi+1;i<Math.min(aoa.length,hi+40);i++){ if(aoa[i]&&aoa[i].length>ncol)ncol=aoa[i].length; }
+      let best=-1,bestHit=0;
+      for(let col=0;col<ncol;col++){ if(used.has(col))continue; let hit=0,tot=0;
+        for(let i=hi+1;i<Math.min(aoa.length,hi+40);i++){ const v=aoa[i]&&aoa[i][col]; if(v===''||v==null)continue; tot++; if(looksDate(v))hit++; }
+        if(tot>=3 && hit/tot>0.6 && hit>bestHit){ bestHit=hit; best=col; } }
+      if(best>=0) c.date=best;
+    }
     for(let i=hi+1;i<aoa.length;i++){
       const row=aoa[i]; const get=k=>c[k]>=0?String(row[c[k]]??'').trim():'';
       const cust=get('cust'), pkg=get('pkg'), won=money(get('won')), vnd=money(get('vnd'));
       if(!cust && !pkg && !won && !vnd) continue;
       if(noVN(cust)==='TOTAL'||noVN(pkg)==='TOTAL') continue;
-      incoming.push({ key:pkg||('row_'+name+'_'+i), sheet:name, date:get('date'), pkg, status:get('status'), cust,
+      incoming.push({ key:pkg||('row_'+name+'_'+i), sheet:name, date:(c.date>=0?fmtDateCell(row[c.date]):''), pkg, status:get('status'), cust,
         pay:get('pay'), note:get('note'), rcv:get('rcv'), rcvPh:get('rcvPh'), addr:get('addr'),
         region:get('region'), weight:weight(get('weight')), price:money(get('price')),
         won, vnd, phuPhi:money(get('phuPhi')), staff:get('staff'), ghiChu:get('ghiChu') });
@@ -834,7 +856,7 @@ function rowHTML(r,src){
     <td>${esc(r.note)}</td><td>${esc(r.rcv)}</td><td>${esc(r.rcvPh)}</td><td>${esc(r.addr)}</td>
     <td>${r.region?'<span class="pill reg">'+esc(r.region)+'</span>':''}</td>
     <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.price)}</td>
-    <td class="r num">${fmtWon(r.won)}</td><td class="r num">${fmtVnd(r.vnd)}</td>
+    <td class="r num"${wonBad(r)?' style="color:#dc2626;font-weight:800;background:#fef2f2" title="Giá trị bất thường — bấm để sửa"':''}>${fmtWon(r.won)}${wonBad(r)?' ⚠️':''}</td><td class="r num">${fmtVnd(r.vnd)}</td>
     <td>${esc(r.staff)}</td><td class="r num">${fmtVnd(r.phuPhi)}</td><td>${esc(r.ghiChu)}</td>
   </tr>`;
 }

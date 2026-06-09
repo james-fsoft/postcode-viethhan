@@ -230,7 +230,10 @@
         <select id="fRegion" onchange="filterChanged()"><option value="">Tất cả khu vực</option></select>
         <select id="fPay" onchange="filterChanged()"><option value="">Tất cả TT</option><option value="owe">Chưa thu</option><option value="paid">Đã thu</option></select>
       </div>
-      <div class="small muted" id="listSummary" style="margin-bottom:10px;"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <div class="small muted" id="listSummary"></div>
+        <button class="btn sm" onclick="downloadAllXlsx()" style="border-color:#86efac;color:#16a34a">⬇️ Tải Excel dữ liệu tổng</button>
+      </div>
       <div class="small muted" style="margin-bottom:8px;">💡 Bấm vào 1 dòng để mở cửa sổ sửa/xóa — tự lưu online. Phân trang để chạy nhanh trên mọi máy.</div>
       <div class="tbl-wrap">
         <table>
@@ -928,6 +931,16 @@ function exportRowsXlsx(rows, base){
   const headers=['NGÀY VỀ','MÃ KIỆN','TRẠNG THÁI HÀNG','MÃ KHÁCH HÀNG','CHECK TT','SĐT NGƯỜI GỬI/ GHI CHÚ','NGƯỜI NHẬN','SĐT NGƯỜI NHẬN','ĐỊA CHỈ NGƯỜI NHẬN','KHU VỰC','무게 (KG)','ĐƠN GIÁ','THÀNH TIỀN WON','THÀNH TIỀN VND','NV GIAO','PHỤ PHÍ','Ghi chú','NGÀY THU'];
   const aoa=[headers].concat((rows||[]).map(r=>[r.date,r.pkg,r.status,r.cust,r.pay,r.note,r.rcv,r.rcvPh,r.addr,r.region,r.weight,r.price,r.won,r.vnd,r.staff,r.phuPhi,r.ghiChu,r.paidDate||'']));
   const ws=XLSX.utils.aoa_to_sheet(aoa); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Dữ liệu'); XLSX.writeFile(wb, base+'.xlsx');
+}
+function downloadAllXlsx(){
+  if(!ROWS.length){ alert('Chưa có dữ liệu tổng để tải.'); return; }
+  const headers=['NGÀY VỀ','TUẦN','MÃ KIỆN','TRẠNG THÁI HÀNG','MÃ KHÁCH HÀNG','CHECK TT','SĐT NGƯỜI GỬI/ GHI CHÚ','NGƯỜI NHẬN','SĐT NGƯỜI NHẬN','ĐỊA CHỈ NGƯỜI NHẬN','KHU VỰC','무게 (KG)','ĐƠN GIÁ','THÀNH TIỀN WON','THÀNH TIỀN VND','NV GIAO','PHỤ PHÍ','Ghi chú','NGÀY THU'];
+  const aoa=[headers].concat(ROWS.map(r=>[r.date,weekKey(r),r.pkg,r.status,r.cust,r.pay,r.note,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.vnd)||'',r.staff,Number(r.phuPhi)||'',r.ghiChu,r.paidDate||'']));
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:12},{wch:10},{wch:12},{wch:24},{wch:18},{wch:13},{wch:18},{wch:16},{wch:14},{wch:34},{wch:10},{wch:8},{wch:11},{wch:14},{wch:14},{wch:12},{wch:11},{wch:18},{wch:12}];
+  for(let c=0;c<headers.length;c++){ const a=XLSX.utils.encode_cell({r:0,c}); if(ws[a]) ws[a].s={font:{bold:true},fill:{fgColor:{rgb:'DDEBF7'}},alignment:{horizontal:'center'},border:{bottom:{style:'thin',color:{rgb:'9CB3D4'}}}}; }
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Dữ liệu tổng');
+  XLSX.writeFile(wb,'VC24_du-lieu-tong_'+todayISO()+'.xlsx');
 }
 async function downloadUpload(id,fname){
   let d; try{ d=await fetch('/api/vc24/upload-file?id='+encodeURIComponent(id)).then(r=>r.json()); }catch(e){}

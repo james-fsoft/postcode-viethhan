@@ -230,6 +230,13 @@
         <select id="fRegion" onchange="filterChanged()"><option value="">Tất cả khu vực</option></select>
         <select id="fPay" onchange="filterChanged()"><option value="">Tất cả TT</option><option value="owe">Chưa thu</option><option value="paid">Đã thu</option></select>
       </div>
+      <div class="filters" style="margin-top:-2px">
+        <span class="small" style="font-weight:700;color:var(--g600);align-self:center">🗓️ Ngày về từ</span>
+        <input type="date" id="fFrom" class="ef" style="width:auto" onchange="filterChanged()" />
+        <span class="small" style="align-self:center">đến</span>
+        <input type="date" id="fTo" class="ef" style="width:auto" onchange="filterChanged()" />
+        <button class="btn sm" onclick="clearDateRange()">✖ Xóa lọc ngày</button>
+      </div>
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
         <div class="small muted" id="listSummary"></div>
         <button class="btn sm" onclick="downloadAllXlsx()" style="border-color:#86efac;color:#16a34a">⬇️ Tải Excel dữ liệu tổng</button>
@@ -990,13 +997,16 @@ function exportRowsXlsx(rows, base){
 }
 function downloadAllXlsx(){
   if(!ROWS.length){ alert('Chưa có dữ liệu tổng để tải.'); return; }
+  const rows = (typeof LIST_ROWS!=='undefined' && LIST_ROWS.length) ? LIST_ROWS : ROWS;  // tải theo bộ lọc hiện tại (gồm khoảng ngày)
   const headers=['NGÀY VỀ','TUẦN','MÃ KIỆN','TRẠNG THÁI HÀNG','MÃ KHÁCH HÀNG','CHECK TT','SĐT NGƯỜI GỬI/ GHI CHÚ','NGƯỜI NHẬN','SĐT NGƯỜI NHẬN','ĐỊA CHỈ NGƯỜI NHẬN','KHU VỰC','무게 (KG)','ĐƠN GIÁ','THÀNH TIỀN WON','THÀNH TIỀN VND','NV GIAO','PHỤ PHÍ','Ghi chú','NGÀY THU'];
-  const aoa=[headers].concat(ROWS.map(r=>[r.date,weekKey(r),r.pkg,r.status,r.cust,r.pay,r.note,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.vnd)||'',r.staff,Number(r.phuPhi)||'',r.ghiChu,r.paidDate||'']));
+  const aoa=[headers].concat(rows.map(r=>[r.date,weekKey(r),r.pkg,r.status,r.cust,r.pay,r.note,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.vnd)||'',r.staff,Number(r.phuPhi)||'',r.ghiChu,r.paidDate||'']));
   const ws=XLSX.utils.aoa_to_sheet(aoa);
   ws['!cols']=[{wch:12},{wch:10},{wch:12},{wch:24},{wch:18},{wch:13},{wch:18},{wch:16},{wch:14},{wch:34},{wch:10},{wch:8},{wch:11},{wch:14},{wch:14},{wch:12},{wch:11},{wch:18},{wch:12}];
   for(let c=0;c<headers.length;c++){ const a=XLSX.utils.encode_cell({r:0,c}); if(ws[a]) ws[a].s={font:{bold:true},fill:{fgColor:{rgb:'DDEBF7'}},alignment:{horizontal:'center'},border:{bottom:{style:'thin',color:{rgb:'9CB3D4'}}}}; }
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Dữ liệu tổng');
-  XLSX.writeFile(wb,'VC24_du-lieu-tong_'+todayISO()+'.xlsx');
+  const ff=$('fFrom')&&$('fFrom').value, ft=$('fTo')&&$('fTo').value;
+  const suffix=(ff||ft)?('_'+(ff||'dau')+'_den_'+(ft||'cuoi')):'';
+  XLSX.writeFile(wb,'VC24_du-lieu-tong'+suffix+'_'+todayISO()+'.xlsx');
 }
 async function downloadUpload(id,fname){
   let d; try{ d=await fetch('/api/vc24/upload-file?id='+encodeURIComponent(id)).then(r=>r.json()); }catch(e){}
@@ -1197,13 +1207,18 @@ function buildFilters(){
   $('fCust').innerHTML='<option value="">Tất cả khách hàng</option>'+uniq(ROWS.map(r=>r.cust)).sort((a,b)=>a.localeCompare(b,'vi')).map(c=>`<option value="${escA(c)}">${esc(c)}</option>`).join('');
   $('fRegion').innerHTML='<option value="">Tất cả khu vực</option>'+uniq(ROWS.map(r=>r.region)).map(c=>`<option value="${escA(c)}">${esc(c)}</option>`).join('');
 }
+function dayNum(d){ return d? (d.getUTCFullYear()*10000 + (d.getUTCMonth()+1)*100 + d.getUTCDate()) : null; }
+function isoToNum(s){ const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m? (+m[1]*10000 + +m[2]*100 + +m[3]) : null; }
+function clearDateRange(){ $('fFrom').value=''; $('fTo').value=''; filterChanged(); }
 function currentFilter(){
   const q=noVN($('q').value), fc=$('fCust').value, fr=$('fRegion').value, fp=$('fPay').value;
+  const from=isoToNum($('fFrom')&&$('fFrom').value), to=isoToNum($('fTo')&&$('fTo').value);
   return ROWS.filter(r=>{
     if(fc && r.cust!==fc) return false;
     if(fr && r.region!==fr) return false;
     if(fp==='paid' && !paid(r)) return false;
     if(fp==='owe' && paid(r)) return false;
+    if(from||to){ const dn=dayNum(parseVNDate(r.date)); if(dn==null) return false; if(from&&dn<from) return false; if(to&&dn>to) return false; }
     if(q){ if(!noVN([r.cust,r.rcv,r.rcvPh,r.pkg,r.addr,r.note,r.ghiChu].join(' ')).includes(q)) return false; }
     return true;
   });

@@ -164,15 +164,42 @@
 <div class="wrap">
   <div class="tabs">
     <button data-tab="draft" onclick="tab('draft')">📝 Dữ liệu nháp <span id="draftCount" style="display:none;background:#f59e0b;color:#fff;border-radius:99px;padding:1px 8px;font-size:.72rem;margin-left:2px"></span></button>
-    <button class="active" data-tab="list" onclick="tab('list')">📦 Dữ liệu tổng</button>
+    <button class="active" data-tab="week" onclick="tab('week')">🗓️ Theo tuần</button>
     <button data-tab="debt" onclick="tab('debt')">📊 Công nợ</button>
     <button data-tab="dash" onclick="tab('dash')">📈 Phân bố nợ</button>
     <button data-tab="cust" onclick="tab('cust')">👤 Theo khách hàng</button>
     <button data-tab="hist" onclick="tab('hist')">📜 Lịch sử</button>
+    <button data-tab="list" onclick="tab('list')">📦 Dữ liệu tổng</button>
     <button data-tab="cfg" onclick="tab('cfg')">⚙️ Thông tin công ty</button>
   </div>
 
-  <div class="tab-pane show" id="tab-list">
+  <div class="tab-pane show" id="tab-week">
+    <div class="panel">
+      <div class="ph"><h2>🗓️ Dữ liệu theo tuần</h2><span class="small muted" id="weekInfo"></span></div>
+      <div class="filters">
+        <select id="weekSel" onchange="weekChanged()" style="font-weight:700;min-width:240px"></select>
+        <input class="grow" id="qWeek" placeholder="🔎 Tìm trong tuần: mã KH, người nhận, SĐT, mã kiện…" oninput="onWeekSearch()" />
+        <select id="fPayWeek" onchange="renderWeek()"><option value="">Tất cả TT</option><option value="owe">Chưa thu</option><option value="paid">Đã thu</option></select>
+      </div>
+      <div class="small muted" id="weekSummary" style="margin-bottom:10px;"></div>
+      <div class="small muted" style="margin-bottom:8px;">💡 Mỗi tuần upload 1 file. Chọn tuần để xem lại. Bấm 1 dòng để sửa/xóa (tự lưu online).</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Ngày về</th><th>Mã kiện</th><th>Trạng thái hàng</th><th>Mã KH</th><th>Check TT</th><th>Ngày thu</th>
+            <th>SĐT gửi / GC</th><th>Người nhận</th><th>SĐT nhận</th><th>Địa chỉ</th><th>Khu vực</th>
+            <th class="r">KG</th><th class="r">Đơn giá</th><th class="r">Tiền Won (₩)</th><th class="r">Tiền VND (₫)</th>
+            <th>NV giao</th><th class="r">Phụ phí</th><th>Ghi chú</th>
+          </tr></thead>
+          <tbody id="weekBody"></tbody>
+        </table>
+        <div class="empty" id="weekEmpty">Chưa có dữ liệu tuần này.</div>
+      </div>
+      <div class="pager" id="weekPager"></div>
+    </div>
+  </div>
+
+  <div class="tab-pane" id="tab-list">
     <div class="small" id="storeBadge" style="margin-bottom:12px;"></div>
     <div class="panel" id="listPanel" style="display:none;margin-top:0;">
       <div class="filters">
@@ -332,6 +359,24 @@
   </div>
 </div>
 
+<div class="modal" id="commitModal">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-bar"><h3>📤 Đẩy lên dữ liệu tổng</h3><button class="btn" onclick="closeCommit()">Đóng</button></div>
+    <div style="padding:4px 2px">
+      <div class="small muted" id="cmInfo" style="margin-bottom:12px"></div>
+      <label class="small" style="font-weight:700;display:block;margin-bottom:4px">🗓️ Tuần của file này</label>
+      <input type="week" id="cmWeek" class="ef" onchange="cmWeekChanged()" oninput="cmWeekChanged()" style="width:100%" />
+      <div class="small" style="color:var(--blue);font-weight:700;margin:6px 0 14px" id="cmWeekLabel"></div>
+      <label class="small" style="font-weight:700;display:block;margin-bottom:4px">🔑 Mật khẩu đăng nhập</label>
+      <input type="password" id="cmPw" class="ef" placeholder="Nhập mật khẩu để xác nhận" style="width:100%" onkeydown="if(event.key==='Enter')confirmCommit()" />
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px">
+        <button class="btn" onclick="closeCommit()">Hủy</button>
+        <button class="btn primary" id="cmBtn" onclick="confirmCommit()">✅ Đẩy lên dữ liệu tổng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="loadOverlay"><div class="spin"></div><div class="small" style="margin-top:14px;color:var(--g600);font-weight:600">Đang tải dữ liệu kế toán…</div></div>
 
 <div class="modal" id="custHistModal">
@@ -405,6 +450,13 @@ function fmtDateCell(v){
 // Tiền won vượt ngưỡng hợp lý cho 1 kiện hàng → coi là dữ liệu lỗi
 const WON_MAX = 1000000000; // 1 tỷ ₩
 function wonBad(r){ return Number(r&&r.won)>WON_MAX; }
+// ---- Quản lý theo tuần (ISO week) ----
+function parseVNDate(s){ const m=String(s||'').match(/(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/); if(!m)return null; let y=+m[3]; if(y<100)y+=2000; const d=new Date(Date.UTC(y,(+m[2])-1,+m[1])); return isNaN(d)?null:d; }
+function isoWeekStr(d){ const t=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())); const day=(t.getUTCDay()+6)%7; t.setUTCDate(t.getUTCDate()-day+3); const firstThu=new Date(Date.UTC(t.getUTCFullYear(),0,4)); const w=1+Math.round(((t-firstThu)/86400000-3+((firstThu.getUTCDay()+6)%7))/7); return t.getUTCFullYear()+'-W'+String(w).padStart(2,'0'); }
+function isoWeekMonday(y,w){ const jan4=new Date(Date.UTC(y,0,4)); const dow=(jan4.getUTCDay()+6)%7; const mon=new Date(jan4); mon.setUTCDate(jan4.getUTCDate()-dow+(w-1)*7); return mon; }
+function weekKey(r){ if(r&&/^\d{4}-W\d{2}$/.test(r.week||''))return r.week; const d=parseVNDate(r&&r.date); return d?isoWeekStr(d):''; }
+function weekLabel(wk){ const m=String(wk||'').match(/(\d{4})-W(\d{2})/); if(!m)return wk||'(chưa rõ tuần)'; const y=+m[1],w=+m[2]; const mon=isoWeekMonday(y,w); const sun=new Date(mon); sun.setUTCDate(mon.getUTCDate()+6); const f=d=>String(d.getUTCDate()).padStart(2,'0')+'/'+String(d.getUTCMonth()+1).padStart(2,'0'); return `Tuần ${String(w).padStart(2,'0')}/${y} (${f(mon)}–${f(sun)})`; }
+function suggestWeek(rows){ const cnt={}; (rows||[]).forEach(r=>{ const d=parseVNDate(r&&r.date); if(d){ const k=isoWeekStr(d); cnt[k]=(cnt[k]||0)+1; } }); let best='',bn=0; Object.keys(cnt).forEach(k=>{ if(cnt[k]>bn){bn=cnt[k];best=k;} }); if(best)return best; return isoWeekStr(new Date()); }
 function fmtWon(n){ return n?('₩'+Number(n).toLocaleString('en-US')):'<span class="muted">—</span>'; }
 function fmtVnd(n){ return n?(Number(n).toLocaleString('en-US')+' ₫'):'<span class="muted">—</span>'; }
 function fmtKg(n){ return n?(Number(n).toLocaleString('en-US',{maximumFractionDigits:2})+' kg'):'<span class="muted">—</span>'; }
@@ -463,8 +515,10 @@ function tab(name){
   if(name==='dash') renderDash();
   if(name==='hist') renderHistory();
   if(name==='draft') renderDraftTab();
+  if(name==='week') renderWeek();
 }
 let EDIT_SOURCE='main';
+let WEEK_SEL='', WPAGE=1, _weekSearchT=null;
 let PAY_CUST='';
 function renderDash(){
   const agg=customerAgg();
@@ -653,7 +707,46 @@ function rebuildAll(label){
   $('listPanel').style.display = ROWS.length?'block':'none';
   $('fileInfo').textContent = ROWS.length ? `${label||''} · ${ROWS.length} đơn` : '';
   buildFilters(); applyFilters(); renderDebt(); buildCustomerPicker(); if(CUST_SEL) renderCust();
+  buildWeekPicker(); if($('tab-week') && $('tab-week').classList.contains('show')) renderWeek();
   updateDraftBadge(); if($('tab-draft') && $('tab-draft').classList.contains('show')) renderDraftTab();
+}
+
+/* ---------- Theo tuần ---------- */
+function weekGroups(){ const g={}; ROWS.forEach(r=>{ const k=weekKey(r)||''; (g[k]=g[k]||[]).push(r); }); return g; }
+function buildWeekPicker(){
+  const sel=$('weekSel'); if(!sel) return;
+  const g=weekGroups();
+  const keys=Object.keys(g).sort((a,b)=>{ if(!a)return 1; if(!b)return -1; return b.localeCompare(a); }); // tuần mới nhất trước
+  if(!keys.length){ sel.innerHTML='<option value="">(chưa có dữ liệu)</option>'; WEEK_SEL=''; return; }
+  if(!WEEK_SEL || !g[WEEK_SEL]) WEEK_SEL=keys[0];
+  sel.innerHTML=keys.map(k=>`<option value="${escA(k)}"${k===WEEK_SEL?' selected':''}>${esc(k?weekLabel(k):'(chưa rõ tuần)')} · ${g[k].length} đơn</option>`).join('');
+}
+function weekChanged(){ WEEK_SEL=$('weekSel').value; WPAGE=1; renderWeek(); }
+function onWeekSearch(){ clearTimeout(_weekSearchT); _weekSearchT=setTimeout(()=>{ WPAGE=1; renderWeek(); },180); }
+function weekPage(n){ WPAGE=n; renderWeek(); const w=$('weekBody').closest('.tbl-wrap'); if(w)w.scrollTop=0; }
+function renderWeek(){
+  buildWeekPicker();
+  const body=$('weekBody'), empty=$('weekEmpty');
+  if(!body) return;
+  const g=weekGroups(); let rows=(g[WEEK_SEL]||[]).slice();
+  const q=noVN(($('qWeek').value)||''), fp=$('fPayWeek').value;
+  rows=rows.filter(r=>{
+    if(fp==='paid' && !paid(r)) return false;
+    if(fp==='owe' && paid(r)) return false;
+    if(q){ if(!noVN([r.cust,r.rcv,r.rcvPh,r.pkg,r.addr,r.note,r.ghiChu].join(' ')).includes(q)) return false; }
+    return true;
+  });
+  $('weekInfo').textContent = WEEK_SEL ? weekLabel(WEEK_SEL) : '';
+  const owe=rows.filter(r=>!paid(r));
+  $('weekSummary').innerHTML = rows.length
+    ? `Tuần này: <b>${rows.length}</b> đơn · Chưa thu <b>${owe.length}</b> — <b style="color:#e11d48">₩${sum(owe,'won').toLocaleString('en-US')}</b> · Tổng Won <b>₩${sum(rows,'won').toLocaleString('en-US')}</b>`
+    : 'Không có đơn khớp.';
+  if(!rows.length){ body.innerHTML=''; empty.style.display='block'; $('weekPager').innerHTML=''; return; }
+  empty.style.display='none';
+  const total=rows.length, pages=Math.max(1,Math.ceil(total/PAGE_SIZE)); if(WPAGE>pages)WPAGE=pages; if(WPAGE<1)WPAGE=1;
+  const start=(WPAGE-1)*PAGE_SIZE, pageRows=rows.slice(start,start+PAGE_SIZE);
+  body.innerHTML=pageRows.map(r=>rowHTML(r,'main')).join('');
+  $('weekPager').innerHTML = pages>1?`<button class="btn sm" ${WPAGE<=1?'disabled':''} onclick="weekPage(${WPAGE-1})">« Trước</button><span class="small">Trang ${WPAGE}/${pages} · ${start+1}–${start+pageRows.length}/${total}</span><button class="btn sm" ${WPAGE>=pages?'disabled':''} onclick="weekPage(${WPAGE+1})">Sau »</button>`:'';
 }
 
 /* ---------- Bản nháp (tab riêng — sửa/xóa được như tổng) ---------- */
@@ -703,19 +796,29 @@ async function saveDraftNow(){
     } else { if(btn) _resetSaveBtn(btn); alert('⚠️ Lưu nháp thất bại (có thể file quá lớn).'); }
   }catch(e){ if(btn) _resetSaveBtn(btn); alert('Lỗi khi lưu nháp.'); }
 }
-async function commitDraft(){
+function commitDraft(){
   if(!DRAFT || !DRAFT.rows.length){ alert('Không có bản nháp.'); return; }
   if(!REDIS){ alert('Chưa bật lưu trữ server.'); return; }
-  if(!confirm('Đẩy bản nháp lên DỮ LIỆU TỔNG?\nFile: '+(DRAFT.fileName||'-')+' · '+DRAFT.rows.length+' đơn.')) return;
-  const pw=prompt('Nhập MẬT KHẨU đăng nhập để đẩy lên dữ liệu tổng:'); if(pw==null||pw==='') return;
+  $('cmWeek').value = suggestWeek(DRAFT.rows);
+  $('cmWeekLabel').textContent = weekLabel($('cmWeek').value);
+  $('cmInfo').textContent = `${DRAFT.fileName||'-'} · ${DRAFT.rows.length} đơn`;
+  $('cmPw').value=''; $('commitModal').classList.add('show'); setTimeout(()=>$('cmWeek').focus(),50);
+}
+function cmWeekChanged(){ const v=$('cmWeek').value; $('cmWeekLabel').textContent = /^\d{4}-W\d{2}$/.test(v)?weekLabel(v):'(chọn tuần)'; }
+function closeCommit(){ $('commitModal').classList.remove('show'); }
+async function confirmCommit(){
+  const wk=$('cmWeek').value, pw=$('cmPw').value;
+  if(!/^\d{4}-W\d{2}$/.test(wk)){ alert('Hãy chọn tuần cho file này.'); return; }
+  if(!pw){ alert('Nhập mật khẩu để xác nhận.'); return; }
+  const btn=$('cmBtn'); if(btn){ btn.disabled=true; btn.textContent='⏳ Đang đẩy lên…'; }
   try{
-    // đồng bộ mọi chỉnh sửa nháp lên server trước khi đẩy (tránh race)
     await fetch('/api/vc24/draft',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileName:DRAFT.fileName,rows:DRAFT.rows})}).catch(()=>{});
-    const res=await fetch('/api/vc24/commit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})}).then(r=>r.json());
+    const res=await fetch('/api/vc24/commit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw,week:wk})}).then(r=>r.json());
+    if(btn){ btn.disabled=false; btn.textContent='✅ Đẩy lên dữ liệu tổng'; }
     if(!res.ok){ alert(res.reason==='password'?'❌ Sai mật khẩu — chưa đẩy lên.':(res.reason==='empty'?'Không có bản nháp.':(res.reason==='save'?'❌ Lưu thất bại (kho dữ liệu quá lớn).':'Đẩy lên thất bại.'))); return; }
-    DRAFT=null; await loadServerData(); tab('list');
-    alert('✅ Đã đẩy lên dữ liệu tổng: thêm '+res.added+' đơn mới.'+((res.dup&&res.dup.length)?'\n'+res.dup.length+' mã kiện đã có sẵn → bỏ qua.':''));
-  }catch(e){ alert('Lỗi khi đẩy lên.'); }
+    closeCommit(); DRAFT=null; WEEK_SEL=wk; await loadServerData(); tab('week');
+    alert('✅ Đã đẩy lên dữ liệu tổng ('+weekLabel(wk)+'): thêm '+res.added+' đơn mới.'+((res.dup&&res.dup.length)?'\n'+res.dup.length+' mã kiện đã có sẵn → bỏ qua.':''));
+  }catch(e){ if(btn){ btn.disabled=false; btn.textContent='✅ Đẩy lên dữ liệu tổng'; } alert('Lỗi khi đẩy lên.'); }
 }
 async function clearDraft(){
   if(!DRAFT) return;
@@ -850,7 +953,7 @@ async function parseWB(wb, fname){
 
 /* ---------- Hàng hiển thị trơn (nhẹ) — click để mở popup sửa cả dòng ---------- */
 const EDIT_FIELDS=[
-  ['date','Ngày về','t'],['cust','Mã khách hàng','t'],['status','Trạng thái hàng','t'],['pay','Check TT','pay'],
+  ['date','Ngày về','t'],['week','Tuần (YYYY-Www)','t'],['cust','Mã khách hàng','t'],['status','Trạng thái hàng','t'],['pay','Check TT','pay'],
   ['region','Khu vực','t'],['staff','NV giao','t'],['rcv','Người nhận','t'],['rcvPh','SĐT người nhận','t'],
   ['weight','Khối lượng (KG)','num'],['price','Đơn giá (₩)','money'],['won','Thành tiền Won (₩)','money'],
   ['vnd','Thành tiền VND (₫)','money'],['phuPhi','Phụ phí (₫)','money'],
@@ -906,7 +1009,7 @@ function saveEdit(){
     r[f]=v; patch[f]=v; });
   closeEdit();
   if(EDIT_SOURCE==='draft'){ renderDraftTab(); saveDraftToServer(); return; }
-  applyFilters(); renderDebt(); renderDash(); if(CUST_SEL) renderCust(); refreshCD();
+  applyFilters(); renderDebt(); renderDash(); if(CUST_SEL) renderCust(); refreshCD(); buildWeekPicker(); renderWeek();
   if(REDIS){ fetch('/api/vc24/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k,row:patch})}).catch(()=>{}); }
 }
 async function deleteCur(){

@@ -537,7 +537,7 @@ async function vcLog(action, detail) {
   await redisSet(VK.log, gzPack(log));
 }
 const isPaidPay = p => String(p || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toUpperCase().trim() === 'DA TT';
-const VC24_EDITABLE = new Set(['date','status','cust','pay','note','rcv','rcvPh','addr','region','weight','price','won','vnd','phuPhi','ghiChu','staff','paidDate']);
+const VC24_EDITABLE = new Set(['date','status','cust','pay','note','rcv','rcvPh','addr','region','weight','price','won','vnd','phuPhi','ghiChu','staff','paidDate','week']);
 const keyOf = r => r && (r.key || r.pkg);
 const VC_EMPTY = () => ({ rows: [], fileName: '', uploadedAt: null });
 // Nén (gzip→base64) để khối dữ liệu nhỏ hơn nhiều lần, tránh vượt giới hạn ghi của Redis
@@ -636,26 +636,27 @@ app.post('/api/vc24/draft/clear', requireAuth, requireVC24, async (req, res) => 
 // ── ĐẨY nháp lên dữ liệu tổng (cần mật khẩu) + lưu lịch sử upload + nhật ký ──
 app.post('/api/vc24/commit', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
-  const { password } = req.body || {};
+  const { password, week } = req.body || {};
   const user = userFromReq(req);
   if (!password || password !== USERS[user]) return res.json({ ok: false, reason: 'password' });
+  const wk = /^\d{4}-W\d{2}$/.test(String(week || '')) ? String(week) : '';
   const draft = gzUnpack(await redisGet(VK.draft), null);
   if (!draft || !Array.isArray(draft.rows) || !draft.rows.length) return res.json({ ok: false, reason: 'empty' });
   const o = await vcLoadOrders();
   const existing = new Set(o.rows.map(keyOf).filter(Boolean));
   let added = 0; const dup = [];
-  for (const r of draft.rows) { const k = keyOf(r); if (k && existing.has(k)) { dup.push(k); continue; } if (k) existing.add(k); o.rows.push(r); added++; }
+  for (const r of draft.rows) { const k = keyOf(r); if (k && existing.has(k)) { dup.push(k); continue; } if (k) existing.add(k); if (wk) r.week = wk; o.rows.push(r); added++; }
   o.fileName = draft.fileName || o.fileName || ''; o.uploadedAt = new Date().toISOString();
   const saved = await vcSaveOrders(o);
   if (!saved) return res.json({ ok: false, reason: 'save' });
   const id = Date.now().toString();
-  await redisSet(VK.uploads + ':' + id, gzPack({ id, fileName: draft.fileName, at: new Date().toISOString(), added, rows: draft.rows }));
+  await redisSet(VK.uploads + ':' + id, gzPack({ id, fileName: draft.fileName, week: wk, at: new Date().toISOString(), added, rows: draft.rows }));
   let idx = gzUnpack(await redisGet(VK.uploads), []); if (!Array.isArray(idx)) idx = [];
-  idx.push({ id, fileName: draft.fileName, at: new Date().toISOString(), added, total: draft.rows.length, dup: dup.length });
+  idx.push({ id, fileName: draft.fileName, week: wk, at: new Date().toISOString(), added, total: draft.rows.length, dup: dup.length });
   if (idx.length > 60) { for (const d of idx.slice(0, idx.length - 60)) await redisSet(VK.uploads + ':' + d.id, gzPack(null)); idx = idx.slice(-60); }
   await redisSet(VK.uploads, gzPack(idx));
   await redisSet(VK.draft, gzPack(null));
-  await vcLog('commit', `Đẩy lên tổng: +${added} đơn${dup.length ? `, ${dup.length} trùng bỏ qua` : ''} (file ${draft.fileName || '-'})`);
+  await vcLog('commit', `Đẩy lên tổng: +${added} đơn${wk ? ` [${wk}]` : ''}${dup.length ? `, ${dup.length} trùng bỏ qua` : ''} (file ${draft.fileName || '-'})`);
   res.json({ ok: true, added, dup, total: o.rows.length });
 });
 

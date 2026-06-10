@@ -928,7 +928,13 @@ function renderWeekCost(){
       </tr>`).join('')}</tbody>
       <tfoot><tr style="border-top:2px solid #c7d2fe;font-weight:800;color:#3730a3"><td style="padding:6px 8px">TỔNG CHI PHÍ</td><td></td><td style="padding:6px 8px;text-align:right">${fmtKg(b.totalKg)}</td><td></td><td style="padding:6px 8px;text-align:right">₩${b.total.toLocaleString('en-US')}</td></tr></tfoot>
     </table></div>
-    <div class="small muted" style="margin-top:6px">${src&&src!==WEEK_SEL?`⤷ Đang dùng giá kế thừa từ <b>${esc(weekLabel(src))}</b>. `:''}${noRate.length?`<span style="color:#dc2626">⚠️ ${noRate.length} khu vực chưa cài giá — bấm "Cài giá".</span>`:'Giá theo ₩/kg cho từng khu vực.'}</div>`;
+    ${(()=>{ const revWon=sum(all,'won'), revVnd=sum(all,'vnd')+sum(all,'phuPhi'), profit=revWon-b.total; const pc=profit>=0?'#16a34a':'#dc2626';
+      return `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed #c7d2fe;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;font-size:.86rem">
+        <div><div class="muted" style="font-size:.78rem">Doanh thu tiền hàng</div><div style="font-weight:800">₩${revWon.toLocaleString('en-US')}${revVnd?`<br><span style="font-size:.8rem;font-weight:700">${revVnd.toLocaleString('en-US')} ₫</span>`:''}</div></div>
+        <div><div class="muted" style="font-size:.78rem">Chi phí vận chuyển</div><div style="font-weight:800;color:#dc2626">−₩${b.total.toLocaleString('en-US')}</div></div>
+        <div><div class="muted" style="font-size:.78rem">Lợi nhuận tuần (₩)</div><div style="font-weight:900;color:${pc};font-size:1.05rem">₩${profit.toLocaleString('en-US')}</div></div>
+      </div>`; })()}
+    <div class="small muted" style="margin-top:6px">${src&&src!==WEEK_SEL?`⤷ Đang dùng giá kế thừa từ <b>${esc(weekLabel(src))}</b>. `:''}${noRate.length?`<span style="color:#dc2626">⚠️ ${noRate.length} khu vực chưa cài giá nên chi phí/lợi nhuận chưa đủ — bấm "Cài giá".</span>`:'Lợi nhuận (₩) = Doanh thu Won − Chi phí. Đơn tính bằng VND hiển thị riêng.'}</div>`;
 }
 function openRateSetup(){
   if(!REDIS){ alert('Chưa bật lưu trữ server.'); return; }

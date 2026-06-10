@@ -972,12 +972,14 @@ function renderWeekDebt(){
   const agg=aggregate(all,false);
   const owe=all.filter(r=>!paid(r)), pd=all.filter(r=>paid(r));
   const totOweWon=sum(owe,'won'), totOweVnd=sum(owe,'vnd')+sum(owe,'phuPhi');
+  const custsW=new Set(all.map(r=>r.cust)); let weekCredit=0; custsW.forEach(c=>weekCredit+=creditOf(c));
+  const paidW=sum(pd,'won')+weekCredit;   // gồm tiền trả trước của KH trong tuần — khớp với tab Công nợ / Phân bố nợ
   $('weekDebtStats').innerHTML=
     stat('Tổng đơn',all.length,'','')+
     stat('Số khách hàng',agg.length,'','')+
     stat('Còn nợ (Won)','₩'+totOweWon.toLocaleString('en-US'),'owe',owe.length+' đơn chưa thu')+
     (totOweVnd?stat('Còn nợ (VND)',totOweVnd.toLocaleString('en-US')+' ₫','owe','gồm phụ phí'):'')+
-    stat('Đã thu (Won)','₩'+sum(pd,'won').toLocaleString('en-US'),'paid',pd.length+' đơn đã thu');
+    stat('Đã thu (Won)','₩'+paidW.toLocaleString('en-US'),'paid',pd.length+' đơn đã thu'+(weekCredit>0?' + trả trước':''));
   let list=agg.slice(); const q=noVN(($('qWeekDebt').value)||''); if(q)list=list.filter(a=>noVN(a.cust).includes(q));
   list.sort((a,b)=> $('weekDebtSort').value==='name'? a.cust.localeCompare(b.cust,'vi') : (b.oweWon+b.oweVnd)-(a.oweWon+a.oweVnd));
   const body=$('weekDebtBody'), empty=$('weekDebtEmpty');

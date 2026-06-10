@@ -531,6 +531,8 @@ function fmtDateCell(v){
   if(typeof v==='number'){ if(v>20000 && v<80000){ const d=new Date(Math.round((v-25569)*86400000)); if(!isNaN(d)){ const dd=String(d.getUTCDate()).padStart(2,'0'),mm=String(d.getUTCMonth()+1).padStart(2,'0'); return `${dd}-${mm}-${d.getUTCFullYear()}`; } } return String(v); }
   return String(v).trim();
 }
+// Định dạng số Excel: hiện ₩/₫ + dấu phẩy mỗi 3 số (giá trị vẫn là số để tính được)
+const XF_WON='"₩"#,##0', XF_VND='#,##0" ₫"', XF_KG='#,##0.##" kg"';
 // Tiền won vượt ngưỡng hợp lý cho 1 kiện hàng → coi là dữ liệu lỗi
 const WON_MAX = 1000000000; // 1 tỷ ₩
 function wonBad(r){ return Number(r&&r.won)>WON_MAX; }
@@ -1122,8 +1124,11 @@ async function renderHistory(){
 }
 function exportRowsXlsx(rows, base){
   const headers=['NGÀY VỀ','MÃ KIỆN','TRẠNG THÁI HÀNG','MÃ KHÁCH HÀNG','CHECK TT','SĐT NGƯỜI GỬI/ GHI CHÚ','NGƯỜI NHẬN','SĐT NGƯỜI NHẬN','ĐỊA CHỈ NGƯỜI NHẬN','KHU VỰC','무게 (KG)','ĐƠN GIÁ','THÀNH TIỀN WON','THÀNH TIỀN VND','NV GIAO','PHỤ PHÍ','Ghi chú','NGÀY THU'];
-  const aoa=[headers].concat((rows||[]).map(r=>[r.date,r.pkg,r.status,r.cust,r.pay,r.note,r.rcv,r.rcvPh,r.addr,r.region,r.weight,r.price,r.won,r.vnd,r.staff,r.phuPhi,r.ghiChu,r.paidDate||'']));
-  const ws=XLSX.utils.aoa_to_sheet(aoa); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Dữ liệu'); XLSX.writeFile(wb, base+'.xlsx');
+  const aoa=[headers].concat((rows||[]).map(r=>[r.date,r.pkg,r.status,r.cust,r.pay,r.note,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.vnd)||'',r.staff,Number(r.phuPhi)||'',r.ghiChu,r.paidDate||'']));
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  const colFmt={10:XF_KG,11:XF_WON,12:XF_WON,13:XF_VND,15:XF_VND};
+  for(let r=1;r<aoa.length;r++){ Object.keys(colFmt).forEach(c=>{ const a=XLSX.utils.encode_cell({r,c:+c}); if(ws[a] && typeof ws[a].v==='number'){ ws[a].s=Object.assign(ws[a].s||{},{numFmt:colFmt[c]}); } }); }
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Dữ liệu'); XLSX.writeFile(wb, base+'.xlsx');
 }
 function downloadAllXlsx(){
   if(!ROWS.length){ alert('Chưa có dữ liệu tổng để tải.'); return; }
@@ -1131,7 +1136,9 @@ function downloadAllXlsx(){
   const headers=['NGÀY VỀ','TUẦN','MÃ KIỆN','TRẠNG THÁI HÀNG','MÃ KHÁCH HÀNG','CHECK TT','SĐT NGƯỜI GỬI/ GHI CHÚ','NGƯỜI NHẬN','SĐT NGƯỜI NHẬN','ĐỊA CHỈ NGƯỜI NHẬN','KHU VỰC','무게 (KG)','ĐƠN GIÁ','THÀNH TIỀN WON','THÀNH TIỀN VND','NV GIAO','PHỤ PHÍ','Ghi chú','NGÀY THU'];
   const aoa=[headers].concat(rows.map(r=>[r.date,weekKey(r),r.pkg,r.status,r.cust,r.pay,r.note,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.vnd)||'',r.staff,Number(r.phuPhi)||'',r.ghiChu,r.paidDate||'']));
   const ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols']=[{wch:12},{wch:10},{wch:12},{wch:24},{wch:18},{wch:13},{wch:18},{wch:16},{wch:14},{wch:34},{wch:10},{wch:8},{wch:11},{wch:14},{wch:14},{wch:12},{wch:11},{wch:18},{wch:12}];
+  ws['!cols']=[{wch:12},{wch:10},{wch:12},{wch:24},{wch:18},{wch:13},{wch:18},{wch:16},{wch:14},{wch:34},{wch:10},{wch:9},{wch:11},{wch:15},{wch:15},{wch:12},{wch:12},{wch:18},{wch:12}];
+  const colFmt={11:XF_KG,12:XF_WON,13:XF_WON,14:XF_VND,16:XF_VND};   // KG, Đơn giá, Won, VND, Phụ phí
+  for(let r=1;r<aoa.length;r++){ Object.keys(colFmt).forEach(c=>{ const a=XLSX.utils.encode_cell({r,c:+c}); if(ws[a] && typeof ws[a].v==='number'){ ws[a].s=Object.assign(ws[a].s||{},{numFmt:colFmt[c]}); } }); }
   for(let c=0;c<headers.length;c++){ const a=XLSX.utils.encode_cell({r:0,c}); if(ws[a]) ws[a].s={font:{bold:true},fill:{fgColor:{rgb:'DDEBF7'}},alignment:{horizontal:'center'},border:{bottom:{style:'thin',color:{rgb:'9CB3D4'}}}}; }
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Dữ liệu tổng');
   const ff=$('fFrom')&&$('fFrom').value, ft=$('fTo')&&$('fTo').value;
@@ -1583,38 +1590,40 @@ async function saveSurcharge(silent){
 function exportInvoiceXlsx(){
   if(!INV_ROWS.length){ alert('Không có dữ liệu hóa đơn.'); return; }
   const cust=INV_CUST, rows=INV_ROWS, co=CFG||{}, X=invCompute();
-  const aoa=[];
-  aoa.push([co.name||'VC24 GLOBAL']);
-  if(co.addr)aoa.push([co.addr]);
-  const l2=[]; if(co.phone)l2.push('ĐT: '+co.phone); if(co.email)l2.push(co.email); if(l2.length)aoa.push([l2.join(' · ')]);
-  if(co.tax)aoa.push(['MST: '+co.tax]);
-  aoa.push([]); aoa.push(['HÓA ĐƠN / YÊU CẦU THANH TOÁN']);
-  aoa.push(['Khách hàng:',cust]); aoa.push(['Ngày xuất:',todayISO()]); aoa.push([]);
+  const aoa=[], fmtCells=[];
+  const row=(arr,fmtMap)=>{ const r=aoa.length; aoa.push(arr); if(fmtMap) Object.keys(fmtMap).forEach(c=>fmtCells.push({r,c:+c,f:fmtMap[c]})); };
+  row([co.name||'VC24 GLOBAL']);
+  if(co.addr)row([co.addr]);
+  const l2=[]; if(co.phone)l2.push('ĐT: '+co.phone); if(co.email)l2.push(co.email); if(l2.length)row([l2.join(' · ')]);
+  if(co.tax)row(['MST: '+co.tax]);
+  row([]); row(['HÓA ĐƠN / YÊU CẦU THANH TOÁN']);
+  row(['Khách hàng:',cust]); row(['Ngày xuất:',todayISO()]); row([]);
   const head=['STT','Ngày về','Mã kiện','Người nhận','SĐT nhận','Địa chỉ','Khu vực','KG','Đơn giá (₩)','Tiền Won (₩)','Phụ phí (₫)','Tiền VND (₫)','Trạng thái'];
-  aoa.push(head);
-  rows.forEach((r,i)=>aoa.push([i+1,r.date,r.pkg,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.phuPhi)||'',Number(r.vnd)||'',paid(r)?'Đã TT':'Chưa TT']));
-  aoa.push(['','','','','','','TỔNG',sum(rows,'weight')||'','',X.totWon,X.totPhi,X.totVnd,'']);
-  aoa.push([]);
+  row(head);
+  rows.forEach((r,i)=>row([i+1,r.date,r.pkg,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.phuPhi)||'',Number(r.vnd)||'',paid(r)?'Đã TT':'Chưa TT'],{7:XF_KG,8:XF_WON,9:XF_WON,10:XF_VND,11:XF_VND}));
+  row(['','','','','','','TỔNG',sum(rows,'weight')||'','',X.totWon,X.totPhi,X.totVnd,''],{7:XF_KG,9:XF_WON,10:XF_VND,11:XF_VND});
+  row([]);
   const hist=historyOf(cust);
-  if(hist.length){ aoa.push(['LỊCH SỬ THANH TOÁN']); aoa.push(['Ngày','Số tiền (₩)','Số đơn gạch']); hist.forEach(h=>aoa.push([fmtPaidDate(h.date),Number(h.amount)||0,h.marked||0])); aoa.push(['Tổng đã nhận',hist.reduce((s,h)=>s+(Number(h.amount)||0),0),'']); aoa.push([]); }
-  aoa.push(['Tiền hàng (KRW):',X.totWon]);
-  if(X.totVnd) aoa.push(['Thành tiền (VND):',X.totVnd]);
-  if(X.totPhi) aoa.push(['Phụ phí (VND):',X.totPhi]);
-  if(X.shownPaidWon) aoa.push(['Đã thanh toán (KRW):',X.shownPaidWon]);
-  if(X.credit>0) aoa.push(['Đã trả trước/dư (KRW):',X.credit]);
-  aoa.push(['Còn nợ (KRW):',X.oweWon]);
-  if(X.oweVnd) aoa.push(['Còn nợ (VND):',X.oweVnd]);
-  aoa.push(['Phí phát sinh (KRW):',X.surcharge]);
-  if(X.surchargeVnd) aoa.push(['Phí phát sinh (VND):',X.surchargeVnd]);
-  if(surchargeNoteOf(cust)) aoa.push(['Ghi chú phí:',surchargeNoteOf(cust)]);
-  aoa.push(['TỔNG THANH TOÁN (KRW):',X.payableWon]);
-  if(X.payableVnd) aoa.push(['TỔNG THANH TOÁN (VND):',X.payableVnd]);
-  aoa.push([]);
-  aoa.push(['TK nhận VND:',[co.bank,co.acc,co.holder].filter(Boolean).join(' · ')]);
-  aoa.push(['TK nhận Won (KRW):',[co.bankWon,co.accWon,co.holderWon].filter(Boolean).join(' · ')]);
-  aoa.push(['Nội dung CK:',co.memo||cust]);
+  if(hist.length){ row(['LỊCH SỬ THANH TOÁN']); row(['Ngày','Số tiền (₩)','Số đơn gạch']); hist.forEach(h=>row([fmtPaidDate(h.date),Number(h.amount)||0,h.marked||0],{1:XF_WON})); row(['Tổng đã nhận',hist.reduce((s,h)=>s+(Number(h.amount)||0),0),''],{1:XF_WON}); row([]); }
+  row(['Tiền hàng (KRW):',X.totWon],{1:XF_WON});
+  if(X.totVnd) row(['Thành tiền (VND):',X.totVnd],{1:XF_VND});
+  if(X.totPhi) row(['Phụ phí (VND):',X.totPhi],{1:XF_VND});
+  if(X.shownPaidWon) row(['Đã thanh toán (KRW):',X.shownPaidWon],{1:XF_WON});
+  if(X.credit>0) row(['Đã trả trước/dư (KRW):',X.credit],{1:XF_WON});
+  row(['Còn nợ (KRW):',X.oweWon],{1:XF_WON});
+  if(X.oweVnd) row(['Còn nợ (VND):',X.oweVnd],{1:XF_VND});
+  row(['Phí phát sinh (KRW):',X.surcharge],{1:XF_WON});
+  if(X.surchargeVnd) row(['Phí phát sinh (VND):',X.surchargeVnd],{1:XF_VND});
+  if(surchargeNoteOf(cust)) row(['Ghi chú phí:',surchargeNoteOf(cust)]);
+  row(['TỔNG THANH TOÁN (KRW):',X.payableWon],{1:XF_WON});
+  if(X.payableVnd) row(['TỔNG THANH TOÁN (VND):',X.payableVnd],{1:XF_VND});
+  row([]);
+  row(['TK nhận VND:',[co.bank,co.acc,co.holder].filter(Boolean).join(' · ')]);
+  row(['TK nhận Won (KRW):',[co.bankWon,co.accWon,co.holderWon].filter(Boolean).join(' · ')]);
+  row(['Nội dung CK:',co.memo||cust]);
   const ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols']=[{wch:5},{wch:12},{wch:12},{wch:18},{wch:14},{wch:34},{wch:10},{wch:8},{wch:12},{wch:14},{wch:12},{wch:14},{wch:10}];
+  ws['!cols']=[{wch:5},{wch:12},{wch:12},{wch:18},{wch:14},{wch:34},{wch:10},{wch:8},{wch:13},{wch:15},{wch:13},{wch:15},{wch:10}];
+  fmtCells.forEach(({r,c,f})=>{ const a=XLSX.utils.encode_cell({r,c}); if(ws[a] && typeof ws[a].v==='number'){ ws[a].s=Object.assign(ws[a].s||{},{numFmt:f}); } });
   const hr=aoa.findIndex(r=>r[0]==='STT');
   if(hr>=0){ for(let cc=0;cc<head.length;cc++){ const a=XLSX.utils.encode_cell({r:hr,c:cc}); if(ws[a]) ws[a].s={font:{bold:true},fill:{fgColor:{rgb:'DDEBF7'}},alignment:{horizontal:'center'}}; } }
   const a0=XLSX.utils.encode_cell({r:0,c:0}); if(ws[a0]) ws[a0].s={font:{bold:true,sz:14,color:{rgb:'1E40AF'}}};

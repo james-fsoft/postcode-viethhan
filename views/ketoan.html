@@ -248,6 +248,7 @@
         <div class="small muted" id="listSummary"></div>
         <button class="btn sm" onclick="downloadAllXlsx()" style="border-color:#86efac;color:#16a34a">⬇️ Tải Excel dữ liệu tổng</button>
       </div>
+      <div id="listProfitBox" style="margin-bottom:12px"></div>
       <div class="small muted" style="margin-bottom:8px;">💡 Bấm vào 1 dòng để mở cửa sổ sửa/xóa — tự lưu online. Phân trang để chạy nhanh trên mọi máy.</div>
       <div class="tbl-wrap">
         <table>
@@ -312,6 +313,7 @@
 
   <div class="tab-pane" id="tab-debt">
     <div class="stats" id="debtStats"></div>
+    <div id="debtProfitBox" style="margin-bottom:14px"></div>
     <div class="panel">
       <div class="ph"><h2>Công nợ theo khách hàng</h2><span class="small muted">Chưa thu = Check TT ≠ "Đã TT" · Còn nợ gồm cả phụ phí</span></div>
       <div class="filters"><input class="grow" id="qDebt" placeholder="🔎 Tìm khách hàng…" oninput="renderDebt()" />
@@ -910,6 +912,30 @@ function weekCostBreakdown(rows, week){
   list.sort((a,b)=>b.cost-a.cost);
   return { list, total:list.reduce((s,x)=>s+x.cost,0), totalKg:list.reduce((s,x)=>s+x.kg,0), rates };
 }
+// Chi phí cho tập đơn bất kỳ — mỗi đơn dùng giá theo TUẦN của nó
+function costOfRows(rows){
+  let total=0, totalKg=0, missing=0;
+  (rows||[]).forEach(r=>{ const rate=Number(effectiveRatesFor(weekKey(r))[regKey(r)])||0; const kg=Number(r.weight)||0; totalKg+=kg; if(rate) total+=Math.round(kg*rate); else if(kg) missing++; });
+  return { total, totalKg, missing };
+}
+function renderProfitBox(elId, rows){
+  const box=$(elId); if(!box) return;
+  if(!rows||!rows.length){ box.innerHTML=''; return; }
+  const c=costOfRows(rows), revWon=sum(rows,'won'), revVnd=sum(rows,'vnd')+sum(rows,'phuPhi'), profit=revWon-c.total, pc=profit>=0?'#16a34a':'#dc2626';
+  box.innerHTML=`<div style="border:1px solid #c7d2fe;background:#eef2ff;border-radius:12px;padding:12px 14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+      <b style="color:#3730a3">🚚 Chi phí & lợi nhuận (${rows.length} đơn)</b>
+      <span class="small muted">Chi phí = giá/kg theo từng tuần. Đổi giá ở tab Theo tuần → Công nợ tuần.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;font-size:.86rem">
+      <div><div class="muted" style="font-size:.78rem">Doanh thu tiền hàng</div><div style="font-weight:800">₩${revWon.toLocaleString('en-US')}${revVnd?`<br><span style="font-size:.8rem;font-weight:700">${revVnd.toLocaleString('en-US')} ₫</span>`:''}</div></div>
+      <div><div class="muted" style="font-size:.78rem">Tổng KG</div><div style="font-weight:800">${fmtKg(c.totalKg)}</div></div>
+      <div><div class="muted" style="font-size:.78rem">Chi phí vận chuyển</div><div style="font-weight:800;color:#dc2626">−₩${c.total.toLocaleString('en-US')}</div></div>
+      <div><div class="muted" style="font-size:.78rem">Lợi nhuận (₩)</div><div style="font-weight:900;color:${pc};font-size:1.05rem">₩${profit.toLocaleString('en-US')}</div></div>
+    </div>
+    ${c.missing?`<div class="small" style="color:#dc2626;margin-top:6px">⚠️ ${c.missing} đơn có khu vực chưa cài giá (chi phí/lợi nhuận chưa đủ). Cài giá ở tab Theo tuần.</div>`:''}
+  </div>`;
+}
 function renderWeekCost(){
   const box=$('weekCostBox'); if(!box) return;
   const all=weekRowsAll();
@@ -1339,6 +1365,7 @@ function applyFilters(){
   const owe=LIST_ROWS.filter(r=>!paid(r));
   $('listSummary').innerHTML=`Khớp <b>${total}</b> đơn · Chưa thu <b>${owe.length}</b> — <b style="color:#e11d48">₩${sum(owe,'won').toLocaleString('en-US')}</b>`+
     (sum(owe,'vnd')||sum(owe,'phuPhi')?` · <b style="color:#e11d48">${(sum(owe,'vnd')+sum(owe,'phuPhi')).toLocaleString('en-US')} ₫</b>`:'');
+  renderProfitBox('listProfitBox', LIST_ROWS);
 }
 function renderPager(total,pages,start,shown){
   $('listPager').innerHTML=`
@@ -1374,6 +1401,7 @@ function renderDebt(){
     stat('Còn nợ (Won)','₩'+totOweWon.toLocaleString('en-US'),'owe',owe.length+' đơn chưa thu')+
     stat('Còn nợ (VND)',oweVnd?oweVnd.toLocaleString('en-US')+' ₫':'—','owe','gồm phụ phí')+
     stat('Đã thu (Won)','₩'+totPaidWon.toLocaleString('en-US'),'paid',pd.length+' đơn đã thu'+(totPaidWon>sum(pd,'won')?' + trả trước':''));
+  renderProfitBox('debtProfitBox', ROWS);
   let list=agg.slice(); const q=noVN($('qDebt').value); if(q)list=list.filter(a=>noVN(a.cust).includes(q));
   list.sort((a,b)=> $('debtSort').value==='name'? a.cust.localeCompare(b.cust,'vi') : (b.oweWon+b.oweVnd)-(a.oweWon+a.oweVnd));
   const body=$('debtBody'), empty=$('debtEmpty');

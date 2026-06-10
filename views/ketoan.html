@@ -814,7 +814,7 @@ function updateStoreBadge(){
 function rebuildAll(label){
   $('listPanel').style.display = ROWS.length?'block':'none';
   $('fileInfo').textContent = ROWS.length ? `${label||''} · ${ROWS.length} đơn` : '';
-  buildFilters(); applyFilters(); renderDebt(); buildCustomerPicker(); if(CUST_SEL) renderCust();
+  buildFilters(); applyFilters(); renderDebt(); renderDash(); buildCustomerPicker(); if(CUST_SEL) renderCust();
   buildWeekPicker(); if($('tab-week') && $('tab-week').classList.contains('show')) renderWeek();
   updateDraftBadge(); if($('tab-draft') && $('tab-draft').classList.contains('show')) renderDraftTab();
 }
@@ -1265,12 +1265,13 @@ function renderDebt(){
   const agg=customerAgg(), owe=ROWS.filter(r=>!paid(r)), pd=ROWS.filter(r=>paid(r));
   const oweVnd=sum(owe,'vnd')+sum(owe,'phuPhi');
   const totOweWon=agg.reduce((s,a)=>s+a.oweWon,0);
+  const totPaidWon=agg.reduce((s,a)=>s+a.paidWon+a.credit,0);   // gồm cả tiền trả trước (credit) — khớp với tab Phân bố nợ
   $('debtStats').innerHTML=
     stat('Tổng đơn',ROWS.length,'','')+
     stat('Số khách hàng',agg.length,'','')+
     stat('Còn nợ (Won)','₩'+totOweWon.toLocaleString('en-US'),'owe',owe.length+' đơn chưa thu')+
     stat('Còn nợ (VND)',oweVnd?oweVnd.toLocaleString('en-US')+' ₫':'—','owe','gồm phụ phí')+
-    stat('Đã thu (Won)','₩'+sum(pd,'won').toLocaleString('en-US'),'paid',pd.length+' đơn đã thu');
+    stat('Đã thu (Won)','₩'+totPaidWon.toLocaleString('en-US'),'paid',pd.length+' đơn đã thu'+(totPaidWon>sum(pd,'won')?' + trả trước':''));
   let list=agg.slice(); const q=noVN($('qDebt').value); if(q)list=list.filter(a=>noVN(a.cust).includes(q));
   list.sort((a,b)=> $('debtSort').value==='name'? a.cust.localeCompare(b.cust,'vi') : (b.oweWon+b.oweVnd)-(a.oweWon+a.oweVnd));
   const body=$('debtBody'), empty=$('debtEmpty');

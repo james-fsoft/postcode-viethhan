@@ -524,7 +524,7 @@ function requireVC24(req, res, next) {
   next();
 }
 const VK = { orders: 'vc24:ketoan:orders', cfg: 'vc24:ketoan:cfg', ledger: 'vc24:ketoan:ledger',
-  draft: 'vc24:ketoan:draft', uploads: 'vc24:ketoan:uploads', log: 'vc24:ketoan:log' };
+  draft: 'vc24:ketoan:draft', uploads: 'vc24:ketoan:uploads', log: 'vc24:ketoan:log', rates: 'vc24:ketoan:rates' };
 // nén chung cho mọi JSON
 function gzPack(o) { try { return 'gz:' + zlib.gzipSync(Buffer.from(JSON.stringify(o), 'utf8')).toString('base64'); } catch { return JSON.stringify(o); } }
 function gzUnpack(s, d) { if (!s) return d; try { const j = (typeof s === 'string' && s.startsWith('gz:')) ? zlib.gunzipSync(Buffer.from(s.slice(3), 'base64')).toString('utf8') : s; return JSON.parse(j); } catch { return d; } }
@@ -560,11 +560,27 @@ const vcSaveOrders = o => redisSet(VK.orders, vcPack(o));   // trả về true/f
 
 app.get('/api/vc24/data', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: true, redis: false, rows: [], cfg: {} });
-  const [o, cfg, ledg, drf] = await Promise.all([vcLoadOrders(), redisGet(VK.cfg), redisGet(VK.ledger), redisGet(VK.draft)]);
+  const [o, cfg, ledg, drf, rt] = await Promise.all([vcLoadOrders(), redisGet(VK.cfg), redisGet(VK.ledger), redisGet(VK.draft), redisGet(VK.rates)]);
   let c = {}; try { c = cfg ? JSON.parse(cfg) : {}; } catch { /* ok */ }
   let ledger = {}; try { ledger = ledg ? JSON.parse(ledg) : {}; } catch { /* ok */ }
+  let rates = {}; try { rates = rt ? JSON.parse(rt) : {}; } catch { /* ok */ }
   const draft = gzUnpack(drf, null);
-  res.json({ ok: true, redis: true, rows: o.rows, fileName: o.fileName, uploadedAt: o.uploadedAt, cfg: c, ledger, draft });
+  res.json({ ok: true, redis: true, rows: o.rows, fileName: o.fileName, uploadedAt: o.uploadedAt, cfg: c, ledger, draft, rates });
+});
+
+// Giá vận chuyển/kg theo khu vực cho từng tuần
+app.post('/api/vc24/rates', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: false, redis: false });
+  const { week, rates } = req.body || {};
+  if (!/^\d{4}-W\d{2}$/.test(String(week || ''))) return res.json({ ok: false, reason: 'week' });
+  let all = {}; try { const s = await redisGet(VK.rates); if (s) all = JSON.parse(s); } catch { /* ok */ }
+  const clean = {};
+  if (rates && typeof rates === 'object') for (const k of Object.keys(rates)) { const v = Math.round(Number(rates[k]) || 0); if (v > 0) clean[k] = v; }
+  all[week] = clean;
+  const ok = await redisSet(VK.rates, JSON.stringify(all));
+  if (!ok) return res.json({ ok: false, reason: 'save' });
+  await vcLog('rates', `Cài giá VC tuần ${week}: ${Object.entries(clean).map(([k, v]) => k + '=' + v).join(', ') || '(trống)'}`);
+  res.json({ ok: true });
 });
 
 // Thu tiền theo SỐ TIỀN (hỗ trợ trả từng phần) + ghi lịch sử

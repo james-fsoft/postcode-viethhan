@@ -206,6 +206,13 @@
       </div>
       <!-- View: Công nợ tuần -->
       <div id="weekDebtView" style="display:none">
+        <div style="border:1px solid #c7d2fe;background:#eef2ff;border-radius:12px;padding:12px 14px;margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+            <b style="color:#3730a3">🚚 Chi phí vận chuyển tuần</b>
+            <button class="btn sm" onclick="openRateSetup()" style="border-color:#a5b4fc;color:#4f46e5">⚙️ Cài giá vận chuyển/kg</button>
+          </div>
+          <div id="weekCostBox"></div>
+        </div>
         <div class="stats" id="weekDebtStats" style="margin-bottom:12px"></div>
         <div class="filters"><input class="grow" id="qWeekDebt" placeholder="🔎 Tìm khách hàng trong tuần…" oninput="renderWeekDebt()" />
           <select id="weekDebtSort" onchange="renderWeekDebt()"><option value="owe">Nợ nhiều nhất</option><option value="name">Theo tên KH</option></select></div>
@@ -454,6 +461,21 @@
   </div>
 </div>
 
+<div class="modal" id="rateModal">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-bar"><h3 id="rateTitle">Cài giá vận chuyển/kg</h3><button class="btn" onclick="closeRateSetup()">Đóng</button></div>
+    <div style="padding:18px">
+      <div class="small muted" id="rateInfo" style="margin-bottom:12px"></div>
+      <div id="rateRows"></div>
+      <div class="small muted" style="margin:6px 0 0">Giá theo ₩/kg. Tuần sau tự kế thừa giá tuần này (đến khi bạn đổi).</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button class="btn" onclick="closeRateSetup()">Hủy</button>
+        <button class="btn primary" id="rateSaveBtn" onclick="saveRates()">💾 Lưu giá</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="payEditModal">
   <div class="modal-box" style="max-width:440px">
     <div class="modal-bar"><h3>✎ Sửa lịch sử thanh toán</h3><button class="btn" onclick="closePayEdit()">Đóng</button></div>
@@ -529,6 +551,7 @@ let ROWS=[], CFG={}, REDIS=false, CUSTS=[], FILTERED=[], CUST_SEL='', CT_SEL=new
 let PAGE=1, PAGE_SIZE=100, LIST_ROWS=[];   // phân trang để máy không lag khi nhiều data
 let _searchT=null;
 let LEDGER={};   // sổ thanh toán: { [cust]: { credit, history:[{date,amount,marked}] } }
+let RATES={};    // giá VC/kg theo tuần: { [week]: { [khu vực]: giá } }
 function creditOf(c){ return (LEDGER[c] && Number(LEDGER[c].credit)) || 0; }
 function historyOf(c){ return (LEDGER[c] && Array.isArray(LEDGER[c].history)) ? LEDGER[c].history : []; }
 function surchargeOf(c){ return (LEDGER[c] && Number(LEDGER[c].surcharge)) || 0; }
@@ -794,6 +817,7 @@ async function loadServerData(){
     const d = await fetch('/api/vc24/data').then(r=>r.json());
     REDIS = !!d.redis;
     LEDGER = d.ledger || {};
+    RATES = d.rates || {};
     DRAFT = d.draft || null;
     if(d.cfg && Object.keys(d.cfg).length){ CFG=d.cfg; CFG_KEYS.forEach(k=>{const el=$('cfg_'+k); if(el)el.value=CFG[k]||'';}); }
     else loadCfgLocal();
@@ -867,7 +891,77 @@ function renderWeekOrders(){
   body.innerHTML=pageRows.map(r=>rowHTML(r,'main')).join('');
   $('weekPager').innerHTML = pages>1?`<button class="btn sm" ${WPAGE<=1?'disabled':''} onclick="weekPage(${WPAGE-1})">« Trước</button><span class="small">Trang ${WPAGE}/${pages} · ${start+1}–${start+pageRows.length}/${total}</span><button class="btn sm" ${WPAGE>=pages?'disabled':''} onclick="weekPage(${WPAGE+1})">Sau »</button>`:'';
 }
+/* ---- Chi phí vận chuyển theo tuần ---- */
+function regKey(r){ return String((r&&r.region)||'').trim() || '(không khu vực)'; }
+function effectiveRatesFor(week){
+  if(RATES[week] && Object.keys(RATES[week]).length) return RATES[week];
+  const ks=Object.keys(RATES).filter(k=>k<=week && RATES[k] && Object.keys(RATES[k]).length).sort();
+  return ks.length?RATES[ks[ks.length-1]]:{};
+}
+function rateSourceWeek(week){ // tuần mà giá đang áp dụng đến từ
+  if(RATES[week] && Object.keys(RATES[week]).length) return week;
+  const ks=Object.keys(RATES).filter(k=>k<=week && RATES[k] && Object.keys(RATES[k]).length).sort();
+  return ks.length?ks[ks.length-1]:'';
+}
+function weekCostBreakdown(rows, week){
+  const rates=effectiveRatesFor(week), m={};
+  rows.forEach(r=>{ const k=regKey(r); if(!m[k])m[k]={region:k,kg:0,count:0}; m[k].kg+=Number(r.weight)||0; m[k].count++; });
+  const list=Object.values(m).map(x=>{ const rate=Number(rates[x.region])||0; return Object.assign(x,{rate,cost:Math.round(x.kg*rate)}); });
+  list.sort((a,b)=>b.cost-a.cost);
+  return { list, total:list.reduce((s,x)=>s+x.cost,0), totalKg:list.reduce((s,x)=>s+x.kg,0), rates };
+}
+function renderWeekCost(){
+  const box=$('weekCostBox'); if(!box) return;
+  const all=weekRowsAll();
+  const b=weekCostBreakdown(all, WEEK_SEL);
+  const src=rateSourceWeek(WEEK_SEL);
+  const noRate=b.list.filter(x=>!x.rate && x.kg>0);
+  box.innerHTML = !all.length ? '<span class="small muted">Chưa có dữ liệu tuần này.</span>' : `
+    <div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:.86rem">
+      <thead><tr style="color:#64748b;text-align:left"><th style="padding:4px 8px">Khu vực</th><th class="r" style="padding:4px 8px;text-align:right">Số đơn</th><th class="r" style="padding:4px 8px;text-align:right">Tổng KG</th><th class="r" style="padding:4px 8px;text-align:right">Đơn giá/kg</th><th class="r" style="padding:4px 8px;text-align:right">Thành tiền (₩)</th></tr></thead>
+      <tbody>${b.list.map(x=>`<tr style="border-top:1px solid #e2e8f0">
+        <td style="padding:4px 8px"><b>${esc(x.region)}</b></td>
+        <td style="padding:4px 8px;text-align:right">${x.count}</td>
+        <td style="padding:4px 8px;text-align:right">${fmtKg(x.kg)}</td>
+        <td style="padding:4px 8px;text-align:right">${x.rate?'₩'+x.rate.toLocaleString('en-US'):'<span style="color:#dc2626">chưa cài</span>'}</td>
+        <td style="padding:4px 8px;text-align:right;font-weight:700">${x.cost?'₩'+x.cost.toLocaleString('en-US'):'—'}</td>
+      </tr>`).join('')}</tbody>
+      <tfoot><tr style="border-top:2px solid #c7d2fe;font-weight:800;color:#3730a3"><td style="padding:6px 8px">TỔNG CHI PHÍ</td><td></td><td style="padding:6px 8px;text-align:right">${fmtKg(b.totalKg)}</td><td></td><td style="padding:6px 8px;text-align:right">₩${b.total.toLocaleString('en-US')}</td></tr></tfoot>
+    </table></div>
+    <div class="small muted" style="margin-top:6px">${src&&src!==WEEK_SEL?`⤷ Đang dùng giá kế thừa từ <b>${esc(weekLabel(src))}</b>. `:''}${noRate.length?`<span style="color:#dc2626">⚠️ ${noRate.length} khu vực chưa cài giá — bấm "Cài giá".</span>`:'Giá theo ₩/kg cho từng khu vực.'}</div>`;
+}
+function openRateSetup(){
+  if(!REDIS){ alert('Chưa bật lưu trữ server.'); return; }
+  if(!WEEK_SEL){ alert('Chưa chọn tuần.'); return; }
+  const all=weekRowsAll();
+  const eff=effectiveRatesFor(WEEK_SEL);
+  // khu vực = từ đơn trong tuần + các khu vực đã có giá kế thừa
+  const regs=uniq(all.map(regKey).concat(Object.keys(eff))).filter(x=>x!=='(không khu vực)');
+  const cur = RATES[WEEK_SEL] || {};
+  $('rateTitle').textContent='Cài giá VC/kg — '+weekLabel(WEEK_SEL);
+  const src=rateSourceWeek(WEEK_SEL);
+  $('rateInfo').innerHTML = regs.length? (src&&src!==WEEK_SEL?`Giá gợi ý kế thừa từ <b>${esc(weekLabel(src))}</b> — sửa nếu cần rồi Lưu cho tuần này.`:'Nhập giá ₩/kg cho từng khu vực.') : 'Tuần này chưa có khu vực nào.';
+  $('rateRows').innerHTML = regs.map(rg=>{ const v = (cur[rg]!=null?cur[rg]:eff[rg])||''; return `<div class="field" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+    <label style="min-width:120px;font-weight:700">${esc(rg)}</label>
+    <input id="rate_${escA(rg)}" class="ef" inputmode="numeric" value="${v?grp(String(v)):''}" oninput="onMoneyInput(this)" placeholder="₩/kg" style="flex:1" />
+  </div>`; }).join('') || '<div class="small muted">Không có khu vực.</div>';
+  window._RATE_REGS=regs;
+  $('rateModal').classList.add('show');
+}
+function closeRateSetup(){ $('rateModal').classList.remove('show'); }
+async function saveRates(){
+  const regs=window._RATE_REGS||[]; const rates={};
+  regs.forEach(rg=>{ const el=$('rate_'+rg); if(el){ const v=money(el.value); if(v>0) rates[rg]=v; } });
+  const btn=$('rateSaveBtn'); if(btn){ btn.disabled=true; btn.textContent='⏳ Đang lưu…'; }
+  try{
+    const r=await fetch('/api/vc24/rates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({week:WEEK_SEL,rates})}).then(x=>x.json());
+    if(btn){ btn.disabled=false; btn.textContent='💾 Lưu giá'; }
+    if(!r.ok){ alert(r.reason==='week'?'Tuần không hợp lệ.':'Lưu giá thất bại.'); return; }
+    RATES[WEEK_SEL]=rates; closeRateSetup(); renderWeekCost();
+  }catch(e){ if(btn){ btn.disabled=false; btn.textContent='💾 Lưu giá'; } alert('Lỗi khi lưu giá.'); }
+}
 function renderWeekDebt(){
+  renderWeekCost();
   const all=weekRowsAll();
   const agg=aggregate(all,false);
   const owe=all.filter(r=>!paid(r)), pd=all.filter(r=>paid(r));

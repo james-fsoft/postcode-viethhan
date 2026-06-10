@@ -615,19 +615,20 @@ app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   res.json({ ok: true, marked, credit });
 });
 
-// Phí phát sinh theo khách hàng (KRW) — ghi trên hóa đơn, lưu lại
+// Phí phát sinh theo khách hàng (KRW + VND) — ghi trên hóa đơn, lưu lại
 app.post('/api/vc24/surcharge', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
-  const { cust, amount, note } = req.body || {};
+  const { cust, amount, amountVnd, note } = req.body || {};
   if (!cust) return res.json({ ok: false, message: 'bad' });
   let ledger = {}; try { const s = await redisGet(VK.ledger); if (s) ledger = JSON.parse(s); } catch { /* ok */ }
   const led = ledger[cust] || { credit: 0, history: [] };
   led.surcharge = Math.round(Number(amount) || 0);
+  led.surchargeVnd = Math.round(Number(amountVnd) || 0);
   led.surchargeNote = String(note || '').slice(0, 200);
   ledger[cust] = led;
   const ok = await redisSet(VK.ledger, JSON.stringify(ledger));
   if (!ok) return res.json({ ok: false, reason: 'save' });
-  await vcLog('surcharge', `Phí phát sinh ${cust}: ₩${led.surcharge.toLocaleString('en-US')}${led.surchargeNote ? ' (' + led.surchargeNote + ')' : ''}`);
+  await vcLog('surcharge', `Phí phát sinh ${cust}: ₩${led.surcharge.toLocaleString('en-US')} + ${led.surchargeVnd.toLocaleString('en-US')}đ${led.surchargeNote ? ' (' + led.surchargeNote + ')' : ''}`);
   res.json({ ok: true });
 });
 
@@ -798,6 +799,29 @@ app.post('/api/vc24/reset', requireAuth, requireVC24, async (req, res) => {
   await redisSet(VK.draft, gzPack(null));
   if (s1 && s2) await vcLog('reset', 'Xóa TOÀN BỘ dữ liệu kế toán');
   res.json({ ok: s1 && s2 });
+});
+
+// Xóa dữ liệu 1 TUẦN (bảo vệ như reset: mật khẩu + "tôi đồng ý xóa")
+function vcParseDate(s) { const m = String(s || '').match(/(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/); if (!m) return null; let y = +m[3]; if (y < 100) y += 2000; const d = new Date(Date.UTC(y, (+m[2]) - 1, +m[1])); return isNaN(d) ? null : d; }
+function vcIsoWeek(d) { const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())); const day = (t.getUTCDay() + 6) % 7; t.setUTCDate(t.getUTCDate() - day + 3); const firstThu = new Date(Date.UTC(t.getUTCFullYear(), 0, 4)); const w = 1 + Math.round(((t - firstThu) / 86400000 - 3 + ((firstThu.getUTCDay() + 6) % 7)) / 7); return t.getUTCFullYear() + '-W' + String(w).padStart(2, '0'); }
+function vcWeekKey(r) { if (r && /^\d{4}-W\d{2}$/.test(r.week || '')) return r.week; const d = vcParseDate(r && r.date); return d ? vcIsoWeek(d) : ''; }
+app.post('/api/vc24/week-delete', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: false, redis: false });
+  const { week, password, confirm } = req.body || {};
+  const user = userFromReq(req);
+  if (!password || password !== USERS[user]) return res.json({ ok: false, reason: 'password' });
+  const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toUpperCase().replace(/\s+/g, ' ').trim();
+  if (norm(confirm) !== 'TOI DONG Y XOA') return res.json({ ok: false, reason: 'confirm' });
+  if (!/^\d{4}-W\d{2}$/.test(String(week || ''))) return res.json({ ok: false, reason: 'week' });
+  const o = await vcLoadOrders();
+  const before = o.rows.length;
+  o.rows = o.rows.filter(r => vcWeekKey(r) !== week);
+  const removed = before - o.rows.length;
+  o.uploadedAt = new Date().toISOString();
+  const saved = await vcSaveOrders(o);
+  if (!saved) return res.json({ ok: false, reason: 'save' });
+  await vcLog('week-delete', `Xóa dữ liệu tuần ${week}: ${removed} đơn`);
+  res.json({ ok: true, removed });
 });
 
 app.post('/api/vc24/cfg', requireAuth, requireVC24, async (req, res) => {

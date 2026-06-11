@@ -236,7 +236,10 @@
         <input class="grow" id="q" placeholder="🔎 Tìm: mã KH, người nhận, SĐT, mã kiện, địa chỉ, ghi chú…" oninput="onSearch()" />
         <select id="fCust" onchange="filterChanged()"><option value="">Tất cả khách hàng</option></select>
         <select id="fRegion" onchange="filterChanged()"><option value="">Tất cả khu vực</option></select>
+        <select id="fStatus" onchange="filterChanged()"><option value="">Tất cả trạng thái hàng</option></select>
+        <select id="fStaff" onchange="filterChanged()"><option value="">Tất cả NV giao</option></select>
         <select id="fPay" onchange="filterChanged()"><option value="">Tất cả TT</option><option value="owe">Chưa thu</option><option value="paid">Đã thu</option></select>
+        <button class="btn sm" onclick="clearListFilters()" title="Xóa hết bộ lọc">✖ Xóa lọc</button>
       </div>
       <div class="filters" style="margin-top:-2px">
         <span class="small" style="font-weight:700;color:var(--g600);align-self:center">🗓️ Ngày về từ</span>
@@ -253,12 +256,7 @@
       <div class="small muted" style="margin-bottom:8px;">💡 Bấm vào 1 dòng để mở cửa sổ sửa/xóa — tự lưu online. Phân trang để chạy nhanh trên mọi máy.</div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr>
-            <th>Ngày về</th><th>Mã kiện</th><th>Trạng thái hàng</th><th>Mã KH</th><th>Check TT</th><th>Ngày thu</th>
-            <th>SĐT gửi / GC</th><th>Người nhận</th><th>SĐT nhận</th><th>Địa chỉ</th><th>Khu vực</th>
-            <th class="r">KG</th><th class="r">Đơn giá</th><th class="r">Tiền Won (₩)</th><th class="r">Tiền VND (₫)</th>
-            <th>NV giao</th><th class="r">Phụ phí (₫)</th><th class="r">Phụ phí (₩)</th><th class="r">Chi phí ship (₩)</th><th>Ghi chú</th>
-          </tr></thead>
+          <thead id="listHead"></thead>
           <tbody id="listBody"></tbody>
         </table>
         <div class="empty" id="listEmpty">Chưa có dữ liệu — hãy thêm file lên.</div>
@@ -1345,19 +1343,50 @@ function wonOf(r){ return (Number(r.won)||0)+(Number(r.phuPhiWon)||0); }
 function vndOf(r){ return (Number(r.vnd)||0)+(Number(r.phuPhi)||0); }
 function sumWon(a){ return (a||[]).reduce((s,r)=>s+wonOf(r),0); }
 function sumVnd(a){ return (a||[]).reduce((s,r)=>s+vndOf(r),0); }
+function fillSel(id,vals,allLabel){ const el=$(id); if(!el)return; const cur=el.value; el.innerHTML=`<option value="">${allLabel}</option>`+vals.map(c=>`<option value="${escA(c)}">${esc(c)}</option>`).join(''); el.value=vals.includes(cur)?cur:''; }
 function buildFilters(){
-  $('fCust').innerHTML='<option value="">Tất cả khách hàng</option>'+uniq(ROWS.map(r=>r.cust)).sort((a,b)=>a.localeCompare(b,'vi')).map(c=>`<option value="${escA(c)}">${esc(c)}</option>`).join('');
-  $('fRegion').innerHTML='<option value="">Tất cả khu vực</option>'+uniq(ROWS.map(r=>r.region)).map(c=>`<option value="${escA(c)}">${esc(c)}</option>`).join('');
+  fillSel('fCust', uniq(ROWS.map(r=>r.cust)).sort((a,b)=>a.localeCompare(b,'vi')), 'Tất cả khách hàng');
+  fillSel('fRegion', uniq(ROWS.map(r=>r.region)), 'Tất cả khu vực');
+  fillSel('fStatus', uniq(ROWS.map(r=>r.status)).sort((a,b)=>a.localeCompare(b,'vi')), 'Tất cả trạng thái hàng');
+  fillSel('fStaff', uniq(ROWS.map(r=>r.staff)).sort((a,b)=>a.localeCompare(b,'vi')), 'Tất cả NV giao');
+  renderListHead();
 }
+// ---- Sắp xếp + cột bảng dữ liệu tổng ----
+const LIST_COLS=[
+  ['date','Ngày về','date'],['pkg','Mã kiện','txt'],['status','Trạng thái hàng','txt'],['cust','Mã KH','txt'],
+  ['pay','Check TT','txt'],['paidDate','Ngày thu','txt'],['note','SĐT gửi / GC','txt'],['rcv','Người nhận','txt'],
+  ['rcvPh','SĐT nhận','txt'],['addr','Địa chỉ','txt'],['region','Khu vực','txt'],['weight','KG','num'],
+  ['price','Đơn giá','num'],['won','Tiền Won (₩)','num'],['vnd','Tiền VND (₫)','num'],['staff','NV giao','txt'],
+  ['phuPhi','Phụ phí (₫)','num'],['phuPhiWon','Phụ phí (₩)','num'],['ship','Chi phí ship (₩)','num'],['ghiChu','Ghi chú','txt']
+];
+let SORT={key:'',dir:1,type:'txt'};
+function renderListHead(){
+  const h=$('listHead'); if(!h) return;
+  h.innerHTML='<tr>'+LIST_COLS.map(([k,lab,t])=>`<th class="${t==='num'?'r ':''}sortable" onclick="sortBy('${k}','${t}')" title="Bấm để sắp xếp" style="cursor:pointer;white-space:nowrap;user-select:none">${lab}${SORT.key===k?(SORT.dir>0?' ▲':' ▼'):' <span style="opacity:.25">↕</span>'}</th>`).join('')+'</tr>';
+}
+function sortBy(key,type){ if(SORT.key===key){ SORT.dir=-SORT.dir; } else { SORT.key=key; SORT.dir=1; SORT.type=type; } PAGE=1; renderListHead(); applyFilters(); }
+function sortRows(rows){
+  if(!SORT.key) return rows;
+  const k=SORT.key,t=SORT.type,d=SORT.dir;
+  return rows.slice().sort((a,b)=>{
+    if(t==='num') return ((Number(a[k])||0)-(Number(b[k])||0))*d;
+    if(k==='date'){ const pa=parseVNDate(a[k]), pb=parseVNDate(b[k]); return ((pa?pa.getTime():0)-(pb?pb.getTime():0))*d; }
+    return String(a[k]||'').localeCompare(String(b[k]||''),'vi')*d;
+  });
+}
+function clearListFilters(){ ['q','fCust','fRegion','fStatus','fStaff','fPay','fFrom','fTo'].forEach(id=>{ const el=$(id); if(el)el.value=''; }); SORT={key:'',dir:1,type:'txt'}; renderListHead(); filterChanged(); }
 function dayNum(d){ return d? (d.getUTCFullYear()*10000 + (d.getUTCMonth()+1)*100 + d.getUTCDate()) : null; }
 function isoToNum(s){ const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m? (+m[1]*10000 + +m[2]*100 + +m[3]) : null; }
 function clearDateRange(){ $('fFrom').value=''; $('fTo').value=''; filterChanged(); }
 function currentFilter(){
   const q=noVN($('q').value), fc=$('fCust').value, fr=$('fRegion').value, fp=$('fPay').value;
+  const fs=$('fStatus')?$('fStatus').value:'', fnv=$('fStaff')?$('fStaff').value:'';
   const from=isoToNum($('fFrom')&&$('fFrom').value), to=isoToNum($('fTo')&&$('fTo').value);
   return ROWS.filter(r=>{
     if(fc && r.cust!==fc) return false;
     if(fr && r.region!==fr) return false;
+    if(fs && r.status!==fs) return false;
+    if(fnv && r.staff!==fnv) return false;
     if(fp==='paid' && !paid(r)) return false;
     if(fp==='owe' && paid(r)) return false;
     if(from||to){ const dn=dayNum(parseVNDate(r.date)); if(dn==null) return false; if(from&&dn<from) return false; if(to&&dn>to) return false; }
@@ -1366,7 +1395,7 @@ function currentFilter(){
   });
 }
 function applyFilters(){
-  LIST_ROWS=currentFilter();
+  LIST_ROWS=sortRows(currentFilter());
   const total=LIST_ROWS.length, body=$('listBody'), empty=$('listEmpty');
   if(!total){ body.innerHTML=''; empty.style.display='block'; empty.textContent=ROWS.length?'Không có đơn khớp bộ lọc.':'Chưa có dữ liệu — hãy thêm file lên.'; $('listPager').innerHTML=''; }
   else{

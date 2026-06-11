@@ -540,12 +540,14 @@ let PAGE=1, PAGE_SIZE=100, LIST_ROWS=[];   // phân trang để máy không lag 
 let _searchT=null;
 let LEDGER={};   // sổ thanh toán: { [cust]: { credit, history:[{date,amount,marked}] } }
 let RATES={};    // giá VC/kg theo tuần: { [week]: { [khu vực]: giá } }
-function creditOf(c){ return (LEDGER[c] && Number(LEDGER[c].credit)) || 0; }
 function historyOf(c){ return (LEDGER[c] && Array.isArray(LEDGER[c].history)) ? LEDGER[c].history : []; }
+function totalReceivedOf(c){ return historyOf(c).reduce((s,h)=>s+(Number(h.amount)||0),0); }
+// Dư (đã trả trước) = TỔNG đã nhận − tổng tiền của MỌI đơn đang "Đã TT" (kể cả đơn sẵn Đã TT từ file)
+function creditOf(c){ const paidWon=ROWS.filter(r=>r.cust===c && paid(r)).reduce((s,r)=>s+(Number(r.won)||0)+(Number(r.phuPhiWon)||0),0); return Math.max(0, totalReceivedOf(c)-paidWon); }
 function surchargeOf(c){ return (LEDGER[c] && Number(LEDGER[c].surcharge)) || 0; }
 function surchargeVndOf(c){ return (LEDGER[c] && Number(LEDGER[c].surchargeVnd)) || 0; }
 function surchargeNoteOf(c){ return (LEDGER[c] && LEDGER[c].surchargeNote) || ''; }
-function paidWonOf(c){ return ROWS.filter(r=>r.cust===c && paid(r)).reduce((s,r)=>s+(Number(r.won)||0),0) + creditOf(c); }
+function paidWonOf(c){ return totalReceivedOf(c); }   // tổng tiền đã nhận của khách (gồm cả phần dư)
 let DRAFT=null, HIST_LOG=[];   // bản nháp chờ duyệt + nhật ký
 let SHOW_PAID=false;   // mặc định chỉ hiện số ĐANG NỢ; bật để hiện số ĐÃ TRẢ
 function togglePaidView(){ SHOW_PAID=!SHOW_PAID; if(CUST_SEL) renderCust(); refreshCD(); renderDash(); }

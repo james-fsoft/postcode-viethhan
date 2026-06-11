@@ -592,7 +592,10 @@ app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   const o = await vcLoadOrders();
   let ledger = {}; try { const s = await redisGet(VK.ledger); if (s) ledger = JSON.parse(s); } catch { /* ok */ }
   const led = ledger[cust] || { credit: 0, history: [] };
-  let credit = (Number(led.credit) || 0) + amt;
+  // dư thực tế = tổng đã nhận − tổng tiền đơn đang Đã TT (không tin số dư đã lưu vì có thể lệch)
+  const received0 = (led.history || []).reduce((s, h) => s + (Number(h.amount) || 0), 0);
+  const paidWon0 = o.rows.filter(r => r.cust === cust && isPaidPay(r.pay)).reduce((s, r) => s + (Number(r.won) || 0) + (Number(r.phuPhiWon) || 0), 0);
+  let credit = Math.max(0, received0 - paidWon0) + amt;
   const unpaid = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay)).sort((a, b) => String(a.date).localeCompare(String(b.date)));
   const wonAmt = r => (Number(r.won) || 0) + (Number(r.phuPhiWon) || 0);   // tiền hàng + phụ phí KRW
   let marked = 0; const markedKeys = [];

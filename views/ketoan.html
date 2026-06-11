@@ -686,7 +686,7 @@ $('custHistModal').addEventListener('click',e=>{ if(e.target.id==='custHistModal
 function openPay(cust,msg){
   PAY_CUST=cust;
   const unpaid=ROWS.filter(r=>r.cust===cust && !paid(r));
-  const rawOwe=sum(unpaid,'won'), credit=creditOf(cust), owe=Math.max(0,rawOwe-credit);
+  const rawOwe=sumWon(unpaid)+surchargeOf(cust), credit=creditOf(cust), owe=Math.max(0,rawOwe-credit);
   const hist=historyOf(cust);
   $('payTitle').textContent='Thu tiền — '+cust;
   $('payBody').innerHTML=`
@@ -764,9 +764,10 @@ $('custDetailModal').addEventListener('click',e=>{ if(e.target.id==='custDetailM
 function oweText(oweWon,oweVnd){ const a=[]; if(oweWon)a.push('₩'+oweWon.toLocaleString('en-US')); if(oweVnd)a.push(oweVnd.toLocaleString('en-US')+' ₫'); return a.length?a.join(' + '):'₩0'; }
 function renderCD(){
   const cust=CD_CUST, rows=ROWS.filter(r=>r.cust===cust);
-  const owe=rows.filter(r=>!paid(r)), oweWon=Math.max(0,sum(owe,'won')-creditOf(cust));
-  const oweVnd=sum(owe,'vnd')+sum(owe,'phuPhi');
-  $('cdTitle').innerHTML=`👤 ${esc(cust)} <span style="font-weight:600;color:var(--g400);font-size:.85rem">— ${rows.length} đơn`+(owe.length?`, nợ <b style="color:#e11d48">${oweText(oweWon,oweVnd)}</b>`:`, <b style="color:var(--green)">đã thu hết</b>`)+`</span>`;
+  const owe=rows.filter(r=>!paid(r));
+  const oweWon=Math.max(0,sumWon(owe)+surchargeOf(cust)-creditOf(cust)), oweVnd=sumVnd(owe)+surchargeVndOf(cust);
+  const hasDebt=owe.length||oweWon||oweVnd;
+  $('cdTitle').innerHTML=`👤 ${esc(cust)} <span style="font-weight:600;color:var(--g400);font-size:.85rem">— ${rows.length} đơn`+(hasDebt?`, nợ <b style="color:#e11d48">${oweText(oweWon,oweVnd)}</b>`:`, <b style="color:var(--green)">đã thu hết</b>`)+`</span>`;
   $('cdPayBtn').style.display=owe.length?'inline-flex':'none';
   $('cdBody').innerHTML=`
     <div style="margin-bottom:10px">${paidToggleHTML()}</div>
@@ -793,7 +794,7 @@ async function confirmPay(){
   const dstr=fmtPaidDate(pdate);
   if(!amt||amt<=0){ $('payMsg').innerHTML='⚠️ Nhập số tiền hợp lệ.'; return; }
   if(!REDIS){ alert('Chưa bật lưu trữ server — không ghi nhận được.'); return; }
-  const owe=Math.max(0,sum(ROWS.filter(r=>r.cust===PAY_CUST&&!paid(r)),'won')-creditOf(PAY_CUST));
+  const owe=Math.max(0,sumWon(ROWS.filter(r=>r.cust===PAY_CUST&&!paid(r)))+surchargeOf(PAY_CUST)-creditOf(PAY_CUST));
   const settleAll=amt>=owe;   // trả đủ/đủ-hơn -> gạch sạch
   if(!confirm(`Ghi nhận khách "${PAY_CUST}" trả ₩${amt.toLocaleString('en-US')} ngày ${dstr}?`+(settleAll?'\n(Trả ĐỦ — sẽ gạch hết đơn còn nợ.)':''))) return;
   const btn=$('payConfirm'); if(btn) btn.disabled=true;
@@ -1379,6 +1380,11 @@ async function deleteCur(){
 /* ---------- Lọc + bảng ---------- */
 function uniq(a){ return [...new Set(a.filter(Boolean))]; }
 function sum(arr,k){ return arr.reduce((a,r)=>a+(Number(r[k])||0),0); }
+// Tổng tiền của 1 đơn: Won = Tiền Won + Phụ phí (KRW); VND = Tiền VND + Phụ phí (VND)
+function wonOf(r){ return (Number(r.won)||0)+(Number(r.phuPhiWon)||0); }
+function vndOf(r){ return (Number(r.vnd)||0)+(Number(r.phuPhi)||0); }
+function sumWon(a){ return (a||[]).reduce((s,r)=>s+wonOf(r),0); }
+function sumVnd(a){ return (a||[]).reduce((s,r)=>s+vndOf(r),0); }
 function buildFilters(){
   $('fCust').innerHTML='<option value="">Tất cả khách hàng</option>'+uniq(ROWS.map(r=>r.cust)).sort((a,b)=>a.localeCompare(b,'vi')).map(c=>`<option value="${escA(c)}">${esc(c)}</option>`).join('');
   $('fRegion').innerHTML='<option value="">Tất cả khu vực</option>'+uniq(ROWS.map(r=>r.region)).map(c=>`<option value="${escA(c)}">${esc(c)}</option>`).join('');
@@ -1428,16 +1434,19 @@ function filterChanged(){ PAGE=1; applyFilters(); }
 function onSearch(){ clearTimeout(_searchT); _searchT=setTimeout(()=>{ PAGE=1; applyFilters(); },220); }
 
 /* ---------- Công nợ ---------- */
-function aggregate(src, applyCredit){
+function aggregate(src, applyCredit, inclSurcharge){
   const m={};
   (src||[]).forEach(r=>{ const k=r.cust||'(không rõ)'; if(!m[k])m[k]={cust:k,total:0,owe:0,oweWon:0,oweVnd:0,paidWon:0,paidVnd:0};
-    const a=m[k]; a.total++; const vnd=(Number(r.vnd)||0)+(Number(r.phuPhi)||0);
-    if(paid(r)){ a.paidWon+=Number(r.won)||0; a.paidVnd+=vnd; } else { a.owe++; a.oweWon+=Number(r.won)||0; a.oweVnd+=vnd; }
+    const a=m[k]; a.total++;
+    if(paid(r)){ a.paidWon+=wonOf(r); a.paidVnd+=vndOf(r); } else { a.owe++; a.oweWon+=wonOf(r); a.oweVnd+=vndOf(r); }
   });
-  Object.values(m).forEach(a=>{ if(applyCredit){ a.credit=creditOf(a.cust); a.oweWon=Math.max(0,a.oweWon-a.credit); } else a.credit=0; });
+  Object.values(m).forEach(a=>{
+    if(inclSurcharge){ a.oweWon+=surchargeOf(a.cust); a.oweVnd+=surchargeVndOf(a.cust); }   // phí phát sinh cộng vào nợ
+    if(applyCredit){ a.credit=creditOf(a.cust); a.oweWon=Math.max(0,a.oweWon-a.credit); } else a.credit=0;
+  });
   return Object.values(m);
 }
-function customerAgg(){ return aggregate(ROWS, true); }
+function customerAgg(){ return aggregate(ROWS, true, true); }
 function renderDebt(){
   const agg=customerAgg(), owe=ROWS.filter(r=>!paid(r)), pd=ROWS.filter(r=>paid(r));
   const oweVnd=sum(owe,'vnd')+sum(owe,'phuPhi');
@@ -1491,12 +1500,12 @@ function renderCust(){
   const owe0=has?rows.filter(r=>!paid(r)):[];
   $('custPayBtn').style.display=(has&&owe0.length)?'inline-flex':'none';
   const ch=$('custHead');
-  const oweW0=Math.max(0,sum(owe0,'won')-creditOf(c)), oweV0=sum(owe0,'vnd')+sum(owe0,'phuPhi');
-  if(has){ ch.style.display='block'; ch.innerHTML=`👤 ${esc(c)} <span style="font-weight:600;color:var(--g400);font-size:.9rem">— ${rows.length} đơn`+(owe0.length?`, còn nợ <b style="color:#e11d48">${oweText(oweW0,oweV0)}</b>`:`, <b style="color:var(--green)">đã thu hết</b>`)+`</span>`; }
+  const oweW0=Math.max(0,sumWon(owe0)+surchargeOf(c)-creditOf(c)), oweV0=sumVnd(owe0)+surchargeVndOf(c);
+  if(has){ ch.style.display='block'; ch.innerHTML=`👤 ${esc(c)} <span style="font-weight:600;color:var(--g400);font-size:.9rem">— ${rows.length} đơn`+((owe0.length||oweW0||oweV0)?`, còn nợ <b style="color:#e11d48">${oweText(oweW0,oweV0)}</b>`:`, <b style="color:var(--green)">đã thu hết</b>`)+`</span>`; }
   else ch.style.display='none';
   if(!has){ $('custSummary').innerHTML=''; return; }
-  const owe=rows.filter(r=>!paid(r)); const oweVnd=sum(owe,'vnd')+sum(owe,'phuPhi');
-  const oweWonC=Math.max(0,sum(owe,'won')-creditOf(c)), paidWonC=paidWonOf(c);
+  const owe=rows.filter(r=>!paid(r)); const oweVnd=sumVnd(owe)+surchargeVndOf(c);
+  const oweWonC=Math.max(0,sumWon(owe)+surchargeOf(c)-creditOf(c)), paidWonC=paidWonOf(c);
   $('custSummary').innerHTML=
     `<div style="grid-column:1/-1;margin-bottom:-2px">${paidToggleHTML()}</div>`+
     stat('Tổng đơn',rows.length,'','')+stat('Đơn chưa thu',owe.length,owe.length?'owe':'','')+

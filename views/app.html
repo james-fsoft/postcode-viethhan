@@ -961,6 +961,7 @@ const LANGS = {
     errInvalidKey: 'Juso API Key không hợp lệ. Kiểm tra lại key tại juso.go.kr.',
     errNotFound: 'Không tìm thấy',
     errAmbiguous: 'Thiếu thông tin (nhiều mã)',
+    needBuildingHint: 'Con đường này trải nhiều mã bưu điện — thêm SỐ NHÀ để ra mã chính xác (giống Naver).',
     typeRoad: 'Tên đường', typeJibun: 'Số lô', typeError: 'Lỗi', typeAmbiguous: 'Thiếu thông tin',
     tabCargo: 'Tra cứu thông quan',
     toolPostalTitle: 'Mã bưu điện', toolCustomsTitle: 'Mã thông quan',
@@ -1051,6 +1052,7 @@ const LANGS = {
     errInvalidKey: 'Invalid Juso API Key. Check your key at juso.go.kr.',
     errNotFound: 'Not found',
     errAmbiguous: 'Missing info (multiple codes)',
+    needBuildingHint: 'This road spans multiple postcodes — add the BUILDING NUMBER for an exact code (like Naver).',
     typeRoad: 'Road', typeJibun: 'Jibun', typeError: 'Error', typeAmbiguous: 'Missing info',
     tabCargo: 'Customs Tracking',
     toolPostalTitle: 'Postal code', toolCustomsTitle: 'Customs tracking',
@@ -1141,6 +1143,7 @@ const LANGS = {
     errInvalidKey: 'Juso API 키가 올바르지 않습니다. juso.go.kr에서 확인하세요.',
     errNotFound: '찾을 수 없음',
     errAmbiguous: '정보 부족 (여러 우편번호)',
+    needBuildingHint: '이 도로는 여러 우편번호에 걸쳐 있습니다 — 건물 번호를 입력하면 정확한 코드가 나옵니다 (네이버와 동일).',
     typeRoad: '도로명', typeJibun: '지번', typeError: '오류', typeAmbiguous: '정보 부족',
     tabCargo: '통관조회',
     toolPostalTitle: '우편번호', toolCustomsTitle: '통관조회',
@@ -1421,6 +1424,15 @@ function cleanAddress(addr) {
     .replace(/\s+/g, ' ').trim();
 }
 
+// Có SỐ NHÀ không? (số đứng SAU token đường/khu cuối cùng 로/길/가/동/리)
+// "신일서로68번길" -> false (68 là số của tên hẻm); "신일서로68번길 12" -> true
+function hasBuildingNo(addr) {
+  const s = cleanAddress(addr);
+  const m = s.match(/.*[로길가동리]/);   // tới token đường/khu CUỐI CÙNG
+  const after = m ? s.slice(m[0].length) : s;
+  return /\d/.test(after);
+}
+
 // Tạo nhiều biến thể địa chỉ, thử từ cụ thể → tổng quát để tăng tỉ lệ tìm thấy
 function buildCandidates(raw) {
   let s = cleanAddress(raw);
@@ -1521,6 +1533,10 @@ async function kakaoLookup(rawAddr, apiKey) {
         seen.add(r.zip);
         options.push(r);
       }
+      // Khắt khe như Naver: địa chỉ CHƯA có số nhà mà con đường trải NHIỀU mã -> không đoán
+      if (!hasBuildingNo(rawAddr) && options.length > 1) {
+        return { zip: null, display: pick.road, type: 'need_building', options };
+      }
       let selected = options.findIndex(o => o.zip === pick.zip && o.road === pick.road);
       if (selected < 0) selected = 0;
       return { zip: pick.zip, display: pick.road, type: 'road', options, selected };
@@ -1600,7 +1616,9 @@ function renderManualResults(rows) {
     const copyBtn = `<button class="inline-copy" onclick="copyZip(${i}, this)" title="${esc(t('btnCopy'))}">${COPY_ICON}</button>`;
 
     let zipCell;
-    if (r.options && r.options.length > 1) {
+    if (r.type === 'need_building') {
+      zipCell = `<span class="inline-zip err" title="${esc(t('needBuildingHint'))}">⚠️ ${esc(t('errAmbiguous'))}</span>`;
+    } else if (r.options && r.options.length > 1) {
       // Địa chỉ mơ hồ → dropdown chọn ĐỊA CHỈ, mã hiển thị riêng bên phải (copy được riêng)
       const opts = r.options.map((o, oi) =>
         `<option value="${oi}"${oi === r.selected ? ' selected' : ''}>${esc(o.road || o.jibun)}</option>`

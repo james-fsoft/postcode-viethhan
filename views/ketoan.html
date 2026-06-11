@@ -1569,8 +1569,8 @@ function renderInvoiceDoc(){
         <tr class="no-print"><td>Phí phát sinh (KRW) · ${kr('발생비용')}:</td><td class="r" style="white-space:nowrap">
           <input id="invSur" inputmode="numeric" value="${escA(X.surcharge?grp(X.surcharge):'')}" oninput="onMoneyInput(this)" placeholder="0" style="width:120px;text-align:right;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit" /> ₩</td></tr>
         <tr class="no-print"><td>Phí phát sinh (VND) · ${kr('발생비용')}:</td><td class="r" style="white-space:nowrap">
-          <input id="invSurVnd" inputmode="numeric" value="${escA(X.surchargeVnd?grp(X.surchargeVnd):'')}" oninput="onMoneyInput(this)" placeholder="0" style="width:120px;text-align:right;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit" /> ₫
-          <button class="btn sm" id="invSurBtn" onclick="saveSurcharge()" style="margin-left:6px">💾 Lưu</button></td></tr>
+          <input id="invSurVnd" inputmode="numeric" value="${escA(X.surchargeVnd?grp(X.surchargeVnd):'')}" oninput="onMoneyInput(this)" placeholder="0" style="width:120px;text-align:right;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit" /> ₫</td></tr>
+        <tr class="no-print"><td colspan="2" style="text-align:right;padding-top:2px"><button class="btn sm" id="invSurBtn" onclick="saveSurcharge()">💾 Lưu phí phát sinh</button></td></tr>
         <tr class="only-print" style="display:none"><td>Phí phát sinh · ${kr('발생비용')}:</td><td class="r">${X.surcharge?'₩'+nf(X.surcharge):''}${X.surchargeVnd?'<br>'+nf(X.surchargeVnd)+' ₫':''}</td></tr>
         ${surNote?`<tr><td colspan="2" style="font-size:.78rem;color:#888;padding-top:0">Ghi chú phí/${kr('비고')}: ${esc(surNote)} <button class="btn sm no-print" onclick="editSurNote()" style="margin-left:4px">✎</button></td></tr>`:`<tr class="no-print"><td colspan="2"><button class="btn sm" onclick="editSurNote()">✎ Thêm ghi chú phí phát sinh</button></td></tr>`}
         <tr class="grand"><td>TỔNG THANH TOÁN (còn nợ)<br>${kr('총 결제금액 (미납)')}:</td><td class="r"><div>₩${nf(X.payableWon)}</div>${X.payableVnd?`<div>${nf(X.payableVnd)} ₫</div>`:''}</td></tr>

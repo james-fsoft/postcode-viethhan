@@ -414,10 +414,8 @@
     <div style="padding:4px 2px">
       <div class="small muted" id="cmInfo" style="margin-bottom:12px"></div>
       <label class="small" style="font-weight:700;display:block;margin-bottom:4px">🗓️ Tuần của file này</label>
-      <input type="week" id="cmWeek" class="ef" onchange="cmWeekChanged()" oninput="cmWeekChanged()" style="width:100%" />
+      <input type="week" id="cmWeek" class="ef" onchange="cmWeekChanged()" oninput="cmWeekChanged()" style="width:100%" onkeydown="if(event.key==='Enter')confirmCommit()" />
       <div class="small" style="color:var(--blue);font-weight:700;margin:6px 0 14px" id="cmWeekLabel"></div>
-      <label class="small" style="font-weight:700;display:block;margin-bottom:4px">🔑 Mật khẩu đăng nhập</label>
-      <input type="password" id="cmPw" class="ef" placeholder="Nhập mật khẩu để xác nhận" style="width:100%" onkeydown="if(event.key==='Enter')confirmCommit()" />
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px">
         <button class="btn" onclick="closeCommit()">Hủy</button>
         <button class="btn primary" id="cmBtn" onclick="confirmCommit()">✅ Đẩy lên dữ liệu tổng</button>
@@ -700,7 +698,7 @@ function payHistRowHTML(h){
   return `<div style="padding:7px 11px;border-bottom:1px solid var(--g100);font-size:.84rem">
     <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
       <span>${fmtPaidDate(h.date)}${h.marked?` <span class="muted">· gạch ${h.marked} đơn</span>`:''}${edits.length?` <span style="color:#d97706;font-size:.72rem" title="Đã chỉnh sửa">✎ đã sửa ${edits.length}×</span>`:''}</span>
-      <span style="display:flex;align-items:center;gap:8px"><b style="color:var(--green)">₩${Number(h.amount||0).toLocaleString('en-US')}</b>${canEdit?`<button class="btn sm" onclick="editPayHist('${escJs(h.at)}')" title="Sửa dòng này">✎</button>`:''}</span>
+      <span style="display:flex;align-items:center;gap:6px"><b style="color:var(--green)">₩${Number(h.amount||0).toLocaleString('en-US')}</b>${canEdit?`<button class="btn sm" onclick="editPayHist('${escJs(h.at)}')" title="Sửa dòng này">✎</button><button class="btn sm" onclick="deletePayHist('${escJs(h.at)}')" title="Xóa dòng thu này" style="border-color:#fecaca;color:#dc2626">🗑</button>`:''}</span>
     </div>
     ${edits.length?`<div style="margin-top:4px;padding-left:6px;border-left:2px solid #fde68a">${edits.slice().reverse().map(e=>`<div style="font-size:.72rem;color:#92400e">✎ Sửa lúc <b>${esc(fmtDT(e.at))}</b>${e.by?' bởi '+esc(e.by):''}: ₩${Number(e.oldAmount||0).toLocaleString('en-US')} → ₩${Number(e.newAmount||0).toLocaleString('en-US')}${e.oldDate!==e.newDate?` · ngày ${esc(fmtPaidDate(e.oldDate))}→${esc(fmtPaidDate(e.newDate))}`:''}<br>Lý do: ${esc(e.reason||'')}</div>`).join('')}</div>`:''}
   </div>`;
@@ -773,7 +771,9 @@ function renderCD(){
     </div>`;
   cdUpdateSelBtn();
 }
+let _paying=false;
 async function confirmPay(){
+  if(_paying) return;   // chống double-click ra 2 dòng
   const amt=money($('payAmt').value);
   const pdate=($('payDate')&&$('payDate').value)||todayISO();
   const dstr=fmtPaidDate(pdate);
@@ -782,13 +782,24 @@ async function confirmPay(){
   const owe=Math.max(0,sumWon(ROWS.filter(r=>r.cust===PAY_CUST&&!paid(r)))+surchargeOf(PAY_CUST)-creditOf(PAY_CUST));
   const settleAll=amt>=owe;   // trả đủ/đủ-hơn -> gạch sạch
   if(!confirm(`Ghi nhận khách "${PAY_CUST}" trả ₩${amt.toLocaleString('en-US')} ngày ${dstr}?`+(settleAll?'\n(Trả ĐỦ — sẽ gạch hết đơn còn nợ.)':''))) return;
-  const btn=$('payConfirm'); if(btn) btn.disabled=true;
+  _paying=true;
+  const btn=$('payConfirm'); if(btn){ btn.disabled=true; btn.textContent='⏳ Đang ghi nhận…'; }
   try{
     const res=await fetch('/api/vc24/payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,amount:amt,date:pdate,settleAll})}).then(r=>r.json());
-    if(!res.ok){ alert(res.reason==='save'?'❌ Lưu thất bại (kho dữ liệu quá lớn).':'Ghi nhận thất bại.'); if(btn)btn.disabled=false; return; }
+    if(!res.ok){ alert(res.reason==='save'?'❌ Lưu thất bại (kho dữ liệu quá lớn).':'Ghi nhận thất bại.'); if(btn){btn.disabled=false;btn.textContent='✅ Ghi nhận thu tiền';} return; }
     await loadServerData();
     openPay(PAY_CUST, `✅ Đã ghi nhận trả ₩${amt.toLocaleString('en-US')} ngày ${dstr}.`+(res.marked?` Gạch ${res.marked} đơn (Đã TT).`:' Chưa đủ gạch đơn — cộng vào tiền đã trả trước.')+(res.credit>0?` Dư ₩${Number(res.credit).toLocaleString('en-US')}.`:''));
-  }catch(e){ alert('Lỗi khi ghi nhận.'); if(btn)btn.disabled=false; }
+  }catch(e){ alert('Lỗi khi ghi nhận.'); if(btn){btn.disabled=false;btn.textContent='✅ Ghi nhận thu tiền';} }
+  finally{ _paying=false; }
+}
+async function deletePayHist(at){
+  const h=historyOf(PAY_CUST).find(x=>x.at===at); if(!h){ alert('Không tìm thấy dòng.'); return; }
+  if(!confirm(`Xóa dòng thu ₩${Number(h.amount||0).toLocaleString('en-US')} ngày ${fmtPaidDate(h.date)} của ${PAY_CUST}?\n\nCác đơn đã gạch bởi lần thu này sẽ trả về CHƯA THU. Không hồi phục.`)) return;
+  try{
+    const r=await fetch('/api/vc24/payment-delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,at})}).then(x=>x.json());
+    if(!r.ok){ alert(r.reason==='notfound'?'Không tìm thấy dòng.':(r.reason==='save'?'Lưu thất bại.':'Xóa thất bại.')); return; }
+    await loadServerData(); openPay(PAY_CUST,'✅ Đã xóa 1 dòng thu & cập nhật lại công nợ.'); refreshCD(); renderDebt();
+  }catch(e){ alert('Lỗi khi xóa.'); }
 }
 async function logout(){ try{ await fetch('/api/logout',{method:'POST'});}catch(e){} location.reload(); }
 
@@ -1020,20 +1031,19 @@ function commitDraft(){
   $('cmWeek').value = (/^\d{4}-W\d{2}$/.test(DRAFT.week||'') ? DRAFT.week : suggestWeek(DRAFT.rows));
   $('cmWeekLabel').textContent = weekLabel($('cmWeek').value);
   $('cmInfo').textContent = `${DRAFT.fileName||'-'} · ${DRAFT.rows.length} đơn`;
-  $('cmPw').value=''; $('commitModal').classList.add('show'); setTimeout(()=>$('cmWeek').focus(),50);
+  $('commitModal').classList.add('show'); setTimeout(()=>$('cmWeek').focus(),50);
 }
 function cmWeekChanged(){ const v=$('cmWeek').value; $('cmWeekLabel').textContent = /^\d{4}-W\d{2}$/.test(v)?weekLabel(v):'(chọn tuần)'; }
 function closeCommit(){ $('commitModal').classList.remove('show'); }
 async function confirmCommit(){
-  const wk=$('cmWeek').value, pw=$('cmPw').value;
+  const wk=$('cmWeek').value;
   if(!/^\d{4}-W\d{2}$/.test(wk)){ alert('Hãy chọn tuần cho file này.'); return; }
-  if(!pw){ alert('Nhập mật khẩu để xác nhận.'); return; }
   const btn=$('cmBtn'); if(btn){ btn.disabled=true; btn.textContent='⏳ Đang đẩy lên…'; }
   try{
     await fetch('/api/vc24/draft',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileName:DRAFT.fileName,rows:DRAFT.rows})}).catch(()=>{});
-    const res=await fetch('/api/vc24/commit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw,week:wk})}).then(r=>r.json());
+    const res=await fetch('/api/vc24/commit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({week:wk})}).then(r=>r.json());
     if(btn){ btn.disabled=false; btn.textContent='✅ Đẩy lên dữ liệu tổng'; }
-    if(!res.ok){ alert(res.reason==='password'?'❌ Sai mật khẩu — chưa đẩy lên.':(res.reason==='empty'?'Không có bản nháp.':(res.reason==='save'?'❌ Lưu thất bại (kho dữ liệu quá lớn).':'Đẩy lên thất bại.'))); return; }
+    if(!res.ok){ alert(res.reason==='empty'?'Không có bản nháp.':(res.reason==='save'?'❌ Lưu thất bại (kho dữ liệu quá lớn).':'Đẩy lên thất bại.')); return; }
     closeCommit(); DRAFT=null; WEEK_SEL=wk; await loadServerData(); tab('week');
     alert('✅ Đã đẩy lên dữ liệu tổng ('+weekLabel(wk)+'): thêm '+res.added+' đơn mới.'+((res.dup&&res.dup.length)?'\n'+res.dup.length+' mã kiện đã có sẵn → bỏ qua.':''));
   }catch(e){ if(btn){ btn.disabled=false; btn.textContent='✅ Đẩy lên dữ liệu tổng'; } alert('Lỗi khi đẩy lên.'); }
@@ -1495,9 +1505,10 @@ function invCompute(){
   const shownOweWon=sumWon(oweRows), shownPaidWon=sumWon(paidRows);
   const oweVnd=sumVnd(oweRows);
   const credit=creditOf(cust);
-  const oweWon=Math.max(0, shownOweWon - credit);
   const surcharge=surchargeOf(cust), surchargeVnd=surchargeVndOf(cust);
-  const payableWon=oweWon+surcharge, payableVnd=oweVnd+surchargeVnd;
+  // dư (credit) trừ vào TOÀN BỘ nợ Won = đơn chưa thu + phí phát sinh (không kẹp riêng ở đơn)
+  const payableWon=Math.max(0, shownOweWon + surcharge - credit), payableVnd=oweVnd+surchargeVnd;
+  const oweWon=payableWon;   // "còn nợ" hiển thị = số phải trả cuối cùng (khớp tab Theo khách)
   return {cust,rows,totWon,totPhiWon,totVnd,totPhi,oweRows,paidRows,shownOweWon,shownPaidWon,oweVnd,credit,oweWon,surcharge,surchargeVnd,payableWon,payableVnd,payable:payableWon};
 }
 function renderInvoiceDoc(){
@@ -1552,7 +1563,6 @@ function renderInvoiceDoc(){
         ${X.totPhi?`<tr><td>Phụ phí (VND):</td><td class="r">${nf(X.totPhi)} ₫</td></tr>`:''}
         ${X.shownPaidWon?`<tr><td>Đã thanh toán (KRW):</td><td class="r" style="color:#16a34a">−₩${nf(X.shownPaidWon)}</td></tr>`:''}
         ${X.credit>0?`<tr><td>Đã trả trước/dư (KRW):</td><td class="r" style="color:#16a34a">−₩${nf(X.credit)}</td></tr>`:''}
-        <tr><td><b style="color:#dc2626">Còn nợ:</b></td><td class="r"><b style="color:#dc2626">₩${nf(X.oweWon)}${X.oweVnd?'<br>'+nf(X.oweVnd)+' ₫':''}</b></td></tr>
         <tr class="no-print"><td>Phí phát sinh (KRW):</td><td class="r" style="white-space:nowrap">
           <input id="invSur" inputmode="numeric" value="${escA(X.surcharge?grp(X.surcharge):'')}" oninput="onMoneyInput(this)" placeholder="0" style="width:120px;text-align:right;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit" /> ₩</td></tr>
         <tr class="no-print"><td>Phí phát sinh (VND):</td><td class="r" style="white-space:nowrap">
@@ -1560,7 +1570,7 @@ function renderInvoiceDoc(){
           <button class="btn sm" id="invSurBtn" onclick="saveSurcharge()" style="margin-left:6px">💾 Lưu</button></td></tr>
         <tr class="only-print" style="display:none"><td>Phí phát sinh:</td><td class="r">₩${nf(X.surcharge)}${X.surchargeVnd?'<br>'+nf(X.surchargeVnd)+' ₫':''}</td></tr>
         ${surNote?`<tr><td colspan="2" style="font-size:.78rem;color:#888;padding-top:0">Ghi chú phí: ${esc(surNote)} <button class="btn sm no-print" onclick="editSurNote()" style="margin-left:4px">✎</button></td></tr>`:`<tr class="no-print"><td colspan="2"><button class="btn sm" onclick="editSurNote()">✎ Thêm ghi chú phí phát sinh</button></td></tr>`}
-        <tr class="grand"><td>TỔNG THANH TOÁN:</td><td class="r"><div>₩${nf(X.payableWon)}</div>${X.payableVnd?`<div>${nf(X.payableVnd)} ₫</div>`:''}</td></tr>
+        <tr class="grand"><td>TỔNG THANH TOÁN (còn nợ):</td><td class="r"><div>₩${nf(X.payableWon)}</div>${X.payableVnd?`<div>${nf(X.payableVnd)} ₫</div>`:''}</td></tr>
       </table>
     </div>
     <div class="note">Kính đề nghị Quý khách thanh toán số tiền còn nợ <b>₩${nf(X.payableWon)}${X.payableVnd?' + '+nf(X.payableVnd)+' ₫':''}</b>. Cảm ơn Quý khách đã sử dụng dịch vụ của ${esc(co.name||'VC24 Global')}.<br>
@@ -1609,13 +1619,11 @@ function exportInvoiceXlsx(){
   if(X.totPhi) row(['Phụ phí (VND):',X.totPhi],{1:XF_VND});
   if(X.shownPaidWon) row(['Đã thanh toán (KRW):',X.shownPaidWon],{1:XF_WON});
   if(X.credit>0) row(['Đã trả trước/dư (KRW):',X.credit],{1:XF_WON});
-  row(['Còn nợ (KRW):',X.oweWon],{1:XF_WON});
-  if(X.oweVnd) row(['Còn nợ (VND):',X.oweVnd],{1:XF_VND});
   row(['Phí phát sinh (KRW):',X.surcharge],{1:XF_WON});
   if(X.surchargeVnd) row(['Phí phát sinh (VND):',X.surchargeVnd],{1:XF_VND});
   if(surchargeNoteOf(cust)) row(['Ghi chú phí:',surchargeNoteOf(cust)]);
-  row(['TỔNG THANH TOÁN (KRW):',X.payableWon],{1:XF_WON});
-  if(X.payableVnd) row(['TỔNG THANH TOÁN (VND):',X.payableVnd],{1:XF_VND});
+  row(['TỔNG THANH TOÁN - CÒN NỢ (KRW):',X.payableWon],{1:XF_WON});
+  if(X.payableVnd) row(['TỔNG THANH TOÁN - CÒN NỢ (VND):',X.payableVnd],{1:XF_VND});
   row([]);
   row(['TK nhận VND:',[co.bank,co.acc,co.holder].filter(Boolean).join(' · ')]);
   row(['TK nhận Won (KRW):',[co.bankWon,co.accWon,co.holderWon].filter(Boolean).join(' · ')]);

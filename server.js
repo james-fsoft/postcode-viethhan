@@ -656,6 +656,33 @@ app.post('/api/vc24/payment-edit', requireAuth, requireVC24, async (req, res) =>
   res.json({ ok: true });
 });
 
+// Xóa 1 dòng thu — bỏ gạch các đơn của lần thu đó, tính lại dư (credit)
+app.post('/api/vc24/payment-delete', requireAuth, requireVC24, async (req, res) => {
+  if (!useRedis) return res.json({ ok: false, redis: false });
+  const { cust, at } = req.body || {};
+  if (!cust || !at) return res.json({ ok: false, reason: 'bad' });
+  let ledger = {}; try { const s = await redisGet(VK.ledger); if (s) ledger = JSON.parse(s); } catch { /* ok */ }
+  const led = ledger[cust];
+  if (!led || !Array.isArray(led.history)) return res.json({ ok: false, reason: 'notfound' });
+  const i = led.history.findIndex(h => h.at === at);
+  if (i < 0) return res.json({ ok: false, reason: 'notfound' });
+  const entry = led.history[i];
+  const o = await vcLoadOrders();
+  const keys = new Set(entry.keys || []);
+  o.rows.forEach(r => { if (r.cust === cust && keys.has(keyOf(r)) && isPaidPay(r.pay)) { r.pay = 'CHƯA TT'; r.paidDate = ''; } });
+  led.history.splice(i, 1);
+  // tính lại dư = tổng đã nhận - tổng won đơn còn Đã TT
+  const totalRecv = led.history.reduce((s, h) => s + (Number(h.amount) || 0), 0);
+  const paidWon = o.rows.filter(r => r.cust === cust && isPaidPay(r.pay)).reduce((s, r) => s + (Number(r.won) || 0) + (Number(r.phuPhiWon) || 0), 0);
+  led.credit = Math.max(0, totalRecv - paidWon);
+  ledger[cust] = led;
+  const s1 = await vcSaveOrders(o);
+  const s2 = await redisSet(VK.ledger, JSON.stringify(ledger));
+  if (!s1 || !s2) return res.json({ ok: false, reason: 'save' });
+  await vcLog('payment-delete', `Xóa 1 dòng thu của ${cust}: ₩${(Number(entry.amount) || 0).toLocaleString('en-US')} (bỏ gạch ${keys.size} đơn)`);
+  res.json({ ok: true });
+});
+
 // Upload = GỘP theo Mã kiện (key). Trùng -> bỏ qua, báo lại danh sách trùng.
 app.post('/api/vc24/upload', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
@@ -693,9 +720,7 @@ app.post('/api/vc24/draft/clear', requireAuth, requireVC24, async (req, res) => 
 // ── ĐẨY nháp lên dữ liệu tổng (cần mật khẩu) + lưu lịch sử upload + nhật ký ──
 app.post('/api/vc24/commit', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
-  const { password, week } = req.body || {};
-  const user = userFromReq(req);
-  if (!password || password !== USERS[user]) return res.json({ ok: false, reason: 'password' });
+  const { week } = req.body || {};
   const wk = /^\d{4}-W\d{2}$/.test(String(week || '')) ? String(week) : '';
   const draft = gzUnpack(await redisGet(VK.draft), null);
   if (!draft || !Array.isArray(draft.rows) || !draft.rows.length) return res.json({ ok: false, reason: 'empty' });

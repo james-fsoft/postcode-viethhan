@@ -1039,8 +1039,10 @@ function renderDraftTab(){
   const existing=new Set(ROWS.map(r=>r.pkg).filter(Boolean));
   let nw=0,dp=0; DRAFT.rows.forEach(r=>{ if(r.pkg && existing.has(r.pkg)) dp++; else nw++; });
   const bad=DRAFT.rows.filter(wonBad);
+  const dups=draftDupPkgs();
   $('draftInfo').textContent=`${DRAFT.fileName||''} · ${DRAFT.rows.length} đơn`;
-  $('draftSummary').innerHTML=`So với dữ liệu tổng: <b style="color:var(--green)">${nw} đơn MỚI</b>${dp?` · <b style="color:#e11d48">${dp} trùng</b> (sẽ bỏ qua khi đẩy lên)`:''}.`
+  $('draftSummary').innerHTML=`So với dữ liệu tổng: <b style="color:var(--green)">${nw} đơn MỚI</b>${dp?` · <b style="color:#e11d48">${dp} trùng mã với tổng</b>`:''}. <span class="muted">Đơn trùng mã KHÔNG bị bỏ — sẽ tự thêm -01 khi cần.</span>`
+    + (dups.length?`<div style="margin-top:8px;padding:8px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;color:#92400e"><b>🔁 ${dups.length} mã kiện đang TRÙNG</b> (${dups.slice(0,12).map(esc).join(', ')}${dups.length>12?'…':''}). Bấm 1 dòng để sửa mã, hoặc <button class="btn sm" onclick="autoFixDup()" style="border-color:#f59e0b;color:#b45309">🔧 Tự đánh số trùng (-01)</button></div>`:'')
     + (bad.length?`<div style="margin-top:8px;padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#b91c1c"><b>⚠️ ${bad.length} đơn có Tiền Won bất thường</b> (quá lớn, có thể lỗi từ file gốc): <b>${bad.slice(0,12).map(r=>esc(r.pkg||'?')).join(', ')}${bad.length>12?'…':''}</b>. Bấm vào ô đỏ để sửa lại trước khi đẩy lên tổng.</div>`:'');
   renderDraftList();
 }
@@ -1225,9 +1227,9 @@ async function parseWB(wb, fname){
   });
   if(!incoming.length){ alert('Không đọc được dòng dữ liệu nào. Kiểm tra file có đúng các cột (Mã khách hàng, Người nhận, Khu vực…) không.'); return; }
 
-  // trùng mã kiện NGAY TRONG FILE
-  const seen={}, dupInFile=[]; const uniqRows=[];
-  incoming.forEach(r=>{ const k=r.pkg; if(k){ if(seen[k]){ dupInFile.push(k); return; } seen[k]=1; } uniqRows.push(r); });
+  // GIỮ TẤT CẢ đơn. Mã kiện trùng (trong file hoặc trùng dữ liệu tổng) -> tự thêm -01,-02… để KHÔNG bị bỏ
+  const uniqRows=incoming;
+  const renamed=resolveDupPkgs(uniqRows);
 
   // Tuần của file: lấy từ ô chọn (mặc định tuần hiện tại)
   const upW = ($('upWeek') && /^\d{4}-W\d{2}$/.test($('upWeek').value)) ? $('upWeek').value : isoWeekStr(new Date());
@@ -1242,9 +1244,30 @@ async function parseWB(wb, fname){
     }catch(e){}
   }
   let m='📥 Đã nạp '+uniqRows.length+' đơn vào BẢN NHÁP để kiểm tra (CHƯA vào dữ liệu tổng).';
-  if(dupInFile.length)m+='\n('+dupInFile.length+' dòng trùng mã kiện ngay trong file đã bỏ.)';
+  if(renamed)m+='\n\n🔁 '+renamed+' mã kiện TRÙNG (trong file hoặc trùng dữ liệu tổng) đã tự thêm hậu tố -01, -02… để không bị bỏ. Bấm vào dòng để sửa lại mã kiện nếu cần.';
   m+='\n\nKiểm tra xong, bấm "✅ Đẩy lên dữ liệu tổng" (cần mật khẩu) để chính thức lưu.';
   alert(m);
+}
+// Đảm bảo mã kiện trong tập rows là DUY NHẤT so với dữ liệu tổng + trong chính tập đó. Trùng -> thêm -01,-02…
+function resolveDupPkgs(rows){
+  const used=new Set(ROWS.map(r=>r.pkg).filter(Boolean)); let renamed=0;
+  rows.forEach((r,i)=>{ let p=String(r.pkg||'').trim();
+    if(p){ if(used.has(p)){ let n=1,np; do{ np=p+'-'+String(n).padStart(2,'0'); n++; }while(used.has(np)); p=np; renamed++; } used.add(p); }
+    r.pkg=p; r.key=p||('row_'+i);
+  });
+  return renamed;
+}
+function draftDupPkgs(){
+  if(!DRAFT||!DRAFT.rows) return [];
+  const total=new Set(ROWS.map(r=>r.pkg).filter(Boolean)); const cnt={};
+  DRAFT.rows.forEach(r=>{ if(r.pkg) cnt[r.pkg]=(cnt[r.pkg]||0)+1; });
+  return Object.keys(cnt).filter(p=>total.has(p)||cnt[p]>1);
+}
+function autoFixDup(){
+  if(!DRAFT||!DRAFT.rows) return;
+  const n=resolveDupPkgs(DRAFT.rows);
+  renderDraftTab(); saveDraftToServer();
+  alert(n?('✅ Đã đổi '+n+' mã kiện trùng (thêm -01, -02…). Có thể bấm từng dòng để sửa lại nếu muốn.'):'Không còn mã kiện trùng.');
 }
 
 /* ---------- Hàng hiển thị trơn (nhẹ) — click để mở popup sửa cả dòng ---------- */
@@ -1277,7 +1300,10 @@ function openEdit(key,src){
   const r=pool.find(x=>x.key===key); if(!r) return; EDIT_KEY=key;
   $('editTitle').textContent=(EDIT_SOURCE==='draft'?'Sửa đơn nháp — Mã kiện ':'Sửa đơn — Mã kiện ')+(r.pkg||key);
   $('editBody').dataset.src=EDIT_SOURCE;
-  $('editBody').innerHTML='<div class="efgrid">'+EDIT_FIELDS.map(([f,lab,t])=>{
+  const pkgField = EDIT_SOURCE==='draft'
+    ? `<div class="field"><label>Mã kiện (đang nháp — sửa được)</label><input id="ef_pkg" class="ef" value="${escA(r.pkg||'')}" style="font-weight:700" /></div>`
+    : '';
+  $('editBody').innerHTML='<div class="efgrid">'+pkgField+EDIT_FIELDS.map(([f,lab,t])=>{
     const v=r[f]==null?'':r[f];
     let inp;
     if(t==='pay') inp=`<select id="ef_${f}" class="ef">${PAY_OPTS.map(o=>`<option value="${escA(o)}"${noVN(o)===noVN(v)?' selected':''}>${o||'(trống)'}</option>`).join('')}</select>`;
@@ -1292,7 +1318,7 @@ function openEdit(key,src){
   }).join('')+'</div>'+
     `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:10px;flex-wrap:wrap">
        <button class="btn" style="border-color:#fecaca;color:#dc2626" onclick="deleteCur()">🗑 Xóa đơn này</button>
-       <span class="small muted">Mã kiện là khóa duy nhất — không sửa được.</span>
+       <span class="small muted">${EDIT_SOURCE==='draft'?'Sửa mã kiện cho khỏi trùng (vd thêm -01) trước khi đẩy lên tổng.':'Mã kiện là khóa duy nhất — không sửa được.'}</span>
      </div>`;
   $('editModal').classList.add('show');
 }
@@ -1312,8 +1338,21 @@ function saveEdit(){
   EDIT_FIELDS.forEach(([f,lab,t])=>{ const el=$('ef_'+f); if(!el)return; let v=el.value;
     if(t==='money') v=money(v); else if(t==='num') v=weight(v); else v=String(v).trim();
     r[f]=v; patch[f]=v; });
+  // Sửa mã kiện (chỉ với bản nháp)
+  if(EDIT_SOURCE==='draft'){
+    const pe=$('ef_pkg');
+    if(pe){ const newPkg=String(pe.value||'').trim();
+      if(newPkg!==r.pkg){
+        if(!newPkg){ alert('Mã kiện không được để trống.'); return; }
+        const clashTotal=ROWS.some(x=>x.pkg===newPkg);
+        const clashDraft=DRAFT.rows.some(x=>x!==r && x.pkg===newPkg);
+        if(clashTotal||clashDraft){ alert('❌ Mã kiện "'+newPkg+'" đã tồn tại '+(clashTotal?'trong dữ liệu tổng':'trong bản nháp')+'. Hãy đặt mã khác (vd thêm -01).'); return; }
+        r.pkg=newPkg; r.key=newPkg; EDIT_KEY=newPkg;
+      }
+    }
+    closeEdit(); renderDraftTab(); saveDraftToServer(); return;
+  }
   closeEdit();
-  if(EDIT_SOURCE==='draft'){ renderDraftTab(); saveDraftToServer(); return; }
   applyFilters(); renderDebt(); renderDash(); if(CUST_SEL) renderCust(); refreshCD(); buildWeekPicker(); renderWeek();
   if(REDIS){ fetch('/api/vc24/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k,row:patch})}).catch(()=>{}); }
 }

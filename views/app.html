@@ -1533,8 +1533,8 @@ async function kakaoLookup(rawAddr, apiKey) {
         seen.add(r.zip);
         options.push(r);
       }
-      // Khắt khe như Naver: địa chỉ CHƯA có số nhà mà con đường trải NHIỀU mã -> không đoán
-      if (!hasBuildingNo(rawAddr) && options.length > 1) {
+      // Khắt khe 100% như Naver: địa chỉ CHƯA có SỐ NHÀ -> luôn yêu cầu bổ sung (kể cả khi đường chỉ 1 mã)
+      if (!hasBuildingNo(rawAddr)) {
         return { zip: null, display: pick.road, type: 'need_building', options };
       }
       let selected = options.findIndex(o => o.zip === pick.zip && o.road === pick.road);
@@ -1882,7 +1882,7 @@ function renderExcelResults(rows, headerRow) {
   thead.innerHTML=hHtml;
   tbody.innerHTML='';
   rows.forEach(r => {
-    const ambiguous = r.options && r.options.length > 1;
+    const ambiguous = (r.options && r.options.length > 1) || r.type === 'need_building';
     let tr='<tr>';
     r.rowData.forEach(cell => { tr+=`<td>${esc(String(cell))}</td>`; });
     let zipHtml;
@@ -1911,7 +1911,7 @@ function downloadExcelResult() {
   const ws_data = [];
   if (hasH && workbookData[0]) ws_data.push([...workbookData[0], t('colZipResult'), t('colNormalized'), t('colType')]);
   excelRows.forEach(r => {
-    const ambiguous = r.options && r.options.length > 1;
+    const ambiguous = (r.options && r.options.length > 1) || r.type === 'need_building';
     if (ambiguous) ws_data.push([...r.rowData, t('errAmbiguous'), '', typeLabel('ambiguous')]);
     else           ws_data.push([...r.rowData, r.zip||'', r.display||'', typeLabel(r.type)]);
   });

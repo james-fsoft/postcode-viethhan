@@ -220,7 +220,7 @@ const LANGS = {
     detectWarn:'Không tự nhận diện được cột. Vui lòng chọn thủ công bên dưới.',
     summary:(f,t)=>`Đã điền mã cho ${f}/${t} dòng. Xem trước trước khi tải.`,
     progress:(i,t)=>`Đang tra cứu... ${i}/${t}`,
-    notFound:'Không tìm thấy', empty:'(trống)',
+    notFound:'Không tìm thấy', needBuilding:'Thiếu thông tin (cần số nhà)', empty:'(trống)',
     errNoFile:'Chưa chọn file.', errRead:'Không đọc được file: ', errNoAddrCol:'Không tìm thấy cột địa chỉ.',
     errNetwork:'Lỗi kết nối, vui lòng thử lại.',
   },
@@ -240,7 +240,7 @@ const LANGS = {
     detectWarn:'Could not auto-detect columns. Please select manually below.',
     summary:(f,t)=>`Filled ${f}/${t} rows. Preview before downloading.`,
     progress:(i,t)=>`Looking up... ${i}/${t}`,
-    notFound:'Not found', empty:'(empty)',
+    notFound:'Not found', needBuilding:'Missing info (need building no.)', empty:'(empty)',
     errNoFile:'No file selected.', errRead:'Cannot read file: ', errNoAddrCol:'Address column not found.',
     errNetwork:'Connection error, please try again.',
   },
@@ -260,7 +260,7 @@ const LANGS = {
     detectWarn:'열을 자동 인식하지 못했습니다. 아래에서 직접 선택하세요.',
     summary:(f,t)=>`${t}건 중 ${f}건 입력 완료. 다운로드 전 미리보기.`,
     progress:(i,t)=>`조회 중... (${i}/${t})`,
-    notFound:'찾을 수 없음', empty:'(빈칸)',
+    notFound:'찾을 수 없음', needBuilding:'정보 부족 (건물번호 필요)', empty:'(빈칸)',
     errNoFile:'파일을 선택하세요.', errRead:'파일을 읽을 수 없습니다: ', errNoAddrCol:'주소 열을 찾을 수 없습니다.',
     errNetwork:'연결 오류, 다시 시도하세요.',
   }
@@ -364,6 +364,13 @@ function cleanAddress(addr){
     .replace(/,\s*/g,' ')
     .replace(/\s+/g,' ').trim();
 }
+// Có SỐ NHÀ không? (số đứng SAU token đường/khu cuối cùng 로/길/가/동/리)
+function hasBuildingNo(addr){
+  const s = cleanAddress(addr);
+  const m = s.match(/.*[로길가동리]/);
+  const after = m ? s.slice(m[0].length) : s;
+  return /\d/.test(after);
+}
 
 // Tạo nhiều biến thể địa chỉ: cụ thể → tổng quát để tăng tỉ lệ tìm thấy
 function buildCandidates(raw){
@@ -405,6 +412,7 @@ async function jusoQuery(q){
 async function lookupZip(addr){
   const cleaned = cleanAddress(addr);
   if (!cleaned) return null;
+  if (!hasBuildingNo(addr)) return null;   // khắt khe như Naver: thiếu SỐ NHÀ -> không tra (đồng nhất với trang tra mã)
   const toks = regionTokens(cleaned);   // vùng của địa chỉ gốc (vd 공주시)
 
   for (const cand of buildCandidates(addr)){
@@ -479,7 +487,7 @@ function renderPreview(){
     const edited = p.addr !== p.origAddr;
     const zipCell = p.zip
       ? `<span class="zip-ok">${p.zip}</span>`
-      : `<span class="zip-no">${t('notFound')}</span>`;
+      : `<span class="zip-no">${(p.addr && !hasBuildingNo(p.addr)) ? t('needBuilding') : t('notFound')}</span>`;
     const addrTxt = esc(p.addr) || `<span class="num">${t('empty')}</span>`;
     tr.innerHTML = `<td class="num" title="Dòng Excel">${p.row + 1}</td>
       <td class="addr" ondblclick="editRow(${i})" title="${esc(t('editHint'))}">${addrTxt}${edited?' <span class="num">✎</span>':''}</td>

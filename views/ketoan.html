@@ -1409,14 +1409,14 @@ function aggregate(src, applyCredit, inclSurcharge){
 function customerAgg(){ return aggregate(ROWS, true, true); }
 function renderDebt(){
   const agg=customerAgg(), owe=ROWS.filter(r=>!paid(r)), pd=ROWS.filter(r=>paid(r));
-  const oweVnd=sum(owe,'vnd')+sum(owe,'phuPhi');
+  const oweVnd=agg.reduce((s,a)=>s+(a.oweVnd||0),0);   // gồm cả phụ phí + phí phát sinh VND — khớp tab Phân bố nợ
   const totOweWon=agg.reduce((s,a)=>s+a.oweWon,0);
   const totPaidWon=agg.reduce((s,a)=>s+a.paidWon+a.credit,0);   // gồm cả tiền trả trước (credit) — khớp với tab Phân bố nợ
   $('debtStats').innerHTML=
     stat('Tổng đơn',ROWS.length,'','')+
     stat('Số khách hàng',agg.length,'','')+
     stat('Còn nợ (Won)','₩'+totOweWon.toLocaleString('en-US'),'owe',owe.length+' đơn chưa thu')+
-    stat('Còn nợ (VND)',oweVnd?oweVnd.toLocaleString('en-US')+' ₫':'—','owe','gồm phụ phí')+
+    stat('Còn nợ (VND)',oweVnd?oweVnd.toLocaleString('en-US')+' ₫':'—','owe','gồm phụ phí + phí phát sinh')+
     stat('Đã thu (Won)','₩'+totPaidWon.toLocaleString('en-US'),'paid',pd.length+' đơn đã thu'+(totPaidWon>sum(pd,'won')?' + trả trước':''));
   renderProfitBox('debtProfitBox', ROWS);
   let list=agg.slice(); const q=noVN($('qDebt').value); if(q)list=list.filter(a=>noVN(a.cust).includes(q));

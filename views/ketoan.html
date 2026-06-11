@@ -1518,17 +1518,18 @@ function renderInvoiceDoc(){
   const co=CFG||{}; const ln=(v,fb)=>v?esc(v):`<span style="color:#aaa">${fb}</span>`;
   const nf=n=>Number(n||0).toLocaleString('en-US');
   const hist=historyOf(cust), surNote=surchargeNoteOf(cust);
+  const kr=s=>`<span style="font-weight:400;color:#9aa3b2;font-size:.78em">${s}</span>`;   // dòng phụ tiếng Hàn
   $('invoiceDoc').innerHTML=`
     <div class="inv-top">
       <div><div class="co-name">${ln(co.name,'VC24 GLOBAL')}</div>
         <div class="co-line">${ln(co.addr,'Địa chỉ: (đang cập nhật)')}</div>
-        <div class="co-line">${co.phone?('ĐT: '+esc(co.phone)):'<span style="color:#aaa">ĐT: (đang cập nhật)</span>'}${co.email?(' · '+esc(co.email)):''}</div>
-        ${co.tax?`<div class="co-line">MST: ${esc(co.tax)}</div>`:''}</div>
-      <div class="inv-title"><h1>HÓA ĐƠN</h1><div class="inv-meta">YÊU CẦU THANH TOÁN</div><div class="inv-meta">Số: <b>${esc(invNo)}</b></div><div class="inv-meta">Ngày: ${dd}/${mm}/${now.getFullYear()}</div></div>
+        <div class="co-line">${co.phone?('ĐT/연락처: '+esc(co.phone)):'<span style="color:#aaa">ĐT: (đang cập nhật)</span>'}${co.email?(' · '+esc(co.email)):''}</div>
+        ${co.tax?`<div class="co-line">MST/사업자번호: ${esc(co.tax)}</div>`:''}</div>
+      <div class="inv-title"><h1>HÓA ĐƠN<br>${kr('청구서')}</h1><div class="inv-meta">YÊU CẦU THANH TOÁN · ${kr('결제 요청')}</div><div class="inv-meta">Số/번호: <b>${esc(invNo)}</b></div><div class="inv-meta">Ngày/발행일: ${dd}/${mm}/${now.getFullYear()}</div></div>
     </div>
-    <div class="bill-to"><div class="t">Khách hàng</div><div class="v">${esc(cust)} <span style="font-weight:500;color:#888;font-size:.85rem">— ${rows.length} đơn</span></div></div>
+    <div class="bill-to"><div class="t">Khách hàng · ${kr('고객')}</div><div class="v">${esc(cust)} <span style="font-weight:500;color:#888;font-size:.85rem">— ${rows.length} đơn / ${rows.length}건</span></div></div>
     <table>
-      <thead><tr><th>STT</th><th>Ngày</th><th>Mã kiện</th><th>Người nhận</th><th>Khu vực</th><th style="text-align:right">KG</th><th style="text-align:right">Tiền Won (₩)</th><th style="text-align:right">Phụ phí (₩)</th><th style="text-align:right">Phụ phí (₫)</th><th style="text-align:right">Tiền VND (₫)</th><th>TT</th></tr></thead>
+      <thead><tr><th>STT<br>${kr('No.')}</th><th>Ngày<br>${kr('날짜')}</th><th>Mã kiện<br>${kr('송장번호')}</th><th>Người nhận<br>${kr('수취인')}</th><th>Khu vực<br>${kr('지역')}</th><th style="text-align:right">KG<br>${kr('중량')}</th><th style="text-align:right">Tiền Won (₩)<br>${kr('금액 ₩')}</th><th style="text-align:right">Phụ phí (₩)<br>${kr('추가비용 ₩')}</th><th style="text-align:right">Phụ phí (₫)<br>${kr('추가비용 ₫')}</th><th style="text-align:right">Tiền VND (₫)<br>${kr('금액 ₫')}</th><th>TT<br>${kr('상태')}</th></tr></thead>
       <tbody>
         ${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.date)}</td><td>${esc(r.pkg)}</td><td>${esc(r.rcv)}</td><td>${esc(r.region)}</td>
           <td style="text-align:right">${r.weight?nf(r.weight):''}</td>
@@ -1536,45 +1537,46 @@ function renderInvoiceDoc(){
           <td style="text-align:right">${r.phuPhiWon?'₩'+nf(r.phuPhiWon):''}</td>
           <td style="text-align:right">${r.phuPhi?nf(r.phuPhi)+' ₫':''}</td>
           <td style="text-align:right">${r.vnd?nf(r.vnd)+' ₫':''}</td>
-          <td style="font-size:.78rem;color:${paid(r)?'#16a34a':'#dc2626'}">${paid(r)?'Đã TT':'Chưa TT'}</td></tr>`).join('')}
-        <tr class="tot-row"><td colspan="6" style="text-align:right">TỔNG (${rows.length} đơn)</td>
+          <td style="font-size:.78rem;color:${paid(r)?'#16a34a':'#dc2626'}">${paid(r)?'Đã TT<br>'+kr('완료'):'Chưa TT<br>'+kr('미납')}</td></tr>`).join('')}
+        <tr class="tot-row"><td colspan="6" style="text-align:right">TỔNG · ${kr('합계')} (${rows.length} đơn/건)</td>
           <td style="text-align:right">${X.totWon?'₩'+nf(X.totWon):''}</td><td style="text-align:right">${X.totPhiWon?'₩'+nf(X.totPhiWon):''}</td><td style="text-align:right">${X.totPhi?nf(X.totPhi)+' ₫':''}</td><td style="text-align:right">${X.totVnd?nf(X.totVnd)+' ₫':''}</td><td></td></tr>
       </tbody>
     </table>
     ${hist.length?`<div class="inv-pay-hist" style="margin-top:14px;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;background:#f8fafc">
-      <div style="font-size:.74rem;text-transform:uppercase;color:#888;font-weight:700;margin-bottom:6px">Lịch sử thanh toán đã nhận</div>
+      <div style="font-size:.74rem;text-transform:uppercase;color:#888;font-weight:700;margin-bottom:6px">Lịch sử thanh toán đã nhận · ${kr('입금 내역')}</div>
       <table style="width:100%;border-collapse:collapse;font-size:.85rem">
-        ${hist.slice().reverse().map(h=>`<tr><td style="padding:2px 0">${esc(fmtPaidDate(h.date))}</td><td style="text-align:right;color:#16a34a;font-weight:700">₩${nf(h.amount)}</td><td style="text-align:right;color:#94a3b8;font-size:.78rem">gạch ${h.marked||0} đơn</td></tr>`).join('')}
-        <tr style="border-top:1px solid #e2e8f0"><td style="padding-top:4px;font-weight:700">Tổng đã nhận</td><td style="text-align:right;font-weight:800;color:#16a34a">₩${nf(hist.reduce((s,h)=>s+(Number(h.amount)||0),0))}</td><td></td></tr>
+        ${hist.slice().reverse().map(h=>`<tr><td style="padding:2px 0">${esc(fmtPaidDate(h.date))}</td><td style="text-align:right;color:#16a34a;font-weight:700">₩${nf(h.amount)}</td><td style="text-align:right;color:#94a3b8;font-size:.78rem">gạch ${h.marked||0} đơn / ${h.marked||0}건</td></tr>`).join('')}
+        <tr style="border-top:1px solid #e2e8f0"><td style="padding-top:4px;font-weight:700">Tổng đã nhận · ${kr('총 입금액')}</td><td style="text-align:right;font-weight:800;color:#16a34a">₩${nf(hist.reduce((s,h)=>s+(Number(h.amount)||0),0))}</td><td></td></tr>
       </table>
     </div>`:''}
     <div class="pay-box">
       <div class="bank">
-        <div style="font-size:.74rem;text-transform:uppercase;color:#888;font-weight:700;margin-bottom:5px;">Thông tin thanh toán</div>
-        ${(co.bank||co.acc||co.holder)?`<div style="margin-bottom:7px"><b>🇻🇳 TK nhận VND:</b><br>Ngân hàng: ${ln(co.bank,'(cập nhật)')}<br>Số TK: <b>${ln(co.acc,'(cập nhật)')}</b> · Chủ TK: ${ln(co.holder,'(cập nhật)')}</div>`:''}
-        ${(co.bankWon||co.accWon||co.holderWon)?`<div style="margin-bottom:7px"><b>🇰🇷 TK nhận Won (KRW):</b><br>Ngân hàng: ${ln(co.bankWon,'(cập nhật)')}<br>Số TK: <b>${ln(co.accWon,'(cập nhật)')}</b> · Chủ TK: ${ln(co.holderWon,'(cập nhật)')}</div>`:''}
+        <div style="font-size:.74rem;text-transform:uppercase;color:#888;font-weight:700;margin-bottom:5px;">Thông tin thanh toán · ${kr('결제 정보')}</div>
+        ${(co.bank||co.acc||co.holder)?`<div style="margin-bottom:7px"><b>🇻🇳 TK nhận VND · ${kr('VND 계좌')}:</b><br>Ngân hàng/은행: ${ln(co.bank,'(cập nhật)')}<br>Số TK/계좌: <b>${ln(co.acc,'(cập nhật)')}</b> · Chủ TK/예금주: ${ln(co.holder,'(cập nhật)')}</div>`:''}
+        ${(co.bankWon||co.accWon||co.holderWon)?`<div style="margin-bottom:7px"><b>🇰🇷 TK nhận Won (KRW) · ${kr('원화 계좌')}:</b><br>Ngân hàng/은행: ${ln(co.bankWon,'(cập nhật)')}<br>Số TK/계좌: <b>${ln(co.accWon,'(cập nhật)')}</b> · Chủ TK/예금주: ${ln(co.holderWon,'(cập nhật)')}</div>`:''}
         ${(!(co.bank||co.acc||co.holder||co.bankWon||co.accWon||co.holderWon))?`<div style="color:#aaa;margin-bottom:7px">(Tài khoản nhận thanh toán: đang cập nhật)</div>`:''}
-        <div><b>Nội dung CK:</b> ${co.memo?esc(co.memo):esc(cust)}</div>
+        <div><b>Nội dung CK · ${kr('입금 메모')}:</b> ${co.memo?esc(co.memo):esc(cust)}</div>
       </div>
       <table class="sumtbl">
-        <tr><td>Tiền hàng (KRW):</td><td class="r">₩${nf(X.totWon)}</td></tr>
-        ${X.totPhiWon?`<tr><td>Phụ phí (KRW):</td><td class="r">₩${nf(X.totPhiWon)}</td></tr>`:''}
-        ${X.totVnd?`<tr><td>Thành tiền (VND):</td><td class="r">${nf(X.totVnd)} ₫</td></tr>`:''}
-        ${X.totPhi?`<tr><td>Phụ phí (VND):</td><td class="r">${nf(X.totPhi)} ₫</td></tr>`:''}
-        ${X.shownPaidWon?`<tr><td>Đã thanh toán (KRW):</td><td class="r" style="color:#16a34a">−₩${nf(X.shownPaidWon)}</td></tr>`:''}
-        ${X.credit>0?`<tr><td>Đã trả trước/dư (KRW):</td><td class="r" style="color:#16a34a">−₩${nf(X.credit)}</td></tr>`:''}
-        <tr class="no-print"><td>Phí phát sinh (KRW):</td><td class="r" style="white-space:nowrap">
+        <tr><td>Tiền hàng (KRW) · ${kr('상품금액')}:</td><td class="r">₩${nf(X.totWon)}</td></tr>
+        ${X.totPhiWon?`<tr><td>Phụ phí (KRW) · ${kr('추가비용')}:</td><td class="r">₩${nf(X.totPhiWon)}</td></tr>`:''}
+        ${X.totVnd?`<tr><td>Thành tiền (VND) · ${kr('금액')}:</td><td class="r">${nf(X.totVnd)} ₫</td></tr>`:''}
+        ${X.totPhi?`<tr><td>Phụ phí (VND) · ${kr('추가비용')}:</td><td class="r">${nf(X.totPhi)} ₫</td></tr>`:''}
+        ${X.shownPaidWon?`<tr><td>Đã thanh toán (KRW) · ${kr('결제됨')}:</td><td class="r" style="color:#16a34a">−₩${nf(X.shownPaidWon)}</td></tr>`:''}
+        ${X.credit>0?`<tr><td>Đã trả trước/dư (KRW) · ${kr('선납/잔액')}:</td><td class="r" style="color:#16a34a">−₩${nf(X.credit)}</td></tr>`:''}
+        <tr class="no-print"><td>Phí phát sinh (KRW) · ${kr('발생비용')}:</td><td class="r" style="white-space:nowrap">
           <input id="invSur" inputmode="numeric" value="${escA(X.surcharge?grp(X.surcharge):'')}" oninput="onMoneyInput(this)" placeholder="0" style="width:120px;text-align:right;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit" /> ₩</td></tr>
-        <tr class="no-print"><td>Phí phát sinh (VND):</td><td class="r" style="white-space:nowrap">
+        <tr class="no-print"><td>Phí phát sinh (VND) · ${kr('발생비용')}:</td><td class="r" style="white-space:nowrap">
           <input id="invSurVnd" inputmode="numeric" value="${escA(X.surchargeVnd?grp(X.surchargeVnd):'')}" oninput="onMoneyInput(this)" placeholder="0" style="width:120px;text-align:right;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit" /> ₫
           <button class="btn sm" id="invSurBtn" onclick="saveSurcharge()" style="margin-left:6px">💾 Lưu</button></td></tr>
-        <tr class="only-print" style="display:none"><td>Phí phát sinh:</td><td class="r">₩${nf(X.surcharge)}${X.surchargeVnd?'<br>'+nf(X.surchargeVnd)+' ₫':''}</td></tr>
-        ${surNote?`<tr><td colspan="2" style="font-size:.78rem;color:#888;padding-top:0">Ghi chú phí: ${esc(surNote)} <button class="btn sm no-print" onclick="editSurNote()" style="margin-left:4px">✎</button></td></tr>`:`<tr class="no-print"><td colspan="2"><button class="btn sm" onclick="editSurNote()">✎ Thêm ghi chú phí phát sinh</button></td></tr>`}
-        <tr class="grand"><td>TỔNG THANH TOÁN (còn nợ):</td><td class="r"><div>₩${nf(X.payableWon)}</div>${X.payableVnd?`<div>${nf(X.payableVnd)} ₫</div>`:''}</td></tr>
+        <tr class="only-print" style="display:none"><td>Phí phát sinh · ${kr('발생비용')}:</td><td class="r">${X.surcharge?'₩'+nf(X.surcharge):''}${X.surchargeVnd?'<br>'+nf(X.surchargeVnd)+' ₫':''}</td></tr>
+        ${surNote?`<tr><td colspan="2" style="font-size:.78rem;color:#888;padding-top:0">Ghi chú phí/${kr('비고')}: ${esc(surNote)} <button class="btn sm no-print" onclick="editSurNote()" style="margin-left:4px">✎</button></td></tr>`:`<tr class="no-print"><td colspan="2"><button class="btn sm" onclick="editSurNote()">✎ Thêm ghi chú phí phát sinh</button></td></tr>`}
+        <tr class="grand"><td>TỔNG THANH TOÁN (còn nợ)<br>${kr('총 결제금액 (미납)')}:</td><td class="r"><div>₩${nf(X.payableWon)}</div>${X.payableVnd?`<div>${nf(X.payableVnd)} ₫</div>`:''}</td></tr>
       </table>
     </div>
     <div class="note">Kính đề nghị Quý khách thanh toán số tiền còn nợ <b>₩${nf(X.payableWon)}${X.payableVnd?' + '+nf(X.payableVnd)+' ₫':''}</b>. Cảm ơn Quý khách đã sử dụng dịch vụ của ${esc(co.name||'VC24 Global')}.<br>
-      <span style="color:#999">* Còn nợ = Tiền hàng − đã thanh toán − dư + Phí phát sinh. Đơn tính theo Won (₩) hoặc VND (₫) tùy hàng.</span></div>`;
+      ${kr('위 미납 금액의 결제를 요청드립니다. '+esc(co.name||'VC24 Global')+'을(를) 이용해 주셔서 감사합니다.')}<br>
+      <span style="color:#999">* Còn nợ = Tiền hàng − đã thanh toán − dư + Phí phát sinh · ${kr('미납액 = 상품금액 − 결제됨 − 잔액 + 발생비용')}</span></div>`;
 }
 function editSurNote(){
   const cur=surchargeNoteOf(INV_CUST);
@@ -1604,34 +1606,34 @@ function exportInvoiceXlsx(){
   if(co.addr)row([co.addr]);
   const l2=[]; if(co.phone)l2.push('ĐT: '+co.phone); if(co.email)l2.push(co.email); if(l2.length)row([l2.join(' · ')]);
   if(co.tax)row(['MST: '+co.tax]);
-  row([]); row(['HÓA ĐƠN / YÊU CẦU THANH TOÁN']);
-  row(['Khách hàng:',cust]); row(['Ngày xuất:',todayISO()]); row([]);
-  const head=['STT','Ngày về','Mã kiện','Người nhận','SĐT nhận','Địa chỉ','Khu vực','KG','Đơn giá (₩)','Tiền Won (₩)','Phụ phí (₩)','Phụ phí (₫)','Tiền VND (₫)','Trạng thái'];
+  row([]); row(['HÓA ĐƠN / 청구서 — YÊU CẦU THANH TOÁN / 결제 요청']);
+  row(['Khách hàng / 고객:',cust]); row(['Ngày xuất / 발행일:',todayISO()]); row([]);
+  const head=['STT / No.','Ngày về / 날짜','Mã kiện / 송장번호','Người nhận / 수취인','SĐT nhận / 연락처','Địa chỉ / 주소','Khu vực / 지역','KG / 중량','Đơn giá (₩) / 단가','Tiền Won (₩) / 금액','Phụ phí (₩) / 추가비용','Phụ phí (₫) / 추가비용','Tiền VND (₫) / 금액','Trạng thái / 상태'];
   row(head);
-  rows.forEach((r,i)=>row([i+1,r.date,r.pkg,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.phuPhiWon)||'',Number(r.phuPhi)||'',Number(r.vnd)||'',paid(r)?'Đã TT':'Chưa TT'],{7:XF_KG,8:XF_WON,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND}));
-  row(['','','','','','','TỔNG',sum(rows,'weight')||'','',X.totWon,X.totPhiWon,X.totPhi,X.totVnd,''],{7:XF_KG,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND});
+  rows.forEach((r,i)=>row([i+1,r.date,r.pkg,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.phuPhiWon)||'',Number(r.phuPhi)||'',Number(r.vnd)||'',paid(r)?'Đã TT / 완료':'Chưa TT / 미납'],{7:XF_KG,8:XF_WON,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND}));
+  row(['','','','','','','TỔNG / 합계',sum(rows,'weight')||'','',X.totWon,X.totPhiWon,X.totPhi,X.totVnd,''],{7:XF_KG,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND});
   row([]);
   const hist=historyOf(cust);
-  if(hist.length){ row(['LỊCH SỬ THANH TOÁN']); row(['Ngày','Số tiền (₩)','Số đơn gạch']); hist.forEach(h=>row([fmtPaidDate(h.date),Number(h.amount)||0,h.marked||0],{1:XF_WON})); row(['Tổng đã nhận',hist.reduce((s,h)=>s+(Number(h.amount)||0),0),''],{1:XF_WON}); row([]); }
-  row(['Tiền hàng (KRW):',X.totWon],{1:XF_WON});
-  if(X.totPhiWon) row(['Phụ phí (KRW):',X.totPhiWon],{1:XF_WON});
-  if(X.totVnd) row(['Thành tiền (VND):',X.totVnd],{1:XF_VND});
-  if(X.totPhi) row(['Phụ phí (VND):',X.totPhi],{1:XF_VND});
-  if(X.shownPaidWon) row(['Đã thanh toán (KRW):',X.shownPaidWon],{1:XF_WON});
-  if(X.credit>0) row(['Đã trả trước/dư (KRW):',X.credit],{1:XF_WON});
-  row(['Phí phát sinh (KRW):',X.surcharge],{1:XF_WON});
-  if(X.surchargeVnd) row(['Phí phát sinh (VND):',X.surchargeVnd],{1:XF_VND});
-  if(surchargeNoteOf(cust)) row(['Ghi chú phí:',surchargeNoteOf(cust)]);
-  row(['TỔNG THANH TOÁN - CÒN NỢ (KRW):',X.payableWon],{1:XF_WON});
-  if(X.payableVnd) row(['TỔNG THANH TOÁN - CÒN NỢ (VND):',X.payableVnd],{1:XF_VND});
+  if(hist.length){ row(['LỊCH SỬ THANH TOÁN / 입금 내역']); row(['Ngày / 날짜','Số tiền (₩) / 금액','Số đơn gạch / 처리건']); hist.forEach(h=>row([fmtPaidDate(h.date),Number(h.amount)||0,h.marked||0],{1:XF_WON})); row(['Tổng đã nhận / 총 입금액',hist.reduce((s,h)=>s+(Number(h.amount)||0),0),''],{1:XF_WON}); row([]); }
+  row(['Tiền hàng (KRW) / 상품금액:',X.totWon],{1:XF_WON});
+  if(X.totPhiWon) row(['Phụ phí (KRW) / 추가비용:',X.totPhiWon],{1:XF_WON});
+  if(X.totVnd) row(['Thành tiền (VND) / 금액:',X.totVnd],{1:XF_VND});
+  if(X.totPhi) row(['Phụ phí (VND) / 추가비용:',X.totPhi],{1:XF_VND});
+  if(X.shownPaidWon) row(['Đã thanh toán (KRW) / 결제됨:',X.shownPaidWon],{1:XF_WON});
+  if(X.credit>0) row(['Đã trả trước/dư (KRW) / 선납·잔액:',X.credit],{1:XF_WON});
+  row(['Phí phát sinh (KRW) / 발생비용:',X.surcharge],{1:XF_WON});
+  if(X.surchargeVnd) row(['Phí phát sinh (VND) / 발생비용:',X.surchargeVnd],{1:XF_VND});
+  if(surchargeNoteOf(cust)) row(['Ghi chú phí / 비고:',surchargeNoteOf(cust)]);
+  row(['TỔNG THANH TOÁN - CÒN NỢ (KRW) / 총 결제금액(미납):',X.payableWon],{1:XF_WON});
+  if(X.payableVnd) row(['TỔNG THANH TOÁN - CÒN NỢ (VND) / 총 결제금액(미납):',X.payableVnd],{1:XF_VND});
   row([]);
-  row(['TK nhận VND:',[co.bank,co.acc,co.holder].filter(Boolean).join(' · ')]);
-  row(['TK nhận Won (KRW):',[co.bankWon,co.accWon,co.holderWon].filter(Boolean).join(' · ')]);
-  row(['Nội dung CK:',co.memo||cust]);
+  row(['TK nhận VND / VND 계좌:',[co.bank,co.acc,co.holder].filter(Boolean).join(' · ')]);
+  row(['TK nhận Won (KRW) / 원화 계좌:',[co.bankWon,co.accWon,co.holderWon].filter(Boolean).join(' · ')]);
+  row(['Nội dung CK / 입금 메모:',co.memo||cust]);
   const ws=XLSX.utils.aoa_to_sheet(aoa);
   ws['!cols']=[{wch:5},{wch:12},{wch:12},{wch:18},{wch:14},{wch:34},{wch:10},{wch:8},{wch:13},{wch:15},{wch:13},{wch:13},{wch:15},{wch:10}];
   fmtCells.forEach(({r,c,f})=>{ const a=XLSX.utils.encode_cell({r,c}); if(ws[a] && typeof ws[a].v==='number'){ ws[a].s=Object.assign(ws[a].s||{},{numFmt:f}); } });
-  const hr=aoa.findIndex(r=>r[0]==='STT');
+  const hr=aoa.findIndex(r=>String(r[0]||'').indexOf('STT')===0);
   if(hr>=0){ for(let cc=0;cc<head.length;cc++){ const a=XLSX.utils.encode_cell({r:hr,c:cc}); if(ws[a]) ws[a].s={font:{bold:true},fill:{fgColor:{rgb:'DDEBF7'}},alignment:{horizontal:'center'}}; } }
   const a0=XLSX.utils.encode_cell({r:0,c:0}); if(ws[a0]) ws[a0].s={font:{bold:true,sz:14,color:{rgb:'1E40AF'}}};
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Hóa đơn');

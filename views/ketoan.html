@@ -197,7 +197,7 @@
               <th>Ngày về</th><th>Mã kiện</th><th>Trạng thái hàng</th><th>Mã KH</th><th>Check TT</th><th>Ngày thu</th>
               <th>SĐT gửi / GC</th><th>Người nhận</th><th>SĐT nhận</th><th>Địa chỉ</th><th>Khu vực</th>
               <th class="r">KG</th><th class="r">Đơn giá</th><th class="r">Tiền Won (₩)</th><th class="r">Tiền VND (₫)</th>
-              <th>NV giao</th><th class="r">Phụ phí</th><th>Ghi chú</th>
+              <th>NV giao</th><th class="r">Phụ phí (₫)</th><th class="r">Phụ phí (₩)</th><th class="r">Chi phí ship (₩)</th><th>Ghi chú</th>
             </tr></thead>
             <tbody id="weekBody"></tbody>
           </table>
@@ -210,7 +210,7 @@
         <div style="border:1px solid #c7d2fe;background:#eef2ff;border-radius:12px;padding:12px 14px;margin-bottom:14px">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
             <b style="color:#3730a3">🚚 Chi phí vận chuyển tuần</b>
-            <button class="btn sm" onclick="openRateSetup()" style="border-color:#a5b4fc;color:#4f46e5">⚙️ Cài giá vận chuyển/kg</button>
+            <span class="small muted">Chi phí ship lấy từ cột trong file upload</span>
           </div>
           <div id="weekCostBox"></div>
         </div>
@@ -257,7 +257,7 @@
             <th>Ngày về</th><th>Mã kiện</th><th>Trạng thái hàng</th><th>Mã KH</th><th>Check TT</th><th>Ngày thu</th>
             <th>SĐT gửi / GC</th><th>Người nhận</th><th>SĐT nhận</th><th>Địa chỉ</th><th>Khu vực</th>
             <th class="r">KG</th><th class="r">Đơn giá</th><th class="r">Tiền Won (₩)</th><th class="r">Tiền VND (₫)</th>
-            <th>NV giao</th><th class="r">Phụ phí</th><th>Ghi chú</th>
+            <th>NV giao</th><th class="r">Phụ phí (₫)</th><th class="r">Phụ phí (₩)</th><th class="r">Chi phí ship (₩)</th><th>Ghi chú</th>
           </tr></thead>
           <tbody id="listBody"></tbody>
         </table>
@@ -302,7 +302,7 @@
             <th>Ngày về</th><th>Mã kiện</th><th>Trạng thái hàng</th><th>Mã KH</th><th>Check TT</th><th>Ngày thu</th>
             <th>SĐT gửi / GC</th><th>Người nhận</th><th>SĐT nhận</th><th>Địa chỉ</th><th>Khu vực</th>
             <th class="r">KG</th><th class="r">Đơn giá</th><th class="r">Tiền Won (₩)</th><th class="r">Tiền VND (₫)</th>
-            <th>NV giao</th><th class="r">Phụ phí</th><th>Ghi chú</th>
+            <th>NV giao</th><th class="r">Phụ phí (₫)</th><th class="r">Phụ phí (₩)</th><th class="r">Chi phí ship (₩)</th><th>Ghi chú</th>
           </tr></thead>
           <tbody id="draftBody"></tbody>
         </table>
@@ -362,7 +362,7 @@
       <div id="custSummary" class="stats"></div>
       <div class="tbl-wrap" id="custTblWrap" style="display:none">
         <table>
-          <thead><tr><th style="width:30px"><input type="checkbox" id="ctSelAll" onclick="ctSelAll(this)" title="Chọn tất cả" /></th><th>Ngày về</th><th>Mã kiện</th><th>Check TT</th><th>Ngày thu</th><th>Người nhận</th><th>Khu vực</th><th class="r">KG</th><th class="r">Tiền Won (₩)</th><th class="r">Phụ phí</th><th class="r">Tiền VND (₫)</th><th>Ghi chú</th></tr></thead>
+          <thead><tr><th style="width:30px"><input type="checkbox" id="ctSelAll" onclick="ctSelAll(this)" title="Chọn tất cả" /></th><th>Ngày về</th><th>Mã kiện</th><th>Check TT</th><th>Ngày thu</th><th>Người nhận</th><th>Khu vực</th><th class="r">KG</th><th class="r">Tiền Won (₩)</th><th class="r">Phụ phí (₫)</th><th class="r">Phụ phí (₩)</th><th class="r">Tiền VND (₫)</th><th>Ghi chú</th></tr></thead>
           <tbody id="custBody"></tbody>
         </table>
       </div>
@@ -461,21 +461,6 @@
   <div class="modal-box" style="max-width:520px">
     <div class="modal-bar"><h3 id="payTitle">Thu tiền</h3><button class="btn" onclick="closePay()">Đóng</button></div>
     <div style="padding:18px" id="payBody"></div>
-  </div>
-</div>
-
-<div class="modal" id="rateModal">
-  <div class="modal-box" style="max-width:480px">
-    <div class="modal-bar"><h3 id="rateTitle">Cài giá vận chuyển/kg</h3><button class="btn" onclick="closeRateSetup()">Đóng</button></div>
-    <div style="padding:18px">
-      <div class="small muted" id="rateInfo" style="margin-bottom:12px"></div>
-      <div id="rateRows"></div>
-      <div class="small muted" style="margin:6px 0 0">Giá theo ₩/kg. Tuần sau tự kế thừa giá tuần này (đến khi bạn đổi).</div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
-        <button class="btn" onclick="closeRateSetup()">Hủy</button>
-        <button class="btn primary" id="rateSaveBtn" onclick="saveRates()">💾 Lưu giá</button>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -776,14 +761,14 @@ function renderCD(){
     </div>
     <div class="small muted" style="margin-bottom:6px">💡 Bấm 1 dòng để sửa. Tick ô đầu dòng để chọn các mục cần xuất hóa đơn riêng.</div>
     <div class="tbl-wrap" style="max-height:52vh">
-      <table><thead><tr><th style="width:30px"><input type="checkbox" onclick="cdSelAll(this)" title="Chọn tất cả" ${(CD_SEL.size&&CD_SEL.size===rows.length)?'checked':''} /></th><th>Ngày về</th><th>Mã kiện</th><th>Check TT</th><th>Ngày thu</th><th>Người nhận</th><th>Địa chỉ</th><th>Khu vực</th><th class="r">KG</th><th class="r">Tiền Won (₩)</th><th class="r">Phụ phí</th><th>Ghi chú</th></tr></thead>
+      <table><thead><tr><th style="width:30px"><input type="checkbox" onclick="cdSelAll(this)" title="Chọn tất cả" ${(CD_SEL.size&&CD_SEL.size===rows.length)?'checked':''} /></th><th>Ngày về</th><th>Mã kiện</th><th>Check TT</th><th>Ngày thu</th><th>Người nhận</th><th>Địa chỉ</th><th>Khu vực</th><th class="r">KG</th><th class="r">Tiền Won (₩)</th><th class="r">Phụ phí (₫)</th><th class="r">Phụ phí (₩)</th><th>Ghi chú</th></tr></thead>
       <tbody>${rows.map(r=>`<tr class="rowclick" onclick="openEdit('${escJs(r.key)}')">
         <td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" ${CD_SEL.has(r.key)?'checked':''} onclick="cdToggle('${escJs(r.key)}',this)" /></td>
         <td>${esc(r.date)}</td><td style="font-weight:700">${esc(r.pkg)}</td>
         <td><span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span></td>
         <td>${paid(r)?fmtPaidDate(r.paidDate):'<span class="muted">—</span>'}</td>
         <td>${esc(r.rcv)}</td><td>${esc(r.addr)}</td><td>${r.region?'<span class="pill reg">'+esc(r.region)+'</span>':''}</td>
-        <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.won)}</td><td class="r num">${fmtVnd(r.phuPhi)}</td><td>${esc(r.ghiChu)}</td>
+        <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.won)}</td><td class="r num">${fmtVnd(r.phuPhi)}</td><td class="r num">${fmtWon(r.phuPhiWon)}</td><td>${esc(r.ghiChu)}</td>
       </tr>`).join('')}</tbody></table>
     </div>`;
   cdUpdateSelBtn();
@@ -875,9 +860,9 @@ function renderWeek(){
   buildWeekPicker();
   $('weekInfo').textContent = WEEK_SEL ? weekLabel(WEEK_SEL) : '';
   const all=weekRowsAll(), owe=all.filter(r=>!paid(r));
-  const oweVnd=sum(owe,'vnd')+sum(owe,'phuPhi');
+  const oweVnd=sumVnd(owe);
   $('weekSummary').innerHTML = all.length
-    ? `Tuần này: <b>${all.length}</b> đơn · Chưa thu <b>${owe.length}</b> — còn nợ <b style="color:#e11d48">${oweText(sum(owe,'won'),oweVnd)}</b> · Tổng Won <b>₩${sum(all,'won').toLocaleString('en-US')}</b>`
+    ? `Tuần này: <b>${all.length}</b> đơn · Chưa thu <b>${owe.length}</b> — còn nợ <b style="color:#e11d48">${oweText(sumWon(owe),oweVnd)}</b> · Tổng Won <b>₩${sumWon(all).toLocaleString('en-US')}</b>`
     : 'Không có dữ liệu tuần này.';
   if(WEEK_VIEW==='debt') renderWeekDebt(); else renderWeekOrders();
 }
@@ -898,113 +883,68 @@ function renderWeekOrders(){
   body.innerHTML=pageRows.map(r=>rowHTML(r,'main')).join('');
   $('weekPager').innerHTML = pages>1?`<button class="btn sm" ${WPAGE<=1?'disabled':''} onclick="weekPage(${WPAGE-1})">« Trước</button><span class="small">Trang ${WPAGE}/${pages} · ${start+1}–${start+pageRows.length}/${total}</span><button class="btn sm" ${WPAGE>=pages?'disabled':''} onclick="weekPage(${WPAGE+1})">Sau »</button>`:'';
 }
-/* ---- Chi phí vận chuyển theo tuần ---- */
+/* ---- Chi phí vận chuyển theo tuần (lấy từ cột "Chi phí ship" trong file) ---- */
 function regKey(r){ return String((r&&r.region)||'').trim() || '(không khu vực)'; }
-function effectiveRatesFor(week){
-  if(RATES[week] && Object.keys(RATES[week]).length) return RATES[week];
-  const ks=Object.keys(RATES).filter(k=>k<=week && RATES[k] && Object.keys(RATES[k]).length).sort();
-  return ks.length?RATES[ks[ks.length-1]]:{};
+function weekCostBreakdown(rows){
+  const m={};
+  (rows||[]).forEach(r=>{ const k=regKey(r); if(!m[k])m[k]={region:k,kg:0,count:0,cost:0}; m[k].kg+=Number(r.weight)||0; m[k].count++; m[k].cost+=Number(r.ship)||0; });
+  const list=Object.values(m).sort((a,b)=>b.cost-a.cost);
+  return { list, total:list.reduce((s,x)=>s+x.cost,0), totalKg:list.reduce((s,x)=>s+x.kg,0) };
 }
-function rateSourceWeek(week){ // tuần mà giá đang áp dụng đến từ
-  if(RATES[week] && Object.keys(RATES[week]).length) return week;
-  const ks=Object.keys(RATES).filter(k=>k<=week && RATES[k] && Object.keys(RATES[k]).length).sort();
-  return ks.length?ks[ks.length-1]:'';
-}
-function weekCostBreakdown(rows, week){
-  const rates=effectiveRatesFor(week), m={};
-  rows.forEach(r=>{ const k=regKey(r); if(!m[k])m[k]={region:k,kg:0,count:0}; m[k].kg+=Number(r.weight)||0; m[k].count++; });
-  const list=Object.values(m).map(x=>{ const rate=Number(rates[x.region])||0; return Object.assign(x,{rate,cost:Math.round(x.kg*rate)}); });
-  list.sort((a,b)=>b.cost-a.cost);
-  return { list, total:list.reduce((s,x)=>s+x.cost,0), totalKg:list.reduce((s,x)=>s+x.kg,0), rates };
-}
-// Chi phí cho tập đơn bất kỳ — mỗi đơn dùng giá theo TUẦN của nó
+// Chi phí cho tập đơn bất kỳ = tổng cột Chi phí ship
 function costOfRows(rows){
   let total=0, totalKg=0, missing=0;
-  (rows||[]).forEach(r=>{ const rate=Number(effectiveRatesFor(weekKey(r))[regKey(r)])||0; const kg=Number(r.weight)||0; totalKg+=kg; if(rate) total+=Math.round(kg*rate); else if(kg) missing++; });
+  (rows||[]).forEach(r=>{ const s=Number(r.ship)||0; const kg=Number(r.weight)||0; totalKg+=kg; total+=s; if(!s && kg) missing++; });
   return { total, totalKg, missing };
+}
+function profitGridHTML(rows, cost){
+  const revWon=sumWon(rows), revVnd=sumVnd(rows), profit=revWon-cost, pc=profit>=0?'#16a34a':'#dc2626';
+  return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;font-size:.86rem">
+    <div><div class="muted" style="font-size:.78rem">Doanh thu tiền hàng</div><div style="font-weight:800">₩${revWon.toLocaleString('en-US')}${revVnd?`<br><span style="font-size:.8rem;font-weight:700">${revVnd.toLocaleString('en-US')} ₫</span>`:''}</div></div>
+    <div><div class="muted" style="font-size:.78rem">Chi phí ship</div><div style="font-weight:800;color:#dc2626">−₩${cost.toLocaleString('en-US')}</div></div>
+    <div><div class="muted" style="font-size:.78rem">Lợi nhuận (₩)</div><div style="font-weight:900;color:${pc};font-size:1.05rem">₩${profit.toLocaleString('en-US')}</div></div>
+  </div>`;
 }
 function renderProfitBox(elId, rows){
   const box=$(elId); if(!box) return;
   if(!rows||!rows.length){ box.innerHTML=''; return; }
-  const c=costOfRows(rows), revWon=sum(rows,'won'), revVnd=sum(rows,'vnd')+sum(rows,'phuPhi'), profit=revWon-c.total, pc=profit>=0?'#16a34a':'#dc2626';
+  const c=costOfRows(rows);
   box.innerHTML=`<div style="border:1px solid #c7d2fe;background:#eef2ff;border-radius:12px;padding:12px 14px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
-      <b style="color:#3730a3">🚚 Chi phí & lợi nhuận (${rows.length} đơn)</b>
-      <span class="small muted">Chi phí = giá/kg theo từng tuần. Đổi giá ở tab Theo tuần → Công nợ tuần.</span>
+      <b style="color:#3730a3">🚚 Chi phí & lợi nhuận (${rows.length} đơn · ${fmtKg(c.totalKg)})</b>
+      <span class="small muted">Chi phí ship lấy từ cột "Chi phí ship" trong file upload.</span>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;font-size:.86rem">
-      <div><div class="muted" style="font-size:.78rem">Doanh thu tiền hàng</div><div style="font-weight:800">₩${revWon.toLocaleString('en-US')}${revVnd?`<br><span style="font-size:.8rem;font-weight:700">${revVnd.toLocaleString('en-US')} ₫</span>`:''}</div></div>
-      <div><div class="muted" style="font-size:.78rem">Tổng KG</div><div style="font-weight:800">${fmtKg(c.totalKg)}</div></div>
-      <div><div class="muted" style="font-size:.78rem">Chi phí vận chuyển</div><div style="font-weight:800;color:#dc2626">−₩${c.total.toLocaleString('en-US')}</div></div>
-      <div><div class="muted" style="font-size:.78rem">Lợi nhuận (₩)</div><div style="font-weight:900;color:${pc};font-size:1.05rem">₩${profit.toLocaleString('en-US')}</div></div>
-    </div>
-    ${c.missing?`<div class="small" style="color:#dc2626;margin-top:6px">⚠️ ${c.missing} đơn có khu vực chưa cài giá (chi phí/lợi nhuận chưa đủ). Cài giá ở tab Theo tuần.</div>`:''}
+    ${profitGridHTML(rows,c.total)}
+    ${c.missing?`<div class="small" style="color:#dc2626;margin-top:6px">⚠️ ${c.missing} đơn chưa có Chi phí ship (chi phí/lợi nhuận chưa đủ). Bổ sung cột "Chi phí ship" trong file rồi up lại, hoặc sửa từng đơn.</div>`:''}
   </div>`;
 }
 function renderWeekCost(){
   const box=$('weekCostBox'); if(!box) return;
   const all=weekRowsAll();
-  const b=weekCostBreakdown(all, WEEK_SEL);
-  const src=rateSourceWeek(WEEK_SEL);
-  const noRate=b.list.filter(x=>!x.rate && x.kg>0);
+  const b=weekCostBreakdown(all);
+  const noShip=all.filter(r=>!(Number(r.ship)||0) && (Number(r.weight)||0)).length;
   box.innerHTML = !all.length ? '<span class="small muted">Chưa có dữ liệu tuần này.</span>' : `
     <div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:.86rem">
-      <thead><tr style="color:#64748b;text-align:left"><th style="padding:4px 8px">Khu vực</th><th class="r" style="padding:4px 8px;text-align:right">Số đơn</th><th class="r" style="padding:4px 8px;text-align:right">Tổng KG</th><th class="r" style="padding:4px 8px;text-align:right">Đơn giá/kg</th><th class="r" style="padding:4px 8px;text-align:right">Thành tiền (₩)</th></tr></thead>
+      <thead><tr style="color:#64748b;text-align:left"><th style="padding:4px 8px">Khu vực</th><th class="r" style="padding:4px 8px;text-align:right">Số đơn</th><th class="r" style="padding:4px 8px;text-align:right">Tổng KG</th><th class="r" style="padding:4px 8px;text-align:right">Chi phí ship (₩)</th></tr></thead>
       <tbody>${b.list.map(x=>`<tr style="border-top:1px solid #e2e8f0">
         <td style="padding:4px 8px"><b>${esc(x.region)}</b></td>
         <td style="padding:4px 8px;text-align:right">${x.count}</td>
         <td style="padding:4px 8px;text-align:right">${fmtKg(x.kg)}</td>
-        <td style="padding:4px 8px;text-align:right">${x.rate?'₩'+x.rate.toLocaleString('en-US'):'<span style="color:#dc2626">chưa cài</span>'}</td>
         <td style="padding:4px 8px;text-align:right;font-weight:700">${x.cost?'₩'+x.cost.toLocaleString('en-US'):'—'}</td>
       </tr>`).join('')}</tbody>
-      <tfoot><tr style="border-top:2px solid #c7d2fe;font-weight:800;color:#3730a3"><td style="padding:6px 8px">TỔNG CHI PHÍ</td><td></td><td style="padding:6px 8px;text-align:right">${fmtKg(b.totalKg)}</td><td></td><td style="padding:6px 8px;text-align:right">₩${b.total.toLocaleString('en-US')}</td></tr></tfoot>
+      <tfoot><tr style="border-top:2px solid #c7d2fe;font-weight:800;color:#3730a3"><td style="padding:6px 8px">TỔNG CHI PHÍ</td><td></td><td style="padding:6px 8px;text-align:right">${fmtKg(b.totalKg)}</td><td style="padding:6px 8px;text-align:right">₩${b.total.toLocaleString('en-US')}</td></tr></tfoot>
     </table></div>
-    ${(()=>{ const revWon=sum(all,'won'), revVnd=sum(all,'vnd')+sum(all,'phuPhi'), profit=revWon-b.total; const pc=profit>=0?'#16a34a':'#dc2626';
-      return `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed #c7d2fe;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;font-size:.86rem">
-        <div><div class="muted" style="font-size:.78rem">Doanh thu tiền hàng</div><div style="font-weight:800">₩${revWon.toLocaleString('en-US')}${revVnd?`<br><span style="font-size:.8rem;font-weight:700">${revVnd.toLocaleString('en-US')} ₫</span>`:''}</div></div>
-        <div><div class="muted" style="font-size:.78rem">Chi phí vận chuyển</div><div style="font-weight:800;color:#dc2626">−₩${b.total.toLocaleString('en-US')}</div></div>
-        <div><div class="muted" style="font-size:.78rem">Lợi nhuận tuần (₩)</div><div style="font-weight:900;color:${pc};font-size:1.05rem">₩${profit.toLocaleString('en-US')}</div></div>
-      </div>`; })()}
-    <div class="small muted" style="margin-top:6px">${src&&src!==WEEK_SEL?`⤷ Đang dùng giá kế thừa từ <b>${esc(weekLabel(src))}</b>. `:''}${noRate.length?`<span style="color:#dc2626">⚠️ ${noRate.length} khu vực chưa cài giá nên chi phí/lợi nhuận chưa đủ — bấm "Cài giá".</span>`:'Lợi nhuận (₩) = Doanh thu Won − Chi phí. Đơn tính bằng VND hiển thị riêng.'}</div>`;
-}
-function openRateSetup(){
-  if(!REDIS){ alert('Chưa bật lưu trữ server.'); return; }
-  if(!WEEK_SEL){ alert('Chưa chọn tuần.'); return; }
-  const all=weekRowsAll();
-  const eff=effectiveRatesFor(WEEK_SEL);
-  // khu vực = từ đơn trong tuần + các khu vực đã có giá kế thừa
-  const regs=uniq(all.map(regKey).concat(Object.keys(eff))).filter(x=>x!=='(không khu vực)');
-  const cur = RATES[WEEK_SEL] || {};
-  $('rateTitle').textContent='Cài giá VC/kg — '+weekLabel(WEEK_SEL);
-  const src=rateSourceWeek(WEEK_SEL);
-  $('rateInfo').innerHTML = regs.length? (src&&src!==WEEK_SEL?`Giá gợi ý kế thừa từ <b>${esc(weekLabel(src))}</b> — sửa nếu cần rồi Lưu cho tuần này.`:'Nhập giá ₩/kg cho từng khu vực.') : 'Tuần này chưa có khu vực nào.';
-  $('rateRows').innerHTML = regs.map(rg=>{ const v = (cur[rg]!=null?cur[rg]:eff[rg])||''; return `<div class="field" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-    <label style="min-width:120px;font-weight:700">${esc(rg)}</label>
-    <input id="rate_${escA(rg)}" class="ef" inputmode="numeric" value="${v?grp(String(v)):''}" oninput="onMoneyInput(this)" placeholder="₩/kg" style="flex:1" />
-  </div>`; }).join('') || '<div class="small muted">Không có khu vực.</div>';
-  window._RATE_REGS=regs;
-  $('rateModal').classList.add('show');
-}
-function closeRateSetup(){ $('rateModal').classList.remove('show'); }
-async function saveRates(){
-  const regs=window._RATE_REGS||[]; const rates={};
-  regs.forEach(rg=>{ const el=$('rate_'+rg); if(el){ const v=money(el.value); if(v>0) rates[rg]=v; } });
-  const btn=$('rateSaveBtn'); if(btn){ btn.disabled=true; btn.textContent='⏳ Đang lưu…'; }
-  try{
-    const r=await fetch('/api/vc24/rates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({week:WEEK_SEL,rates})}).then(x=>x.json());
-    if(btn){ btn.disabled=false; btn.textContent='💾 Lưu giá'; }
-    if(!r.ok){ alert(r.reason==='week'?'Tuần không hợp lệ.':'Lưu giá thất bại.'); return; }
-    RATES[WEEK_SEL]=rates; closeRateSetup(); renderWeekCost();
-  }catch(e){ if(btn){ btn.disabled=false; btn.textContent='💾 Lưu giá'; } alert('Lỗi khi lưu giá.'); }
+    <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #c7d2fe">${profitGridHTML(all,b.total)}</div>
+    <div class="small muted" style="margin-top:6px">${noShip?`<span style="color:#dc2626">⚠️ ${noShip} đơn chưa có Chi phí ship — bổ sung cột trong file rồi up lại.</span>`:'Chi phí ship lấy từ cột trong file upload. Lợi nhuận (₩) = Doanh thu Won − Chi phí ship.'}</div>`;
 }
 function renderWeekDebt(){
   renderWeekCost();
   const all=weekRowsAll();
   const agg=aggregate(all,false);
   const owe=all.filter(r=>!paid(r)), pd=all.filter(r=>paid(r));
-  const totOweWon=sum(owe,'won'), totOweVnd=sum(owe,'vnd')+sum(owe,'phuPhi');
+  const totOweWon=sumWon(owe), totOweVnd=sumVnd(owe);
   const custsW=new Set(all.map(r=>r.cust)); let weekCredit=0; custsW.forEach(c=>weekCredit+=creditOf(c));
-  const paidW=sum(pd,'won')+weekCredit;   // gồm tiền trả trước của KH trong tuần — khớp với tab Công nợ / Phân bố nợ
+  const paidW=sumWon(pd)+weekCredit;   // gồm tiền trả trước của KH trong tuần — khớp với tab Công nợ / Phân bố nợ
   $('weekDebtStats').innerHTML=
     stat('Tổng đơn',all.length,'','')+
     stat('Số khách hàng',agg.length,'','')+
@@ -1126,21 +1066,21 @@ async function renderHistory(){
     </div>`;
 }
 function exportRowsXlsx(rows, base){
-  const headers=['NGÀY VỀ','MÃ KIỆN','TRẠNG THÁI HÀNG','MÃ KHÁCH HÀNG','CHECK TT','SĐT NGƯỜI GỬI/ GHI CHÚ','NGƯỜI NHẬN','SĐT NGƯỜI NHẬN','ĐỊA CHỈ NGƯỜI NHẬN','KHU VỰC','무게 (KG)','ĐƠN GIÁ','THÀNH TIỀN WON','THÀNH TIỀN VND','NV GIAO','PHỤ PHÍ','Ghi chú','NGÀY THU'];
-  const aoa=[headers].concat((rows||[]).map(r=>[r.date,r.pkg,r.status,r.cust,r.pay,r.note,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.vnd)||'',r.staff,Number(r.phuPhi)||'',r.ghiChu,r.paidDate||'']));
+  const headers=['NGÀY VỀ','MÃ KIỆN','TRẠNG THÁI HÀNG','MÃ KHÁCH HÀNG','CHECK TT','SĐT NGƯỜI GỬI/ GHI CHÚ','NGƯỜI NHẬN','SĐT NGƯỜI NHẬN','ĐỊA CHỈ NGƯỜI NHẬN','KHU VỰC','무게 (KG)','ĐƠN GIÁ','THÀNH TIỀN WON','THÀNH TIỀN VND','PHỤ PHÍ (VND)','PHỤ PHÍ (KRW)','CHI PHÍ SHIP (KRW)','NV GIAO','Ghi chú','NGÀY THU'];
+  const aoa=[headers].concat((rows||[]).map(r=>[r.date,r.pkg,r.status,r.cust,r.pay,r.note,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.vnd)||'',Number(r.phuPhi)||'',Number(r.phuPhiWon)||'',Number(r.ship)||'',r.staff,r.ghiChu,r.paidDate||'']));
   const ws=XLSX.utils.aoa_to_sheet(aoa);
-  const colFmt={10:XF_KG,11:XF_WON,12:XF_WON,13:XF_VND,15:XF_VND};
+  const colFmt={10:XF_KG,11:XF_WON,12:XF_WON,13:XF_VND,14:XF_VND,15:XF_WON,16:XF_WON};
   for(let r=1;r<aoa.length;r++){ Object.keys(colFmt).forEach(c=>{ const a=XLSX.utils.encode_cell({r,c:+c}); if(ws[a] && typeof ws[a].v==='number'){ ws[a].s=Object.assign(ws[a].s||{},{numFmt:colFmt[c]}); } }); }
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Dữ liệu'); XLSX.writeFile(wb, base+'.xlsx');
 }
 function downloadAllXlsx(){
   if(!ROWS.length){ alert('Chưa có dữ liệu tổng để tải.'); return; }
   const rows = (typeof LIST_ROWS!=='undefined' && LIST_ROWS.length) ? LIST_ROWS : ROWS;  // tải theo bộ lọc hiện tại (gồm khoảng ngày)
-  const headers=['NGÀY VỀ','TUẦN','MÃ KIỆN','TRẠNG THÁI HÀNG','MÃ KHÁCH HÀNG','CHECK TT','SĐT NGƯỜI GỬI/ GHI CHÚ','NGƯỜI NHẬN','SĐT NGƯỜI NHẬN','ĐỊA CHỈ NGƯỜI NHẬN','KHU VỰC','무게 (KG)','ĐƠN GIÁ','THÀNH TIỀN WON','THÀNH TIỀN VND','NV GIAO','PHỤ PHÍ','Ghi chú','NGÀY THU'];
-  const aoa=[headers].concat(rows.map(r=>[r.date,weekKey(r),r.pkg,r.status,r.cust,r.pay,r.note,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.vnd)||'',r.staff,Number(r.phuPhi)||'',r.ghiChu,r.paidDate||'']));
+  const headers=['NGÀY VỀ','TUẦN','MÃ KIỆN','TRẠNG THÁI HÀNG','MÃ KHÁCH HÀNG','CHECK TT','SĐT NGƯỜI GỬI/ GHI CHÚ','NGƯỜI NHẬN','SĐT NGƯỜI NHẬN','ĐỊA CHỈ NGƯỜI NHẬN','KHU VỰC','무게 (KG)','ĐƠN GIÁ','THÀNH TIỀN WON','THÀNH TIỀN VND','PHỤ PHÍ (VND)','PHỤ PHÍ (KRW)','CHI PHÍ SHIP (KRW)','NV GIAO','Ghi chú','NGÀY THU'];
+  const aoa=[headers].concat(rows.map(r=>[r.date,weekKey(r),r.pkg,r.status,r.cust,r.pay,r.note,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.vnd)||'',Number(r.phuPhi)||'',Number(r.phuPhiWon)||'',Number(r.ship)||'',r.staff,r.ghiChu,r.paidDate||'']));
   const ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols']=[{wch:12},{wch:10},{wch:12},{wch:24},{wch:18},{wch:13},{wch:18},{wch:16},{wch:14},{wch:34},{wch:10},{wch:9},{wch:11},{wch:15},{wch:15},{wch:12},{wch:12},{wch:18},{wch:12}];
-  const colFmt={11:XF_KG,12:XF_WON,13:XF_WON,14:XF_VND,16:XF_VND};   // KG, Đơn giá, Won, VND, Phụ phí
+  ws['!cols']=[{wch:12},{wch:10},{wch:12},{wch:24},{wch:18},{wch:13},{wch:18},{wch:16},{wch:14},{wch:34},{wch:10},{wch:9},{wch:11},{wch:15},{wch:15},{wch:12},{wch:12},{wch:14},{wch:12},{wch:18},{wch:12}];
+  const colFmt={11:XF_KG,12:XF_WON,13:XF_WON,14:XF_VND,15:XF_VND,16:XF_WON,17:XF_WON};   // KG, Đơn giá, Won, VND, Phụ phí VND, Phụ phí KRW, Ship
   for(let r=1;r<aoa.length;r++){ Object.keys(colFmt).forEach(c=>{ const a=XLSX.utils.encode_cell({r,c:+c}); if(ws[a] && typeof ws[a].v==='number'){ ws[a].s=Object.assign(ws[a].s||{},{numFmt:colFmt[c]}); } }); }
   for(let c=0;c<headers.length;c++){ const a=XLSX.utils.encode_cell({r:0,c}); if(ws[a]) ws[a].s={font:{bold:true},fill:{fgColor:{rgb:'DDEBF7'}},alignment:{horizontal:'center'},border:{bottom:{style:'thin',color:{rgb:'9CB3D4'}}}}; }
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Dữ liệu tổng');
@@ -1167,8 +1107,8 @@ $('drop').addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(f) re
 function readFile(f){ const rd=new FileReader(); rd.onload=e=>{ const wb=XLSX.read(e.target.result,{type:'array'}); parseWB(wb,f.name); }; rd.readAsArrayBuffer(f); }
 
 function downloadTemplate(){
-  const headers=['NGÀY VỀ','MÃ KIỆN','TRẠNG THÁI HÀNG','MÃ KHÁCH HÀNG','CHECK TT','SĐT NGƯỜI GỬI/ GHI CHÚ','NGƯỜI NHẬN','SĐT NGƯỜI NHẬN','ĐỊA CHỈ NGƯỜI NHẬN','KHU VỰC','무게 (KG)','ĐƠN GIÁ','THÀNH TIỀN WON','THÀNH TIỀN VND','NV GIAO','PHỤ PHÍ','Ghi chú'];
-  const sample=['01-06-2026','0106M1554','HÀNG VỀ TRUNG TÂM','288- QUANG FL','CHƯA TT','','Nguyễn Văn A','0901234567','75 ngõ 68 Triều Khúc, Hà Nội','HN',6.25,9190,57438,'','J&T','',''];
+  const headers=['NGÀY VỀ','MÃ KIỆN','TRẠNG THÁI HÀNG','MÃ KHÁCH HÀNG','CHECK TT','SĐT NGƯỜI GỬI/ GHI CHÚ','NGƯỜI NHẬN','SĐT NGƯỜI NHẬN','ĐỊA CHỈ NGƯỜI NHẬN','KHU VỰC','무게 (KG)','ĐƠN GIÁ','THÀNH TIỀN WON','THÀNH TIỀN VND','PHỤ PHÍ (VND)','PHỤ PHÍ (KRW)','CHI PHÍ SHIP (KRW)','NV GIAO','Ghi chú'];
+  const sample=['01-06-2026','0106M1554','HÀNG VỀ TRUNG TÂM','288- QUANG FL','CHƯA TT','','Nguyễn Văn A','0901234567','75 ngõ 68 Triều Khúc, Hà Nội','HN',6.25,9190,57438,'',0,0,50000,'J&T',''];
   const aoa=[headers,sample];
   const ws=XLSX.utils.aoa_to_sheet(aoa);
   ws['!cols']=headers.map(h=>({wch:Math.max(10,h.length+2)}));
@@ -1186,9 +1126,17 @@ function detect(H){
   c.addr=findCol(H,'DIA CHI');
   c.rcv=(function(){ for(let i=0;i<H.length;i++){ const h=H[i]; if(h.includes('NGUOI NHAN')&&!h.includes('SDT')&&!h.includes('DIA CHI')&&!h.includes('DT'))return i;} return -1; })();
   c.region=findCol(H,'KHU VUC'); c.weight=findCol(H,'무게'); if(c.weight<0)c.weight=findCol(H,'KG');
-  c.price=findCol(H,'DON GIA'); c.won=findCol(H,'WON'); c.vnd=findCol(H,'VND');
+  c.price=findCol(H,'DON GIA');
+  // Tiền hàng (không phải phụ phí): ưu tiên "THÀNH TIỀN WON/VND"
+  c.won=(function(){ for(let i=0;i<H.length;i++){ if(H[i].includes('WON')&&!H[i].includes('PHU PHI')) return i; } return -1; })();
+  c.vnd=(function(){ for(let i=0;i<H.length;i++){ if(H[i].includes('VND')&&!H[i].includes('PHU PHI')) return i; } return -1; })();
   c.staff=findCol(H,'NV GIAO'); if(c.staff<0)c.staff=findCol(H,'GIAO');
-  c.phuPhi=findCol(H,'PHU PHI');
+  // 2 cột phụ phí: KRW và VND
+  const phuCols=[]; for(let i=0;i<H.length;i++){ if(H[i].includes('PHU PHI')) phuCols.push(i); }
+  let pw=phuCols.find(i=>H[i].includes('WON')||H[i].includes('KRW')); c.phuPhiWon=(pw==null?-1:pw);
+  let pv=phuCols.find(i=>i!==c.phuPhiWon); c.phuPhi=(pv==null?-1:pv);
+  // Chi phí ship (giá vốn vận chuyển, KRW)
+  c.ship=findCol(H,'CHI PHI','SHIP'); if(c.ship<0)c.ship=findCol(H,'SHIP'); if(c.ship<0)c.ship=findCol(H,'CHI PHI VAN CHUYEN'); if(c.ship<0)c.ship=findCol(H,'CUOC SHIP');
   c.ghiChu=(function(){ let idx=-1; for(let i=0;i<H.length;i++){ const h=H[i]; if(h.includes('GHI CHU')&&!h.includes('NGUOI GUI')&&!h.includes('SDT'))idx=i;} return idx; })();
   return c;
 }
@@ -1223,7 +1171,7 @@ async function parseWB(wb, fname){
       incoming.push({ key:pkg||('row_'+name+'_'+i), sheet:name, date:(c.date>=0?fmtDateCell(row[c.date]):''), pkg, status:get('status'), cust,
         pay:get('pay'), note:get('note'), rcv:get('rcv'), rcvPh:get('rcvPh'), addr:get('addr'),
         region:get('region'), weight:weight(raw('weight')), price:money(raw('price')),
-        won, vnd, phuPhi:money(raw('phuPhi')), staff:get('staff'), ghiChu:get('ghiChu') });
+        won, vnd, phuPhi:money(raw('phuPhi')), phuPhiWon:money(raw('phuPhiWon')), ship:money(raw('ship')), staff:get('staff'), ghiChu:get('ghiChu') });
     }
   });
   if(!incoming.length){ alert('Không đọc được dòng dữ liệu nào. Kiểm tra file có đúng các cột (Mã khách hàng, Người nhận, Khu vực…) không.'); return; }
@@ -1276,7 +1224,7 @@ const EDIT_FIELDS=[
   ['date','Ngày về','t'],['week','Tuần (YYYY-Www)','t'],['cust','Mã khách hàng','t'],['status','Trạng thái hàng','t'],['pay','Check TT','pay'],
   ['region','Khu vực','t'],['staff','NV giao','t'],['rcv','Người nhận','t'],['rcvPh','SĐT người nhận','t'],
   ['weight','Khối lượng (KG)','num'],['price','Đơn giá (₩)','money'],['won','Thành tiền Won (₩)','money'],
-  ['vnd','Thành tiền VND (₫)','money'],['phuPhi','Phụ phí (₫)','money'],
+  ['vnd','Thành tiền VND (₫)','money'],['phuPhi','Phụ phí (₫)','money'],['phuPhiWon','Phụ phí (₩)','money'],['ship','Chi phí ship (₩)','money'],
   ['paidDate','Ngày nhận TT','date'],
   ['note','SĐT gửi / Ghi chú','t'],['ghiChu','Ghi chú','t'],['addr','Địa chỉ người nhận','area']
 ];
@@ -1292,7 +1240,7 @@ function rowHTML(r,src){
     <td>${r.region?'<span class="pill reg">'+esc(r.region)+'</span>':''}</td>
     <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.price)}</td>
     <td class="r num"${wonBad(r)?' style="color:#dc2626;font-weight:800;background:#fef2f2" title="Giá trị bất thường — bấm để sửa"':''}>${fmtWon(r.won)}${wonBad(r)?' ⚠️':''}</td><td class="r num">${fmtVnd(r.vnd)}</td>
-    <td>${esc(r.staff)}</td><td class="r num">${fmtVnd(r.phuPhi)}</td><td>${esc(r.ghiChu)}</td>
+    <td>${esc(r.staff)}</td><td class="r num">${fmtVnd(r.phuPhi)}</td><td class="r num">${fmtWon(r.phuPhiWon)}</td><td class="r num">${fmtWon(r.ship)}</td><td>${esc(r.ghiChu)}</td>
   </tr>`;
 }
 function openEdit(key,src){
@@ -1417,8 +1365,8 @@ function applyFilters(){
     renderPager(total,pages,start,pageRows.length);
   }
   const owe=LIST_ROWS.filter(r=>!paid(r));
-  $('listSummary').innerHTML=`Khớp <b>${total}</b> đơn · Chưa thu <b>${owe.length}</b> — <b style="color:#e11d48">₩${sum(owe,'won').toLocaleString('en-US')}</b>`+
-    (sum(owe,'vnd')||sum(owe,'phuPhi')?` · <b style="color:#e11d48">${(sum(owe,'vnd')+sum(owe,'phuPhi')).toLocaleString('en-US')} ₫</b>`:'');
+  $('listSummary').innerHTML=`Khớp <b>${total}</b> đơn · Chưa thu <b>${owe.length}</b> — <b style="color:#e11d48">₩${sumWon(owe).toLocaleString('en-US')}</b>`+
+    (sumVnd(owe)?` · <b style="color:#e11d48">${sumVnd(owe).toLocaleString('en-US')} ₫</b>`:'');
   renderProfitBox('listProfitBox', LIST_ROWS);
 }
 function renderPager(total,pages,start,shown){
@@ -1518,7 +1466,7 @@ function renderCust(){
     <td>${paid(r)?fmtPaidDate(r.paidDate):'<span class="muted">—</span>'}</td>
     <td>${esc(r.rcv)}</td><td>${r.region?'<span class="pill reg">'+esc(r.region)+'</span>':''}</td>
     <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.won)}</td>
-    <td class="r num">${fmtVnd(r.phuPhi)}</td><td class="r num">${fmtVnd(r.vnd)}</td><td>${esc(r.ghiChu)}</td>
+    <td class="r num">${fmtVnd(r.phuPhi)}</td><td class="r num">${fmtWon(r.phuPhiWon)}</td><td class="r num">${fmtVnd(r.vnd)}</td><td>${esc(r.ghiChu)}</td>
   </tr>`).join('');
   const sa=$('ctSelAll'); if(sa) sa.checked = CT_SEL.size>0 && CT_SEL.size===rows.length;
   ctUpdateSelBtn();
@@ -1542,15 +1490,15 @@ function openInvoice(cust,onlyOwe,rowsOverride){
 }
 function invCompute(){
   const cust=INV_CUST, rows=INV_ROWS;
-  const totWon=sum(rows,'won'), totVnd=sum(rows,'vnd'), totPhi=sum(rows,'phuPhi');
+  const totWon=sum(rows,'won'), totPhiWon=sum(rows,'phuPhiWon'), totVnd=sum(rows,'vnd'), totPhi=sum(rows,'phuPhi');
   const oweRows=rows.filter(r=>!paid(r)), paidRows=rows.filter(paid);
-  const shownOweWon=sum(oweRows,'won'), shownPaidWon=sum(paidRows,'won');
-  const oweVnd=sum(oweRows,'vnd')+sum(oweRows,'phuPhi');
+  const shownOweWon=sumWon(oweRows), shownPaidWon=sumWon(paidRows);
+  const oweVnd=sumVnd(oweRows);
   const credit=creditOf(cust);
   const oweWon=Math.max(0, shownOweWon - credit);
   const surcharge=surchargeOf(cust), surchargeVnd=surchargeVndOf(cust);
   const payableWon=oweWon+surcharge, payableVnd=oweVnd+surchargeVnd;
-  return {cust,rows,totWon,totVnd,totPhi,oweRows,paidRows,shownOweWon,shownPaidWon,oweVnd,credit,oweWon,surcharge,surchargeVnd,payableWon,payableVnd,payable:payableWon};
+  return {cust,rows,totWon,totPhiWon,totVnd,totPhi,oweRows,paidRows,shownOweWon,shownPaidWon,oweVnd,credit,oweWon,surcharge,surchargeVnd,payableWon,payableVnd,payable:payableWon};
 }
 function renderInvoiceDoc(){
   const cust=INV_CUST, rows=INV_ROWS, X=invCompute();
@@ -1569,16 +1517,17 @@ function renderInvoiceDoc(){
     </div>
     <div class="bill-to"><div class="t">Khách hàng</div><div class="v">${esc(cust)} <span style="font-weight:500;color:#888;font-size:.85rem">— ${rows.length} đơn</span></div></div>
     <table>
-      <thead><tr><th>STT</th><th>Ngày</th><th>Mã kiện</th><th>Người nhận</th><th>Khu vực</th><th style="text-align:right">KG</th><th style="text-align:right">Tiền Won (₩)</th><th style="text-align:right">Phụ phí (₫)</th><th style="text-align:right">Tiền VND (₫)</th><th>TT</th></tr></thead>
+      <thead><tr><th>STT</th><th>Ngày</th><th>Mã kiện</th><th>Người nhận</th><th>Khu vực</th><th style="text-align:right">KG</th><th style="text-align:right">Tiền Won (₩)</th><th style="text-align:right">Phụ phí (₩)</th><th style="text-align:right">Phụ phí (₫)</th><th style="text-align:right">Tiền VND (₫)</th><th>TT</th></tr></thead>
       <tbody>
         ${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.date)}</td><td>${esc(r.pkg)}</td><td>${esc(r.rcv)}</td><td>${esc(r.region)}</td>
           <td style="text-align:right">${r.weight?nf(r.weight):''}</td>
           <td style="text-align:right">${r.won?'₩'+nf(r.won):''}</td>
+          <td style="text-align:right">${r.phuPhiWon?'₩'+nf(r.phuPhiWon):''}</td>
           <td style="text-align:right">${r.phuPhi?nf(r.phuPhi)+' ₫':''}</td>
           <td style="text-align:right">${r.vnd?nf(r.vnd)+' ₫':''}</td>
           <td style="font-size:.78rem;color:${paid(r)?'#16a34a':'#dc2626'}">${paid(r)?'Đã TT':'Chưa TT'}</td></tr>`).join('')}
         <tr class="tot-row"><td colspan="6" style="text-align:right">TỔNG (${rows.length} đơn)</td>
-          <td style="text-align:right">${X.totWon?'₩'+nf(X.totWon):''}</td><td style="text-align:right">${X.totPhi?nf(X.totPhi)+' ₫':''}</td><td style="text-align:right">${X.totVnd?nf(X.totVnd)+' ₫':''}</td><td></td></tr>
+          <td style="text-align:right">${X.totWon?'₩'+nf(X.totWon):''}</td><td style="text-align:right">${X.totPhiWon?'₩'+nf(X.totPhiWon):''}</td><td style="text-align:right">${X.totPhi?nf(X.totPhi)+' ₫':''}</td><td style="text-align:right">${X.totVnd?nf(X.totVnd)+' ₫':''}</td><td></td></tr>
       </tbody>
     </table>
     ${hist.length?`<div class="inv-pay-hist" style="margin-top:14px;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;background:#f8fafc">
@@ -1598,6 +1547,7 @@ function renderInvoiceDoc(){
       </div>
       <table class="sumtbl">
         <tr><td>Tiền hàng (KRW):</td><td class="r">₩${nf(X.totWon)}</td></tr>
+        ${X.totPhiWon?`<tr><td>Phụ phí (KRW):</td><td class="r">₩${nf(X.totPhiWon)}</td></tr>`:''}
         ${X.totVnd?`<tr><td>Thành tiền (VND):</td><td class="r">${nf(X.totVnd)} ₫</td></tr>`:''}
         ${X.totPhi?`<tr><td>Phụ phí (VND):</td><td class="r">${nf(X.totPhi)} ₫</td></tr>`:''}
         ${X.shownPaidWon?`<tr><td>Đã thanh toán (KRW):</td><td class="r" style="color:#16a34a">−₩${nf(X.shownPaidWon)}</td></tr>`:''}
@@ -1646,14 +1596,15 @@ function exportInvoiceXlsx(){
   if(co.tax)row(['MST: '+co.tax]);
   row([]); row(['HÓA ĐƠN / YÊU CẦU THANH TOÁN']);
   row(['Khách hàng:',cust]); row(['Ngày xuất:',todayISO()]); row([]);
-  const head=['STT','Ngày về','Mã kiện','Người nhận','SĐT nhận','Địa chỉ','Khu vực','KG','Đơn giá (₩)','Tiền Won (₩)','Phụ phí (₫)','Tiền VND (₫)','Trạng thái'];
+  const head=['STT','Ngày về','Mã kiện','Người nhận','SĐT nhận','Địa chỉ','Khu vực','KG','Đơn giá (₩)','Tiền Won (₩)','Phụ phí (₩)','Phụ phí (₫)','Tiền VND (₫)','Trạng thái'];
   row(head);
-  rows.forEach((r,i)=>row([i+1,r.date,r.pkg,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.phuPhi)||'',Number(r.vnd)||'',paid(r)?'Đã TT':'Chưa TT'],{7:XF_KG,8:XF_WON,9:XF_WON,10:XF_VND,11:XF_VND}));
-  row(['','','','','','','TỔNG',sum(rows,'weight')||'','',X.totWon,X.totPhi,X.totVnd,''],{7:XF_KG,9:XF_WON,10:XF_VND,11:XF_VND});
+  rows.forEach((r,i)=>row([i+1,r.date,r.pkg,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.phuPhiWon)||'',Number(r.phuPhi)||'',Number(r.vnd)||'',paid(r)?'Đã TT':'Chưa TT'],{7:XF_KG,8:XF_WON,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND}));
+  row(['','','','','','','TỔNG',sum(rows,'weight')||'','',X.totWon,X.totPhiWon,X.totPhi,X.totVnd,''],{7:XF_KG,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND});
   row([]);
   const hist=historyOf(cust);
   if(hist.length){ row(['LỊCH SỬ THANH TOÁN']); row(['Ngày','Số tiền (₩)','Số đơn gạch']); hist.forEach(h=>row([fmtPaidDate(h.date),Number(h.amount)||0,h.marked||0],{1:XF_WON})); row(['Tổng đã nhận',hist.reduce((s,h)=>s+(Number(h.amount)||0),0),''],{1:XF_WON}); row([]); }
   row(['Tiền hàng (KRW):',X.totWon],{1:XF_WON});
+  if(X.totPhiWon) row(['Phụ phí (KRW):',X.totPhiWon],{1:XF_WON});
   if(X.totVnd) row(['Thành tiền (VND):',X.totVnd],{1:XF_VND});
   if(X.totPhi) row(['Phụ phí (VND):',X.totPhi],{1:XF_VND});
   if(X.shownPaidWon) row(['Đã thanh toán (KRW):',X.shownPaidWon],{1:XF_WON});
@@ -1670,7 +1621,7 @@ function exportInvoiceXlsx(){
   row(['TK nhận Won (KRW):',[co.bankWon,co.accWon,co.holderWon].filter(Boolean).join(' · ')]);
   row(['Nội dung CK:',co.memo||cust]);
   const ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols']=[{wch:5},{wch:12},{wch:12},{wch:18},{wch:14},{wch:34},{wch:10},{wch:8},{wch:13},{wch:15},{wch:13},{wch:15},{wch:10}];
+  ws['!cols']=[{wch:5},{wch:12},{wch:12},{wch:18},{wch:14},{wch:34},{wch:10},{wch:8},{wch:13},{wch:15},{wch:13},{wch:13},{wch:15},{wch:10}];
   fmtCells.forEach(({r,c,f})=>{ const a=XLSX.utils.encode_cell({r,c}); if(ws[a] && typeof ws[a].v==='number'){ ws[a].s=Object.assign(ws[a].s||{},{numFmt:f}); } });
   const hr=aoa.findIndex(r=>r[0]==='STT');
   if(hr>=0){ for(let cc=0;cc<head.length;cc++){ const a=XLSX.utils.encode_cell({r:hr,c:cc}); if(ws[a]) ws[a].s={font:{bold:true},fill:{fgColor:{rgb:'DDEBF7'}},alignment:{horizontal:'center'}}; } }

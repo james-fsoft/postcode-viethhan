@@ -537,7 +537,7 @@ async function vcLog(action, detail) {
   await redisSet(VK.log, gzPack(log));
 }
 const isPaidPay = p => String(p || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toUpperCase().trim() === 'DA TT';
-const VC24_EDITABLE = new Set(['date','status','cust','pay','note','rcv','rcvPh','addr','region','weight','price','won','vnd','phuPhi','ghiChu','staff','paidDate','week']);
+const VC24_EDITABLE = new Set(['date','status','cust','pay','note','rcv','rcvPh','addr','region','weight','price','won','vnd','phuPhi','phuPhiWon','ship','ghiChu','staff','paidDate','week']);
 const keyOf = r => r && (r.key || r.pkg);
 const VC_EMPTY = () => ({ rows: [], fileName: '', uploadedAt: null });
 // Nén (gzip→base64) để khối dữ liệu nhỏ hơn nhiều lần, tránh vượt giới hạn ghi của Redis
@@ -594,15 +594,16 @@ app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   const led = ledger[cust] || { credit: 0, history: [] };
   let credit = (Number(led.credit) || 0) + amt;
   const unpaid = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay)).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  const wonAmt = r => (Number(r.won) || 0) + (Number(r.phuPhiWon) || 0);   // tiền hàng + phụ phí KRW
   let marked = 0; const markedKeys = [];
   if (settleAll) {
     // Trả đủ/đủ-hơn -> gạch SẠCH mọi đơn (tránh sót vài đồng do số quá lớn mất chính xác)
-    const totalUnpaid = unpaid.reduce((s, r) => s + (Number(r.won) || 0), 0);
+    const totalUnpaid = unpaid.reduce((s, r) => s + wonAmt(r), 0);
     unpaid.forEach(r => { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); marked++; markedKeys.push(keyOf(r)); });
     credit = Math.max(0, credit - totalUnpaid);
   } else {
     // Trả từng phần: gạch nợ dần các đơn cũ nhất khi đủ tiền
-    for (const r of unpaid) { const w = Number(r.won) || 0; if (w > 0 && credit >= w) { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); credit -= w; marked++; markedKeys.push(keyOf(r)); } }
+    for (const r of unpaid) { const w = wonAmt(r); if (w > 0 && credit >= w) { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); credit -= w; marked++; markedKeys.push(keyOf(r)); } }
   }
   led.credit = credit;
   led.history = led.history || [];

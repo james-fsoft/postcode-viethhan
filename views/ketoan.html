@@ -1593,8 +1593,7 @@ function renderInvoiceDoc(){
         ${X.totPhiWon?`<tr><td>Phụ phí (KRW) · ${kr('추가비용')}:</td><td class="r">₩${nf(X.totPhiWon)}</td></tr>`:''}
         ${X.totVnd?`<tr><td>Thành tiền (VND) · ${kr('금액')}:</td><td class="r">${nf(X.totVnd)} ₫</td></tr>`:''}
         ${X.totPhi?`<tr><td>Phụ phí (VND) · ${kr('추가비용')}:</td><td class="r">${nf(X.totPhi)} ₫</td></tr>`:''}
-        ${X.shownPaidWon?`<tr><td>Đã thanh toán (KRW) · ${kr('결제됨')}:</td><td class="r" style="color:#16a34a">−₩${nf(X.shownPaidWon)}</td></tr>`:''}
-        ${X.credit>0?`<tr><td>Đã trả trước/dư (KRW) · ${kr('선납/잔액')}:</td><td class="r" style="color:#16a34a">−₩${nf(X.credit)}</td></tr>`:''}
+        ${(X.shownPaidWon+X.credit)?`<tr><td>Đã thanh toán (KRW) · ${kr('결제됨')}:</td><td class="r" style="color:#16a34a">−₩${nf(X.shownPaidWon+X.credit)}</td></tr>`:''}
         <tr class="no-print"><td>Phí phát sinh (KRW) · ${kr('발생비용')}:</td><td class="r" style="white-space:nowrap">
           <input id="invSur" inputmode="numeric" value="${escA(X.surcharge?grp(X.surcharge):'')}" oninput="onMoneyInput(this)" placeholder="0" style="width:120px;text-align:right;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit" /> ₩</td></tr>
         <tr class="no-print"><td>Phí phát sinh (VND) · ${kr('발생비용')}:</td><td class="r" style="white-space:nowrap">
@@ -1650,8 +1649,7 @@ function exportInvoiceXlsx(){
   if(X.totPhiWon) row(['Phụ phí (KRW) / 추가비용:',X.totPhiWon],{1:XF_WON});
   if(X.totVnd) row(['Thành tiền (VND) / 금액:',X.totVnd],{1:XF_VND});
   if(X.totPhi) row(['Phụ phí (VND) / 추가비용:',X.totPhi],{1:XF_VND});
-  if(X.shownPaidWon) row(['Đã thanh toán (KRW) / 결제됨:',X.shownPaidWon],{1:XF_WON});
-  if(X.credit>0) row(['Đã trả trước/dư (KRW) / 선납·잔액:',X.credit],{1:XF_WON});
+  if(X.shownPaidWon+X.credit) row(['Đã thanh toán (KRW) / 결제됨:',X.shownPaidWon+X.credit],{1:XF_WON});
   row(['Phí phát sinh (KRW) / 발생비용:',X.surcharge],{1:XF_WON});
   if(X.surchargeVnd) row(['Phí phát sinh (VND) / 발생비용:',X.surchargeVnd],{1:XF_VND});
   if(surchargeNoteOf(cust)) row(['Ghi chú phí / 비고:',surchargeNoteOf(cust)]);

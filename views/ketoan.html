@@ -1638,12 +1638,6 @@ function exportInvoiceXlsx(){
   if(co.tax)row(['MST: '+co.tax]);
   row([]); row(['HÓA ĐƠN / 청구서 — YÊU CẦU THANH TOÁN / 결제 요청']);
   row(['Khách hàng / 고객:',cust]); row(['Ngày xuất / 발행일:',todayISO()]); row([]);
-  // Thông tin tài khoản nhận thanh toán đưa LÊN TRÊN (ngay dưới phần đầu)
-  row(['THÔNG TIN THANH TOÁN / 결제 정보']);
-  row(['TK nhận VND / VND 계좌:',[co.bank,co.acc,co.holder].filter(Boolean).join(' · ')]);
-  row(['TK nhận Won (KRW) / 원화 계좌:',[co.bankWon,co.accWon,co.holderWon].filter(Boolean).join(' · ')]);
-  row(['Nội dung CK / 입금 메모:',co.memo||cust]);
-  row([]);
   const head=['STT / No.','Ngày về / 날짜','Mã kiện / 송장번호','Người nhận / 수취인','SĐT nhận / 연락처','Địa chỉ / 주소','Khu vực / 지역','KG / 중량','Đơn giá (₩) / 단가','Tiền Won (₩) / 금액','Phụ phí (₩) / 추가비용','Phụ phí (₫) / 추가비용','Tiền VND (₫) / 금액','Trạng thái / 상태'];
   row(head);
   rows.forEach((r,i)=>row([i+1,r.date,r.pkg,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.phuPhiWon)||'',Number(r.phuPhi)||'',Number(r.vnd)||'',paid(r)?'Đã TT / 완료':'Chưa TT / 미납'],{7:XF_KG,8:XF_WON,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND}));
@@ -1663,6 +1657,12 @@ function exportInvoiceXlsx(){
   if(X.payableVnd) row(['TỔNG THANH TOÁN - CÒN NỢ (VND) / 총 결제금액(미납):',X.payableVnd],{1:XF_VND});
   const ws=XLSX.utils.aoa_to_sheet(aoa);
   ws['!cols']=[{wch:5},{wch:12},{wch:12},{wch:18},{wch:14},{wch:34},{wch:10},{wch:8},{wch:13},{wch:15},{wch:13},{wch:13},{wch:15},{wch:10}];
+  // Thông tin tài khoản nhận thanh toán -> đặt ở khu G6:G9 (ngang phần đầu)
+  const putG=(r,text,bold)=>{ const a=XLSX.utils.encode_cell({r,c:6}); ws[a]={t:'s',v:String(text)}; if(bold) ws[a].s={font:{bold:true}}; const ref=XLSX.utils.decode_range(ws['!ref']||'A1'); if(r>ref.e.r)ref.e.r=r; if(ref.e.c<6)ref.e.c=6; ws['!ref']=XLSX.utils.encode_range(ref); };
+  putG(5,'THÔNG TIN THANH TOÁN / 결제 정보', true);
+  putG(6,'TK nhận VND: '+[co.bank,co.acc,co.holder].filter(Boolean).join(' · '));
+  putG(7,'TK nhận Won (KRW): '+[co.bankWon,co.accWon,co.holderWon].filter(Boolean).join(' · '));
+  putG(8,'Nội dung CK: '+(co.memo||cust));
   fmtCells.forEach(({r,c,f})=>{ const a=XLSX.utils.encode_cell({r,c}); if(ws[a] && typeof ws[a].v==='number'){ ws[a].s=Object.assign(ws[a].s||{},{numFmt:f}); } });
   const hr=aoa.findIndex(r=>String(r[0]||'').indexOf('STT')===0);
   if(hr>=0){ for(let cc=0;cc<head.length;cc++){ const a=XLSX.utils.encode_cell({r:hr,c:cc}); if(ws[a]) ws[a].s={font:{bold:true},fill:{fgColor:{rgb:'DDEBF7'}},alignment:{horizontal:'center'}}; } }

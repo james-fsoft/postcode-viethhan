@@ -1593,7 +1593,6 @@ function renderInvoiceDoc(){
         ${X.totPhiWon?`<tr><td>Phụ phí (KRW) · ${kr('추가비용')}:</td><td class="r">₩${nf(X.totPhiWon)}</td></tr>`:''}
         ${X.totVnd?`<tr><td>Thành tiền (VND) · ${kr('금액')}:</td><td class="r">${nf(X.totVnd)} ₫</td></tr>`:''}
         ${X.totPhi?`<tr><td>Phụ phí (VND) · ${kr('추가비용')}:</td><td class="r">${nf(X.totPhi)} ₫</td></tr>`:''}
-        ${(X.shownPaidWon+X.credit)?`<tr><td>Đã thanh toán (KRW) · ${kr('결제됨')}:</td><td class="r" style="color:#16a34a">−₩${nf(X.shownPaidWon+X.credit)}</td></tr>`:''}
         <tr class="no-print"><td>Phí phát sinh (KRW) · ${kr('발생비용')}:</td><td class="r" style="white-space:nowrap">
           <input id="invSur" inputmode="numeric" value="${escA(X.surcharge?grp(X.surcharge):'')}" oninput="onMoneyInput(this)" placeholder="0" style="width:120px;text-align:right;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit" /> ₩</td></tr>
         <tr class="no-print"><td>Phí phát sinh (VND) · ${kr('발생비용')}:</td><td class="r" style="white-space:nowrap">
@@ -1601,6 +1600,7 @@ function renderInvoiceDoc(){
         <tr class="no-print"><td colspan="2" style="text-align:right;padding-top:2px"><button class="btn sm" id="invSurBtn" onclick="saveSurcharge()">💾 Lưu phí phát sinh</button></td></tr>
         <tr class="only-print" style="display:none"><td>Phí phát sinh · ${kr('발생비용')}:</td><td class="r">${X.surcharge?'₩'+nf(X.surcharge):''}${X.surchargeVnd?'<br>'+nf(X.surchargeVnd)+' ₫':''}</td></tr>
         ${surNote?`<tr><td colspan="2" style="font-size:.78rem;color:#888;padding-top:0">Ghi chú phí/${kr('비고')}: ${esc(surNote)} <button class="btn sm no-print" onclick="editSurNote()" style="margin-left:4px">✎</button></td></tr>`:`<tr class="no-print"><td colspan="2"><button class="btn sm" onclick="editSurNote()">✎ Thêm ghi chú phí phát sinh</button></td></tr>`}
+        ${(X.shownPaidWon+X.credit)?`<tr><td>Đã thanh toán (KRW) · ${kr('결제됨')}:</td><td class="r" style="color:#16a34a">−₩${nf(X.shownPaidWon+X.credit)}</td></tr>`:''}
         <tr class="grand"><td>TỔNG THANH TOÁN (còn nợ)<br>${kr('총 결제금액 (미납)')}:</td><td class="r"><div>₩${nf(X.payableWon)}</div>${X.payableVnd?`<div>${nf(X.payableVnd)} ₫</div>`:''}</td></tr>
       </table>
     </div>
@@ -1638,6 +1638,12 @@ function exportInvoiceXlsx(){
   if(co.tax)row(['MST: '+co.tax]);
   row([]); row(['HÓA ĐƠN / 청구서 — YÊU CẦU THANH TOÁN / 결제 요청']);
   row(['Khách hàng / 고객:',cust]); row(['Ngày xuất / 발행일:',todayISO()]); row([]);
+  // Thông tin tài khoản nhận thanh toán đưa LÊN TRÊN (ngay dưới phần đầu)
+  row(['THÔNG TIN THANH TOÁN / 결제 정보']);
+  row(['TK nhận VND / VND 계좌:',[co.bank,co.acc,co.holder].filter(Boolean).join(' · ')]);
+  row(['TK nhận Won (KRW) / 원화 계좌:',[co.bankWon,co.accWon,co.holderWon].filter(Boolean).join(' · ')]);
+  row(['Nội dung CK / 입금 메모:',co.memo||cust]);
+  row([]);
   const head=['STT / No.','Ngày về / 날짜','Mã kiện / 송장번호','Người nhận / 수취인','SĐT nhận / 연락처','Địa chỉ / 주소','Khu vực / 지역','KG / 중량','Đơn giá (₩) / 단가','Tiền Won (₩) / 금액','Phụ phí (₩) / 추가비용','Phụ phí (₫) / 추가비용','Tiền VND (₫) / 금액','Trạng thái / 상태'];
   row(head);
   rows.forEach((r,i)=>row([i+1,r.date,r.pkg,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.phuPhiWon)||'',Number(r.phuPhi)||'',Number(r.vnd)||'',paid(r)?'Đã TT / 완료':'Chưa TT / 미납'],{7:XF_KG,8:XF_WON,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND}));
@@ -1649,16 +1655,12 @@ function exportInvoiceXlsx(){
   if(X.totPhiWon) row(['Phụ phí (KRW) / 추가비용:',X.totPhiWon],{1:XF_WON});
   if(X.totVnd) row(['Thành tiền (VND) / 금액:',X.totVnd],{1:XF_VND});
   if(X.totPhi) row(['Phụ phí (VND) / 추가비용:',X.totPhi],{1:XF_VND});
-  if(X.shownPaidWon+X.credit) row(['Đã thanh toán (KRW) / 결제됨:',X.shownPaidWon+X.credit],{1:XF_WON});
   row(['Phí phát sinh (KRW) / 발생비용:',X.surcharge],{1:XF_WON});
   if(X.surchargeVnd) row(['Phí phát sinh (VND) / 발생비용:',X.surchargeVnd],{1:XF_VND});
   if(surchargeNoteOf(cust)) row(['Ghi chú phí / 비고:',surchargeNoteOf(cust)]);
+  if(X.shownPaidWon+X.credit) row(['Đã thanh toán (KRW) / 결제됨:',X.shownPaidWon+X.credit],{1:XF_WON});
   row(['TỔNG THANH TOÁN - CÒN NỢ (KRW) / 총 결제금액(미납):',X.payableWon],{1:XF_WON});
   if(X.payableVnd) row(['TỔNG THANH TOÁN - CÒN NỢ (VND) / 총 결제금액(미납):',X.payableVnd],{1:XF_VND});
-  row([]);
-  row(['TK nhận VND / VND 계좌:',[co.bank,co.acc,co.holder].filter(Boolean).join(' · ')]);
-  row(['TK nhận Won (KRW) / 원화 계좌:',[co.bankWon,co.accWon,co.holderWon].filter(Boolean).join(' · ')]);
-  row(['Nội dung CK / 입금 메모:',co.memo||cust]);
   const ws=XLSX.utils.aoa_to_sheet(aoa);
   ws['!cols']=[{wch:5},{wch:12},{wch:12},{wch:18},{wch:14},{wch:34},{wch:10},{wch:8},{wch:13},{wch:15},{wch:13},{wch:13},{wch:15},{wch:10}];
   fmtCells.forEach(({r,c,f})=>{ const a=XLSX.utils.encode_cell({r,c}); if(ws[a] && typeof ws[a].v==='number'){ ws[a].s=Object.assign(ws[a].s||{},{numFmt:f}); } });

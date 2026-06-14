@@ -749,10 +749,11 @@
   }
   @media(max-width:560px){ .tf-section{padding:56px 0;} .tf-sec-head h2{font-size:1.6rem;} .tf-hero-copy h1{font-size:1.9rem;} .tf-final-box{padding:40px 22px;} }
   /* EMBED MODE: chỉ hiện tool (cho trang /demo nhúng iframe) */
+  html.embed{background:#fff;}
   html.embed .tf-header,html.embed .tf-hero,html.embed .tf-section:not(#try),html.embed .tf-final,html.embed .tf-footer{display:none!important;}
-  html.embed .tf-try{background:transparent;padding:14px 0 6px;}
-  html.embed #try>.tf-wrap{padding:0 8px;}
-  html.embed #try .tf-sec-head,html.embed .tf-micro{display:none!important;}
+  html.embed .tf-try{background:transparent;padding:6px 0;}
+  html.embed #try>.tf-wrap{padding:0 8px;max-width:none;}
+  html.embed #try .tf-sec-head,html.embed .tf-micro,html.embed .tf-demo-cta,html.embed #userHubBtn,html.embed .api-box{display:none!important;}
   </style>
 </head>
 <body class="tf">
@@ -1116,7 +1117,7 @@
 
   </div><!-- /.container (khung quanh tool) -->
   <p class="tf-micro" style="margin-top:26px">Built for high-volume logistics operations · Process thousands of rows in minutes, not hours</p>
-  <p style="text-align:center;margin-top:8px"><a class="tf-btn tf-btn-outline" href="/demo">Open full live demo →</a></p>
+  <p class="tf-demo-cta" style="text-align:center;margin-top:8px"><a class="tf-btn tf-btn-outline" href="/demo">Open full live demo →</a></p>
   </div><!-- /tf-wrap -->
 </section><!-- /tf-try -->
 

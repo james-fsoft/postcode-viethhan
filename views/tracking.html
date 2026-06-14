@@ -200,8 +200,9 @@
   .footer-support { color:var(--blue); text-decoration:none; font-weight:600; }
   .footer-support:hover { text-decoration:underline; }
   /* EMBED MODE: chỉ hiện tool tra thông quan (cho /demo nhúng iframe) */
-  html.embed .site-header, html.embed .app-footer { display:none !important; }
-  html.embed body { background:transparent; }
+  html.embed .site-header, html.embed .app-footer, html.embed #userHubBtn { display:none !important; }
+  html.embed body { background:#fff; }
+  html.embed .container, html.embed main { padding-top:8px; }
 </style>
 </head>
 <body>

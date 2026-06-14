@@ -49,7 +49,7 @@
   .tool-hd p{font-size:.86rem;color:var(--gray);margin-top:2px;}
   .tool-hd .step{margin-left:auto;font-size:.74rem;font-weight:800;color:#fff;background:var(--grad);padding:6px 13px;border-radius:99px;flex:none;}
   .tool-hd .step.green{background:linear-gradient(120deg,#16a34a,#22c55e);}
-  .frame{width:100%;border:0;display:block;background:#fff;min-height:560px;}
+  .frame{width:100%;border:0;display:block;background:#fff;height:480px;}
   .demo-foot{text-align:center;padding:0 0 60px;}
   .demo-foot .box{background:var(--grad);border-radius:24px;padding:46px 30px;color:#fff;box-shadow:var(--shadow-lg);}
   .demo-foot h3{font-size:1.7rem;font-weight:850;margin-bottom:10px;letter-spacing:-.01em;}
@@ -171,10 +171,26 @@ function setDemoLang(l){
   document.getElementById('frPostal').src='/?embed=1&lang='+l;
   document.getElementById('frCustoms').src='/tracking?embed=1&lang='+l;
 }
-// auto-resize iframes to their content (same-origin)
-function fitFrame(ifr){ try{ const h=ifr.contentDocument.documentElement.scrollHeight; if(h>200) ifr.style.height=(h+8)+'px'; }catch(e){} }
-['frPostal','frCustoms'].forEach(id=>{ const f=document.getElementById(id); f.addEventListener('load',()=>fitFrame(f)); });
-setInterval(()=>['frPostal','frCustoms'].forEach(id=>fitFrame(document.getElementById(id))),900);
+// auto-resize iframes to nội dung — dùng ResizeObserver (không polling -> hết nhấp nháy)
+function attachFit(ifr){
+  function fit(){
+    try{
+      const doc=ifr.contentDocument; if(!doc||!doc.body) return;
+      const h=Math.max(doc.body.scrollHeight, doc.body.offsetHeight);
+      const cur=parseInt(ifr.style.height)||0;
+      if(h>160 && Math.abs(cur-h)>4) ifr.style.height=(h+4)+'px';
+    }catch(e){}
+  }
+  ifr.addEventListener('load',function(){
+    fit();
+    try{
+      const w=ifr.contentWindow;
+      if(w.ResizeObserver){ new w.ResizeObserver(fit).observe(ifr.contentDocument.body); }
+      else { let n=0; const t=setInterval(()=>{ fit(); if(++n>20) clearInterval(t); },500); }
+    }catch(e){}
+  });
+}
+['frPostal','frCustoms'].forEach(id=>attachFit(document.getElementById(id)));
 (function(){ const saved=(()=>{try{return localStorage.getItem('lang');}catch(e){return null;}})(); setDemoLang(['en','vi','ko'].includes(saved)?saved:'en'); })();
 </script>
 </body>

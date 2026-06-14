@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Demo — Transflash Logistics</title>
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="__BASE__/demo" />
+  <meta property="og:title" content="Live Demo — Transflash Logistics" />
+  <meta property="og:description" content="Try the Transflash Logistics platform with your real data: Korean postal code lookup and customs clearance tracking." />
+  <meta property="og:url" content="__BASE__/demo" />
+  <link rel="icon" href="/logo.svg" />
+  <style>
+  :root{
+    --ink:#0b1020;--ink2:#1e293b;--gray:#475569;--gray2:#64748b;--line:#e7ebf3;
+    --bg:#ffffff;--bg2:#f7f9fc;--bg3:#eef2fb;--brand:#4f46e5;--brand2:#2563eb;
+    --grad:linear-gradient(120deg,#6366f1 0%,#2563eb 55%,#06b6d4 130%);
+    --shadow:0 12px 34px -14px rgba(15,23,42,.18);--shadow-lg:0 30px 70px -26px rgba(30,41,59,.32);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter','Segoe UI','Noto Sans KR',Arial,sans-serif;color:var(--ink2);background:var(--bg2);-webkit-font-smoothing:antialiased;}
+  a{text-decoration:none;color:inherit;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px;}
+  .hd{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--line);}
+  .hd-row{display:flex;align-items:center;gap:16px;height:64px;}
+  .logo{display:flex;align-items:center;gap:11px;}
+  .logo img{height:32px;width:32px;}
+  .logo b{font-size:1.04rem;font-weight:850;color:var(--ink);letter-spacing:-.01em;}
+  .logo i{font-size:.64rem;font-style:normal;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--brand);display:block;}
+  .hd-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+  .lang{display:flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;}
+  .lang button{border:none;background:#fff;color:var(--gray);font-weight:750;font-size:.8rem;padding:7px 12px;cursor:pointer;font-family:inherit;}
+  .lang button.on{background:var(--grad);color:#fff;}
+  .back{font-size:.86rem;font-weight:700;color:var(--ink2);border:1.5px solid var(--line);border-radius:10px;padding:8px 14px;background:#fff;}
+  .back:hover{border-color:var(--brand);color:var(--brand);}
+  .intro{position:relative;overflow:hidden;background:radial-gradient(1100px 420px at 80% -10%,#e9efff 0,rgba(233,239,255,0) 60%),linear-gradient(180deg,#fbfcff,#f7f9fc);padding:54px 0 30px;text-align:center;}
+  .pill{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);color:var(--brand);font-weight:750;font-size:.78rem;padding:6px 14px;border-radius:99px;box-shadow:var(--shadow);}
+  .intro h1{font-size:2.3rem;font-weight:870;letter-spacing:-.02em;color:var(--ink);margin:16px 0 10px;line-height:1.14;}
+  .intro p{font-size:1.05rem;color:var(--gray);max-width:640px;margin:0 auto;line-height:1.55;}
+  .demo-grid{padding:34px 0 70px;display:grid;gap:26px;}
+  .tool{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden;}
+  .tool-hd{display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fbfcff,#fff);}
+  .tool-ic{width:46px;height:46px;border-radius:13px;background:var(--bg3);color:var(--brand);display:flex;align-items:center;justify-content:center;flex:none;}
+  .tool-ic svg{width:24px;height:24px;stroke-width:1.8;}
+  .tool-ic.green{background:#e8f7ee;color:#16a34a;}
+  .tool-hd h2{font-size:1.16rem;font-weight:830;color:var(--ink);letter-spacing:-.01em;}
+  .tool-hd .en{font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--brand2);}
+  .tool-hd .green-en{color:#16a34a;}
+  .tool-hd p{font-size:.86rem;color:var(--gray);margin-top:2px;}
+  .tool-hd .step{margin-left:auto;font-size:.74rem;font-weight:800;color:#fff;background:var(--grad);padding:6px 13px;border-radius:99px;flex:none;}
+  .tool-hd .step.green{background:linear-gradient(120deg,#16a34a,#22c55e);}
+  .frame{width:100%;border:0;display:block;background:#fff;min-height:560px;}
+  .demo-foot{text-align:center;padding:0 0 60px;}
+  .demo-foot .box{background:var(--grad);border-radius:24px;padding:46px 30px;color:#fff;box-shadow:var(--shadow-lg);}
+  .demo-foot h3{font-size:1.7rem;font-weight:850;margin-bottom:10px;letter-spacing:-.01em;}
+  .demo-foot p{opacity:.92;margin-bottom:22px;max-width:560px;margin-left:auto;margin-right:auto;}
+  .demo-foot .cta{display:inline-flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;font-weight:760;font-size:.94rem;border-radius:12px;padding:13px 22px;cursor:pointer;border:1.5px solid transparent;font-family:inherit;}
+  .btn-w{background:#fff;color:var(--brand);}
+  .btn-o{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.45);}
+  .ft{background:#0b1228;color:#9fb0d6;text-align:center;padding:26px 0;font-size:.84rem;}
+  .ft b{color:#fff;}
+  @media(max-width:600px){ .intro h1{font-size:1.7rem;} .tool-hd{flex-wrap:wrap;} .tool-hd .step{margin-left:0;} }
+  </style>
+</head>
+<body>
+<header class="hd">
+  <div class="wrap hd-row">
+    <a class="logo" href="/"><img src="/logo.svg" alt="Transflash" /><span><b>Transflash</b><i>Logistics</i></span></a>
+    <div class="hd-right">
+      <div class="lang" id="lang">
+        <button data-l="en" class="on" onclick="setDemoLang('en')">EN</button>
+        <button data-l="vi" onclick="setDemoLang('vi')">VI</button>
+        <button data-l="ko" onclick="setDemoLang('ko')">KO</button>
+      </div>
+      <a class="back" href="/" id="backBtn">← Back to site</a>
+    </div>
+  </div>
+</header>
+
+<section class="intro">
+  <div class="wrap">
+    <span class="pill">▶ <span id="t_badge">Live Demo</span></span>
+    <h1 id="t_title">Try Transflash Logistics with your real data</h1>
+    <p id="t_sub">Two live tools in one place — Korean postal code lookup and customs clearance tracking for Global ↔ Korea logistics.</p>
+  </div>
+</section>
+
+<div class="wrap demo-grid">
+  <!-- Tool 1: Postal code -->
+  <div class="tool">
+    <div class="tool-hd">
+      <div class="tool-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div>
+      <div>
+        <span class="en">Postal Code Lookup</span>
+        <h2 id="t_p_title">Korean postal code lookup</h2>
+        <p id="t_p_sub">Find the 5-digit postal code from a Korean address — single or bulk Excel.</p>
+      </div>
+      <span class="step">01</span>
+    </div>
+    <iframe class="frame" id="frPostal" src="/?embed=1&lang=en" title="Postal code lookup" loading="lazy"></iframe>
+  </div>
+
+  <!-- Tool 2: Customs tracking -->
+  <div class="tool">
+    <div class="tool-hd">
+      <div class="tool-ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/></svg></div>
+      <div>
+        <span class="en green-en">Customs &amp; Clearance Tracking</span>
+        <h2 id="t_c_title">Customs clearance tracking</h2>
+        <p id="t_c_sub">Track clearance progress by HAWB / B/L directly from Korea Customs (UNI-PASS).</p>
+      </div>
+      <span class="step green">02</span>
+    </div>
+    <iframe class="frame" id="frCustoms" src="/tracking?embed=1&lang=en" title="Customs tracking" loading="lazy"></iframe>
+  </div>
+</div>
+
+<section class="demo-foot">
+  <div class="wrap">
+    <div class="box">
+      <h3 id="t_cta_title">Turn your logistics Excel into an automated workflow</h3>
+      <p id="t_cta_sub">Send us a sample file and we'll process it for you, or book a demo with the Transflash team.</p>
+      <div class="cta">
+        <a class="btn btn-w" id="t_cta_demo" href="mailto:support@transflash.app?subject=Book a demo — Transflash Logistics">Book a demo</a>
+        <a class="btn btn-o" id="t_cta_file" href="mailto:support@transflash.app?subject=Sample file to test">Send a sample file</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="ft">© 2026 <b>Transflash</b> · Global ↔ Korea logistics data automation</footer>
+
+<script>
+const DEMO_I18N = {
+  en:{ badge:'Live Demo', back:'← Back to site',
+    title:'Try Transflash Logistics with your real data',
+    sub:'Two live tools in one place — Korean postal code lookup and customs clearance tracking for Global ↔ Korea logistics.',
+    p_title:'Korean postal code lookup', p_sub:'Find the 5-digit postal code from a Korean address — single or bulk Excel.',
+    c_title:'Customs clearance tracking', c_sub:'Track clearance progress by HAWB / B/L directly from Korea Customs (UNI-PASS).',
+    cta_title:'Turn your logistics Excel into an automated workflow',
+    cta_sub:"Send us a sample file and we'll process it for you, or book a demo with the Transflash team.",
+    cta_demo:'Book a demo', cta_file:'Send a sample file' },
+  vi:{ badge:'Demo trực tiếp', back:'← Về trang chính',
+    title:'Trải nghiệm Transflash Logistics với dữ liệu thật',
+    sub:'Hai công cụ live trong một trang — tra mã bưu điện Hàn Quốc và tra cứu thông quan cho logistics Global ↔ Korea.',
+    p_title:'Tra mã bưu điện Hàn Quốc', p_sub:'Tìm mã bưu điện 5 số từ địa chỉ Hàn Quốc — tra đơn lẻ hoặc Excel hàng loạt.',
+    c_title:'Tra cứu thông quan', c_sub:'Tra tiến trình thông quan theo HAWB / B/L trực tiếp từ Hải quan Hàn Quốc (UNI-PASS).',
+    cta_title:'Biến file Excel logistics của bạn thành quy trình tự động',
+    cta_sub:'Gửi file mẫu để chúng tôi xử lý thử, hoặc đặt lịch demo cùng đội ngũ Transflash.',
+    cta_demo:'Đặt lịch demo', cta_file:'Gửi file mẫu để test' },
+  ko:{ badge:'라이브 데모', back:'← 사이트로',
+    title:'실제 데이터로 Transflash Logistics를 체험하세요',
+    sub:'한 페이지에서 두 가지 도구 — 한국 우편번호 조회와 통관 추적 (Global ↔ Korea 물류).',
+    p_title:'한국 우편번호 조회', p_sub:'한국 주소에서 5자리 우편번호 조회 — 단건 또는 엑셀 일괄.',
+    c_title:'통관 추적', c_sub:'관세청(UNI-PASS)에서 HAWB / B/L로 통관 진행 상태를 직접 조회.',
+    cta_title:'물류 엑셀을 자동화 워크플로우로',
+    cta_sub:'샘플 파일을 보내주시면 처리해 드리거나, Transflash 팀과 데모를 예약하세요.',
+    cta_demo:'데모 예약', cta_file:'샘플 파일 보내기' }
+};
+function setDemoLang(l){
+  if(!DEMO_I18N[l]) l='en';
+  const d=DEMO_I18N[l];
+  document.documentElement.lang=l;
+  try{ localStorage.setItem('lang',l); }catch(e){}
+  document.querySelectorAll('#lang button').forEach(b=>b.classList.toggle('on',b.dataset.l===l));
+  const set=(id,v)=>{ const e=document.getElementById(id); if(e)e.textContent=v; };
+  set('t_badge',d.badge); set('backBtn',d.back); set('t_title',d.title); set('t_sub',d.sub);
+  set('t_p_title',d.p_title); set('t_p_sub',d.p_sub); set('t_c_title',d.c_title); set('t_c_sub',d.c_sub);
+  set('t_cta_title',d.cta_title); set('t_cta_sub',d.cta_sub); set('t_cta_demo',d.cta_demo); set('t_cta_file',d.cta_file);
+  document.getElementById('frPostal').src='/?embed=1&lang='+l;
+  document.getElementById('frCustoms').src='/tracking?embed=1&lang='+l;
+}
+// auto-resize iframes to their content (same-origin)
+function fitFrame(ifr){ try{ const h=ifr.contentDocument.documentElement.scrollHeight; if(h>200) ifr.style.height=(h+8)+'px'; }catch(e){} }
+['frPostal','frCustoms'].forEach(id=>{ const f=document.getElementById(id); f.addEventListener('load',()=>fitFrame(f)); });
+setInterval(()=>['frPostal','frCustoms'].forEach(id=>fitFrame(document.getElementById(id))),900);
+(function(){ const saved=(()=>{try{return localStorage.getItem('lang');}catch(e){return null;}})(); setDemoLang(['en','vi','ko'].includes(saved)?saved:'en'); })();
+</script>
+</body>
+</html>

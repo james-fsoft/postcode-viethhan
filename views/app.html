@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vietnam - Korea Logistics – Tra Mã Bưu Điện, Thông Quan & Tiện Ích</title>
-  <meta name="description" content="Bộ công cụ logistics Việt – Hàn miễn phí: tra mã bưu điện Hàn Quốc, theo dõi thông quan, tỷ giá Won, đổi size, tên tiếng Hàn và cẩm nang cho người Việt ở Hàn." />
+  <script>if(location.search.indexOf('embed')>=0)document.documentElement.classList.add('embed');</script>
+  <title>Transflash Logistics — Korean Postal Code, Customs & Excel Automation</title>
+  <meta name="description" content="Automate logistics data for Global ↔ Korea: Korean postal code lookup, address normalization, customs clearance tracking and bulk Excel processing for logistics businesses." />
   <link rel="canonical" href="__BASE__/" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Vietnam – Korea Logistics: công cụ & tiện ích Việt – Hàn" />
-  <meta property="og:description" content="Tra mã bưu điện, theo dõi thông quan, tỷ giá Won và cẩm nang cho người Việt ở Hàn — tất cả miễn phí." />
+  <meta property="og:title" content="Transflash Logistics — Global ↔ Korea logistics data automation" />
+  <meta property="og:description" content="Korean postal code lookup, address normalization, customs tracking, bulk Excel & API for logistics operations." />
   <meta property="og:image" content="__BASE__/og.svg" />
   <meta property="og:url" content="__BASE__/" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -747,6 +748,11 @@
     .tf-trust-grid{grid-template-columns:1fr 1fr;}
   }
   @media(max-width:560px){ .tf-section{padding:56px 0;} .tf-sec-head h2{font-size:1.6rem;} .tf-hero-copy h1{font-size:1.9rem;} .tf-final-box{padding:40px 22px;} }
+  /* EMBED MODE: chỉ hiện tool (cho trang /demo nhúng iframe) */
+  html.embed .tf-header,html.embed .tf-hero,html.embed .tf-section:not(#try),html.embed .tf-final,html.embed .tf-footer{display:none!important;}
+  html.embed .tf-try{background:transparent;padding:14px 0 6px;}
+  html.embed #try>.tf-wrap{padding:0 8px;}
+  html.embed #try .tf-sec-head,html.embed .tf-micro{display:none!important;}
   </style>
 </head>
 <body class="tf">
@@ -758,6 +764,7 @@
       <a href="#modules" onclick="document.getElementById('tfNav').classList.remove('open')">Modules</a>
       <a href="#workflow" onclick="document.getElementById('tfNav').classList.remove('open')">Workflow</a>
       <a href="#pricing" onclick="document.getElementById('tfNav').classList.remove('open')">Pricing</a>
+      <a href="/demo">Live Demo</a>
       <a href="#contact" onclick="document.getElementById('tfNav').classList.remove('open')">Contact</a>
     </nav>
     <div class="tf-head-right">
@@ -786,17 +793,17 @@
   <div class="tf-wrap tf-hero-grid">
     <div class="tf-hero-copy">
       <span class="tf-pill">⚡ AI-powered logistics data automation</span>
-      <h1>Tự động hóa xử lý <span class="tf-grad-text">hàng nghìn đơn logistics</span> Việt – Hàn mỗi ngày</h1>
-      <p>Tra mã bưu điện Hàn Quốc, chuẩn hóa địa chỉ, kiểm tra mã thông quan, xử lý Excel hàng loạt và tích hợp dữ liệu vận hành cho doanh nghiệp logistics.</p>
+      <h1>Automate <span class="tf-grad-text">thousands of logistics orders</span> for Global ↔ Korea, every day</h1>
+      <p>Korean postal code lookup, address normalization, customs clearance checks, bulk Excel processing and operational data integration — for logistics businesses.</p>
       <div class="tf-hero-cta">
-        <a class="tf-btn tf-btn-primary" href="#try">Dùng thử với file Excel</a>
-        <a class="tf-btn tf-btn-outline" href="#contact">Đặt lịch demo</a>
+        <a class="tf-btn tf-btn-primary" href="#try">Try it with your Excel</a>
+        <a class="tf-btn tf-btn-outline" href="/demo">View live demo</a>
       </div>
       <div class="tf-hero-trust">
-        <span>🏛️ <b>Dữ liệu Chính phủ Hàn Quốc</b></span>
+        <span>🏛️ <b>Korea Government data</b></span>
         <span>⚡ <b>Real-time</b></span>
         <span>🔌 <b>Excel / API ready</b></span>
-        <span>🇻🇳🇰🇷 <b>Việt · Anh · Hàn</b></span>
+        <span>🌐 <b>EN · KO · VI</b></span>
       </div>
     </div>
     <div class="tf-hero-visual">
@@ -805,9 +812,9 @@
         <div class="tf-dash-body">
           <div class="tf-dash-upload">📄 vandon_0612.xlsx · Upload Excel <span class="ok">✓</span></div>
           <div class="tf-dash-stats">
-            <div class="st"><b>2,438</b><span>địa chỉ đã xử lý</span></div>
+            <div class="st"><b>2,438</b><span>addresses processed</span></div>
             <div class="st"><b class="grn">98.7%</b><span>matched</span></div>
-            <div class="st"><b>5 số</b><span>postal code</span></div>
+            <div class="st"><b>5-digit</b><span>postal code</span></div>
           </div>
           <table class="tf-dash-table">
             <thead><tr><th>Recipient</th><th>Address</th><th>Postal</th><th>Status</th></tr></thead>
@@ -829,15 +836,15 @@
 <section class="tf-section alt pain" id="pain">
   <div class="tf-wrap">
     <div class="tf-sec-head">
-      <div class="eyebrow">Vấn đề vận hành</div>
-      <h2>Doanh nghiệp logistics đang mất quá nhiều thời gian cho dữ liệu thủ công</h2>
-      <p>Mỗi ngày hàng nghìn dòng địa chỉ, mã bưu điện và vận đơn được xử lý bằng tay — chậm, dễ sai và khó kiểm soát.</p>
+      <div class="eyebrow">The operations problem</div>
+      <h2>Logistics teams lose too much time on manual data</h2>
+      <p>Every day, thousands of address, postal-code and waybill rows are handled by hand — slow, error-prone and hard to control.</p>
     </div>
     <div class="tf-grid c2">
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div><h3>Copy-paste địa chỉ từng dòng</h3><p>Nhân viên ngồi gõ lại từng địa chỉ Hàn Quốc vào hệ thống — tốn hàng giờ mỗi ngày cho công việc lặp đi lặp lại.</p></div>
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div><h3>Sai mã bưu điện làm chậm giao hàng</h3><p>Một mã bưu điện sai khiến đơn bị trả về, giao trễ và phát sinh chi phí — ảnh hưởng trực tiếp tới khách hàng.</p></div>
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div><h3>Kiểm tra mã thông quan thủ công</h3><p>Tra cứu tiến trình thông quan từng vận đơn trên website hải quan — mất thời gian và không theo dõi được hàng loạt.</p></div>
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6"/></svg></div><h3>File Excel lớn dễ lỗi, khó kiểm soát</h3><p>File hàng nghìn dòng dễ lệch cột, thiếu dữ liệu, sai định dạng — không có quy trình đối soát đáng tin cậy.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div><h3>Copy-pasting addresses row by row</h3><p>Staff retype every Korean address into the system — hours wasted each day on repetitive work.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div><h3>Wrong postal codes delay delivery</h3><p>A single wrong postal code means returned parcels, late delivery and extra cost — hitting customers directly.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div><h3>Manual customs code checks</h3><p>Looking up clearance status one waybill at a time on the customs site — slow and impossible to track in bulk.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6"/></svg></div><h3>Large Excel files break easily</h3><p>Thousand-row files drift columns, miss data and lose formatting — with no reliable reconciliation process.</p></div>
     </div>
   </div>
 </section>
@@ -846,17 +853,17 @@
 <section class="tf-section" id="solution">
   <div class="tf-wrap">
     <div class="tf-sec-head">
-      <div class="eyebrow">Giải pháp</div>
-      <h2>Một nền tảng để chuẩn hóa toàn bộ dữ liệu logistics</h2>
-      <p>From manual Excel work to automated logistics data flow — xử lý, đối soát và xuất dữ liệu sạch chỉ trong vài phút.</p>
+      <div class="eyebrow">The solution</div>
+      <h2>One platform to standardize all your logistics data</h2>
+      <p>From manual Excel work to automated logistics data flow — process, reconcile and export clean data in minutes.</p>
     </div>
     <div class="tf-grid c3">
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div><h3>Tra mã bưu điện hàng loạt</h3><p>Batch Lookup hàng nghìn địa chỉ Hàn Quốc, trả về mã bưu điện 5 số chuẩn từ dữ liệu Chính phủ.</p></div>
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></div><h3>Chuẩn hóa địa chỉ Hàn Quốc</h3><p>Tự nhận diện địa chỉ đường (도로명) và địa chỉ cũ (지번), chuẩn hóa về định dạng giao hàng chính xác.</p></div>
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/></svg></div><h3>Kiểm tra mã thông quan / tracking</h3><p>Theo dõi tiến trình thông quan theo số vận đơn (HAWB) từ Hải quan Hàn Quốc — kiểm tra hàng loạt.</p></div>
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><h3>Xử lý Excel nghìn dòng</h3><p>Upload file vận đơn, tự dò cột, đối soát và điền mã — process thousands of rows in minutes, not hours.</p></div>
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><rect x="4" y="17" width="16" height="4" rx="1"/></svg></div><h3>Xuất dữ liệu sạch cho kế toán</h3><p>Kết quả chuẩn hóa xuất ra Excel/CSV gọn gàng, sẵn sàng cho công nợ, hóa đơn và đối soát kế toán.</p></div>
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div><h3>API tích hợp ERP / WMS / vận đơn</h3><p>Kết nối Transflash vào hệ thống có sẵn qua API — tự động hóa luồng dữ liệu vận hành đầu-cuối.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div><h3>Batch postal code lookup</h3><p>Look up thousands of Korean addresses at once, returning standard 5-digit codes from government data.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></div><h3>Korean address normalization</h3><p>Auto-detect road-name (도로명) and lot-number (지번) addresses, normalized to a precise delivery format.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/></svg></div><h3>Customs &amp; clearance tracking</h3><p>Track clearance progress by waybill (HAWB) from Korea Customs — checked in bulk.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><h3>Thousand-row Excel processing</h3><p>Upload waybill files, auto-map columns, reconcile and fill codes — process thousands of rows in minutes, not hours.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><rect x="4" y="17" width="16" height="4" rx="1"/></svg></div><h3>Clean data export for accounting</h3><p>Normalized results export to tidy Excel/CSV — ready for receivables, invoicing and reconciliation.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div><h3>API integration with ERP / WMS</h3><p>Connect Transflash to your existing systems via API — automate operational data flow end to end.</p></div>
     </div>
   </div>
 </section>
@@ -865,15 +872,15 @@
 <section class="tf-section alt" id="workflow">
   <div class="tf-wrap">
     <div class="tf-sec-head">
-      <div class="eyebrow">Quy trình</div>
-      <h2>Từ file Excel đến dữ liệu tự động trong 4 bước</h2>
-      <p>Built for high-volume logistics operations — đơn giản, nhanh, kiểm soát được.</p>
+      <div class="eyebrow">Workflow</div>
+      <h2>From Excel file to automated data in 4 steps</h2>
+      <p>Built for high-volume logistics operations — simple, fast, controllable.</p>
     </div>
     <div class="tf-flow">
-      <div class="tf-step"><div class="n">1</div><h4>Upload Excel</h4><p>Tải lên file vận đơn / danh sách địa chỉ — .xlsx, .xls, .csv.</p><span class="arr">→</span></div>
-      <div class="tf-step"><div class="n">2</div><h4>AI kiểm tra dữ liệu</h4><p>Tự dò cột địa chỉ, phát hiện dòng thiếu/sai, gắn cờ cần xem lại.</p><span class="arr">→</span></div>
-      <div class="tf-step"><div class="n">3</div><h4>Chuẩn hóa & đối soát</h4><p>Trả mã bưu điện, chuẩn hóa địa chỉ, kiểm tra thông quan, đối soát.</p><span class="arr">→</span></div>
-      <div class="tf-step"><div class="n">4</div><h4>Export / API</h4><p>Xuất file sạch hoặc đẩy dữ liệu trực tiếp vào hệ thống qua API.</p></div>
+      <div class="tf-step"><div class="n">1</div><h4>Upload Excel</h4><p>Upload your waybill / address list — .xlsx, .xls, .csv.</p><span class="arr">→</span></div>
+      <div class="tf-step"><div class="n">2</div><h4>AI checks the data</h4><p>Auto-detect address columns, flag missing/invalid rows for review.</p><span class="arr">→</span></div>
+      <div class="tf-step"><div class="n">3</div><h4>Normalize & reconcile</h4><p>Return postal codes, normalize addresses, check customs, reconcile.</p><span class="arr">→</span></div>
+      <div class="tf-step"><div class="n">4</div><h4>Export / API</h4><p>Export a clean file or push data straight into your system via API.</p></div>
     </div>
   </div>
 </section>
@@ -883,16 +890,16 @@
   <div class="tf-wrap">
     <div class="tf-sec-head">
       <div class="eyebrow">Product Modules</div>
-      <h2>Các module nghiệp vụ trong một nền tảng</h2>
-      <p>Dùng riêng từng module hoặc kết hợp thành quy trình vận hành hoàn chỉnh.</p>
+      <h2>Business modules in a single platform</h2>
+      <p>Use each module on its own, or combine them into a complete operational workflow.</p>
     </div>
     <div class="tf-grid c2">
-      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div><div><span class="en">Postal Code Batch Lookup</span><h3>Tra mã bưu điện hàng loạt</h3><p>Nghìn địa chỉ → mã bưu điện 5 số chuẩn, theo từng dòng, có trạng thái rõ ràng.</p></div></div>
-      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div><span class="en">Address Normalization</span><h3>Chuẩn hóa địa chỉ</h3><p>Nhận diện 도로명 / 지번, làm sạch và chuẩn hóa địa chỉ giao hàng.</p></div></div>
-      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/></svg></div><div><span class="en">Customs & Clearance Check</span><h3>Kiểm tra mã thông quan</h3><p>Theo dõi tiến trình thông quan theo HAWB từ Hải quan Hàn Quốc.</p></div></div>
-      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div><span class="en">Logistics Excel Automation</span><h3>Tự động hóa Excel vận đơn</h3><p>Upload, dò cột, đối soát, điền mã và xuất kết quả hàng loạt.</p></div></div>
-      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><rect x="4" y="17" width="16" height="4" rx="1"/></svg></div><div><span class="en">Accounting Data Export</span><h3>Xuất dữ liệu kế toán</h3><p>Dữ liệu sạch cho công nợ, hóa đơn, đối soát — đúng định dạng.</p></div></div>
-      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div><div><span class="en">API Integration</span><h3>Tích hợp API</h3><p>Kết nối ERP / WMS / hệ thống vận đơn qua REST API, Enterprise Support.</p></div></div>
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div><div><span class="en">Postal Code Batch Lookup</span><h3>Bulk postal code lookup</h3><p>Thousands of addresses → standard 5-digit codes, row by row, with clear status.</p></div></div>
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div><span class="en">Address Normalization</span><h3>Address normalization</h3><p>Detect 도로명 / 지번, clean and normalize delivery addresses.</p></div></div>
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/></svg></div><div><span class="en">Customs & Clearance Check</span><h3>Customs code check</h3><p>Track clearance progress by HAWB from Korea Customs.</p></div></div>
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div><span class="en">Logistics Excel Automation</span><h3>Waybill Excel automation</h3><p>Upload, map columns, reconcile, fill codes and export in bulk.</p></div></div>
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><rect x="4" y="17" width="16" height="4" rx="1"/></svg></div><div><span class="en">Accounting Data Export</span><h3>Accounting data export</h3><p>Clean data for receivables, invoicing and reconciliation — correctly formatted.</p></div></div>
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div><div><span class="en">API Integration</span><h3>API integration</h3><p>Connect ERP / WMS / waybill systems via REST API, with Enterprise Support.</p></div></div>
     </div>
   </div>
 </section>
@@ -901,9 +908,9 @@
 <section class="tf-section tf-try" id="try">
   <div class="tf-wrap">
     <div class="tf-sec-head">
-      <div class="eyebrow">Dùng thử ngay</div>
-      <h2>Trải nghiệm trực tiếp với dữ liệu thật của bạn</h2>
-      <p>Tra một địa chỉ hoặc upload file Excel — xem hệ thống chuẩn hóa và trả mã bưu điện ngay lập tức.</p>
+      <div class="eyebrow">Try it now</div>
+      <h2>Experience it live with your real data</h2>
+      <p>Look up a single address or upload an Excel file — watch the system normalize and return postal codes instantly. <a href="/demo" style="color:var(--tf-brand);font-weight:750">See the full demo →</a></p>
     </div>
 
   <div class="container">
@@ -1109,6 +1116,7 @@
 
   </div><!-- /.container (khung quanh tool) -->
   <p class="tf-micro" style="margin-top:26px">Built for high-volume logistics operations · Process thousands of rows in minutes, not hours</p>
+  <p style="text-align:center;margin-top:8px"><a class="tf-btn tf-btn-outline" href="/demo">Open full live demo →</a></p>
   </div><!-- /tf-wrap -->
 </section><!-- /tf-try -->
 
@@ -1116,17 +1124,17 @@
 <section class="tf-section">
   <div class="tf-wrap">
     <div class="tf-sec-head">
-      <div class="eyebrow">Khách hàng</div>
-      <h2>Dành cho doanh nghiệp xử lý số lượng lớn</h2>
-      <p>Designed for Vietnam–Korea logistics — phù hợp với mọi mô hình vận hành đơn hàng xuyên biên giới.</p>
+      <div class="eyebrow">Who it's for</div>
+      <h2>Built for high-volume operations</h2>
+      <p>Designed for Global ↔ Korea logistics — fits any cross-border order operation.</p>
     </div>
     <div class="tf-chips">
-      <div class="tf-chip"><span class="e">🚚</span> Công ty vận chuyển Việt – Hàn</div>
-      <div class="tf-chip"><span class="e">📦</span> Forwarder</div>
-      <div class="tf-chip"><span class="e">🏭</span> Kho fulfillment</div>
-      <div class="tf-chip"><span class="e">🛒</span> Dịch vụ mua hộ Hàn Quốc</div>
-      <div class="tf-chip"><span class="e">🌐</span> Shop TMĐT xuyên biên giới</div>
-      <div class="tf-chip"><span class="e">📊</span> Doanh nghiệp nghìn đơn/tháng</div>
+      <div class="tf-chip"><span class="e">🚚</span> Global ↔ Korea carriers</div>
+      <div class="tf-chip"><span class="e">📦</span> Forwarders</div>
+      <div class="tf-chip"><span class="e">🏭</span> Fulfillment centers</div>
+      <div class="tf-chip"><span class="e">🛒</span> Korea buy-for-me services</div>
+      <div class="tf-chip"><span class="e">🌐</span> Cross-border e-commerce</div>
+      <div class="tf-chip"><span class="e">📊</span> Thousands of orders / month</div>
     </div>
   </div>
 </section>
@@ -1135,16 +1143,16 @@
 <section class="tf-section alt">
   <div class="tf-wrap">
     <div class="tf-sec-head">
-      <div class="eyebrow">Đáng tin cậy</div>
-      <h2>Nền tảng dữ liệu logistics nghiêm túc</h2>
-      <p>Xây dựng cho vận hành thật, dữ liệu lớn, bảo mật và sẵn sàng tích hợp.</p>
+      <div class="eyebrow">Trusted</div>
+      <h2>A serious logistics data platform</h2>
+      <p>Built for real operations, large volumes, security and integration.</p>
     </div>
     <div class="tf-trust-grid">
-      <div class="tf-trust-card"><div class="ic">🇻🇳🇰🇷</div><b>Vietnam–Korea</b><span>Thiết kế riêng cho logistics Việt – Hàn</span></div>
-      <div class="tf-trust-card"><div class="ic">🔒</div><b>Secure</b><span>Xử lý dữ liệu an toàn, bảo mật</span></div>
-      <div class="tf-trust-card"><div class="ic">🔌</div><b>Excel / API ready</b><span>Tích hợp linh hoạt với hệ thống</span></div>
-      <div class="tf-trust-card"><div class="ic">🎧</div><b>Enterprise support</b><span>Hỗ trợ chuyên trách cho doanh nghiệp</span></div>
-      <div class="tf-trust-card"><div class="ic">🏢</div><b>Transflash / SotaTek</b><span>Phát triển bởi hệ sinh thái công nghệ</span></div>
+      <div class="tf-trust-card"><div class="ic">🌐</div><b>Global ↔ Korea</b><span>Purpose-built for Korea logistics</span></div>
+      <div class="tf-trust-card"><div class="ic">🔒</div><b>Secure</b><span>Safe, secure data processing</span></div>
+      <div class="tf-trust-card"><div class="ic">🔌</div><b>Excel / API ready</b><span>Flexible system integration</span></div>
+      <div class="tf-trust-card"><div class="ic">🎧</div><b>Enterprise support</b><span>Dedicated support for businesses</span></div>
+      <div class="tf-trust-card"><div class="ic">🏢</div><b>Transflash / SotaTek</b><span>Backed by a technology ecosystem</span></div>
     </div>
   </div>
 </section>
@@ -1153,29 +1161,29 @@
 <section class="tf-section" id="pricing">
   <div class="tf-wrap">
     <div class="tf-sec-head">
-      <div class="eyebrow">Gói dịch vụ</div>
-      <h2>Chọn quy mô phù hợp với vận hành của bạn</h2>
-      <p>Từ tra cứu cơ bản đến tích hợp toàn hệ thống — mở rộng theo nhu cầu.</p>
+      <div class="eyebrow">Pricing</div>
+      <h2>Pick the scale that fits your operation</h2>
+      <p>From basic lookups to full system integration — grows with your needs.</p>
     </div>
     <div class="tf-price-grid">
       <div class="tf-price">
         <h3>Free Tool</h3>
-        <p class="pr-sub">Tra cứu cơ bản cho cá nhân & dùng thử.</p>
-        <ul><li>Tra mã bưu điện thủ công</li><li>Kiểm tra mã thông quan</li><li>Upload Excel giới hạn</li><li>Việt · Anh · Hàn</li></ul>
-        <a class="tf-btn tf-btn-outline" href="#try">Dùng thử ngay</a>
+        <p class="pr-sub">Basic lookups for individuals & trials.</p>
+        <ul><li>Manual postal code lookup</li><li>Customs code check</li><li>Limited Excel upload</li><li>EN · KO · VI</li></ul>
+        <a class="tf-btn tf-btn-outline" href="#try">Try it now</a>
       </div>
       <div class="tf-price feature">
-        <span class="pop">Phổ biến</span>
+        <span class="pop">Popular</span>
         <h3>Business</h3>
-        <p class="pr-sub">Xử lý Excel hàng loạt cho đội vận hành.</p>
-        <ul><li>Batch Lookup nghìn dòng</li><li>Chuẩn hóa địa chỉ tự động</li><li>Xuất dữ liệu sạch cho kế toán</li><li>Đối soát & gắn cờ cần xem lại</li><li>Hỗ trợ ưu tiên</li></ul>
-        <a class="tf-btn tf-btn-primary" href="#contact">Đặt lịch demo</a>
+        <p class="pr-sub">Bulk Excel processing for ops teams.</p>
+        <ul><li>Batch lookup, thousands of rows</li><li>Automatic address normalization</li><li>Clean data export for accounting</li><li>Reconcile &amp; flag for review</li><li>Priority support</li></ul>
+        <a class="tf-btn tf-btn-primary" href="#contact">Book a demo</a>
       </div>
       <div class="tf-price">
         <h3>Enterprise</h3>
-        <p class="pr-sub">API, dashboard riêng, tích hợp hệ thống.</p>
-        <ul><li>API tích hợp ERP / WMS / vận đơn</li><li>Dashboard & quy trình riêng</li><li>Khối lượng lớn không giới hạn</li><li>SLA & Enterprise Support</li><li>Tư vấn triển khai</li></ul>
-        <a class="tf-btn tf-btn-outline" href="#contact">Liên hệ tư vấn</a>
+        <p class="pr-sub">API, dedicated dashboard, integration.</p>
+        <ul><li>API integration: ERP / WMS / waybill</li><li>Dedicated dashboard &amp; workflow</li><li>Unlimited high volume</li><li>SLA &amp; Enterprise Support</li><li>Onboarding consulting</li></ul>
+        <a class="tf-btn tf-btn-outline" href="#contact">Contact sales</a>
       </div>
     </div>
   </div>
@@ -1185,11 +1193,11 @@
 <section class="tf-final" id="contact">
   <div class="tf-wrap">
     <div class="tf-final-box">
-      <h2>Biến file Excel logistics của bạn thành quy trình tự động</h2>
-      <p>Gửi file mẫu để chúng tôi xử lý thử, hoặc đặt lịch demo cùng đội ngũ Transflash.</p>
+      <h2>Turn your logistics Excel into an automated workflow</h2>
+      <p>Send us a sample file and we'll process it for you, or book a demo with the Transflash team.</p>
       <div class="tf-final-cta">
-        <a class="tf-btn tf-btn-outline" href="mailto:support@transflash.app?subject=Đặt lịch demo Transflash Logistics">Đặt lịch demo</a>
-        <a class="tf-btn tf-btn-ghost" href="mailto:support@transflash.app?subject=Gửi file mẫu để test">Gửi file mẫu để test</a>
+        <a class="tf-btn tf-btn-outline" href="mailto:support@transflash.app?subject=Book a demo — Transflash Logistics">Book a demo</a>
+        <a class="tf-btn tf-btn-ghost" href="mailto:support@transflash.app?subject=Sample file to test">Send a sample file</a>
       </div>
     </div>
   </div>
@@ -1201,33 +1209,34 @@
     <div class="fgrid">
       <div class="fbrand">
         <b>Transflash Logistics</b>
-        <p>Nền tảng tự động hóa dữ liệu logistics Việt – Hàn: mã bưu điện, chuẩn hóa địa chỉ, thông quan, Excel & API.</p>
+        <p>Logistics data automation for Global ↔ Korea: postal codes, address normalization, customs, Excel &amp; API.</p>
         <p style="margin-top:6px"><a href="mailto:support@transflash.app" style="display:inline">support@transflash.app</a></p>
       </div>
       <div>
-        <h4>Sản phẩm</h4>
+        <h4>Product</h4>
         <a href="#solution">Solutions</a>
         <a href="#modules">Modules</a>
         <a href="#workflow">Workflow</a>
         <a href="#pricing">Pricing</a>
+        <a href="/demo">Live Demo</a>
       </div>
       <div>
-        <h4>Công cụ</h4>
-        <a href="/">Tra mã bưu điện</a>
-        <a href="/tracking">Tra cứu thông quan</a>
-        <a href="/tools">Tiện ích</a>
-        <a href="/ten-tieng-han">Tên tiếng Hàn</a>
+        <h4>Tools</h4>
+        <a href="/">Postal code lookup</a>
+        <a href="/tracking">Customs tracking</a>
+        <a href="/tools">Utilities</a>
+        <a href="/demo">Live demo</a>
       </div>
       <div>
-        <h4>Cẩm nang</h4>
-        <a href="/customs-guide">Hướng dẫn thông quan</a>
-        <a href="/import-guide">Quy trình XNK Việt – Hàn</a>
-        <a href="/nguoi-viet-o-han">Người Việt ở Hàn</a>
-        <a href="/about">Giới thiệu</a>
+        <h4>Resources</h4>
+        <a href="/customs-guide">Customs guide</a>
+        <a href="/import-guide">Import/Export process</a>
+        <a href="/about">About</a>
+        <a href="mailto:support@transflash.app">Contact</a>
       </div>
     </div>
     <div class="tf-fbottom">
-      <span>© 2026 Transflash · Giải pháp logistics Việt – Hàn</span>
+      <span>© 2026 Transflash · Global ↔ Korea logistics</span>
       <span>From manual Excel work to automated logistics data flow</span>
     </div>
   </div>
@@ -2429,7 +2438,7 @@ function applyAccessUI() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 (async function() {
-  setLang(localStorage.getItem('lang') || 'vi');
+  setLang(new URLSearchParams(location.search).get('lang') || localStorage.getItem('lang') || 'en');
 
   try {
     const cfg = await fetch('/api/config').then(r => r.json());

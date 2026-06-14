@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>if(location.search.indexOf('embed')>=0)document.documentElement.classList.add('embed');</script>
 <title>__TITLE__</title>
 <meta name="description" content="__DESC__" />
 <meta name="keywords" content="__KEYWORDS__" />
@@ -198,6 +199,9 @@
   .app-footer .tf-dot { color:var(--line2); }
   .footer-support { color:var(--blue); text-decoration:none; font-weight:600; }
   .footer-support:hover { text-decoration:underline; }
+  /* EMBED MODE: chỉ hiện tool tra thông quan (cho /demo nhúng iframe) */
+  html.embed .site-header, html.embed .app-footer { display:none !important; }
+  html.embed body { background:transparent; }
 </style>
 </head>
 <body>
@@ -890,7 +894,7 @@ function tryUpload() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 (function () {
   const param = new URLSearchParams(location.search).get('lang');
-  const lang = ['vi','en','ko'].includes(param) ? param : (localStorage.getItem('lang') || 'vi');
+  const lang = ['vi','en','ko'].includes(param) ? param : (localStorage.getItem('lang') || 'en');
   batchRows = [];   // ban đầu trống — chờ upload Excel
   setLang(lang);    // setLang gọi refreshBatchUI để dựng trạng thái trống
   loadAuth();       // xác định khách / đã đăng nhập (gate upload Excel)

@@ -879,6 +879,7 @@ app.get('/sitemap.xml', (req, res) => {
     `  <url><loc>${SITE}/about?lang=en</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
     `  <url><loc>${SITE}/about?lang=ko</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
     `  <url><loc>${SITE}/</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
+    `  <url><loc>${SITE}/demo</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>\n` +
     `  <url><loc>${SITE}/tracking</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>\n` +
     `  <url><loc>${SITE}/tracking-info</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority>` +
     `<xhtml:link rel="alternate" hreflang="vi" href="${SITE}/tracking-info"/>` +
@@ -903,6 +904,11 @@ app.get('/sitemap.xml', (req, res) => {
 // ── Trang chính — PUBLIC: ai cũng vào được (khách hoặc đã login) ─────────────
 app.get('/', (req, res) => {
   sendTpl(res, 'app.html');
+});
+
+// ── Trang DEMO — PUBLIC: gộp 2 tool (mã bưu điện + thông quan) qua iframe embed
+app.get('/demo', (req, res) => {
+  sendTpl(res, 'demo.html');
 });
 
 // ── Trang xử lý file vận đơn — chỉ gói Pro / Enterprise ──────────────────────

@@ -604,26 +604,163 @@
       font-size: 0.82rem; color: var(--red); margin-top: 10px; display: none;
     }
   </style>
+  <!-- ════════ TRANSFLASH B2B PREMIUM REDESIGN ════════ -->
+  <style>
+  :root{
+    --tf-ink:#0b1020; --tf-ink2:#1e293b; --tf-gray:#475569; --tf-gray2:#64748b; --tf-line:#e7ebf3;
+    --tf-bg:#ffffff; --tf-bg2:#f7f9fc; --tf-bg3:#eef2fb;
+    --tf-brand:#4f46e5; --tf-brand2:#2563eb; --tf-violet:#7c3aed; --tf-cyan:#06b6d4;
+    --tf-grad:linear-gradient(120deg,#6366f1 0%,#2563eb 55%,#06b6d4 130%);
+    --tf-green:#16a34a; --tf-amber:#d97706;
+    --tf-shadow:0 12px 34px -14px rgba(15,23,42,.18);
+    --tf-shadow-lg:0 30px 70px -26px rgba(30,41,59,.32);
+    --tf-r:20px;
+  }
+  body.tf{font-family:'Inter','Segoe UI','Noto Sans KR',Arial,sans-serif;color:var(--tf-ink2);background:var(--tf-bg);-webkit-font-smoothing:antialiased;}
+  body.tf .container{max-width:none;margin:0;padding:0;}
+  .tf-wrap{max-width:1180px;margin:0 auto;padding:0 24px;}
+  .tf-section{padding:84px 0;}
+  .tf-section.alt{background:var(--tf-bg2);}
+  .tf-grad-text{background:var(--tf-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  .tf-sec-head{max-width:760px;margin:0 auto 46px;text-align:center;}
+  .tf-sec-head .eyebrow{font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--tf-brand);margin-bottom:12px;}
+  .tf-sec-head h2{font-size:2.05rem;line-height:1.18;font-weight:850;color:var(--tf-ink);letter-spacing:-.02em;margin:0 0 12px;}
+  .tf-sec-head p{font-size:1.05rem;color:var(--tf-gray);line-height:1.6;margin:0;}
+  .tf-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:750;font-size:.96rem;border-radius:12px;padding:13px 22px;cursor:pointer;border:1.5px solid transparent;text-decoration:none;transition:transform .14s,box-shadow .16s,background .16s;font-family:inherit;}
+  .tf-btn-primary{background:var(--tf-grad);color:#fff;box-shadow:0 14px 30px -10px rgba(37,99,235,.55);}
+  .tf-btn-primary:hover{transform:translateY(-2px);box-shadow:0 20px 40px -12px rgba(37,99,235,.6);}
+  .tf-btn-outline{background:#fff;color:var(--tf-ink);border-color:var(--tf-line);}
+  .tf-btn-outline:hover{border-color:var(--tf-brand);color:var(--tf-brand);transform:translateY(-2px);}
+  .tf-btn-ghost{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.42);}
+  .tf-btn-ghost:hover{background:rgba(255,255,255,.24);}
+  .tf-header{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid transparent;transition:border-color .2s,box-shadow .2s;}
+  .tf-header.scrolled{border-color:var(--tf-line);box-shadow:0 6px 24px -16px rgba(15,23,42,.28);}
+  .tf-head-row{display:flex;align-items:center;gap:18px;height:66px;}
+  .tf-logo{display:flex;align-items:center;gap:11px;text-decoration:none;}
+  .tf-logo img{height:34px;width:34px;}
+  .tf-logo span{display:flex;flex-direction:column;line-height:1.05;}
+  .tf-logo b{font-size:1.06rem;font-weight:850;color:var(--tf-ink);letter-spacing:-.01em;}
+  .tf-logo i{font-size:.66rem;font-style:normal;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--tf-brand);}
+  .tf-nav{display:flex;gap:4px;margin-left:14px;}
+  .tf-nav a{font-size:.9rem;font-weight:650;color:var(--tf-gray);padding:8px 13px;border-radius:9px;text-decoration:none;transition:background .14s,color .14s;}
+  .tf-nav a:hover{background:var(--tf-bg3);color:var(--tf-brand);}
+  .tf-head-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+  .tf-cta-sm{display:inline-flex;align-items:center;background:var(--tf-grad);color:#fff;font-weight:750;font-size:.86rem;padding:9px 16px;border-radius:10px;text-decoration:none;box-shadow:0 10px 22px -10px rgba(37,99,235,.55);}
+  .tf-cta-sm:hover{transform:translateY(-1px);}
+  .tf-burger{display:none;background:none;border:1.5px solid var(--tf-line);border-radius:9px;font-size:1.1rem;padding:6px 11px;cursor:pointer;color:var(--tf-ink);}
+  body.tf .lang-select{border:1.5px solid var(--tf-line);border-radius:9px;padding:7px 9px;font-size:.82rem;font-weight:650;background:#fff;color:var(--tf-ink2);font-family:inherit;}
+  body.tf .btn-login-top,body.tf .btn-logout{border:1.5px solid var(--tf-line);background:#fff;color:var(--tf-ink2);font-weight:700;font-size:.84rem;border-radius:9px;padding:8px 14px;cursor:pointer;font-family:inherit;}
+  .tf-hero{position:relative;overflow:hidden;background:radial-gradient(1200px 460px at 78% -8%,#e9efff 0%,rgba(233,239,255,0) 60%),linear-gradient(180deg,#fbfcff 0%,#ffffff 70%);padding:64px 0 72px;}
+  .tf-hero:before{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--tf-line) 1px,transparent 1px),linear-gradient(90deg,var(--tf-line) 1px,transparent 1px);background-size:46px 46px;opacity:.35;-webkit-mask-image:radial-gradient(900px 400px at 75% 10%,#000,transparent 75%);mask-image:radial-gradient(900px 400px at 75% 10%,#000,transparent 75%);}
+  .tf-hero-grid{position:relative;display:grid;grid-template-columns:1.05fr 1fr;gap:54px;align-items:center;}
+  .tf-pill{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--tf-line);color:var(--tf-brand);font-weight:750;font-size:.8rem;padding:7px 14px;border-radius:99px;box-shadow:var(--tf-shadow);margin-bottom:20px;}
+  .tf-hero-copy h1{font-size:3rem;line-height:1.08;font-weight:880;letter-spacing:-.03em;color:var(--tf-ink);margin:0 0 18px;}
+  .tf-hero-copy>p{font-size:1.14rem;line-height:1.6;color:var(--tf-gray);max-width:560px;margin:0 0 26px;}
+  .tf-hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:22px;}
+  .tf-hero-trust{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.84rem;font-weight:650;color:var(--tf-gray2);}
+  .tf-hero-trust span{display:inline-flex;align-items:center;gap:6px;}
+  .tf-hero-trust b{color:var(--tf-ink2);font-weight:750;}
+  .tf-dash{background:#fff;border:1px solid var(--tf-line);border-radius:18px;box-shadow:var(--tf-shadow-lg);overflow:hidden;transform:perspective(1400px) rotateY(-7deg) rotateX(2deg);transition:transform .35s;}
+  .tf-dash:hover{transform:perspective(1400px) rotateY(0) rotateX(0);}
+  .tf-dash-bar{display:flex;align-items:center;gap:7px;padding:11px 14px;background:#0b1228;}
+  .tf-dash-bar .dot{width:11px;height:11px;border-radius:50%;}
+  .tf-dash-bar .dot.r{background:#ff5f57;}.tf-dash-bar .dot.y{background:#febc2e;}.tf-dash-bar .dot.g{background:#28c840;}
+  .tf-dash-title{margin-left:8px;color:#9fb0d6;font-size:.74rem;font-weight:700;letter-spacing:.02em;}
+  .tf-dash-body{padding:16px;}
+  .tf-dash-upload{display:flex;align-items:center;gap:9px;background:#f3f6fd;border:1px dashed #c7d2fe;border-radius:11px;padding:11px 13px;font-size:.84rem;font-weight:700;color:var(--tf-ink2);}
+  .tf-dash-upload .ok{margin-left:auto;color:#fff;background:var(--tf-green);border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;}
+  .tf-dash-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:13px 0;}
+  .tf-dash-stats .st{background:var(--tf-bg2);border:1px solid var(--tf-line);border-radius:11px;padding:11px;text-align:center;}
+  .tf-dash-stats .st b{display:block;font-size:1.32rem;font-weight:850;color:var(--tf-ink);letter-spacing:-.02em;}
+  .tf-dash-stats .st b.grn{color:var(--tf-green);}
+  .tf-dash-stats .st span{font-size:.7rem;color:var(--tf-gray2);font-weight:600;}
+  .tf-dash-table{width:100%;border-collapse:collapse;font-size:.76rem;}
+  .tf-dash-table th{text-align:left;color:var(--tf-gray2);font-weight:700;padding:6px 8px;border-bottom:1px solid var(--tf-line);font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;}
+  .tf-dash-table td{padding:8px;border-bottom:1px solid #f1f4fb;color:var(--tf-ink2);font-weight:600;}
+  .tf-dash-table .mono{font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--tf-brand2);}
+  .tf-bdg{display:inline-block;font-size:.66rem;font-weight:800;padding:3px 8px;border-radius:99px;}
+  .tf-bdg.ok{background:#e8f7ee;color:#15803d;}.tf-bdg.rev{background:#fef6e7;color:#b45309;}.tf-bdg.exp{background:#eaf0ff;color:#3730a3;}
+  .tf-dash-steps{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:13px;font-size:.74rem;font-weight:700;color:var(--tf-gray);}
+  .tf-dash-steps b{color:var(--tf-green);}
+  .tf-grid{display:grid;gap:20px;}
+  .tf-grid.c2{grid-template-columns:repeat(2,1fr);}
+  .tf-grid.c3{grid-template-columns:repeat(3,1fr);}
+  .tf-card{background:#fff;border:1px solid var(--tf-line);border-radius:var(--tf-r);padding:26px;box-shadow:0 1px 0 rgba(15,23,42,.02);transition:transform .16s,box-shadow .18s,border-color .18s;}
+  .tf-card:hover{transform:translateY(-4px);box-shadow:var(--tf-shadow);border-color:#dfe5f3;}
+  .tf-ic{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:var(--tf-bg3);color:var(--tf-brand);margin-bottom:15px;}
+  .tf-ic svg{width:24px;height:24px;stroke-width:1.8;}
+  .tf-card h3{font-size:1.08rem;font-weight:800;color:var(--tf-ink);margin:0 0 7px;letter-spacing:-.01em;}
+  .tf-card p{font-size:.92rem;color:var(--tf-gray);line-height:1.58;margin:0;}
+  .pain .tf-ic{background:#fff1f2;color:#e11d48;}
+  .tf-flow{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .tf-step{position:relative;background:#fff;border:1px solid var(--tf-line);border-radius:var(--tf-r);padding:24px 20px;}
+  .tf-step .n{width:34px;height:34px;border-radius:10px;background:var(--tf-grad);color:#fff;font-weight:850;display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:.95rem;}
+  .tf-step h4{font-size:1.02rem;font-weight:800;color:var(--tf-ink);margin:0 0 6px;}
+  .tf-step p{font-size:.86rem;color:var(--tf-gray);line-height:1.5;margin:0;}
+  .tf-step .arr{position:absolute;right:-11px;top:50%;transform:translateY(-50%);color:#cbd5e1;font-size:1.3rem;z-index:2;}
+  .tf-mod{display:flex;gap:15px;align-items:flex-start;background:#fff;border:1px solid var(--tf-line);border-radius:16px;padding:20px;transition:border-color .16s,box-shadow .16s;}
+  .tf-mod:hover{border-color:#dfe5f3;box-shadow:var(--tf-shadow);}
+  .tf-mod .tf-ic{margin-bottom:0;flex:none;}
+  .tf-mod h3{font-size:1rem;margin:0 0 4px;color:var(--tf-ink);font-weight:800;}
+  .tf-mod p{font-size:.88rem;color:var(--tf-gray);line-height:1.5;margin:5px 0 0;}
+  .tf-mod .en{font-size:.72rem;font-weight:800;letter-spacing:.04em;color:var(--tf-brand2);text-transform:uppercase;}
+  .tf-try{background:linear-gradient(180deg,#f4f7ff 0%,#ffffff 100%);}
+  .tf-chips{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:900px;margin:0 auto;}
+  .tf-chip{background:#fff;border:1px solid var(--tf-line);border-radius:14px;padding:16px 20px;font-weight:750;color:var(--tf-ink2);display:flex;align-items:center;gap:10px;font-size:.95rem;box-shadow:0 1px 0 rgba(15,23,42,.02);}
+  .tf-chip .e{font-size:1.25rem;}
+  .tf-trust-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
+  .tf-trust-card{text-align:center;padding:22px 14px;background:#fff;border:1px solid var(--tf-line);border-radius:16px;}
+  .tf-trust-card .ic{width:44px;height:44px;border-radius:12px;background:var(--tf-bg3);color:var(--tf-brand);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.3rem;}
+  .tf-trust-card b{display:block;font-size:.92rem;color:var(--tf-ink);font-weight:800;margin-bottom:4px;}
+  .tf-trust-card span{font-size:.8rem;color:var(--tf-gray2);line-height:1.45;}
+  .tf-price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch;}
+  .tf-price{background:#fff;border:1px solid var(--tf-line);border-radius:var(--tf-r);padding:30px;display:flex;flex-direction:column;}
+  .tf-price.feature{border:1.5px solid var(--tf-brand);box-shadow:var(--tf-shadow-lg);position:relative;}
+  .tf-price.feature .pop{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--tf-grad);color:#fff;font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:5px 13px;border-radius:99px;}
+  .tf-price h3{font-size:1.2rem;font-weight:850;color:var(--tf-ink);margin:0 0 4px;}
+  .tf-price .pr-sub{font-size:.86rem;color:var(--tf-gray2);margin:0 0 18px;min-height:38px;}
+  .tf-price ul{list-style:none;margin:0 0 22px;padding:0;display:flex;flex-direction:column;gap:10px;}
+  .tf-price li{font-size:.9rem;color:var(--tf-gray);display:flex;gap:9px;align-items:flex-start;line-height:1.45;}
+  .tf-price li:before{content:"✓";color:var(--tf-green);font-weight:900;flex:none;}
+  .tf-price .tf-btn{margin-top:auto;width:100%;}
+  .tf-final{padding:0 0 84px;}
+  .tf-final-box{position:relative;overflow:hidden;background:var(--tf-grad);border-radius:28px;padding:56px 40px;text-align:center;color:#fff;box-shadow:var(--tf-shadow-lg);}
+  .tf-final-box:before{content:"";position:absolute;inset:0;background-image:radial-gradient(600px 240px at 80% 120%,rgba(255,255,255,.22),transparent 70%);}
+  .tf-final-box h2{position:relative;font-size:2.1rem;font-weight:850;letter-spacing:-.02em;margin:0 0 12px;}
+  .tf-final-box p{position:relative;font-size:1.06rem;opacity:.92;max-width:600px;margin:0 auto 26px;}
+  .tf-final-box .tf-final-cta{position:relative;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+  .tf-footer{background:#0b1228;color:#a7b3d4;padding:54px 0 30px;}
+  .tf-footer .fgrid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:30px;}
+  .tf-footer h4{color:#fff;font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;margin:0 0 14px;font-weight:800;}
+  .tf-footer a{display:block;color:#9fb0d6;text-decoration:none;font-size:.88rem;padding:5px 0;transition:color .14s;}
+  .tf-footer a:hover{color:#fff;}
+  .tf-footer .fbrand b{color:#fff;font-size:1.2rem;font-weight:850;}
+  .tf-footer .fbrand p{font-size:.86rem;line-height:1.6;margin:10px 0 0;max-width:300px;}
+  .tf-fbottom{border-top:1px solid rgba(255,255,255,.1);margin-top:34px;padding-top:20px;font-size:.82rem;color:#7f8cb0;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  .tf-micro{text-align:center;font-size:.82rem;font-weight:700;color:var(--tf-brand);letter-spacing:.04em;margin-top:14px;}
+  @media(max-width:920px){
+    .tf-hero-grid{grid-template-columns:1fr;gap:34px;} .tf-hero-copy h1{font-size:2.3rem;}
+    .tf-dash{transform:none;} .tf-grid.c3,.tf-flow,.tf-trust-grid,.tf-price-grid,.tf-footer .fgrid{grid-template-columns:1fr;}
+    .tf-grid.c2{grid-template-columns:1fr;} .tf-step .arr{display:none;}
+    .tf-nav{display:none;position:absolute;top:66px;left:0;right:0;background:#fff;border-bottom:1px solid var(--tf-line);flex-direction:column;padding:10px 18px;gap:2px;box-shadow:var(--tf-shadow);}
+    .tf-nav.open{display:flex;} .tf-burger{display:inline-flex;} .tf-cta-sm{display:none;}
+    .tf-trust-grid{grid-template-columns:1fr 1fr;}
+  }
+  @media(max-width:560px){ .tf-section{padding:56px 0;} .tf-sec-head h2{font-size:1.6rem;} .tf-hero-copy h1{font-size:1.9rem;} .tf-final-box{padding:40px 22px;} }
+  </style>
 </head>
-<body>
-<header class="site-header">
-  <div class="topbar">
-    <div class="brand-area">
-      <img src="/logo.svg" alt="Vietnam - Korea Logistics" />
-      <div class="brand-text">
-        <div class="brand-name" data-i18n="brandName">Vietnam - Korea Logistics</div>
-        <div class="brand-sub" data-i18n="brandSub">Tra Mã Bưu Điện Hàn Quốc</div>
-      </div>
-    </div>
-
-    <nav class="top-nav">
-      <a href="/" class="active" data-i18n="navPostal">Mã bưu điện</a>
-      <a href="/tracking" data-i18n="navCustoms">Mã thông quan</a>
-      <a href="/tools" data-i18n="navTools">Tiện ích</a>
-      <a href="/nguoi-viet-o-han" data-i18n="navHub">Người Việt ở Hàn</a>
+<body class="tf">
+<header class="tf-header" id="tfHeader">
+  <div class="tf-wrap tf-head-row">
+    <a class="tf-logo" href="/"><img src="/logo.svg" alt="Transflash Logistics" /><span><b>Transflash</b><i>Logistics</i></span></a>
+    <nav class="tf-nav" id="tfNav">
+      <a href="#solution" onclick="document.getElementById('tfNav').classList.remove('open')">Solutions</a>
+      <a href="#modules" onclick="document.getElementById('tfNav').classList.remove('open')">Modules</a>
+      <a href="#workflow" onclick="document.getElementById('tfNav').classList.remove('open')">Workflow</a>
+      <a href="#pricing" onclick="document.getElementById('tfNav').classList.remove('open')">Pricing</a>
+      <a href="#contact" onclick="document.getElementById('tfNav').classList.remove('open')">Contact</a>
     </nav>
-
-    <div class="topbar-right">
+    <div class="tf-head-right">
       <div class="user-chip" id="userChip" style="display:none">
         <span class="user-avatar" id="userAvatar">U</span>
         <span class="user-meta">
@@ -632,19 +769,146 @@
         </span>
       </div>
       <select class="lang-select" id="langSelect" onchange="setLang(this.value)">
-        <option value="vi" data-i18n="langVI">Tiếng Việt</option>
-        <option value="en" data-i18n="langEN">Tiếng Anh</option>
-        <option value="ko" data-i18n="langKO">Tiếng Hàn</option>
+        <option value="vi">VI</option>
+        <option value="en">EN</option>
+        <option value="ko">KO</option>
       </select>
       <button class="btn-login-top" id="loginBtn" onclick="location.href='/login'" style="display:none"><span data-i18n="btnLogin">Đăng nhập</span></button>
       <button class="btn-logout" id="logoutBtn" onclick="logout()"><span data-i18n="btnLogout">Đăng xuất</span></button>
+      <a class="tf-cta-sm" href="#try">Dùng thử</a>
+      <button class="tf-burger" aria-label="Menu" onclick="document.getElementById('tfNav').classList.toggle('open')">☰</button>
     </div>
   </div>
 </header>
 
-<div class="container">
-  <!-- Hero: giới thiệu nhanh + dải tin cậy -->
-  <div class="home-hero">
+<!-- ══════════ HERO ══════════ -->
+<section class="tf-hero">
+  <div class="tf-wrap tf-hero-grid">
+    <div class="tf-hero-copy">
+      <span class="tf-pill">⚡ AI-powered logistics data automation</span>
+      <h1>Tự động hóa xử lý <span class="tf-grad-text">hàng nghìn đơn logistics</span> Việt – Hàn mỗi ngày</h1>
+      <p>Tra mã bưu điện Hàn Quốc, chuẩn hóa địa chỉ, kiểm tra mã thông quan, xử lý Excel hàng loạt và tích hợp dữ liệu vận hành cho doanh nghiệp logistics.</p>
+      <div class="tf-hero-cta">
+        <a class="tf-btn tf-btn-primary" href="#try">Dùng thử với file Excel</a>
+        <a class="tf-btn tf-btn-outline" href="#contact">Đặt lịch demo</a>
+      </div>
+      <div class="tf-hero-trust">
+        <span>🏛️ <b>Dữ liệu Chính phủ Hàn Quốc</b></span>
+        <span>⚡ <b>Real-time</b></span>
+        <span>🔌 <b>Excel / API ready</b></span>
+        <span>🇻🇳🇰🇷 <b>Việt · Anh · Hàn</b></span>
+      </div>
+    </div>
+    <div class="tf-hero-visual">
+      <div class="tf-dash">
+        <div class="tf-dash-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="tf-dash-title">Transflash · Batch Processing</span></div>
+        <div class="tf-dash-body">
+          <div class="tf-dash-upload">📄 vandon_0612.xlsx · Upload Excel <span class="ok">✓</span></div>
+          <div class="tf-dash-stats">
+            <div class="st"><b>2,438</b><span>địa chỉ đã xử lý</span></div>
+            <div class="st"><b class="grn">98.7%</b><span>matched</span></div>
+            <div class="st"><b>5 số</b><span>postal code</span></div>
+          </div>
+          <table class="tf-dash-table">
+            <thead><tr><th>Recipient</th><th>Address</th><th>Postal</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Minh Thu</td><td>서울 강남구 …</td><td class="mono">06236</td><td><span class="tf-bdg ok">Matched</span></td></tr>
+              <tr><td>Hà Yến</td><td>대전 대덕구 …</td><td class="mono">34326</td><td><span class="tf-bdg ok">Matched</span></td></tr>
+              <tr><td>Việt Trinh</td><td>경기 수원시 …</td><td class="mono">—</td><td><span class="tf-bdg rev">Need Review</span></td></tr>
+              <tr><td>MS Trang</td><td>인천 남동구 …</td><td class="mono">21565</td><td><span class="tf-bdg exp">Exported</span></td></tr>
+            </tbody>
+          </table>
+          <div class="tf-dash-steps"><span>✓ Postal code found</span><span>✓ Customs code checked</span><span><b>✓ Export completed</b></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ PAIN POINTS ══════════ -->
+<section class="tf-section alt pain" id="pain">
+  <div class="tf-wrap">
+    <div class="tf-sec-head">
+      <div class="eyebrow">Vấn đề vận hành</div>
+      <h2>Doanh nghiệp logistics đang mất quá nhiều thời gian cho dữ liệu thủ công</h2>
+      <p>Mỗi ngày hàng nghìn dòng địa chỉ, mã bưu điện và vận đơn được xử lý bằng tay — chậm, dễ sai và khó kiểm soát.</p>
+    </div>
+    <div class="tf-grid c2">
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div><h3>Copy-paste địa chỉ từng dòng</h3><p>Nhân viên ngồi gõ lại từng địa chỉ Hàn Quốc vào hệ thống — tốn hàng giờ mỗi ngày cho công việc lặp đi lặp lại.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div><h3>Sai mã bưu điện làm chậm giao hàng</h3><p>Một mã bưu điện sai khiến đơn bị trả về, giao trễ và phát sinh chi phí — ảnh hưởng trực tiếp tới khách hàng.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div><h3>Kiểm tra mã thông quan thủ công</h3><p>Tra cứu tiến trình thông quan từng vận đơn trên website hải quan — mất thời gian và không theo dõi được hàng loạt.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6"/></svg></div><h3>File Excel lớn dễ lỗi, khó kiểm soát</h3><p>File hàng nghìn dòng dễ lệch cột, thiếu dữ liệu, sai định dạng — không có quy trình đối soát đáng tin cậy.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ SOLUTION ══════════ -->
+<section class="tf-section" id="solution">
+  <div class="tf-wrap">
+    <div class="tf-sec-head">
+      <div class="eyebrow">Giải pháp</div>
+      <h2>Một nền tảng để chuẩn hóa toàn bộ dữ liệu logistics</h2>
+      <p>From manual Excel work to automated logistics data flow — xử lý, đối soát và xuất dữ liệu sạch chỉ trong vài phút.</p>
+    </div>
+    <div class="tf-grid c3">
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div><h3>Tra mã bưu điện hàng loạt</h3><p>Batch Lookup hàng nghìn địa chỉ Hàn Quốc, trả về mã bưu điện 5 số chuẩn từ dữ liệu Chính phủ.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></div><h3>Chuẩn hóa địa chỉ Hàn Quốc</h3><p>Tự nhận diện địa chỉ đường (도로명) và địa chỉ cũ (지번), chuẩn hóa về định dạng giao hàng chính xác.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/></svg></div><h3>Kiểm tra mã thông quan / tracking</h3><p>Theo dõi tiến trình thông quan theo số vận đơn (HAWB) từ Hải quan Hàn Quốc — kiểm tra hàng loạt.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><h3>Xử lý Excel nghìn dòng</h3><p>Upload file vận đơn, tự dò cột, đối soát và điền mã — process thousands of rows in minutes, not hours.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><rect x="4" y="17" width="16" height="4" rx="1"/></svg></div><h3>Xuất dữ liệu sạch cho kế toán</h3><p>Kết quả chuẩn hóa xuất ra Excel/CSV gọn gàng, sẵn sàng cho công nợ, hóa đơn và đối soát kế toán.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div><h3>API tích hợp ERP / WMS / vận đơn</h3><p>Kết nối Transflash vào hệ thống có sẵn qua API — tự động hóa luồng dữ liệu vận hành đầu-cuối.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ WORKFLOW ══════════ -->
+<section class="tf-section alt" id="workflow">
+  <div class="tf-wrap">
+    <div class="tf-sec-head">
+      <div class="eyebrow">Quy trình</div>
+      <h2>Từ file Excel đến dữ liệu tự động trong 4 bước</h2>
+      <p>Built for high-volume logistics operations — đơn giản, nhanh, kiểm soát được.</p>
+    </div>
+    <div class="tf-flow">
+      <div class="tf-step"><div class="n">1</div><h4>Upload Excel</h4><p>Tải lên file vận đơn / danh sách địa chỉ — .xlsx, .xls, .csv.</p><span class="arr">→</span></div>
+      <div class="tf-step"><div class="n">2</div><h4>AI kiểm tra dữ liệu</h4><p>Tự dò cột địa chỉ, phát hiện dòng thiếu/sai, gắn cờ cần xem lại.</p><span class="arr">→</span></div>
+      <div class="tf-step"><div class="n">3</div><h4>Chuẩn hóa & đối soát</h4><p>Trả mã bưu điện, chuẩn hóa địa chỉ, kiểm tra thông quan, đối soát.</p><span class="arr">→</span></div>
+      <div class="tf-step"><div class="n">4</div><h4>Export / API</h4><p>Xuất file sạch hoặc đẩy dữ liệu trực tiếp vào hệ thống qua API.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ MODULES ══════════ -->
+<section class="tf-section" id="modules">
+  <div class="tf-wrap">
+    <div class="tf-sec-head">
+      <div class="eyebrow">Product Modules</div>
+      <h2>Các module nghiệp vụ trong một nền tảng</h2>
+      <p>Dùng riêng từng module hoặc kết hợp thành quy trình vận hành hoàn chỉnh.</p>
+    </div>
+    <div class="tf-grid c2">
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div><div><span class="en">Postal Code Batch Lookup</span><h3>Tra mã bưu điện hàng loạt</h3><p>Nghìn địa chỉ → mã bưu điện 5 số chuẩn, theo từng dòng, có trạng thái rõ ràng.</p></div></div>
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div><span class="en">Address Normalization</span><h3>Chuẩn hóa địa chỉ</h3><p>Nhận diện 도로명 / 지번, làm sạch và chuẩn hóa địa chỉ giao hàng.</p></div></div>
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/></svg></div><div><span class="en">Customs & Clearance Check</span><h3>Kiểm tra mã thông quan</h3><p>Theo dõi tiến trình thông quan theo HAWB từ Hải quan Hàn Quốc.</p></div></div>
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div><span class="en">Logistics Excel Automation</span><h3>Tự động hóa Excel vận đơn</h3><p>Upload, dò cột, đối soát, điền mã và xuất kết quả hàng loạt.</p></div></div>
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><rect x="4" y="17" width="16" height="4" rx="1"/></svg></div><div><span class="en">Accounting Data Export</span><h3>Xuất dữ liệu kế toán</h3><p>Dữ liệu sạch cho công nợ, hóa đơn, đối soát — đúng định dạng.</p></div></div>
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div><div><span class="en">API Integration</span><h3>Tích hợp API</h3><p>Kết nối ERP / WMS / hệ thống vận đơn qua REST API, Enterprise Support.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ TRY (live tool) ══════════ -->
+<section class="tf-section tf-try" id="try">
+  <div class="tf-wrap">
+    <div class="tf-sec-head">
+      <div class="eyebrow">Dùng thử ngay</div>
+      <h2>Trải nghiệm trực tiếp với dữ liệu thật của bạn</h2>
+      <p>Tra một địa chỉ hoặc upload file Excel — xem hệ thống chuẩn hóa và trả mã bưu điện ngay lập tức.</p>
+    </div>
+
+  <div class="container">
+  <!-- legacy hero (ẩn) -->
+  <div class="home-hero" style="display:none">
     <h1 data-i18n="heroTitle">Bộ công cụ & tiện ích logistics Việt – Hàn</h1>
     <p class="hh-sub" data-i18n="heroSub">Tra mã bưu điện, theo dõi thông quan, tỷ giá Won và cẩm nang cho người Việt ở Hàn — tất cả miễn phí.</p>
     <div class="trust-band">
@@ -655,7 +919,8 @@
     </div>
   </div>
 
-  <!-- 2 công cụ: Mã bưu điện & Mã thông quan -->
+  <!-- legacy marketing blocks (ẩn — đã thay bằng section premium) -->
+  <div style="display:none">
   <div class="tool-nav">
     <div class="tool-card postal active">
       <div class="tool-ic">
@@ -711,6 +976,7 @@
     <h2 class="sec-title" data-i18n="postalTitle">Tìm mã bưu điện từ địa chỉ Hàn Quốc</h2>
     <p class="sec-lead" data-i18n="postalLead">Nhập danh sách địa chỉ Hàn Quốc, hệ thống tự trả về mã bưu điện 5 số — tra thủ công hoặc upload Excel hàng loạt.</p>
   </div>
+  </div><!-- /legacy hidden -->
 
   <!-- API Key — ẩn khi server đã có key sẵn -->
   <div class="api-box" id="apiBox">
@@ -841,47 +1107,131 @@
     </div>
   </div>
 
-  <!-- Footer kiểu sitemap -->
-  <footer class="site-footer">
-    <div class="foot-grid">
-      <div class="foot-col">
-        <h4 data-i18n="footColTools">Công cụ</h4>
+  </div><!-- /.container (khung quanh tool) -->
+  <p class="tf-micro" style="margin-top:26px">Built for high-volume logistics operations · Process thousands of rows in minutes, not hours</p>
+  </div><!-- /tf-wrap -->
+</section><!-- /tf-try -->
+
+<!-- ══════════ TARGET CUSTOMERS ══════════ -->
+<section class="tf-section">
+  <div class="tf-wrap">
+    <div class="tf-sec-head">
+      <div class="eyebrow">Khách hàng</div>
+      <h2>Dành cho doanh nghiệp xử lý số lượng lớn</h2>
+      <p>Designed for Vietnam–Korea logistics — phù hợp với mọi mô hình vận hành đơn hàng xuyên biên giới.</p>
+    </div>
+    <div class="tf-chips">
+      <div class="tf-chip"><span class="e">🚚</span> Công ty vận chuyển Việt – Hàn</div>
+      <div class="tf-chip"><span class="e">📦</span> Forwarder</div>
+      <div class="tf-chip"><span class="e">🏭</span> Kho fulfillment</div>
+      <div class="tf-chip"><span class="e">🛒</span> Dịch vụ mua hộ Hàn Quốc</div>
+      <div class="tf-chip"><span class="e">🌐</span> Shop TMĐT xuyên biên giới</div>
+      <div class="tf-chip"><span class="e">📊</span> Doanh nghiệp nghìn đơn/tháng</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ TRUST ══════════ -->
+<section class="tf-section alt">
+  <div class="tf-wrap">
+    <div class="tf-sec-head">
+      <div class="eyebrow">Đáng tin cậy</div>
+      <h2>Nền tảng dữ liệu logistics nghiêm túc</h2>
+      <p>Xây dựng cho vận hành thật, dữ liệu lớn, bảo mật và sẵn sàng tích hợp.</p>
+    </div>
+    <div class="tf-trust-grid">
+      <div class="tf-trust-card"><div class="ic">🇻🇳🇰🇷</div><b>Vietnam–Korea</b><span>Thiết kế riêng cho logistics Việt – Hàn</span></div>
+      <div class="tf-trust-card"><div class="ic">🔒</div><b>Secure</b><span>Xử lý dữ liệu an toàn, bảo mật</span></div>
+      <div class="tf-trust-card"><div class="ic">🔌</div><b>Excel / API ready</b><span>Tích hợp linh hoạt với hệ thống</span></div>
+      <div class="tf-trust-card"><div class="ic">🎧</div><b>Enterprise support</b><span>Hỗ trợ chuyên trách cho doanh nghiệp</span></div>
+      <div class="tf-trust-card"><div class="ic">🏢</div><b>Transflash / SotaTek</b><span>Phát triển bởi hệ sinh thái công nghệ</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ PRICING ══════════ -->
+<section class="tf-section" id="pricing">
+  <div class="tf-wrap">
+    <div class="tf-sec-head">
+      <div class="eyebrow">Gói dịch vụ</div>
+      <h2>Chọn quy mô phù hợp với vận hành của bạn</h2>
+      <p>Từ tra cứu cơ bản đến tích hợp toàn hệ thống — mở rộng theo nhu cầu.</p>
+    </div>
+    <div class="tf-price-grid">
+      <div class="tf-price">
+        <h3>Free Tool</h3>
+        <p class="pr-sub">Tra cứu cơ bản cho cá nhân & dùng thử.</p>
+        <ul><li>Tra mã bưu điện thủ công</li><li>Kiểm tra mã thông quan</li><li>Upload Excel giới hạn</li><li>Việt · Anh · Hàn</li></ul>
+        <a class="tf-btn tf-btn-outline" href="#try">Dùng thử ngay</a>
+      </div>
+      <div class="tf-price feature">
+        <span class="pop">Phổ biến</span>
+        <h3>Business</h3>
+        <p class="pr-sub">Xử lý Excel hàng loạt cho đội vận hành.</p>
+        <ul><li>Batch Lookup nghìn dòng</li><li>Chuẩn hóa địa chỉ tự động</li><li>Xuất dữ liệu sạch cho kế toán</li><li>Đối soát & gắn cờ cần xem lại</li><li>Hỗ trợ ưu tiên</li></ul>
+        <a class="tf-btn tf-btn-primary" href="#contact">Đặt lịch demo</a>
+      </div>
+      <div class="tf-price">
+        <h3>Enterprise</h3>
+        <p class="pr-sub">API, dashboard riêng, tích hợp hệ thống.</p>
+        <ul><li>API tích hợp ERP / WMS / vận đơn</li><li>Dashboard & quy trình riêng</li><li>Khối lượng lớn không giới hạn</li><li>SLA & Enterprise Support</li><li>Tư vấn triển khai</li></ul>
+        <a class="tf-btn tf-btn-outline" href="#contact">Liên hệ tư vấn</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ FINAL CTA ══════════ -->
+<section class="tf-final" id="contact">
+  <div class="tf-wrap">
+    <div class="tf-final-box">
+      <h2>Biến file Excel logistics của bạn thành quy trình tự động</h2>
+      <p>Gửi file mẫu để chúng tôi xử lý thử, hoặc đặt lịch demo cùng đội ngũ Transflash.</p>
+      <div class="tf-final-cta">
+        <a class="tf-btn tf-btn-outline" href="mailto:support@transflash.app?subject=Đặt lịch demo Transflash Logistics">Đặt lịch demo</a>
+        <a class="tf-btn tf-btn-ghost" href="mailto:support@transflash.app?subject=Gửi file mẫu để test">Gửi file mẫu để test</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer class="tf-footer">
+  <div class="tf-wrap">
+    <div class="fgrid">
+      <div class="fbrand">
+        <b>Transflash Logistics</b>
+        <p>Nền tảng tự động hóa dữ liệu logistics Việt – Hàn: mã bưu điện, chuẩn hóa địa chỉ, thông quan, Excel & API.</p>
+        <p style="margin-top:6px"><a href="mailto:support@transflash.app" style="display:inline">support@transflash.app</a></p>
+      </div>
+      <div>
+        <h4>Sản phẩm</h4>
+        <a href="#solution">Solutions</a>
+        <a href="#modules">Modules</a>
+        <a href="#workflow">Workflow</a>
+        <a href="#pricing">Pricing</a>
+      </div>
+      <div>
+        <h4>Công cụ</h4>
         <a href="/">Tra mã bưu điện</a>
         <a href="/tracking">Tra cứu thông quan</a>
-        <a href="/size-korea">Đổi size Hàn</a>
+        <a href="/tools">Tiện ích</a>
         <a href="/ten-tieng-han">Tên tiếng Hàn</a>
       </div>
-      <div class="foot-col">
-        <h4 data-i18n="footColUtil">Tiện ích</h4>
-        <a href="/tools">Tỷ giá Won (Vietcombank)</a>
-        <a href="/tools">Tính cước / tính thuế</a>
-        <a href="/tools">Lịch nghỉ lễ Hàn Quốc</a>
-        <a href="/tools">Mã sân bay / cảng</a>
-      </div>
-      <div class="foot-col">
-        <h4 data-i18n="footColGuide">Cẩm nang</h4>
-        <a href="/nguoi-viet-o-han">Người Việt ở Hàn</a>
+      <div>
+        <h4>Cẩm nang</h4>
         <a href="/customs-guide">Hướng dẫn thông quan</a>
-        <a href="/pccc">Mã thông quan cá nhân (PCCC)</a>
-        <a href="/import-guide">Quy trình XNK Việt - Hàn</a>
-        <a href="/food-korea">Xuất thực phẩm sang Hàn</a>
-        <a href="/travel-korea">Du lịch Hàn Quốc</a>
-        <a href="/shopping-korea">Mua hàng Hàn về VN</a>
-      </div>
-      <div class="foot-col">
-        <h4 data-i18n="footColAbout">Về chúng tôi</h4>
-        <a href="/about" data-i18n="footerAbout">Giới thiệu</a>
-        <a href="/tracking-info">Giải pháp cho doanh nghiệp</a>
-        <a href="mailto:support@transflash.app">support@transflash.app</a>
-        <a onclick="openPlanModal('upgrade'); return false;" data-i18n="footerSupport">Liên hệ hỗ trợ</a>
+        <a href="/import-guide">Quy trình XNK Việt – Hàn</a>
+        <a href="/nguoi-viet-o-han">Người Việt ở Hàn</a>
+        <a href="/about">Giới thiệu</a>
       </div>
     </div>
-    <div class="foot-bottom">
-      <span class="tf-brand">Transflash</span> · <span data-i18n="footerText">Giải pháp logistics Việt - Hàn</span> · © 2026
+    <div class="tf-fbottom">
+      <span>© 2026 Transflash · Giải pháp logistics Việt – Hàn</span>
+      <span>From manual Excel work to automated logistics data flow</span>
     </div>
-  </footer>
-
-</div>
+  </div>
+</footer>
 
 <!-- Modal nâng cấp / hết lượt -->
 <div class="modal-overlay" id="planModal" style="display:none">
@@ -2110,7 +2460,7 @@ function applyAccessUI() {
   }
 
 })();
-(function(){var h=document.querySelector('.site-header');if(h)addEventListener('scroll',function(){h.classList.toggle('scrolled',window.scrollY>4);},{passive:true});})();
+(function(){var h=document.getElementById('tfHeader');if(h)addEventListener('scroll',function(){h.classList.toggle('scrolled',window.scrollY>4);},{passive:true});})();
 </script>
 <script src="/userhub.js"></script>
 </body>

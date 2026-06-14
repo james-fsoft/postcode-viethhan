@@ -123,7 +123,7 @@ function sendPage(res, ...parts) {
 }
 
 // Domain gốc — đổi domain chỉ cần sửa biến môi trường SITE_URL (1 chỗ duy nhất)
-const BASE_URL = process.env.SITE_URL || 'https://postcode-viethhan.vercel.app';
+const BASE_URL = process.env.SITE_URL || 'https://logistics.transflash.app';
 
 // Trả trang HTML và chèn __BASE__ = domain hiện tại (+ các thay thế khác nếu có)
 const _tplCache = {};

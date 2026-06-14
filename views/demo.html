@@ -3,195 +3,473 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Live Demo — Transflash Logistics</title>
-  <meta name="robots" content="index, follow" />
+  <title>TransFlash Logistics Intelligence — Live Demo</title>
+  <meta name="description" content="AI-powered logistics intelligence platform for Korea–Vietnam logistics teams: Korean postal code lookup, customs clearance tracking, Excel batch processing and AI insights." />
   <link rel="canonical" href="__BASE__/demo" />
-  <meta property="og:title" content="Live Demo — Transflash Logistics" />
-  <meta property="og:description" content="Try the Transflash Logistics platform with your real data: Korean postal code lookup and customs clearance tracking." />
+  <meta property="og:title" content="TransFlash Logistics Intelligence — Live Demo" />
+  <meta property="og:description" content="Search postal codes, track customs clearance, and automate logistics operations with AI-powered workflows." />
   <meta property="og:url" content="__BASE__/demo" />
   <link rel="icon" href="/logo.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
   :root{
-    --ink:#0b1020;--ink2:#1e293b;--gray:#475569;--gray2:#64748b;--line:#e7ebf3;
-    --bg:#ffffff;--bg2:#f7f9fc;--bg3:#eef2fb;--brand:#4f46e5;--brand2:#2563eb;
-    --grad:linear-gradient(120deg,#6366f1 0%,#2563eb 55%,#06b6d4 130%);
-    --shadow:0 12px 34px -14px rgba(15,23,42,.18);--shadow-lg:0 30px 70px -26px rgba(30,41,59,.32);
+    --navy:#0F172A; --blue:#2563EB; --blue-l:#EFF6FF; --green:#16A34A; --amber:#F59E0B; --red:#DC2626;
+    --bg:#F8FAFC; --card:#FFFFFF; --text:#111827; --muted:#64748B; --line:#E2E8F0;
+    --shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(15,23,42,.14);
+    --shadow-lg:0 24px 60px -24px rgba(15,23,42,.26);
+    --r:16px;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Inter','Segoe UI','Noto Sans KR',Arial,sans-serif;color:var(--ink2);background:var(--bg2);-webkit-font-smoothing:antialiased;}
+  body{font-family:'Inter',-apple-system,'Segoe UI','Noto Sans KR',Arial,sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;line-height:1.5;}
   a{text-decoration:none;color:inherit;}
-  .wrap{max-width:1180px;margin:0 auto;padding:0 24px;}
-  .hd{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--line);}
-  .hd-row{display:flex;align-items:center;gap:16px;height:64px;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 22px;}
+  .sec{padding:64px 0;}
+  .eyebrow{font-size:.74rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);}
+  h2.t{font-size:2rem;font-weight:800;letter-spacing:-.02em;color:var(--navy);line-height:1.16;margin:10px 0;}
+  .lead{font-size:1.04rem;color:var(--muted);max-width:640px;line-height:1.6;}
+  .center{text-align:center;} .center .lead{margin:0 auto;}
+  .grad-t{background:linear-gradient(100deg,#2563EB,#3b82f6 60%,#0ea5e9);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  /* buttons */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:.94rem;border-radius:11px;padding:11px 18px;cursor:pointer;border:1px solid transparent;font-family:inherit;transition:transform .12s,box-shadow .14s,background .14s,border-color .14s;white-space:nowrap;}
+  .btn-p{background:var(--blue);color:#fff;box-shadow:0 8px 20px -8px rgba(37,99,235,.55);}
+  .btn-p:hover{background:#1d4ed8;transform:translateY(-1px);}
+  .btn-o{background:#fff;color:var(--navy);border-color:var(--line);}
+  .btn-o:hover{border-color:#cbd5e1;transform:translateY(-1px);}
+  .btn-d{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.28);}
+  .btn-d:hover{background:rgba(255,255,255,.18);}
+  .btn-sm{padding:8px 14px;font-size:.85rem;border-radius:9px;}
+  /* header */
+  header{position:sticky;top:0;z-index:50;height:72px;background:#fff;border-bottom:1px solid var(--line);}
+  .hdr{height:72px;display:flex;align-items:center;gap:16px;}
   .logo{display:flex;align-items:center;gap:11px;}
-  .logo img{height:32px;width:32px;}
-  .logo b{font-size:1.04rem;font-weight:850;color:var(--ink);letter-spacing:-.01em;}
-  .logo i{font-size:.64rem;font-style:normal;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--brand);display:block;}
-  .hd-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
-  .lang{display:flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;}
-  .lang button{border:none;background:#fff;color:var(--gray);font-weight:750;font-size:.8rem;padding:7px 12px;cursor:pointer;font-family:inherit;}
-  .lang button.on{background:var(--grad);color:#fff;}
-  .back{font-size:.86rem;font-weight:700;color:var(--ink2);border:1.5px solid var(--line);border-radius:10px;padding:8px 14px;background:#fff;}
-  .back:hover{border-color:var(--brand);color:var(--brand);}
-  .intro{position:relative;overflow:hidden;background:radial-gradient(1100px 420px at 80% -10%,#e9efff 0,rgba(233,239,255,0) 60%),linear-gradient(180deg,#fbfcff,#f7f9fc);padding:54px 0 30px;text-align:center;}
-  .pill{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);color:var(--brand);font-weight:750;font-size:.78rem;padding:6px 14px;border-radius:99px;box-shadow:var(--shadow);}
-  .intro h1{font-size:2.3rem;font-weight:870;letter-spacing:-.02em;color:var(--ink);margin:16px 0 10px;line-height:1.14;}
-  .intro p{font-size:1.05rem;color:var(--gray);max-width:640px;margin:0 auto;line-height:1.55;}
-  .demo-grid{padding:34px 0 70px;display:grid;gap:26px;}
-  .tool{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden;}
-  .tool-hd{display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fbfcff,#fff);}
-  .tool-ic{width:46px;height:46px;border-radius:13px;background:var(--bg3);color:var(--brand);display:flex;align-items:center;justify-content:center;flex:none;}
-  .tool-ic svg{width:24px;height:24px;stroke-width:1.8;}
-  .tool-ic.green{background:#e8f7ee;color:#16a34a;}
-  .tool-hd h2{font-size:1.16rem;font-weight:830;color:var(--ink);letter-spacing:-.01em;}
-  .tool-hd .en{font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--brand2);}
-  .tool-hd .green-en{color:#16a34a;}
-  .tool-hd p{font-size:.86rem;color:var(--gray);margin-top:2px;}
-  .tool-hd .step{margin-left:auto;font-size:.74rem;font-weight:800;color:#fff;background:var(--grad);padding:6px 13px;border-radius:99px;flex:none;}
-  .tool-hd .step.green{background:linear-gradient(120deg,#16a34a,#22c55e);}
-  .frame{width:100%;border:0;display:block;background:#fff;height:480px;}
-  .demo-foot{text-align:center;padding:0 0 60px;}
-  .demo-foot .box{background:var(--grad);border-radius:24px;padding:46px 30px;color:#fff;box-shadow:var(--shadow-lg);}
-  .demo-foot h3{font-size:1.7rem;font-weight:850;margin-bottom:10px;letter-spacing:-.01em;}
-  .demo-foot p{opacity:.92;margin-bottom:22px;max-width:560px;margin-left:auto;margin-right:auto;}
-  .demo-foot .cta{display:inline-flex;gap:12px;flex-wrap:wrap;justify-content:center;}
-  .btn{display:inline-flex;align-items:center;justify-content:center;font-weight:760;font-size:.94rem;border-radius:12px;padding:13px 22px;cursor:pointer;border:1.5px solid transparent;font-family:inherit;}
-  .btn-w{background:#fff;color:var(--brand);}
-  .btn-o{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.45);}
-  .ft{background:#0b1228;color:#9fb0d6;text-align:center;padding:26px 0;font-size:.84rem;}
-  .ft b{color:#fff;}
-  @media(max-width:600px){ .intro h1{font-size:1.7rem;} .tool-hd{flex-wrap:wrap;} .tool-hd .step{margin-left:0;} }
+  .logo img{height:30px;width:30px;}
+  .logo b{font-size:1.02rem;font-weight:800;color:var(--navy);letter-spacing:-.01em;}
+  .logo i{display:block;font-size:.62rem;font-style:normal;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);}
+  .hdr-r{margin-left:auto;display:flex;align-items:center;gap:10px;}
+  .lang{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff;}
+  .lang button{border:0;background:#fff;color:var(--muted);font-weight:700;font-size:.78rem;padding:7px 11px;cursor:pointer;font-family:inherit;}
+  .lang button.on{background:var(--navy);color:#fff;}
+  .hide-sm{}
+  /* hero */
+  .hero{padding:48px 0 30px;background:radial-gradient(900px 360px at 88% -10%,#e8f0ff 0,rgba(232,240,255,0) 60%),#fff;border-bottom:1px solid var(--line);}
+  .hero-grid{display:grid;grid-template-columns:1.04fr .96fr;gap:46px;align-items:center;}
+  .pill{display:inline-flex;align-items:center;gap:7px;background:var(--blue-l);color:var(--blue);font-weight:700;font-size:.76rem;padding:6px 13px;border-radius:99px;border:1px solid #dbeafe;}
+  .hero h1{font-size:2.85rem;line-height:1.08;font-weight:900;letter-spacing:-.03em;color:var(--navy);margin:16px 0 14px;}
+  .hero .sub{font-size:1.08rem;color:var(--muted);max-width:520px;line-height:1.6;}
+  .hero-cta{display:flex;gap:11px;flex-wrap:wrap;margin:22px 0 18px;}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;}
+  .badge{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 11px;font-size:.8rem;font-weight:600;color:var(--navy);}
+  .badge .d{width:7px;height:7px;border-radius:50%;background:var(--green);}
+  /* command center */
+  .cc{background:var(--navy);border-radius:20px;padding:20px;box-shadow:var(--shadow-lg);color:#e5e9f3;}
+  .cc-hd{display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:700;color:#cbd5e1;margin-bottom:14px;}
+  .cc-hd .live{margin-left:auto;font-size:.66rem;font-weight:800;color:#86efac;display:inline-flex;align-items:center;gap:5px;}
+  .cc-hd .live i{width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block;box-shadow:0 0 0 3px rgba(34,197,94,.2);}
+  .cc-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .cc-m{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:13px;}
+  .cc-m b{display:block;font-size:1.5rem;font-weight:800;color:#fff;letter-spacing:-.02em;}
+  .cc-m span{font-size:.74rem;color:#94a3b8;}
+  .cc-m.g b{color:#4ade80;}
+  .ai-card{margin-top:12px;background:linear-gradient(135deg,#1d4ed8,#2563eb);border-radius:14px;padding:15px;color:#fff;}
+  .ai-card .ttl{display:flex;align-items:center;gap:7px;font-size:.78rem;font-weight:800;letter-spacing:.02em;margin-bottom:7px;opacity:.95;}
+  .ai-card p{font-size:.86rem;line-height:1.5;color:#eaf1ff;}
+  .ai-card .rec{margin-top:8px;font-size:.8rem;background:rgba(255,255,255,.14);border-radius:9px;padding:8px 10px;}
+  .ai-card .rec b{color:#fff;}
+  /* tools */
+  .tool-card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;}
+  .tool-card+.tool-card{margin-top:24px;}
+  .tc-hd{display:flex;align-items:flex-start;gap:14px;padding:20px 22px;border-bottom:1px solid var(--line);}
+  .tc-ic{width:42px;height:42px;border-radius:11px;background:var(--blue-l);color:var(--blue);display:flex;align-items:center;justify-content:center;flex:none;}
+  .tc-ic.green{background:#dcfce7;color:var(--green);}
+  .tc-ic svg{width:22px;height:22px;stroke-width:1.9;}
+  .tc-badge{font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);background:var(--blue-l);border-radius:6px;padding:3px 8px;display:inline-block;margin-bottom:5px;}
+  .tc-badge.green{color:var(--green);background:#dcfce7;}
+  .tc-hd h3{font-size:1.16rem;font-weight:800;color:var(--navy);letter-spacing:-.01em;}
+  .tc-hd p{font-size:.88rem;color:var(--muted);margin-top:3px;max-width:620px;}
+  .tc-step{margin-left:auto;font-size:.7rem;font-weight:800;color:#fff;background:var(--navy);border-radius:99px;padding:5px 11px;flex:none;}
+  .tc-step.green{background:var(--green);}
+  .frame{width:100%;border:0;display:block;background:#fff;height:460px;}
+  /* generic grids */
+  .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;transition:transform .14s,box-shadow .16s,border-color .16s;}
+  .card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:#dbe3ef;}
+  .card .ic{width:42px;height:42px;border-radius:11px;background:var(--blue-l);color:var(--blue);display:flex;align-items:center;justify-content:center;margin-bottom:13px;}
+  .card .ic svg{width:22px;height:22px;stroke-width:1.9;}
+  .card h3{font-size:1.04rem;font-weight:800;color:var(--navy);margin-bottom:6px;letter-spacing:-.01em;}
+  .card p{font-size:.9rem;color:var(--muted);line-height:1.55;}
+  /* ai layer */
+  .ai-sec{background:var(--navy);color:#e5e9f3;}
+  .ai-sec .eyebrow{color:#7dd3fc;} .ai-sec h2.t{color:#fff;} .ai-sec .lead{color:#94a3b8;}
+  .ai-sec .card{background:#13203b;border-color:#1e2d4d;}
+  .ai-sec .card:hover{border-color:#2b3d63;}
+  .ai-sec .card h3{color:#fff;} .ai-sec .card p{color:#94a3b8;}
+  .ai-sec .card .ic{background:rgba(59,130,246,.15);color:#60a5fa;}
+  .assistant{margin-top:26px;background:#0b1530;border:1px solid #1e2d4d;border-radius:18px;padding:22px;max-width:760px;margin-left:auto;margin-right:auto;}
+  .assistant .q{display:flex;gap:10px;align-items:flex-start;}
+  .assistant .av{width:30px;height:30px;border-radius:8px;background:#1e293b;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex:none;}
+  .assistant .av.ai{background:linear-gradient(135deg,#2563eb,#0ea5e9);}
+  .assistant .bub{font-size:.92rem;line-height:1.55;}
+  .assistant .q+.q{margin-top:14px;}
+  .assistant .you .bub{color:#cbd5e1;font-weight:500;}
+  .assistant .ai-r .bub{color:#e5e9f3;background:#13203b;border:1px solid #1e2d4d;border-radius:12px;padding:12px 14px;}
+  /* business value */
+  .bv .num{font-size:2.4rem;font-weight:900;letter-spacing:-.03em;color:var(--blue);line-height:1;}
+  .bv .card{text-align:left;}
+  .bv .card p{margin-top:8px;font-weight:600;color:var(--navy);}
+  /* api */
+  .api-grid{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center;}
+  .code{background:var(--navy);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-lg);font-family:ui-monospace,Menlo,Consolas,monospace;}
+  .code .bar{display:flex;align-items:center;gap:6px;padding:11px 14px;border-bottom:1px solid #1e2d4d;}
+  .code .bar .dot{width:10px;height:10px;border-radius:50%;}
+  .code .bar .dot.r{background:#ff5f57;}.code .bar .dot.y{background:#febc2e;}.code .bar .dot.g{background:#28c840;}
+  .code .bar span{margin-left:8px;color:#7c8db5;font-size:.74rem;}
+  .code pre{padding:16px 18px;color:#cbd5e1;font-size:.82rem;line-height:1.65;overflow:auto;}
+  .code .mt{color:#f472b6;} .code .pa{color:#93c5fd;} .code .k{color:#7dd3fc;} .code .s{color:#86efac;}
+  /* final */
+  .final{background:linear-gradient(120deg,#0F172A,#1e3a8a);border-radius:24px;padding:52px 38px;text-align:center;color:#fff;box-shadow:var(--shadow-lg);}
+  .final h2{font-size:2rem;font-weight:800;letter-spacing:-.02em;margin-bottom:10px;}
+  .final p{opacity:.86;max-width:560px;margin:0 auto 24px;}
+  .final .cta{display:inline-flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+  /* footer */
+  footer.ft{background:#0b1228;color:#9fb0d6;padding:46px 0 26px;}
+  .ft-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:28px;}
+  .ft-grid h4{color:#fff;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:13px;font-weight:800;}
+  .ft-grid a{display:block;color:#9fb0d6;font-size:.88rem;padding:5px 0;}
+  .ft-grid a:hover{color:#fff;}
+  .ft b.brand{color:#fff;font-size:1.1rem;font-weight:800;}
+  .ft .tag{font-size:.86rem;margin-top:8px;line-height:1.6;max-width:300px;}
+  .ft-bot{border-top:1px solid rgba(255,255,255,.1);margin-top:30px;padding-top:18px;font-size:.82rem;color:#7f8cb0;}
+  @media(max-width:960px){
+    .hero-grid{grid-template-columns:1fr;gap:32px;} .hero h1{font-size:2.2rem;}
+    .g3,.g4,.api-grid,.ft-grid{grid-template-columns:1fr;} .bv.g4{grid-template-columns:1fr 1fr;}
+    .hide-sm{display:none;}
+  }
+  @media(max-width:560px){ .sec{padding:48px 0;} h2.t{font-size:1.55rem;} .hero h1{font-size:1.85rem;} .cc-metrics{grid-template-columns:1fr 1fr;} .bv.g4{grid-template-columns:1fr;} .final{padding:38px 22px;} }
   </style>
 </head>
 <body>
-<header class="hd">
-  <div class="wrap hd-row">
-    <a class="logo" href="/"><img src="/logo.svg" alt="Transflash" /><span><b>Transflash</b><i>Logistics</i></span></a>
-    <div class="hd-right">
+<header>
+  <div class="wrap hdr">
+    <a class="logo" href="/"><img src="/logo.svg" alt="TransFlash" /><span><b>TransFlash</b><i>Logistics</i></span></a>
+    <div class="hdr-r">
       <div class="lang" id="lang">
-        <button data-l="en" class="on" onclick="setDemoLang('en')">EN</button>
-        <button data-l="vi" onclick="setDemoLang('vi')">VI</button>
-        <button data-l="ko" onclick="setDemoLang('ko')">KO</button>
+        <button data-l="en" class="on" onclick="setLang('en')">EN</button>
+        <button data-l="vi" onclick="setLang('vi')">VI</button>
+        <button data-l="ko" onclick="setLang('ko')">KO</button>
       </div>
-      <a class="back" href="/" id="backBtn">← Back to site</a>
+      <a class="btn btn-o btn-sm hide-sm" href="/" id="b_back">Back to site</a>
+      <a class="btn btn-p btn-sm" href="/login" id="b_signin">Sign in</a>
     </div>
   </div>
 </header>
 
-<section class="intro">
-  <div class="wrap">
-    <span class="pill">▶ <span id="t_badge">Live Demo</span></span>
-    <h1 id="t_title">Try Transflash Logistics with your real data</h1>
-    <p id="t_sub">Two live tools in one place — Korean postal code lookup and customs clearance tracking for Global ↔ Korea logistics.</p>
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="pill">⚡ <span id="h_pill">AI Logistics Intelligence</span></span>
+      <h1><span id="h_t1">AI Logistics Intelligence</span><br><span class="grad-t" id="h_t2">for Korea–Vietnam Trade</span></h1>
+      <p class="sub" id="h_sub">Search postal codes, track customs clearance, and automate logistics operations with AI-powered workflows built for modern logistics teams.</p>
+      <div class="hero-cta">
+        <a class="btn btn-p" href="#tools" id="h_cta1">Try Live Demo</a>
+        <a class="btn btn-o" href="#api" id="h_cta2">View API Docs</a>
+      </div>
+      <div class="badges">
+        <span class="badge"><span class="d"></span><span id="h_b1">Korean Postal Code Lookup</span></span>
+        <span class="badge"><span class="d"></span><span id="h_b2">UNI-PASS Customs Tracking</span></span>
+        <span class="badge"><span class="d"></span><span id="h_b3">Excel Batch Processing</span></span>
+        <span class="badge"><span class="d"></span><span id="h_b4">API Ready</span></span>
+      </div>
+    </div>
+    <div>
+      <div class="cc">
+        <div class="cc-hd">📊 <span id="cc_title">Today's Logistics Snapshot</span><span class="live"><i></i>LIVE</span></div>
+        <div class="cc-metrics">
+          <div class="cc-m"><b>1,248</b><span id="cc_m1">Postal Searches</span></div>
+          <div class="cc-m"><b>328</b><span id="cc_m2">Customs Checks</span></div>
+          <div class="cc-m"><b style="color:#fbbf24">42</b><span id="cc_m3">Delayed Shipments</span></div>
+          <div class="cc-m g"><b>92%</b><span id="cc_m4">Faster Lookup</span></div>
+        </div>
+        <div class="ai-card">
+          <div class="ttl">✨ <span id="cc_ai_t">AI Insight</span></div>
+          <p id="cc_ai_p">3 shipments may require customs follow-up today.</p>
+          <div class="rec"><span id="cc_ai_r">Recommended action:</span> <b>Prioritize HAWB ending in 7432, 8821, and 1094.</b></div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
-<div class="wrap demo-grid">
-  <!-- Tool 1: Postal code -->
-  <div class="tool">
-    <div class="tool-hd">
-      <div class="tool-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div>
-      <div>
-        <span class="en">Postal Code Lookup</span>
-        <h2 id="t_p_title">Korean postal code lookup</h2>
-        <p id="t_p_sub">Find the 5-digit postal code from a Korean address — single or bulk Excel.</p>
-      </div>
-      <span class="step">01</span>
-    </div>
-    <iframe class="frame" id="frPostal" src="/?embed=1&lang=en" title="Postal code lookup" loading="lazy"></iframe>
-  </div>
-
-  <!-- Tool 2: Customs tracking -->
-  <div class="tool">
-    <div class="tool-hd">
-      <div class="tool-ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/></svg></div>
-      <div>
-        <span class="en green-en">Customs &amp; Clearance Tracking</span>
-        <h2 id="t_c_title">Customs clearance tracking</h2>
-        <p id="t_c_sub">Track clearance progress by HAWB / B/L directly from Korea Customs (UNI-PASS).</p>
-      </div>
-      <span class="step green">02</span>
-    </div>
-    <iframe class="frame" id="frCustoms" src="/tracking?embed=1&lang=en" title="Customs tracking" loading="lazy"></iframe>
-  </div>
-</div>
-
-<section class="demo-foot">
+<!-- LIVE TOOLS -->
+<section class="sec" id="tools">
   <div class="wrap">
-    <div class="box">
-      <h3 id="t_cta_title">Turn your logistics Excel into an automated workflow</h3>
-      <p id="t_cta_sub">Send us a sample file and we'll process it for you, or book a demo with the Transflash team.</p>
+    <div class="center" style="max-width:720px;margin:0 auto 34px">
+      <span class="eyebrow" id="tl_eye">Live Demo</span>
+      <h2 class="t" id="tl_title">Live Logistics Tools</h2>
+      <p class="lead" id="tl_sub">Use real logistics data to test the core TransFlash workflow.</p>
+    </div>
+
+    <!-- Card 1: Postal -->
+    <div class="tool-card">
+      <div class="tc-hd">
+        <div class="tc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div>
+        <div>
+          <span class="tc-badge" id="c1_badge">Search</span>
+          <h3 id="c1_title">Korean Postal Code Lookup</h3>
+          <p id="c1_desc">Find 5-digit Korean postal codes from Korean addresses. Supports single lookup and Excel batch upload.</p>
+        </div>
+        <span class="tc-step">01</span>
+      </div>
+      <iframe class="frame" id="frPostal" src="/?embed=1&lang=en" title="Korean postal code lookup" loading="lazy"></iframe>
+    </div>
+
+    <!-- Card 2: Customs -->
+    <div class="tool-card">
+      <div class="tc-hd">
+        <div class="tc-ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/></svg></div>
+        <div>
+          <span class="tc-badge green" id="c2_badge">Track</span>
+          <h3 id="c2_title">Customs Clearance Tracking</h3>
+          <p id="c2_desc">Track customs clearance status by HAWB, B/L, or cargo management number directly from Korea Customs UNI-PASS.</p>
+        </div>
+        <span class="tc-step green">02</span>
+      </div>
+      <iframe class="frame" id="frCustoms" src="/tracking?embed=1&lang=en" title="Customs clearance tracking" loading="lazy"></iframe>
+    </div>
+  </div>
+</section>
+
+<!-- AI LAYER -->
+<section class="sec ai-sec">
+  <div class="wrap">
+    <div class="center" style="max-width:720px;margin:0 auto 34px">
+      <span class="eyebrow" id="ai_eye">AI Layer</span>
+      <h2 class="t" id="ai_title">AI That Turns Logistics Data Into Action</h2>
+      <p class="lead" id="ai_sub">TransFlash does not only search. It analyzes, recommends, and helps teams act faster.</p>
+    </div>
+    <div class="g3">
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div><h3 id="ai_c1t">Delay Prediction</h3><p id="ai_c1p">Predict potential clearance delays based on shipment status and historical patterns.</p></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3 id="ai_c2t">Customs Copilot</h3><p id="ai_c2p">Explain customs status in plain language and suggest next actions.</p></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v4"/><path d="M12 18v4"/><path d="m4.9 4.9 2.9 2.9"/><path d="m16.2 16.2 2.9 2.9"/><path d="M2 12h4"/><path d="M18 12h4"/><circle cx="12" cy="12" r="3"/></svg></div><h3 id="ai_c3t">Operations Automation</h3><p id="ai_c3p">Automatically classify, route, and summarize logistics records.</p></div>
+    </div>
+    <div class="assistant">
+      <div class="q you"><div class="av">🧑‍💼</div><div class="bub" id="as_q">"Which shipments need urgent customs follow-up today?"</div></div>
+      <div class="q ai-r"><div class="av ai">✨</div><div class="bub" id="as_a">3 shipments require attention. Two are under inspection for more than 24 hours, and one has missing consignee information.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- BUSINESS VALUE -->
+<section class="sec">
+  <div class="wrap">
+    <div class="center" style="max-width:720px;margin:0 auto 34px">
+      <span class="eyebrow" id="bv_eye">Business Value</span>
+      <h2 class="t" id="bv_title">Built for High-Volume Logistics Operations</h2>
+    </div>
+    <div class="g4 bv">
+      <div class="card"><div class="num">90%</div><p id="bv1">Less manual lookup time</p></div>
+      <div class="card"><div class="num">10,000+</div><p id="bv2">Batch records supported</p></div>
+      <div class="card"><div class="num">24/7</div><p id="bv3">Automated tracking</p></div>
+      <div class="card"><div class="num">API</div><p id="bv4">Ready for integration</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- USE CASES -->
+<section class="sec" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="center" style="max-width:720px;margin:0 auto 34px">
+      <span class="eyebrow" id="uc_eye">Use Cases</span>
+      <h2 class="t" id="uc_title">Designed for Logistics Teams</h2>
+    </div>
+    <div class="g3">
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M14 9h4l4 4v4a1 1 0 0 1-1 1h-1"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg></div><h3 id="uc1t">Freight Forwarders</h3><p id="uc1p">Track HAWB and B/L status across shipments.</p></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg></div><h3 id="uc2t">E-commerce Sellers</h3><p id="uc2p">Validate Korean addresses and postal codes before fulfillment.</p></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21V8l9-5 9 5v13"/><path d="M3 21h18"/><path d="M9 21v-6h6v6"/></svg></div><h3 id="uc3t">Warehouse Operators</h3><p id="uc3p">Scan warehouse lists and identify clearance issues.</p></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.5 0 2.9.37 4.15 1.02"/></svg></div><h3 id="uc4t">Customs Brokers</h3><p id="uc4p">Monitor clearance progress and prepare next actions.</p></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><h3 id="uc5t">Korea–Vietnam Trade Teams</h3><p id="uc5p">Bridge data between Korean customs and Vietnamese operations.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- API -->
+<section class="sec" id="api">
+  <div class="wrap api-grid">
+    <div>
+      <span class="eyebrow" id="ap_eye">API & Integration</span>
+      <h2 class="t" id="ap_title">Integrate Logistics Intelligence Into Your Workflow</h2>
+      <p class="lead" id="ap_desc">Connect postal code lookup, customs tracking, Excel batch processing, and AI insights into your internal system through API integration.</p>
+      <div class="hero-cta">
+        <a class="btn btn-p" href="mailto:support@transflash.app?subject=TransFlash API Docs" id="ap_b1">View API Docs</a>
+        <a class="btn btn-o" href="mailto:support@transflash.app?subject=Contact Sales — TransFlash" id="ap_b2">Contact Sales</a>
+      </div>
+    </div>
+    <div class="code">
+      <div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span>request</span></div>
+      <pre><span class="mt">POST</span> <span class="pa">/api/logistics/customs/track</span>
+
+{
+  <span class="k">"bl_number"</span>: <span class="s">"304433643476"</span>,
+  <span class="k">"country"</span>: <span class="s">"KR"</span>
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL -->
+<section class="sec" style="padding-top:0">
+  <div class="wrap">
+    <div class="final">
+      <h2 id="fn_title">Ready to Transform Your Logistics Operations?</h2>
+      <p id="fn_sub">Start with postal code lookup and customs tracking today. Expand into AI automation when your team is ready.</p>
       <div class="cta">
-        <a class="btn btn-w" id="t_cta_demo" href="mailto:support@transflash.app?subject=Book a demo — Transflash Logistics">Book a demo</a>
-        <a class="btn btn-o" id="t_cta_file" href="mailto:support@transflash.app?subject=Sample file to test">Send a sample file</a>
+        <a class="btn btn-o" href="#tools" id="fn_b1">Try Demo</a>
+        <a class="btn btn-d" href="mailto:support@transflash.app?subject=Book a consultation — TransFlash" id="fn_b2">Book a Consultation</a>
       </div>
     </div>
   </div>
 </section>
 
-<footer class="ft">© 2026 <b>Transflash</b> · Global ↔ Korea logistics data automation</footer>
+<!-- FOOTER -->
+<footer class="ft">
+  <div class="wrap ft-grid">
+    <div>
+      <b class="brand">TransFlash Logistics</b>
+      <p class="tag" id="ft_tag">Accelerating Business Transformation.</p>
+    </div>
+    <div>
+      <h4 id="ft_products">Products</h4>
+      <a href="/">Postal Code Lookup</a>
+      <a href="/tracking">Customs Tracking</a>
+      <a href="#api" id="ft_ai">AI Logistics</a>
+      <a href="#api">API</a>
+    </div>
+    <div>
+      <h4 id="ft_company">Company</h4>
+      <a href="mailto:support@transflash.app" id="ft_contact">Contact</a>
+      <a href="/" id="ft_home">Back to TransFlash</a>
+    </div>
+  </div>
+  <div class="wrap ft-bot">© 2026 TransFlash · Korea–Vietnam logistics intelligence</div>
+</footer>
 
 <script>
-const DEMO_I18N = {
-  en:{ badge:'Live Demo', back:'← Back to site',
-    title:'Try Transflash Logistics with your real data',
-    sub:'Two live tools in one place — Korean postal code lookup and customs clearance tracking for Global ↔ Korea logistics.',
-    p_title:'Korean postal code lookup', p_sub:'Find the 5-digit postal code from a Korean address — single or bulk Excel.',
-    c_title:'Customs clearance tracking', c_sub:'Track clearance progress by HAWB / B/L directly from Korea Customs (UNI-PASS).',
-    cta_title:'Turn your logistics Excel into an automated workflow',
-    cta_sub:"Send us a sample file and we'll process it for you, or book a demo with the Transflash team.",
-    cta_demo:'Book a demo', cta_file:'Send a sample file' },
-  vi:{ badge:'Demo trực tiếp', back:'← Về trang chính',
-    title:'Trải nghiệm Transflash Logistics với dữ liệu thật',
-    sub:'Hai công cụ live trong một trang — tra mã bưu điện Hàn Quốc và tra cứu thông quan cho logistics Global ↔ Korea.',
-    p_title:'Tra mã bưu điện Hàn Quốc', p_sub:'Tìm mã bưu điện 5 số từ địa chỉ Hàn Quốc — tra đơn lẻ hoặc Excel hàng loạt.',
-    c_title:'Tra cứu thông quan', c_sub:'Tra tiến trình thông quan theo HAWB / B/L trực tiếp từ Hải quan Hàn Quốc (UNI-PASS).',
-    cta_title:'Biến file Excel logistics của bạn thành quy trình tự động',
-    cta_sub:'Gửi file mẫu để chúng tôi xử lý thử, hoặc đặt lịch demo cùng đội ngũ Transflash.',
-    cta_demo:'Đặt lịch demo', cta_file:'Gửi file mẫu để test' },
-  ko:{ badge:'라이브 데모', back:'← 사이트로',
-    title:'실제 데이터로 Transflash Logistics를 체험하세요',
-    sub:'한 페이지에서 두 가지 도구 — 한국 우편번호 조회와 통관 추적 (Global ↔ Korea 물류).',
-    p_title:'한국 우편번호 조회', p_sub:'한국 주소에서 5자리 우편번호 조회 — 단건 또는 엑셀 일괄.',
-    c_title:'통관 추적', c_sub:'관세청(UNI-PASS)에서 HAWB / B/L로 통관 진행 상태를 직접 조회.',
-    cta_title:'물류 엑셀을 자동화 워크플로우로',
-    cta_sub:'샘플 파일을 보내주시면 처리해 드리거나, Transflash 팀과 데모를 예약하세요.',
-    cta_demo:'데모 예약', cta_file:'샘플 파일 보내기' }
+const I18N = {
+  en:{ back:'Back to site', signin:'Sign in', pill:'AI Logistics Intelligence',
+    t1:'AI Logistics Intelligence', t2:'for Korea–Vietnam Trade',
+    sub:'Search postal codes, track customs clearance, and automate logistics operations with AI-powered workflows built for modern logistics teams.',
+    cta1:'Try Live Demo', cta2:'View API Docs',
+    b1:'Korean Postal Code Lookup', b2:'UNI-PASS Customs Tracking', b3:'Excel Batch Processing', b4:'API Ready',
+    cc_title:"Today's Logistics Snapshot", cc_m1:'Postal Searches', cc_m2:'Customs Checks', cc_m3:'Delayed Shipments', cc_m4:'Faster Lookup',
+    cc_ai_t:'AI Insight', cc_ai_p:'3 shipments may require customs follow-up today.', cc_ai_r:'Recommended action:',
+    tl_eye:'Live Demo', tl_title:'Live Logistics Tools', tl_sub:'Use real logistics data to test the core TransFlash workflow.',
+    c1_badge:'Search', c1_title:'Korean Postal Code Lookup', c1_desc:'Find 5-digit Korean postal codes from Korean addresses. Supports single lookup and Excel batch upload.',
+    c2_badge:'Track', c2_title:'Customs Clearance Tracking', c2_desc:'Track customs clearance status by HAWB, B/L, or cargo management number directly from Korea Customs UNI-PASS.',
+    ai_eye:'AI Layer', ai_title:'AI That Turns Logistics Data Into Action', ai_sub:'TransFlash does not only search. It analyzes, recommends, and helps teams act faster.',
+    ai_c1t:'Delay Prediction', ai_c1p:'Predict potential clearance delays based on shipment status and historical patterns.',
+    ai_c2t:'Customs Copilot', ai_c2p:'Explain customs status in plain language and suggest next actions.',
+    ai_c3t:'Operations Automation', ai_c3p:'Automatically classify, route, and summarize logistics records.',
+    as_q:'"Which shipments need urgent customs follow-up today?"', as_a:'3 shipments require attention. Two are under inspection for more than 24 hours, and one has missing consignee information.',
+    bv_eye:'Business Value', bv_title:'Built for High-Volume Logistics Operations',
+    bv1:'Less manual lookup time', bv2:'Batch records supported', bv3:'Automated tracking', bv4:'Ready for integration',
+    uc_eye:'Use Cases', uc_title:'Designed for Logistics Teams',
+    uc1t:'Freight Forwarders', uc1p:'Track HAWB and B/L status across shipments.',
+    uc2t:'E-commerce Sellers', uc2p:'Validate Korean addresses and postal codes before fulfillment.',
+    uc3t:'Warehouse Operators', uc3p:'Scan warehouse lists and identify clearance issues.',
+    uc4t:'Customs Brokers', uc4p:'Monitor clearance progress and prepare next actions.',
+    uc5t:'Korea–Vietnam Trade Teams', uc5p:'Bridge data between Korean customs and Vietnamese operations.',
+    ap_eye:'API & Integration', ap_title:'Integrate Logistics Intelligence Into Your Workflow',
+    ap_desc:'Connect postal code lookup, customs tracking, Excel batch processing, and AI insights into your internal system through API integration.',
+    ap_b1:'View API Docs', ap_b2:'Contact Sales',
+    fn_title:'Ready to Transform Your Logistics Operations?', fn_sub:'Start with postal code lookup and customs tracking today. Expand into AI automation when your team is ready.',
+    fn_b1:'Try Demo', fn_b2:'Book a Consultation',
+    ft_tag:'Accelerating Business Transformation.', ft_products:'Products', ft_ai:'AI Logistics', ft_company:'Company', ft_contact:'Contact', ft_home:'Back to TransFlash' },
+  vi:{ back:'Về trang chính', signin:'Đăng nhập', pill:'AI Logistics Intelligence',
+    t1:'Nền tảng AI cho Logistics', t2:'thương mại Hàn – Việt',
+    sub:'Tra mã bưu điện, theo dõi thông quan và tự động hóa vận hành logistics bằng quy trình AI — dành cho đội logistics hiện đại.',
+    cta1:'Dùng thử Demo', cta2:'Xem API Docs',
+    b1:'Tra mã bưu điện Hàn Quốc', b2:'Thông quan UNI-PASS', b3:'Xử lý Excel hàng loạt', b4:'Sẵn sàng API',
+    cc_title:'Tổng quan logistics hôm nay', cc_m1:'Lượt tra mã', cc_m2:'Lượt kiểm tra thông quan', cc_m3:'Lô bị chậm', cc_m4:'Tra nhanh hơn',
+    cc_ai_t:'AI Insight', cc_ai_p:'3 lô hàng có thể cần theo dõi thông quan hôm nay.', cc_ai_r:'Hành động đề xuất:',
+    tl_eye:'Demo trực tiếp', tl_title:'Công cụ logistics trực tiếp', tl_sub:'Dùng dữ liệu thật để trải nghiệm quy trình lõi của TransFlash.',
+    c1_badge:'Tra cứu', c1_title:'Tra mã bưu điện Hàn Quốc', c1_desc:'Tìm mã bưu điện 5 số từ địa chỉ Hàn Quốc. Hỗ trợ tra đơn lẻ và upload Excel hàng loạt.',
+    c2_badge:'Theo dõi', c2_title:'Tra cứu thông quan', c2_desc:'Theo dõi tiến trình thông quan theo HAWB, B/L hoặc mã quản lý hàng — trực tiếp từ Hải quan Hàn Quốc (UNI-PASS).',
+    ai_eye:'Tầng AI', ai_title:'AI biến dữ liệu logistics thành hành động', ai_sub:'TransFlash không chỉ tra cứu — mà phân tích, đề xuất và giúp đội xử lý nhanh hơn.',
+    ai_c1t:'Dự đoán chậm trễ', ai_c1p:'Dự đoán nguy cơ chậm thông quan dựa trên trạng thái lô hàng và dữ liệu lịch sử.',
+    ai_c2t:'Trợ lý thông quan', ai_c2p:'Giải thích trạng thái thông quan bằng ngôn ngữ dễ hiểu và gợi ý bước tiếp theo.',
+    ai_c3t:'Tự động hóa vận hành', ai_c3p:'Tự động phân loại, định tuyến và tóm tắt hồ sơ logistics.',
+    as_q:'"Lô nào cần theo dõi thông quan gấp hôm nay?"', as_a:'3 lô cần chú ý. Hai lô đang kiểm tra hơn 24 giờ, một lô thiếu thông tin người nhận.',
+    bv_eye:'Giá trị kinh doanh', bv_title:'Cho vận hành logistics khối lượng lớn',
+    bv1:'Giảm thời gian tra thủ công', bv2:'Hỗ trợ xử lý hàng loạt', bv3:'Theo dõi tự động', bv4:'Sẵn sàng tích hợp',
+    uc_eye:'Trường hợp dùng', uc_title:'Thiết kế cho đội logistics',
+    uc1t:'Forwarder', uc1p:'Theo dõi trạng thái HAWB và B/L trên nhiều lô.',
+    uc2t:'Nhà bán TMĐT', uc2p:'Chuẩn hóa địa chỉ và mã bưu điện Hàn trước khi giao.',
+    uc3t:'Vận hành kho', uc3p:'Quét danh sách kho và phát hiện vấn đề thông quan.',
+    uc4t:'Đại lý hải quan', uc4p:'Theo dõi tiến trình thông quan và chuẩn bị bước tiếp theo.',
+    uc5t:'Đội thương mại Hàn – Việt', uc5p:'Kết nối dữ liệu giữa Hải quan Hàn và vận hành tại Việt Nam.',
+    ap_eye:'API & Tích hợp', ap_title:'Tích hợp logistics intelligence vào quy trình của bạn',
+    ap_desc:'Kết nối tra mã bưu điện, tra thông quan, xử lý Excel và AI insight vào hệ thống nội bộ qua API.',
+    ap_b1:'Xem API Docs', ap_b2:'Liên hệ tư vấn',
+    fn_title:'Sẵn sàng nâng cấp vận hành logistics?', fn_sub:'Bắt đầu với tra mã bưu điện và thông quan hôm nay. Mở rộng sang tự động hóa AI khi đội đã sẵn sàng.',
+    fn_b1:'Dùng thử Demo', fn_b2:'Đặt lịch tư vấn',
+    ft_tag:'Accelerating Business Transformation.', ft_products:'Sản phẩm', ft_ai:'AI Logistics', ft_company:'Công ty', ft_contact:'Liên hệ', ft_home:'Về TransFlash' },
+  ko:{ back:'사이트로', signin:'로그인', pill:'AI 물류 인텔리전스',
+    t1:'AI 물류 인텔리전스', t2:'한국–베트남 무역을 위한',
+    sub:'우편번호 조회, 통관 추적, 물류 업무 자동화를 AI 워크플로우로 — 현대 물류팀을 위해 설계되었습니다.',
+    cta1:'라이브 데모', cta2:'API 문서 보기',
+    b1:'한국 우편번호 조회', b2:'UNI-PASS 통관 추적', b3:'엑셀 일괄 처리', b4:'API 지원',
+    cc_title:'오늘의 물류 현황', cc_m1:'우편번호 조회', cc_m2:'통관 확인', cc_m3:'지연 화물', cc_m4:'더 빠른 조회',
+    cc_ai_t:'AI 인사이트', cc_ai_p:'오늘 통관 후속 조치가 필요한 화물이 3건 있습니다.', cc_ai_r:'권장 조치:',
+    tl_eye:'라이브 데모', tl_title:'라이브 물류 도구', tl_sub:'실제 물류 데이터로 TransFlash 핵심 워크플로우를 체험하세요.',
+    c1_badge:'조회', c1_title:'한국 우편번호 조회', c1_desc:'한국 주소에서 5자리 우편번호 조회. 단건 및 엑셀 일괄 업로드 지원.',
+    c2_badge:'추적', c2_title:'통관 추적', c2_desc:'HAWB, B/L 또는 화물관리번호로 관세청(UNI-PASS)에서 직접 통관 상태를 추적합니다.',
+    ai_eye:'AI 레이어', ai_title:'물류 데이터를 행동으로 바꾸는 AI', ai_sub:'TransFlash는 조회뿐 아니라 분석하고 제안하여 팀이 더 빠르게 움직이도록 돕습니다.',
+    ai_c1t:'지연 예측', ai_c1p:'화물 상태와 과거 패턴을 기반으로 통관 지연 가능성을 예측합니다.',
+    ai_c2t:'통관 코파일럿', ai_c2p:'통관 상태를 쉬운 말로 설명하고 다음 조치를 제안합니다.',
+    ai_c3t:'업무 자동화', ai_c3p:'물류 기록을 자동으로 분류, 라우팅, 요약합니다.',
+    as_q:'"오늘 긴급 통관 후속 조치가 필요한 화물은?"', as_a:'3건이 주의가 필요합니다. 2건은 24시간 이상 검사 중이며, 1건은 수하인 정보가 누락되었습니다.',
+    bv_eye:'비즈니스 가치', bv_title:'대량 물류 운영을 위해 설계',
+    bv1:'수작업 조회 시간 절감', bv2:'대량 레코드 지원', bv3:'자동 추적', bv4:'통합 준비 완료',
+    uc_eye:'활용 사례', uc_title:'물류팀을 위한 설계',
+    uc1t:'포워더', uc1p:'여러 화물의 HAWB·B/L 상태를 추적합니다.',
+    uc2t:'이커머스 셀러', uc2p:'배송 전 한국 주소와 우편번호를 검증합니다.',
+    uc3t:'창고 운영', uc3p:'창고 목록을 스캔하고 통관 이슈를 파악합니다.',
+    uc4t:'관세사', uc4p:'통관 진행을 모니터링하고 다음 조치를 준비합니다.',
+    uc5t:'한국–베트남 무역팀', uc5p:'한국 관세청과 베트남 운영 데이터를 연결합니다.',
+    ap_eye:'API & 통합', ap_title:'물류 인텔리전스를 워크플로우에 통합',
+    ap_desc:'우편번호 조회, 통관 추적, 엑셀 일괄 처리, AI 인사이트를 API로 내부 시스템에 연결하세요.',
+    ap_b1:'API 문서 보기', ap_b2:'영업팀 문의',
+    fn_title:'물류 운영을 혁신할 준비가 되셨나요?', fn_sub:'오늘 우편번호 조회와 통관 추적으로 시작하세요. 준비되면 AI 자동화로 확장하세요.',
+    fn_b1:'데모 체험', fn_b2:'상담 예약',
+    ft_tag:'Accelerating Business Transformation.', ft_products:'제품', ft_ai:'AI 물류', ft_company:'회사', ft_contact:'문의', ft_home:'TransFlash로' }
 };
-function setDemoLang(l){
-  if(!DEMO_I18N[l]) l='en';
-  const d=DEMO_I18N[l];
-  document.documentElement.lang=l;
-  try{ localStorage.setItem('lang',l); }catch(e){}
+const MAP={ b_back:'back', b_signin:'signin', h_pill:'pill', h_t1:'t1', h_t2:'t2', h_sub:'sub', h_cta1:'cta1', h_cta2:'cta2',
+  h_b1:'b1', h_b2:'b2', h_b3:'b3', h_b4:'b4', cc_title:'cc_title', cc_m1:'cc_m1', cc_m2:'cc_m2', cc_m3:'cc_m3', cc_m4:'cc_m4',
+  cc_ai_t:'cc_ai_t', cc_ai_p:'cc_ai_p', cc_ai_r:'cc_ai_r', tl_eye:'tl_eye', tl_title:'tl_title', tl_sub:'tl_sub',
+  c1_badge:'c1_badge', c1_title:'c1_title', c1_desc:'c1_desc', c2_badge:'c2_badge', c2_title:'c2_title', c2_desc:'c2_desc',
+  ai_eye:'ai_eye', ai_title:'ai_title', ai_sub:'ai_sub', ai_c1t:'ai_c1t', ai_c1p:'ai_c1p', ai_c2t:'ai_c2t', ai_c2p:'ai_c2p',
+  ai_c3t:'ai_c3t', ai_c3p:'ai_c3p', as_q:'as_q', as_a:'as_a', bv_eye:'bv_eye', bv_title:'bv_title', bv1:'bv1', bv2:'bv2', bv3:'bv3', bv4:'bv4',
+  uc_eye:'uc_eye', uc_title:'uc_title', uc1t:'uc1t', uc1p:'uc1p', uc2t:'uc2t', uc2p:'uc2p', uc3t:'uc3t', uc3p:'uc3p',
+  uc4t:'uc4t', uc4p:'uc4p', uc5t:'uc5t', uc5p:'uc5p', ap_eye:'ap_eye', ap_title:'ap_title', ap_desc:'ap_desc', ap_b1:'ap_b1', ap_b2:'ap_b2',
+  fn_title:'fn_title', fn_sub:'fn_sub', fn_b1:'fn_b1', fn_b2:'fn_b2', ft_tag:'ft_tag', ft_products:'ft_products', ft_ai:'ft_ai',
+  ft_company:'ft_company', ft_contact:'ft_contact', ft_home:'ft_home' };
+function setLang(l){
+  if(!I18N[l]) l='en'; const d=I18N[l];
+  document.documentElement.lang=l; try{ localStorage.setItem('lang',l); }catch(e){}
   document.querySelectorAll('#lang button').forEach(b=>b.classList.toggle('on',b.dataset.l===l));
-  const set=(id,v)=>{ const e=document.getElementById(id); if(e)e.textContent=v; };
-  set('t_badge',d.badge); set('backBtn',d.back); set('t_title',d.title); set('t_sub',d.sub);
-  set('t_p_title',d.p_title); set('t_p_sub',d.p_sub); set('t_c_title',d.c_title); set('t_c_sub',d.c_sub);
-  set('t_cta_title',d.cta_title); set('t_cta_sub',d.cta_sub); set('t_cta_demo',d.cta_demo); set('t_cta_file',d.cta_file);
-  document.getElementById('frPostal').src='/?embed=1&lang='+l;
-  document.getElementById('frCustoms').src='/tracking?embed=1&lang='+l;
+  for(const id in MAP){ const e=document.getElementById(id); if(e && d[MAP[id]]!=null) e.textContent=d[MAP[id]]; }
+  setFrame('frPostal','/?embed=1&lang='+l); setFrame('frCustoms','/tracking?embed=1&lang='+l);
 }
-// auto-resize iframes to nội dung — dùng ResizeObserver (không polling -> hết nhấp nháy)
+function setFrame(id,src){ const f=document.getElementById(id); if(f && f.getAttribute('src')!==src) f.setAttribute('src',src); }
+// iframe auto-fit (ResizeObserver — no flicker)
 function attachFit(ifr){
-  function fit(){
-    try{
-      const doc=ifr.contentDocument; if(!doc||!doc.body) return;
-      const h=Math.max(doc.body.scrollHeight, doc.body.offsetHeight);
-      const cur=parseInt(ifr.style.height)||0;
-      if(h>160 && Math.abs(cur-h)>4) ifr.style.height=(h+4)+'px';
-    }catch(e){}
-  }
-  ifr.addEventListener('load',function(){
-    fit();
-    try{
-      const w=ifr.contentWindow;
-      if(w.ResizeObserver){ new w.ResizeObserver(fit).observe(ifr.contentDocument.body); }
-      else { let n=0; const t=setInterval(()=>{ fit(); if(++n>20) clearInterval(t); },500); }
-    }catch(e){}
-  });
+  function fit(){ try{ const doc=ifr.contentDocument; if(!doc||!doc.body) return; const h=Math.max(doc.body.scrollHeight,doc.body.offsetHeight); const cur=parseInt(ifr.style.height)||0; if(h>160 && Math.abs(cur-h)>4) ifr.style.height=(h+4)+'px'; }catch(e){} }
+  ifr.addEventListener('load',function(){ fit(); try{ const w=ifr.contentWindow; if(w.ResizeObserver){ new w.ResizeObserver(fit).observe(ifr.contentDocument.body); } else { let n=0,t=setInterval(()=>{fit(); if(++n>20)clearInterval(t);},500); } }catch(e){} });
 }
 ['frPostal','frCustoms'].forEach(id=>attachFit(document.getElementById(id)));
-(function(){ const saved=(()=>{try{return localStorage.getItem('lang');}catch(e){return null;}})(); setDemoLang(['en','vi','ko'].includes(saved)?saved:'en'); })();
+(function(){ const s=(()=>{try{return localStorage.getItem('lang');}catch(e){return null;}})(); setLang(['en','vi','ko'].includes(s)?s:'en'); })();
 </script>
 </body>
 </html>

@@ -759,14 +759,14 @@
 <body class="tf">
 <header class="tf-header" id="tfHeader">
   <div class="tf-wrap tf-head-row">
-    <a class="tf-logo" href="/"><img src="/logo.svg" alt="Transflash Logistics" /><span><b>Transflash</b><i>Logistics</i></span></a>
+    <a class="tf-logo" href="/"><img src="/logo.svg" alt="TransFlash Logistics" /><span><b>TransFlash</b><i>Logistics</i></span></a>
     <nav class="tf-nav" id="tfNav">
-      <a href="#solution" onclick="document.getElementById('tfNav').classList.remove('open')">Solutions</a>
-      <a href="#modules" onclick="document.getElementById('tfNav').classList.remove('open')">Modules</a>
-      <a href="#workflow" onclick="document.getElementById('tfNav').classList.remove('open')">Workflow</a>
-      <a href="#pricing" onclick="document.getElementById('tfNav').classList.remove('open')">Pricing</a>
-      <a href="/demo">Live Demo</a>
-      <a href="#contact" onclick="document.getElementById('tfNav').classList.remove('open')">Contact</a>
+      <a href="#solution" data-i18n="lp_navSol" onclick="document.getElementById('tfNav').classList.remove('open')">Solutions</a>
+      <a href="#modules" data-i18n="lp_navMod" onclick="document.getElementById('tfNav').classList.remove('open')">Modules</a>
+      <a href="#workflow" data-i18n="lp_navWf" onclick="document.getElementById('tfNav').classList.remove('open')">Workflow</a>
+      <a href="#pricing" data-i18n="lp_navPr" onclick="document.getElementById('tfNav').classList.remove('open')">Pricing</a>
+      <a href="/demo" data-i18n="lp_navDemo">Live Demo</a>
+      <a href="#contact" data-i18n="lp_navCt" onclick="document.getElementById('tfNav').classList.remove('open')">Contact</a>
     </nav>
     <div class="tf-head-right">
       <div class="user-chip" id="userChip" style="display:none">
@@ -783,7 +783,7 @@
       </select>
       <button class="btn-login-top" id="loginBtn" onclick="location.href='/login'" style="display:none"><span data-i18n="btnLogin">Đăng nhập</span></button>
       <button class="btn-logout" id="logoutBtn" onclick="logout()"><span data-i18n="btnLogout">Đăng xuất</span></button>
-      <a class="tf-cta-sm" href="#try">Dùng thử</a>
+      <a class="tf-cta-sm" href="#try" data-i18n="lp_try">Try it</a>
       <button class="tf-burger" aria-label="Menu" onclick="document.getElementById('tfNav').classList.toggle('open')">☰</button>
     </div>
   </div>
@@ -793,18 +793,18 @@
 <section class="tf-hero">
   <div class="tf-wrap tf-hero-grid">
     <div class="tf-hero-copy">
-      <span class="tf-pill">⚡ AI-powered logistics data automation</span>
-      <h1>Automate <span class="tf-grad-text">thousands of logistics orders</span> for Global ↔ Korea, every day</h1>
-      <p>Korean postal code lookup, address normalization, customs clearance checks, bulk Excel processing and operational data integration — for logistics businesses.</p>
+      <span class="tf-pill">⚡ <span data-i18n="lp_pill">AI-powered logistics data automation</span></span>
+      <h1><span data-i18n="lp_h1a">Automate</span> <span class="tf-grad-text" data-i18n="lp_grad">thousands of logistics orders</span> <span data-i18n="lp_h1b">for Global ↔ Korea, every day</span></h1>
+      <p data-i18n="lp_sub">Korean postal code lookup, address normalization, customs clearance checks, bulk Excel processing and operational data integration — for logistics businesses.</p>
       <div class="tf-hero-cta">
-        <a class="tf-btn tf-btn-primary" href="#try">Try it with your Excel</a>
-        <a class="tf-btn tf-btn-outline" href="/demo">View live demo</a>
+        <a class="tf-btn tf-btn-primary" href="#try" data-i18n="lp_cta1">Try it with your Excel</a>
+        <a class="tf-btn tf-btn-outline" href="/demo" data-i18n="lp_cta2">View live demo</a>
       </div>
       <div class="tf-hero-trust">
-        <span>🏛️ <b>Korea Government data</b></span>
-        <span>⚡ <b>Real-time</b></span>
-        <span>🔌 <b>Excel / API ready</b></span>
-        <span>🌐 <b>EN · KO · VI</b></span>
+        <span>🏛️ <b data-i18n="lp_tb1">Korea Government data</b></span>
+        <span>⚡ <b data-i18n="lp_tb2">Real-time</b></span>
+        <span>🔌 <b data-i18n="lp_tb3">Excel / API ready</b></span>
+        <span>🌐 <b data-i18n="lp_tb4">EN · KO · VI</b></span>
       </div>
     </div>
     <div class="tf-hero-visual">
@@ -837,15 +837,15 @@
 <section class="tf-section alt pain" id="pain">
   <div class="tf-wrap">
     <div class="tf-sec-head">
-      <div class="eyebrow">The operations problem</div>
-      <h2>Logistics teams lose too much time on manual data</h2>
-      <p>Every day, thousands of address, postal-code and waybill rows are handled by hand — slow, error-prone and hard to control.</p>
+      <div class="eyebrow" data-i18n="lp_painEye">The operations problem</div>
+      <h2 data-i18n="lp_painH">Logistics teams lose too much time on manual data</h2>
+      <p data-i18n="lp_painL">Every day, thousands of address, postal-code and waybill rows are handled by hand — slow, error-prone and hard to control.</p>
     </div>
     <div class="tf-grid c2">
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div><h3>Copy-pasting addresses row by row</h3><p>Staff retype every Korean address into the system — hours wasted each day on repetitive work.</p></div>
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div><h3>Wrong postal codes delay delivery</h3><p>A single wrong postal code means returned parcels, late delivery and extra cost — hitting customers directly.</p></div>
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div><h3>Manual customs code checks</h3><p>Looking up clearance status one waybill at a time on the customs site — slow and impossible to track in bulk.</p></div>
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6"/></svg></div><h3>Large Excel files break easily</h3><p>Thousand-row files drift columns, miss data and lose formatting — with no reliable reconciliation process.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div><h3 data-i18n="lp_p1t">Copy-pasting addresses row by row</h3><p data-i18n="lp_p1p">Staff retype every Korean address into the system — hours wasted each day on repetitive work.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div><h3 data-i18n="lp_p2t">Wrong postal codes delay delivery</h3><p data-i18n="lp_p2p">A single wrong postal code means returned parcels, late delivery and extra cost — hitting customers directly.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div><h3 data-i18n="lp_p3t">Manual customs code checks</h3><p data-i18n="lp_p3p">Looking up clearance status one waybill at a time on the customs site — slow and impossible to track in bulk.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6"/></svg></div><h3 data-i18n="lp_p4t">Large Excel files break easily</h3><p data-i18n="lp_p4p">Thousand-row files drift columns, miss data and lose formatting — with no reliable reconciliation process.</p></div>
     </div>
   </div>
 </section>
@@ -854,17 +854,17 @@
 <section class="tf-section" id="solution">
   <div class="tf-wrap">
     <div class="tf-sec-head">
-      <div class="eyebrow">The solution</div>
-      <h2>One platform to standardize all your logistics data</h2>
-      <p>From manual Excel work to automated logistics data flow — process, reconcile and export clean data in minutes.</p>
+      <div class="eyebrow" data-i18n="lp_solEye">The solution</div>
+      <h2 data-i18n="lp_solH">One platform to standardize all your logistics data</h2>
+      <p data-i18n="lp_solL">From manual Excel work to automated logistics data flow — process, reconcile and export clean data in minutes.</p>
     </div>
     <div class="tf-grid c3">
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div><h3>Batch postal code lookup</h3><p>Look up thousands of Korean addresses at once, returning standard 5-digit codes from government data.</p></div>
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></div><h3>Korean address normalization</h3><p>Auto-detect road-name (도로명) and lot-number (지번) addresses, normalized to a precise delivery format.</p></div>
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/></svg></div><h3>Customs &amp; clearance tracking</h3><p>Track clearance progress by waybill (HAWB) from Korea Customs — checked in bulk.</p></div>
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><h3>Thousand-row Excel processing</h3><p>Upload waybill files, auto-map columns, reconcile and fill codes — process thousands of rows in minutes, not hours.</p></div>
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><rect x="4" y="17" width="16" height="4" rx="1"/></svg></div><h3>Clean data export for accounting</h3><p>Normalized results export to tidy Excel/CSV — ready for receivables, invoicing and reconciliation.</p></div>
-      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div><h3>API integration with ERP / WMS</h3><p>Connect Transflash to your existing systems via API — automate operational data flow end to end.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div><h3 data-i18n="lp_s1t">Batch postal code lookup</h3><p data-i18n="lp_s1p">Look up thousands of Korean addresses at once, returning standard 5-digit codes from government data.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></div><h3 data-i18n="lp_s2t">Korean address normalization</h3><p data-i18n="lp_s2p">Auto-detect road-name (도로명) and lot-number (지번) addresses, normalized to a precise delivery format.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/></svg></div><h3 data-i18n="lp_s3t">Customs &amp; clearance tracking</h3><p data-i18n="lp_s3p">Track clearance progress by waybill (HAWB) from Korea Customs — checked in bulk.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><h3 data-i18n="lp_s4t">Thousand-row Excel processing</h3><p data-i18n="lp_s4p">Upload waybill files, auto-map columns, reconcile and fill codes — process thousands of rows in minutes, not hours.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><rect x="4" y="17" width="16" height="4" rx="1"/></svg></div><h3 data-i18n="lp_s5t">Clean data export for accounting</h3><p data-i18n="lp_s5p">Normalized results export to tidy Excel/CSV — ready for receivables, invoicing and reconciliation.</p></div>
+      <div class="tf-card"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div><h3 data-i18n="lp_s6t">API integration with ERP / WMS</h3><p data-i18n="lp_s6p">Connect Transflash to your existing systems via API — automate operational data flow end to end.</p></div>
     </div>
   </div>
 </section>
@@ -873,15 +873,15 @@
 <section class="tf-section alt" id="workflow">
   <div class="tf-wrap">
     <div class="tf-sec-head">
-      <div class="eyebrow">Workflow</div>
-      <h2>From Excel file to automated data in 4 steps</h2>
-      <p>Built for high-volume logistics operations — simple, fast, controllable.</p>
+      <div class="eyebrow" data-i18n="lp_wfEye">Workflow</div>
+      <h2 data-i18n="lp_wfH">From Excel file to automated data in 4 steps</h2>
+      <p data-i18n="lp_wfL">Built for high-volume logistics operations — simple, fast, controllable.</p>
     </div>
     <div class="tf-flow">
-      <div class="tf-step"><div class="n">1</div><h4>Upload Excel</h4><p>Upload your waybill / address list — .xlsx, .xls, .csv.</p><span class="arr">→</span></div>
-      <div class="tf-step"><div class="n">2</div><h4>AI checks the data</h4><p>Auto-detect address columns, flag missing/invalid rows for review.</p><span class="arr">→</span></div>
-      <div class="tf-step"><div class="n">3</div><h4>Normalize & reconcile</h4><p>Return postal codes, normalize addresses, check customs, reconcile.</p><span class="arr">→</span></div>
-      <div class="tf-step"><div class="n">4</div><h4>Export / API</h4><p>Export a clean file or push data straight into your system via API.</p></div>
+      <div class="tf-step"><div class="n">1</div><h4 data-i18n="lp_w1t">Upload Excel</h4><p data-i18n="lp_w1p">Upload your waybill / address list — .xlsx, .xls, .csv.</p><span class="arr">→</span></div>
+      <div class="tf-step"><div class="n">2</div><h4 data-i18n="lp_w2t">AI checks the data</h4><p data-i18n="lp_w2p">Auto-detect address columns, flag missing/invalid rows for review.</p><span class="arr">→</span></div>
+      <div class="tf-step"><div class="n">3</div><h4 data-i18n="lp_w3t">Normalize & reconcile</h4><p data-i18n="lp_w3p">Return postal codes, normalize addresses, check customs, reconcile.</p><span class="arr">→</span></div>
+      <div class="tf-step"><div class="n">4</div><h4 data-i18n="lp_w4t">Export / API</h4><p data-i18n="lp_w4p">Export a clean file or push data straight into your system via API.</p></div>
     </div>
   </div>
 </section>
@@ -890,17 +890,17 @@
 <section class="tf-section" id="modules">
   <div class="tf-wrap">
     <div class="tf-sec-head">
-      <div class="eyebrow">Product Modules</div>
-      <h2>Business modules in a single platform</h2>
-      <p>Use each module on its own, or combine them into a complete operational workflow.</p>
+      <div class="eyebrow" data-i18n="lp_modEye">Product Modules</div>
+      <h2 data-i18n="lp_modH">Business modules in a single platform</h2>
+      <p data-i18n="lp_modL">Use each module on its own, or combine them into a complete operational workflow.</p>
     </div>
     <div class="tf-grid c2">
-      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div><div><span class="en">Postal Code Batch Lookup</span><h3>Bulk postal code lookup</h3><p>Thousands of addresses → standard 5-digit codes, row by row, with clear status.</p></div></div>
-      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div><span class="en">Address Normalization</span><h3>Address normalization</h3><p>Detect 도로명 / 지번, clean and normalize delivery addresses.</p></div></div>
-      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/></svg></div><div><span class="en">Customs & Clearance Check</span><h3>Customs code check</h3><p>Track clearance progress by HAWB from Korea Customs.</p></div></div>
-      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div><span class="en">Logistics Excel Automation</span><h3>Waybill Excel automation</h3><p>Upload, map columns, reconcile, fill codes and export in bulk.</p></div></div>
-      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><rect x="4" y="17" width="16" height="4" rx="1"/></svg></div><div><span class="en">Accounting Data Export</span><h3>Accounting data export</h3><p>Clean data for receivables, invoicing and reconciliation — correctly formatted.</p></div></div>
-      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div><div><span class="en">API Integration</span><h3>API integration</h3><p>Connect ERP / WMS / waybill systems via REST API, with Enterprise Support.</p></div></div>
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div><div><span class="en">Postal Code Batch Lookup</span><h3 data-i18n="lp_m1t">Bulk postal code lookup</h3><p data-i18n="lp_m1p">Thousands of addresses → standard 5-digit codes, row by row, with clear status.</p></div></div>
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div><span class="en">Address Normalization</span><h3 data-i18n="lp_m2t">Address normalization</h3><p data-i18n="lp_m2p">Detect 도로명 / 지번, clean and normalize delivery addresses.</p></div></div>
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/></svg></div><div><span class="en">Customs & Clearance Check</span><h3 data-i18n="lp_m3t">Customs code check</h3><p data-i18n="lp_m3p">Track clearance progress by HAWB from Korea Customs.</p></div></div>
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div><span class="en">Logistics Excel Automation</span><h3 data-i18n="lp_m4t">Waybill Excel automation</h3><p data-i18n="lp_m4p">Upload, map columns, reconcile, fill codes and export in bulk.</p></div></div>
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><rect x="4" y="17" width="16" height="4" rx="1"/></svg></div><div><span class="en">Accounting Data Export</span><h3 data-i18n="lp_m5t">Accounting data export</h3><p data-i18n="lp_m5p">Clean data for receivables, invoicing and reconciliation — correctly formatted.</p></div></div>
+      <div class="tf-mod"><div class="tf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div><div><span class="en">API Integration</span><h3 data-i18n="lp_m6t">API integration</h3><p data-i18n="lp_m6p">Connect ERP / WMS / waybill systems via REST API, with Enterprise Support.</p></div></div>
     </div>
   </div>
 </section>
@@ -909,9 +909,9 @@
 <section class="tf-section tf-try" id="try">
   <div class="tf-wrap">
     <div class="tf-sec-head">
-      <div class="eyebrow">Try it now</div>
-      <h2>Experience it live with your real data</h2>
-      <p>Look up a single address or upload an Excel file — watch the system normalize and return postal codes instantly. <a href="/demo" style="color:var(--tf-brand);font-weight:750">See the full demo →</a></p>
+      <div class="eyebrow" data-i18n="lp_tryEye">Try it now</div>
+      <h2 data-i18n="lp_tryH">Experience it live with your real data</h2>
+      <p><span data-i18n="lp_tryL">Look up a single address or upload an Excel file — watch the system normalize and return postal codes instantly.</span> <a href="/demo" data-i18n="lp_trySee" style="color:var(--tf-brand);font-weight:750">See the full demo →</a></p>
     </div>
 
   <div class="container">
@@ -1116,8 +1116,8 @@
   </div>
 
   </div><!-- /.container (khung quanh tool) -->
-  <p class="tf-micro" style="margin-top:26px">Built for high-volume logistics operations · Process thousands of rows in minutes, not hours</p>
-  <p class="tf-demo-cta" style="text-align:center;margin-top:8px"><a class="tf-btn tf-btn-outline" href="/demo">Open full live demo →</a></p>
+  <p class="tf-micro" style="margin-top:26px" data-i18n="lp_micro">Built for high-volume logistics operations · Process thousands of rows in minutes, not hours</p>
+  <p class="tf-demo-cta" style="text-align:center;margin-top:8px"><a class="tf-btn tf-btn-outline" href="/demo" data-i18n="lp_openDemo">Open full live demo →</a></p>
   </div><!-- /tf-wrap -->
 </section><!-- /tf-try -->
 
@@ -1125,17 +1125,17 @@
 <section class="tf-section">
   <div class="tf-wrap">
     <div class="tf-sec-head">
-      <div class="eyebrow">Who it's for</div>
-      <h2>Built for high-volume operations</h2>
-      <p>Designed for Global ↔ Korea logistics — fits any cross-border order operation.</p>
+      <div class="eyebrow" data-i18n="lp_custEye">Who it's for</div>
+      <h2 data-i18n="lp_custH">Built for high-volume operations</h2>
+      <p data-i18n="lp_custL">Designed for Global ↔ Korea logistics — fits any cross-border order operation.</p>
     </div>
     <div class="tf-chips">
-      <div class="tf-chip"><span class="e">🚚</span> Global ↔ Korea carriers</div>
-      <div class="tf-chip"><span class="e">📦</span> Forwarders</div>
-      <div class="tf-chip"><span class="e">🏭</span> Fulfillment centers</div>
-      <div class="tf-chip"><span class="e">🛒</span> Korea buy-for-me services</div>
-      <div class="tf-chip"><span class="e">🌐</span> Cross-border e-commerce</div>
-      <div class="tf-chip"><span class="e">📊</span> Thousands of orders / month</div>
+      <div class="tf-chip"><span class="e">🚚</span> <span data-i18n="lp_ch1">Global ↔ Korea carriers</span></div>
+      <div class="tf-chip"><span class="e">📦</span> <span data-i18n="lp_ch2">Forwarders</span></div>
+      <div class="tf-chip"><span class="e">🏭</span> <span data-i18n="lp_ch3">Fulfillment centers</span></div>
+      <div class="tf-chip"><span class="e">🛒</span> <span data-i18n="lp_ch4">Korea buy-for-me services</span></div>
+      <div class="tf-chip"><span class="e">🌐</span> <span data-i18n="lp_ch5">Cross-border e-commerce</span></div>
+      <div class="tf-chip"><span class="e">📊</span> <span data-i18n="lp_ch6">Thousands of orders / month</span></div>
     </div>
   </div>
 </section>
@@ -1144,16 +1144,16 @@
 <section class="tf-section alt">
   <div class="tf-wrap">
     <div class="tf-sec-head">
-      <div class="eyebrow">Trusted</div>
-      <h2>A serious logistics data platform</h2>
-      <p>Built for real operations, large volumes, security and integration.</p>
+      <div class="eyebrow" data-i18n="lp_trEye">Trusted</div>
+      <h2 data-i18n="lp_trH">A serious logistics data platform</h2>
+      <p data-i18n="lp_trL">Built for real operations, large volumes, security and integration.</p>
     </div>
     <div class="tf-trust-grid">
-      <div class="tf-trust-card"><div class="ic">🌐</div><b>Global ↔ Korea</b><span>Purpose-built for Korea logistics</span></div>
-      <div class="tf-trust-card"><div class="ic">🔒</div><b>Secure</b><span>Safe, secure data processing</span></div>
-      <div class="tf-trust-card"><div class="ic">🔌</div><b>Excel / API ready</b><span>Flexible system integration</span></div>
-      <div class="tf-trust-card"><div class="ic">🎧</div><b>Enterprise support</b><span>Dedicated support for businesses</span></div>
-      <div class="tf-trust-card"><div class="ic">🏢</div><b>Transflash / SotaTek</b><span>Backed by a technology ecosystem</span></div>
+      <div class="tf-trust-card"><div class="ic">🌐</div><b data-i18n="lp_tr1b">Global ↔ Korea</b><span data-i18n="lp_tr1s">Purpose-built for Korea logistics</span></div>
+      <div class="tf-trust-card"><div class="ic">🔒</div><b data-i18n="lp_tr2b">Secure</b><span data-i18n="lp_tr2s">Safe, secure data processing</span></div>
+      <div class="tf-trust-card"><div class="ic">🔌</div><b data-i18n="lp_tr3b">Excel / API ready</b><span data-i18n="lp_tr3s">Flexible system integration</span></div>
+      <div class="tf-trust-card"><div class="ic">🎧</div><b data-i18n="lp_tr4b">Enterprise support</b><span data-i18n="lp_tr4s">Dedicated support for businesses</span></div>
+      <div class="tf-trust-card"><div class="ic">🏢</div><b data-i18n="lp_tr5b">Transflash / SotaTek</b><span data-i18n="lp_tr5s">Backed by a technology ecosystem</span></div>
     </div>
   </div>
 </section>
@@ -1162,29 +1162,29 @@
 <section class="tf-section" id="pricing">
   <div class="tf-wrap">
     <div class="tf-sec-head">
-      <div class="eyebrow">Pricing</div>
-      <h2>Pick the scale that fits your operation</h2>
-      <p>From basic lookups to full system integration — grows with your needs.</p>
+      <div class="eyebrow" data-i18n="lp_prEye">Pricing</div>
+      <h2 data-i18n="lp_prH">Pick the scale that fits your operation</h2>
+      <p data-i18n="lp_prL">From basic lookups to full system integration — grows with your needs.</p>
     </div>
     <div class="tf-price-grid">
       <div class="tf-price">
-        <h3>Free Tool</h3>
-        <p class="pr-sub">Basic lookups for individuals & trials.</p>
-        <ul><li>Manual postal code lookup</li><li>Customs code check</li><li>Limited Excel upload</li><li>EN · KO · VI</li></ul>
-        <a class="tf-btn tf-btn-outline" href="#try">Try it now</a>
+        <h3 data-i18n="lp_prFree">Free Tool</h3>
+        <p class="pr-sub" data-i18n="lp_prFreeS">Basic lookups for individuals & trials.</p>
+        <ul><li data-i18n="lp_prFree1">Manual postal code lookup</li><li data-i18n="lp_prFree2">Customs code check</li><li data-i18n="lp_prFree3">Limited Excel upload</li><li data-i18n="lp_prFree4">EN · KO · VI</li></ul>
+        <a class="tf-btn tf-btn-outline" href="#try" data-i18n="lp_prFreeC">Try it now</a>
       </div>
       <div class="tf-price feature">
-        <span class="pop">Popular</span>
-        <h3>Business</h3>
-        <p class="pr-sub">Bulk Excel processing for ops teams.</p>
-        <ul><li>Batch lookup, thousands of rows</li><li>Automatic address normalization</li><li>Clean data export for accounting</li><li>Reconcile &amp; flag for review</li><li>Priority support</li></ul>
-        <a class="tf-btn tf-btn-primary" href="#contact">Book a demo</a>
+        <span class="pop" data-i18n="lp_prPop">Popular</span>
+        <h3 data-i18n="lp_prBiz">Business</h3>
+        <p class="pr-sub" data-i18n="lp_prBizS">Bulk Excel processing for ops teams.</p>
+        <ul><li data-i18n="lp_prBiz1">Batch lookup, thousands of rows</li><li data-i18n="lp_prBiz2">Automatic address normalization</li><li data-i18n="lp_prBiz3">Clean data export for accounting</li><li data-i18n="lp_prBiz4">Reconcile &amp; flag for review</li><li data-i18n="lp_prBiz5">Priority support</li></ul>
+        <a class="tf-btn tf-btn-primary" href="#contact" data-i18n="lp_prBizC">Book a demo</a>
       </div>
       <div class="tf-price">
-        <h3>Enterprise</h3>
-        <p class="pr-sub">API, dedicated dashboard, integration.</p>
-        <ul><li>API integration: ERP / WMS / waybill</li><li>Dedicated dashboard &amp; workflow</li><li>Unlimited high volume</li><li>SLA &amp; Enterprise Support</li><li>Onboarding consulting</li></ul>
-        <a class="tf-btn tf-btn-outline" href="#contact">Contact sales</a>
+        <h3 data-i18n="lp_prEnt">Enterprise</h3>
+        <p class="pr-sub" data-i18n="lp_prEntS">API, dedicated dashboard, integration.</p>
+        <ul><li data-i18n="lp_prEnt1">API integration: ERP / WMS / waybill</li><li data-i18n="lp_prEnt2">Dedicated dashboard &amp; workflow</li><li data-i18n="lp_prEnt3">Unlimited high volume</li><li data-i18n="lp_prEnt4">SLA &amp; Enterprise Support</li><li data-i18n="lp_prEnt5">Onboarding consulting</li></ul>
+        <a class="tf-btn tf-btn-outline" href="#contact" data-i18n="lp_prEntC">Contact sales</a>
       </div>
     </div>
   </div>
@@ -1194,11 +1194,11 @@
 <section class="tf-final" id="contact">
   <div class="tf-wrap">
     <div class="tf-final-box">
-      <h2>Turn your logistics Excel into an automated workflow</h2>
-      <p>Send us a sample file and we'll process it for you, or book a demo with the Transflash team.</p>
+      <h2 data-i18n="lp_fnH">Turn your logistics Excel into an automated workflow</h2>
+      <p data-i18n="lp_fnS">Send us a sample file and we'll process it for you, or book a demo with the Transflash team.</p>
       <div class="tf-final-cta">
-        <a class="tf-btn tf-btn-outline" href="mailto:support@transflash.app?subject=Book a demo — Transflash Logistics">Book a demo</a>
-        <a class="tf-btn tf-btn-ghost" href="mailto:support@transflash.app?subject=Sample file to test">Send a sample file</a>
+        <a class="tf-btn tf-btn-outline" href="mailto:support@transflash.app?subject=Book a demo — Transflash Logistics" data-i18n="lp_fnB1">Book a demo</a>
+        <a class="tf-btn tf-btn-ghost" href="mailto:support@transflash.app?subject=Sample file to test" data-i18n="lp_fnB2">Send a sample file</a>
       </div>
     </div>
   </div>
@@ -1209,35 +1209,35 @@
   <div class="tf-wrap">
     <div class="fgrid">
       <div class="fbrand">
-        <b>Transflash Logistics</b>
-        <p>Logistics data automation for Global ↔ Korea: postal codes, address normalization, customs, Excel &amp; API.</p>
+        <b>TransFlash Logistics</b>
+        <p data-i18n="lp_ftP">Logistics data automation for Global ↔ Korea: postal codes, address normalization, customs, Excel &amp; API.</p>
         <p style="margin-top:6px"><a href="mailto:support@transflash.app" style="display:inline">support@transflash.app</a></p>
       </div>
       <div>
-        <h4>Product</h4>
-        <a href="#solution">Solutions</a>
-        <a href="#modules">Modules</a>
-        <a href="#workflow">Workflow</a>
-        <a href="#pricing">Pricing</a>
-        <a href="/demo">Live Demo</a>
+        <h4 data-i18n="lp_ftProd">Product</h4>
+        <a href="#solution" data-i18n="lp_navSol">Solutions</a>
+        <a href="#modules" data-i18n="lp_navMod">Modules</a>
+        <a href="#workflow" data-i18n="lp_navWf">Workflow</a>
+        <a href="#pricing" data-i18n="lp_navPr">Pricing</a>
+        <a href="/demo" data-i18n="lp_navDemo">Live Demo</a>
       </div>
       <div>
-        <h4>Tools</h4>
-        <a href="/">Postal code lookup</a>
-        <a href="/tracking">Customs tracking</a>
-        <a href="/tools">Utilities</a>
-        <a href="/demo">Live demo</a>
+        <h4 data-i18n="lp_ftTools">Tools</h4>
+        <a href="/" data-i18n="lp_ftPostal">Postal code lookup</a>
+        <a href="/tracking" data-i18n="lp_ftCustoms">Customs tracking</a>
+        <a href="/tools" data-i18n="lp_ftUtil">Utilities</a>
+        <a href="/demo" data-i18n="lp_navDemo">Live Demo</a>
       </div>
       <div>
-        <h4>Resources</h4>
-        <a href="/customs-guide">Customs guide</a>
-        <a href="/import-guide">Import/Export process</a>
-        <a href="/about">About</a>
-        <a href="mailto:support@transflash.app">Contact</a>
+        <h4 data-i18n="lp_ftRes">Resources</h4>
+        <a href="/customs-guide" data-i18n="lp_ftGuide">Customs guide</a>
+        <a href="/import-guide" data-i18n="lp_ftImport">Import/Export process</a>
+        <a href="/about" data-i18n="lp_ftAbout">About</a>
+        <a href="mailto:support@transflash.app" data-i18n="lp_ftContact">Contact</a>
       </div>
     </div>
     <div class="tf-fbottom">
-      <span>© 2026 Transflash · Global ↔ Korea logistics</span>
+      <span data-i18n="lp_ftBottom">© 2026 Transflash · Global ↔ Korea logistics</span>
       <span>From manual Excel work to automated logistics data flow</span>
     </div>
   </div>
@@ -1261,6 +1261,45 @@
 const LANGS = {
   vi: {
     brandName: 'Vietnam - Korea Logistics', brandSub: 'Tra Mã Bưu Điện Hàn Quốc',
+    lp_navSol:'Giải pháp', lp_navMod:'Module', lp_navWf:'Quy trình', lp_navPr:'Bảng giá', lp_navDemo:'Demo', lp_navCt:'Liên hệ', lp_try:'Dùng thử',
+    lp_pill:'Tự động hóa dữ liệu logistics bằng AI', lp_h1a:'Tự động hóa', lp_grad:'hàng nghìn đơn logistics', lp_h1b:'cho Global ↔ Korea, mỗi ngày',
+    lp_sub:'Tra mã bưu điện Hàn Quốc, chuẩn hóa địa chỉ, kiểm tra mã thông quan, xử lý Excel hàng loạt và tích hợp dữ liệu vận hành — cho doanh nghiệp logistics.',
+    lp_cta1:'Dùng thử với file Excel', lp_cta2:'Xem demo trực tiếp', lp_tb1:'Dữ liệu Chính phủ Hàn Quốc', lp_tb2:'Thời gian thực', lp_tb3:'Sẵn sàng Excel / API', lp_tb4:'EN · KO · VI',
+    lp_painEye:'Vấn đề vận hành', lp_painH:'Đội logistics mất quá nhiều thời gian cho dữ liệu thủ công', lp_painL:'Mỗi ngày hàng nghìn dòng địa chỉ, mã bưu điện và vận đơn được xử lý bằng tay — chậm, dễ sai và khó kiểm soát.',
+    lp_p1t:'Copy-paste địa chỉ từng dòng', lp_p1p:'Nhân viên gõ lại từng địa chỉ Hàn Quốc vào hệ thống — tốn hàng giờ mỗi ngày cho việc lặp lại.',
+    lp_p2t:'Sai mã bưu điện làm chậm giao hàng', lp_p2p:'Một mã sai khiến đơn bị trả về, giao trễ và phát sinh chi phí — ảnh hưởng trực tiếp tới khách hàng.',
+    lp_p3t:'Kiểm tra mã thông quan thủ công', lp_p3p:'Tra tiến trình thông quan từng vận đơn trên web hải quan — chậm và không theo dõi hàng loạt được.',
+    lp_p4t:'File Excel lớn dễ lỗi', lp_p4p:'File nghìn dòng dễ lệch cột, thiếu dữ liệu, sai định dạng — không có quy trình đối soát tin cậy.',
+    lp_solEye:'Giải pháp', lp_solH:'Một nền tảng để chuẩn hóa toàn bộ dữ liệu logistics', lp_solL:'Từ Excel thủ công đến luồng dữ liệu tự động — xử lý, đối soát và xuất dữ liệu sạch chỉ trong vài phút.',
+    lp_s1t:'Tra mã bưu điện hàng loạt', lp_s1p:'Tra hàng nghìn địa chỉ Hàn cùng lúc, trả mã 5 số chuẩn từ dữ liệu Chính phủ.',
+    lp_s2t:'Chuẩn hóa địa chỉ Hàn Quốc', lp_s2p:'Tự nhận diện địa chỉ đường (도로명) và địa chỉ cũ (지번), chuẩn hóa về định dạng giao hàng chính xác.',
+    lp_s3t:'Tra cứu thông quan', lp_s3p:'Theo dõi tiến trình thông quan theo vận đơn (HAWB) từ Hải quan Hàn Quốc — kiểm tra hàng loạt.',
+    lp_s4t:'Xử lý Excel nghìn dòng', lp_s4p:'Upload file vận đơn, tự dò cột, đối soát và điền mã — xử lý nghìn dòng trong vài phút.',
+    lp_s5t:'Xuất dữ liệu sạch cho kế toán', lp_s5p:'Kết quả chuẩn hóa xuất ra Excel/CSV gọn gàng — sẵn sàng cho công nợ, hóa đơn, đối soát.',
+    lp_s6t:'Tích hợp API với ERP / WMS', lp_s6p:'Kết nối Transflash vào hệ thống có sẵn qua API — tự động hóa luồng dữ liệu đầu-cuối.',
+    lp_wfEye:'Quy trình', lp_wfH:'Từ file Excel đến dữ liệu tự động trong 4 bước', lp_wfL:'Xây dựng cho vận hành khối lượng lớn — đơn giản, nhanh, kiểm soát được.',
+    lp_w1t:'Upload Excel', lp_w1p:'Tải lên file vận đơn / danh sách địa chỉ — .xlsx, .xls, .csv.', lp_w2t:'AI kiểm tra dữ liệu', lp_w2p:'Tự dò cột địa chỉ, gắn cờ dòng thiếu/sai để xem lại.',
+    lp_w3t:'Chuẩn hóa & đối soát', lp_w3p:'Trả mã bưu điện, chuẩn hóa địa chỉ, kiểm tra thông quan, đối soát.', lp_w4t:'Export / API', lp_w4p:'Xuất file sạch hoặc đẩy dữ liệu thẳng vào hệ thống qua API.',
+    lp_modEye:'Product Modules', lp_modH:'Các module nghiệp vụ trong một nền tảng', lp_modL:'Dùng riêng từng module hoặc kết hợp thành quy trình vận hành hoàn chỉnh.',
+    lp_m1t:'Tra mã bưu điện hàng loạt', lp_m1p:'Nghìn địa chỉ → mã 5 số chuẩn, theo từng dòng, trạng thái rõ ràng.',
+    lp_m2t:'Chuẩn hóa địa chỉ', lp_m2p:'Nhận diện 도로명 / 지번, làm sạch và chuẩn hóa địa chỉ giao hàng.',
+    lp_m3t:'Kiểm tra mã thông quan', lp_m3p:'Theo dõi tiến trình thông quan theo HAWB từ Hải quan Hàn Quốc.',
+    lp_m4t:'Tự động hóa Excel vận đơn', lp_m4p:'Upload, dò cột, đối soát, điền mã và xuất hàng loạt.',
+    lp_m5t:'Xuất dữ liệu kế toán', lp_m5p:'Dữ liệu sạch cho công nợ, hóa đơn, đối soát — đúng định dạng.',
+    lp_m6t:'Tích hợp API', lp_m6p:'Kết nối ERP / WMS / hệ thống vận đơn qua REST API, có Enterprise Support.',
+    lp_tryEye:'Dùng thử ngay', lp_tryH:'Trải nghiệm trực tiếp với dữ liệu thật của bạn', lp_tryL:'Tra một địa chỉ hoặc upload file Excel — xem hệ thống chuẩn hóa và trả mã bưu điện ngay lập tức.', lp_trySee:'Xem demo đầy đủ →',
+    lp_micro:'Xây dựng cho vận hành khối lượng lớn · Xử lý nghìn dòng trong vài phút', lp_openDemo:'Mở demo đầy đủ →',
+    lp_custEye:'Dành cho ai', lp_custH:'Cho vận hành khối lượng lớn', lp_custL:'Thiết kế cho logistics Global ↔ Korea — phù hợp mọi mô hình đơn hàng xuyên biên giới.',
+    lp_ch1:'Đơn vị vận chuyển Global ↔ Korea', lp_ch2:'Forwarder', lp_ch3:'Kho fulfillment', lp_ch4:'Dịch vụ mua hộ Hàn Quốc', lp_ch5:'TMĐT xuyên biên giới', lp_ch6:'Nghìn đơn / tháng',
+    lp_trEye:'Đáng tin cậy', lp_trH:'Nền tảng dữ liệu logistics nghiêm túc', lp_trL:'Xây dựng cho vận hành thật, khối lượng lớn, bảo mật và tích hợp.',
+    lp_tr1b:'Global ↔ Korea', lp_tr1s:'Thiết kế riêng cho logistics Hàn Quốc', lp_tr2b:'Bảo mật', lp_tr2s:'Xử lý dữ liệu an toàn', lp_tr3b:'Sẵn sàng Excel / API', lp_tr3s:'Tích hợp linh hoạt với hệ thống', lp_tr4b:'Enterprise support', lp_tr4s:'Hỗ trợ chuyên trách cho doanh nghiệp', lp_tr5b:'Transflash / SotaTek', lp_tr5s:'Phát triển bởi hệ sinh thái công nghệ',
+    lp_prEye:'Bảng giá', lp_prH:'Chọn quy mô phù hợp với vận hành của bạn', lp_prL:'Từ tra cứu cơ bản đến tích hợp toàn hệ thống — mở rộng theo nhu cầu.',
+    lp_prFree:'Free Tool', lp_prFreeS:'Tra cứu cơ bản cho cá nhân & dùng thử.', lp_prFree1:'Tra mã bưu điện thủ công', lp_prFree2:'Kiểm tra mã thông quan', lp_prFree3:'Upload Excel giới hạn', lp_prFree4:'EN · KO · VI', lp_prFreeC:'Dùng thử ngay',
+    lp_prPop:'Phổ biến', lp_prBiz:'Business', lp_prBizS:'Xử lý Excel hàng loạt cho đội vận hành.', lp_prBiz1:'Batch lookup nghìn dòng', lp_prBiz2:'Chuẩn hóa địa chỉ tự động', lp_prBiz3:'Xuất dữ liệu sạch cho kế toán', lp_prBiz4:'Đối soát & gắn cờ cần xem lại', lp_prBiz5:'Hỗ trợ ưu tiên', lp_prBizC:'Đặt lịch demo',
+    lp_prEnt:'Enterprise', lp_prEntS:'API, dashboard riêng, tích hợp hệ thống.', lp_prEnt1:'API tích hợp ERP / WMS / vận đơn', lp_prEnt2:'Dashboard & quy trình riêng', lp_prEnt3:'Khối lượng lớn không giới hạn', lp_prEnt4:'SLA & Enterprise Support', lp_prEnt5:'Tư vấn triển khai', lp_prEntC:'Liên hệ tư vấn',
+    lp_fnH:'Biến file Excel logistics của bạn thành quy trình tự động', lp_fnS:'Gửi file mẫu để chúng tôi xử lý thử, hoặc đặt lịch demo cùng đội ngũ Transflash.', lp_fnB1:'Đặt lịch demo', lp_fnB2:'Gửi file mẫu để test',
+    lp_ftP:'Tự động hóa dữ liệu logistics cho Global ↔ Korea: mã bưu điện, chuẩn hóa địa chỉ, thông quan, Excel & API.', lp_ftProd:'Sản phẩm', lp_ftTools:'Công cụ', lp_ftRes:'Tài nguyên',
+    lp_ftPostal:'Tra mã bưu điện', lp_ftCustoms:'Tra thông quan', lp_ftUtil:'Tiện ích', lp_ftGuide:'Hướng dẫn thông quan', lp_ftImport:'Quy trình XNK', lp_ftAbout:'Giới thiệu', lp_ftContact:'Liên hệ', lp_ftBottom:'© 2026 Transflash · Logistics Global ↔ Korea',
     langVI: 'Tiếng Việt', langEN: 'Tiếng Anh', langKO: 'Tiếng Hàn',
     apiKeyLabel: 'Juso API Key (도로명주소)', getKey: 'Lấy key miễn phí →',
     editHint: 'Nhấp đúp vào địa chỉ chưa tìm thấy để sửa rồi tra lại.',
@@ -1352,6 +1391,45 @@ const LANGS = {
   },
   en: {
     brandName: 'Vietnam - Korea Logistics', brandSub: 'Korean Postal Code Lookup',
+    lp_navSol:'Solutions', lp_navMod:'Modules', lp_navWf:'Workflow', lp_navPr:'Pricing', lp_navDemo:'Live Demo', lp_navCt:'Contact', lp_try:'Try it',
+    lp_pill:'AI-powered logistics data automation', lp_h1a:'Automate', lp_grad:'thousands of logistics orders', lp_h1b:'for Global ↔ Korea, every day',
+    lp_sub:'Korean postal code lookup, address normalization, customs clearance checks, bulk Excel processing and operational data integration — for logistics businesses.',
+    lp_cta1:'Try it with your Excel', lp_cta2:'View live demo', lp_tb1:'Korea Government data', lp_tb2:'Real-time', lp_tb3:'Excel / API ready', lp_tb4:'EN · KO · VI',
+    lp_painEye:'The operations problem', lp_painH:'Logistics teams lose too much time on manual data', lp_painL:'Every day, thousands of address, postal-code and waybill rows are handled by hand — slow, error-prone and hard to control.',
+    lp_p1t:'Copy-pasting addresses row by row', lp_p1p:'Staff retype every Korean address into the system — hours wasted each day on repetitive work.',
+    lp_p2t:'Wrong postal codes delay delivery', lp_p2p:'A single wrong postal code means returned parcels, late delivery and extra cost — hitting customers directly.',
+    lp_p3t:'Manual customs code checks', lp_p3p:'Looking up clearance status one waybill at a time on the customs site — slow and impossible to track in bulk.',
+    lp_p4t:'Large Excel files break easily', lp_p4p:'Thousand-row files drift columns, miss data and lose formatting — with no reliable reconciliation process.',
+    lp_solEye:'The solution', lp_solH:'One platform to standardize all your logistics data', lp_solL:'From manual Excel work to automated logistics data flow — process, reconcile and export clean data in minutes.',
+    lp_s1t:'Batch postal code lookup', lp_s1p:'Look up thousands of Korean addresses at once, returning standard 5-digit codes from government data.',
+    lp_s2t:'Korean address normalization', lp_s2p:'Auto-detect road-name (도로명) and lot-number (지번) addresses, normalized to a precise delivery format.',
+    lp_s3t:'Customs & clearance tracking', lp_s3p:'Track clearance progress by waybill (HAWB) from Korea Customs — checked in bulk.',
+    lp_s4t:'Thousand-row Excel processing', lp_s4p:'Upload waybill files, auto-map columns, reconcile and fill codes — process thousands of rows in minutes, not hours.',
+    lp_s5t:'Clean data export for accounting', lp_s5p:'Normalized results export to tidy Excel/CSV — ready for receivables, invoicing and reconciliation.',
+    lp_s6t:'API integration with ERP / WMS', lp_s6p:'Connect Transflash to your existing systems via API — automate operational data flow end to end.',
+    lp_wfEye:'Workflow', lp_wfH:'From Excel file to automated data in 4 steps', lp_wfL:'Built for high-volume logistics operations — simple, fast, controllable.',
+    lp_w1t:'Upload Excel', lp_w1p:'Upload your waybill / address list — .xlsx, .xls, .csv.', lp_w2t:'AI checks the data', lp_w2p:'Auto-detect address columns, flag missing/invalid rows for review.',
+    lp_w3t:'Normalize & reconcile', lp_w3p:'Return postal codes, normalize addresses, check customs, reconcile.', lp_w4t:'Export / API', lp_w4p:'Export a clean file or push data straight into your system via API.',
+    lp_modEye:'Product Modules', lp_modH:'Business modules in a single platform', lp_modL:'Use each module on its own, or combine them into a complete operational workflow.',
+    lp_m1t:'Bulk postal code lookup', lp_m1p:'Thousands of addresses → standard 5-digit codes, row by row, with clear status.',
+    lp_m2t:'Address normalization', lp_m2p:'Detect 도로명 / 지번, clean and normalize delivery addresses.',
+    lp_m3t:'Customs code check', lp_m3p:'Track clearance progress by HAWB from Korea Customs.',
+    lp_m4t:'Waybill Excel automation', lp_m4p:'Upload, map columns, reconcile, fill codes and export in bulk.',
+    lp_m5t:'Accounting data export', lp_m5p:'Clean data for receivables, invoicing and reconciliation — correctly formatted.',
+    lp_m6t:'API integration', lp_m6p:'Connect ERP / WMS / waybill systems via REST API, with Enterprise Support.',
+    lp_tryEye:'Try it now', lp_tryH:'Experience it live with your real data', lp_tryL:'Look up a single address or upload an Excel file — watch the system normalize and return postal codes instantly.', lp_trySee:'See the full demo →',
+    lp_micro:'Built for high-volume logistics operations · Process thousands of rows in minutes, not hours', lp_openDemo:'Open full live demo →',
+    lp_custEye:"Who it's for", lp_custH:'Built for high-volume operations', lp_custL:'Designed for Global ↔ Korea logistics — fits any cross-border order operation.',
+    lp_ch1:'Global ↔ Korea carriers', lp_ch2:'Forwarders', lp_ch3:'Fulfillment centers', lp_ch4:'Korea buy-for-me services', lp_ch5:'Cross-border e-commerce', lp_ch6:'Thousands of orders / month',
+    lp_trEye:'Trusted', lp_trH:'A serious logistics data platform', lp_trL:'Built for real operations, large volumes, security and integration.',
+    lp_tr1b:'Global ↔ Korea', lp_tr1s:'Purpose-built for Korea logistics', lp_tr2b:'Secure', lp_tr2s:'Safe, secure data processing', lp_tr3b:'Excel / API ready', lp_tr3s:'Flexible system integration', lp_tr4b:'Enterprise support', lp_tr4s:'Dedicated support for businesses', lp_tr5b:'Transflash / SotaTek', lp_tr5s:'Backed by a technology ecosystem',
+    lp_prEye:'Pricing', lp_prH:'Pick the scale that fits your operation', lp_prL:'From basic lookups to full system integration — grows with your needs.',
+    lp_prFree:'Free Tool', lp_prFreeS:'Basic lookups for individuals & trials.', lp_prFree1:'Manual postal code lookup', lp_prFree2:'Customs code check', lp_prFree3:'Limited Excel upload', lp_prFree4:'EN · KO · VI', lp_prFreeC:'Try it now',
+    lp_prPop:'Popular', lp_prBiz:'Business', lp_prBizS:'Bulk Excel processing for ops teams.', lp_prBiz1:'Batch lookup, thousands of rows', lp_prBiz2:'Automatic address normalization', lp_prBiz3:'Clean data export for accounting', lp_prBiz4:'Reconcile & flag for review', lp_prBiz5:'Priority support', lp_prBizC:'Book a demo',
+    lp_prEnt:'Enterprise', lp_prEntS:'API, dedicated dashboard, integration.', lp_prEnt1:'API integration: ERP / WMS / waybill', lp_prEnt2:'Dedicated dashboard & workflow', lp_prEnt3:'Unlimited high volume', lp_prEnt4:'SLA & Enterprise Support', lp_prEnt5:'Onboarding consulting', lp_prEntC:'Contact sales',
+    lp_fnH:'Turn your logistics Excel into an automated workflow', lp_fnS:"Send us a sample file and we'll process it for you, or book a demo with the Transflash team.", lp_fnB1:'Book a demo', lp_fnB2:'Send a sample file',
+    lp_ftP:'Logistics data automation for Global ↔ Korea: postal codes, address normalization, customs, Excel & API.', lp_ftProd:'Product', lp_ftTools:'Tools', lp_ftRes:'Resources',
+    lp_ftPostal:'Postal code lookup', lp_ftCustoms:'Customs tracking', lp_ftUtil:'Utilities', lp_ftGuide:'Customs guide', lp_ftImport:'Import/Export process', lp_ftAbout:'About', lp_ftContact:'Contact', lp_ftBottom:'© 2026 Transflash · Global ↔ Korea logistics',
     langVI: 'Vietnamese', langEN: 'English', langKO: 'Korean',
     apiKeyLabel: 'Juso API Key (도로명주소)', getKey: 'Get free key →',
     editHint: 'Double-click an unmatched address to edit and retry.',
@@ -1443,6 +1521,45 @@ const LANGS = {
   },
   ko: {
     brandName: 'Vietnam - Korea Logistics', brandSub: '한국 우편번호 조회',
+    lp_navSol:'솔루션', lp_navMod:'모듈', lp_navWf:'워크플로우', lp_navPr:'요금', lp_navDemo:'라이브 데모', lp_navCt:'문의', lp_try:'체험',
+    lp_pill:'AI 기반 물류 데이터 자동화', lp_h1a:'자동화', lp_grad:'수천 건의 물류 주문을', lp_h1b:'Global ↔ Korea, 매일',
+    lp_sub:'한국 우편번호 조회, 주소 정규화, 통관 확인, 대량 엑셀 처리, 운영 데이터 통합 — 물류 기업을 위한 솔루션.',
+    lp_cta1:'엑셀로 체험하기', lp_cta2:'라이브 데모 보기', lp_tb1:'한국 정부 데이터', lp_tb2:'실시간', lp_tb3:'Excel / API 지원', lp_tb4:'EN · KO · VI',
+    lp_painEye:'운영의 문제', lp_painH:'물류팀은 수작업 데이터에 너무 많은 시간을 씁니다', lp_painL:'매일 수천 건의 주소·우편번호·운송장이 수작업으로 처리됩니다 — 느리고, 오류가 많고, 통제가 어렵습니다.',
+    lp_p1t:'주소를 한 줄씩 복사-붙여넣기', lp_p1p:'직원이 모든 한국 주소를 시스템에 다시 입력합니다 — 매일 반복 작업에 많은 시간이 낭비됩니다.',
+    lp_p2t:'잘못된 우편번호로 배송 지연', lp_p2p:'우편번호 하나가 틀리면 반송, 배송 지연, 추가 비용이 발생해 고객에게 직접 영향을 줍니다.',
+    lp_p3t:'수작업 통관 확인', lp_p3p:'관세청 사이트에서 운송장 하나씩 통관 상태를 조회 — 느리고 대량 추적이 불가능합니다.',
+    lp_p4t:'대용량 엑셀은 쉽게 깨집니다', lp_p4p:'수천 행 파일은 열이 어긋나고 데이터가 누락되며 서식이 깨집니다 — 신뢰할 수 있는 대조 프로세스가 없습니다.',
+    lp_solEye:'솔루션', lp_solH:'모든 물류 데이터를 표준화하는 하나의 플랫폼', lp_solL:'수작업 엑셀에서 자동화된 데이터 흐름으로 — 몇 분 만에 처리, 대조, 깨끗한 데이터 내보내기.',
+    lp_s1t:'우편번호 일괄 조회', lp_s1p:'수천 개의 한국 주소를 한 번에 조회해 정부 데이터 기반 5자리 표준 코드를 반환합니다.',
+    lp_s2t:'한국 주소 정규화', lp_s2p:'도로명·지번 주소를 자동 인식해 정확한 배송 형식으로 정규화합니다.',
+    lp_s3t:'통관 추적', lp_s3p:'관세청에서 운송장(HAWB)으로 통관 진행을 추적 — 대량 확인.',
+    lp_s4t:'수천 행 엑셀 처리', lp_s4p:'운송장 파일 업로드, 열 자동 매핑, 대조 및 코드 채우기 — 수천 행을 몇 분 만에.',
+    lp_s5t:'회계용 깨끗한 데이터 내보내기', lp_s5p:'정규화 결과를 깔끔한 Excel/CSV로 내보내 채권·청구·대조에 바로 사용.',
+    lp_s6t:'ERP / WMS API 통합', lp_s6p:'Transflash를 기존 시스템에 API로 연결 — 운영 데이터 흐름을 엔드투엔드 자동화.',
+    lp_wfEye:'워크플로우', lp_wfH:'엑셀 파일에서 자동화 데이터까지 4단계', lp_wfL:'대량 물류 운영을 위해 설계 — 간단하고 빠르며 통제 가능합니다.',
+    lp_w1t:'엑셀 업로드', lp_w1p:'운송장 / 주소 목록 업로드 — .xlsx, .xls, .csv.', lp_w2t:'AI가 데이터 검사', lp_w2p:'주소 열 자동 감지, 누락·오류 행을 검토용으로 표시.',
+    lp_w3t:'정규화 & 대조', lp_w3p:'우편번호 반환, 주소 정규화, 통관 확인, 대조.', lp_w4t:'내보내기 / API', lp_w4p:'깨끗한 파일을 내보내거나 API로 시스템에 바로 전송.',
+    lp_modEye:'Product Modules', lp_modH:'하나의 플랫폼 속 비즈니스 모듈', lp_modL:'각 모듈을 단독으로 쓰거나 결합해 완전한 운영 워크플로우를 구성하세요.',
+    lp_m1t:'우편번호 일괄 조회', lp_m1p:'수천 개 주소 → 5자리 표준 코드, 행별 상태 표시.',
+    lp_m2t:'주소 정규화', lp_m2p:'도로명 / 지번 감지, 배송 주소 정리 및 정규화.',
+    lp_m3t:'통관 코드 확인', lp_m3p:'관세청에서 HAWB로 통관 진행 추적.',
+    lp_m4t:'운송장 엑셀 자동화', lp_m4p:'업로드, 열 매핑, 대조, 코드 채우기, 일괄 내보내기.',
+    lp_m5t:'회계 데이터 내보내기', lp_m5p:'채권·청구·대조용 깨끗한 데이터 — 올바른 형식.',
+    lp_m6t:'API 통합', lp_m6p:'ERP / WMS / 운송장 시스템을 REST API로 연결, Enterprise Support.',
+    lp_tryEye:'지금 체험', lp_tryH:'실제 데이터로 직접 체험하세요', lp_tryL:'주소 한 건을 조회하거나 엑셀을 업로드하세요 — 시스템이 즉시 정규화하고 우편번호를 반환합니다.', lp_trySee:'전체 데모 보기 →',
+    lp_micro:'대량 물류 운영을 위해 설계 · 수천 행을 몇 분 만에 처리', lp_openDemo:'전체 라이브 데모 열기 →',
+    lp_custEye:'대상 고객', lp_custH:'대량 운영을 위해 설계', lp_custL:'Global ↔ Korea 물류를 위해 설계 — 모든 국경 간 주문 운영에 적합.',
+    lp_ch1:'Global ↔ Korea 운송사', lp_ch2:'포워더', lp_ch3:'풀필먼트 센터', lp_ch4:'한국 구매대행', lp_ch5:'국경 간 이커머스', lp_ch6:'월 수천 건 주문',
+    lp_trEye:'신뢰', lp_trH:'진지한 물류 데이터 플랫폼', lp_trL:'실제 운영, 대용량, 보안, 통합을 위해 구축.',
+    lp_tr1b:'Global ↔ Korea', lp_tr1s:'한국 물류를 위한 전용 설계', lp_tr2b:'보안', lp_tr2s:'안전한 데이터 처리', lp_tr3b:'Excel / API 지원', lp_tr3s:'유연한 시스템 통합', lp_tr4b:'Enterprise support', lp_tr4s:'기업 전담 지원', lp_tr5b:'Transflash / SotaTek', lp_tr5s:'기술 생태계 기반',
+    lp_prEye:'요금', lp_prH:'운영 규모에 맞는 플랜을 선택하세요', lp_prL:'기본 조회부터 전체 시스템 통합까지 — 필요에 따라 확장.',
+    lp_prFree:'Free Tool', lp_prFreeS:'개인 및 체험을 위한 기본 조회.', lp_prFree1:'수동 우편번호 조회', lp_prFree2:'통관 코드 확인', lp_prFree3:'제한된 엑셀 업로드', lp_prFree4:'EN · KO · VI', lp_prFreeC:'지금 체험',
+    lp_prPop:'인기', lp_prBiz:'Business', lp_prBizS:'운영팀을 위한 대량 엑셀 처리.', lp_prBiz1:'수천 행 일괄 조회', lp_prBiz2:'자동 주소 정규화', lp_prBiz3:'회계용 깨끗한 데이터 내보내기', lp_prBiz4:'대조 & 검토 표시', lp_prBiz5:'우선 지원', lp_prBizC:'데모 예약',
+    lp_prEnt:'Enterprise', lp_prEntS:'API, 전용 대시보드, 통합.', lp_prEnt1:'API 통합: ERP / WMS / 운송장', lp_prEnt2:'전용 대시보드 & 워크플로우', lp_prEnt3:'무제한 대용량', lp_prEnt4:'SLA & Enterprise Support', lp_prEnt5:'온보딩 컨설팅', lp_prEntC:'영업 문의',
+    lp_fnH:'물류 엑셀을 자동화 워크플로우로', lp_fnS:'샘플 파일을 보내주시면 처리해 드리거나, Transflash 팀과 데모를 예약하세요.', lp_fnB1:'데모 예약', lp_fnB2:'샘플 파일 보내기',
+    lp_ftP:'Global ↔ Korea 물류 데이터 자동화: 우편번호, 주소 정규화, 통관, Excel & API.', lp_ftProd:'제품', lp_ftTools:'도구', lp_ftRes:'리소스',
+    lp_ftPostal:'우편번호 조회', lp_ftCustoms:'통관 추적', lp_ftUtil:'유틸리티', lp_ftGuide:'통관 가이드', lp_ftImport:'수출입 프로세스', lp_ftAbout:'소개', lp_ftContact:'문의', lp_ftBottom:'© 2026 Transflash · Global ↔ Korea 물류',
     langVI: '베트남어', langEN: '영어', langKO: '한국어',
     apiKeyLabel: 'Juso API Key (도로명주소)', getKey: '무료 키 발급 →',
     editHint: '찾지 못한 주소를 더블클릭하여 수정 후 다시 조회하세요.',

@@ -21,6 +21,13 @@ usersEnv.split(',').forEach(pair => {
   if (idx > 0) USERS[pair.slice(0, idx).trim()] = pair.slice(idx + 1).trim();
 });
 
+// Nhóm account được phép vào VC24 Global (kế toán & công nợ). Thêm/bớt qua env
+// VC24_USERS="vhpro,vc24a,vc24b,vc24c". 3 account ngang quyền — mọi thao tác đều ghi log kèm tên.
+const VC24_USERS = new Set(
+  (process.env.VC24_USERS || 'vhpro,vc24a,vc24b,vc24c').split(',').map(s => s.trim()).filter(Boolean)
+);
+function isVC24(user) { return !!user && VC24_USERS.has(user); }
+
 const JWT_SECRET = process.env.SESSION_SECRET || 'vh-logistics-change-this-secret';
 const COOKIE = 'vh_token';
 // Để trống = chỉ dùng trên domain hiện tại. Đặt '.transflash.app' để dùng CHUNG đăng nhập
@@ -389,7 +396,7 @@ app.get('/api/config', async (req, res) => {
     canUpload: true, isGuest: false, used,
     redis: useRedis,
     contact,
-    hub: USER_HUBS[username] || null,
+    hub: USER_HUBS[username] || (isVC24(username) ? { url: '/vc24global-main', label: '🏢 VC24 Global' } : null),
   });
 });
 
@@ -503,24 +510,24 @@ app.get('/tracking', (req, res) => {
 // ── Trang riêng theo công ty — mỗi công ty 1 account + 1 file để tuỳ biến ────
 // VC24 Global: chỉ account 'vhpro' mới vào được. Bản sao của /tracking để sau
 // này sửa format Excel / cách xử lý riêng mà không ảnh hưởng trang chung.
-// Trung tâm điều khiển VC24 (hub) — chỉ account 'vhpro'
+// Trung tâm điều khiển VC24 (hub) — nhóm account VC24
 app.get('/vc24global-main', requireAuth, (req, res) => {
-  if (userFromReq(req) !== 'vhpro') return res.redirect('/');
+  if (!isVC24(userFromReq(req))) return res.redirect('/');
   sendTpl(res, 'vc24global-main.html');
 });
 app.get('/vc24global', requireAuth, (req, res) => {
-  if (userFromReq(req) !== 'vhpro') return res.redirect('/');
+  if (!isVC24(userFromReq(req))) return res.redirect('/');
   sendTpl(res, 'vc24global.html');
 });
-// Kế toán & công nợ VC24 Global — chỉ account 'vhpro'
+// Kế toán & công nợ VC24 Global — nhóm account VC24
 app.get('/vc24/ke-toan', requireAuth, (req, res) => {
-  if (userFromReq(req) !== 'vhpro') return res.redirect('/');
+  if (!isVC24(userFromReq(req))) return res.redirect('/');
   sendTpl(res, 'ketoan.html');
 });
 
 // ── API lưu trữ dữ liệu kế toán VC24 (Redis) — chỉ account 'vhpro' ───────────
 function requireVC24(req, res, next) {
-  if (userFromReq(req) !== 'vhpro') return res.status(403).json({ ok: false, message: 'forbidden' });
+  if (!isVC24(userFromReq(req))) return res.status(403).json({ ok: false, message: 'forbidden' });
   next();
 }
 const VK = { orders: 'vc24:ketoan:orders', cfg: 'vc24:ketoan:cfg', ledger: 'vc24:ketoan:ledger',
@@ -529,11 +536,11 @@ const VK = { orders: 'vc24:ketoan:orders', cfg: 'vc24:ketoan:cfg', ledger: 'vc24
 function gzPack(o) { try { return 'gz:' + zlib.gzipSync(Buffer.from(JSON.stringify(o), 'utf8')).toString('base64'); } catch { return JSON.stringify(o); } }
 function gzUnpack(s, d) { if (!s) return d; try { const j = (typeof s === 'string' && s.startsWith('gz:')) ? zlib.gunzipSync(Buffer.from(s.slice(3), 'base64')).toString('utf8') : s; return JSON.parse(j); } catch { return d; } }
 // Ghi nhật ký thao tác (bounded)
-async function vcLog(action, detail) {
+async function vcLog(action, detail, user) {
   if (!useRedis) return;
   let log = gzUnpack(await redisGet(VK.log), []); if (!Array.isArray(log)) log = [];
-  log.push({ at: new Date().toISOString(), action: String(action || ''), detail: String(detail || '') });
-  if (log.length > 800) log = log.slice(-800);
+  log.push({ at: new Date().toISOString(), user: String(user || ''), action: String(action || ''), detail: String(detail || '') });
+  if (log.length > 1500) log = log.slice(-1500);
   await redisSet(VK.log, gzPack(log));
 }
 const isPaidPay = p => String(p || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toUpperCase().trim() === 'DA TT';
@@ -579,7 +586,7 @@ app.post('/api/vc24/rates', requireAuth, requireVC24, async (req, res) => {
   all[week] = clean;
   const ok = await redisSet(VK.rates, JSON.stringify(all));
   if (!ok) return res.json({ ok: false, reason: 'save' });
-  await vcLog('rates', `Cài giá VC tuần ${week}: ${Object.entries(clean).map(([k, v]) => k + '=' + v).join(', ') || '(trống)'}`);
+  await vcLog('rates', `Cài giá VC tuần ${week}: ${Object.entries(clean).map(([k, v]) => k + '=' + v).join(', ') || '(trống)'}`, userFromReq(req));
   res.json({ ok: true });
 });
 
@@ -615,7 +622,7 @@ app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   const s1 = await vcSaveOrders(o);
   const s2 = await redisSet(VK.ledger, JSON.stringify(ledger));
   if (!s1 || !s2) return res.json({ ok: false, reason: 'save' });
-  await vcLog('payment', `Thu ₩${amt.toLocaleString('en-US')} của ${cust} (gạch ${marked} đơn)`);
+  await vcLog('payment', `Thu ₩${amt.toLocaleString('en-US')} của ${cust} (gạch ${marked} đơn)`, userFromReq(req));
   res.json({ ok: true, marked, credit });
 });
 
@@ -632,7 +639,7 @@ app.post('/api/vc24/surcharge', requireAuth, requireVC24, async (req, res) => {
   ledger[cust] = led;
   const ok = await redisSet(VK.ledger, JSON.stringify(ledger));
   if (!ok) return res.json({ ok: false, reason: 'save' });
-  await vcLog('surcharge', `Phí phát sinh ${cust}: ₩${led.surcharge.toLocaleString('en-US')} + ${led.surchargeVnd.toLocaleString('en-US')}đ${led.surchargeNote ? ' (' + led.surchargeNote + ')' : ''}`);
+  await vcLog('surcharge', `Phí phát sinh ${cust}: ₩${led.surcharge.toLocaleString('en-US')} + ${led.surchargeVnd.toLocaleString('en-US')}đ${led.surchargeNote ? ' (' + led.surchargeNote + ')' : ''}`, userFromReq(req));
   res.json({ ok: true });
 });
 
@@ -655,7 +662,7 @@ app.post('/api/vc24/payment-edit', requireAuth, requireVC24, async (req, res) =>
   ledger[cust] = led;
   const ok = await redisSet(VK.ledger, JSON.stringify(ledger));
   if (!ok) return res.json({ ok: false, reason: 'save' });
-  await vcLog('payment-edit', `Sửa lịch sử thu ${cust}: ₩${oldAmt.toLocaleString('en-US')}→₩${newAmt.toLocaleString('en-US')} — ${String(reason).slice(0, 120)}`);
+  await vcLog('payment-edit', `Sửa lịch sử thu ${cust}: ₩${oldAmt.toLocaleString('en-US')}→₩${newAmt.toLocaleString('en-US')} — ${String(reason).slice(0, 120)}`, userFromReq(req));
   res.json({ ok: true });
 });
 
@@ -682,7 +689,7 @@ app.post('/api/vc24/payment-delete', requireAuth, requireVC24, async (req, res) 
   const s1 = await vcSaveOrders(o);
   const s2 = await redisSet(VK.ledger, JSON.stringify(ledger));
   if (!s1 || !s2) return res.json({ ok: false, reason: 'save' });
-  await vcLog('payment-delete', `Xóa 1 dòng thu của ${cust}: ₩${(Number(entry.amount) || 0).toLocaleString('en-US')} (bỏ gạch ${keys.size} đơn)`);
+  await vcLog('payment-delete', `Xóa 1 dòng thu của ${cust}: ₩${(Number(entry.amount) || 0).toLocaleString('en-US')} (bỏ gạch ${keys.size} đơn)`, userFromReq(req));
   res.json({ ok: true });
 });
 
@@ -741,7 +748,7 @@ app.post('/api/vc24/commit', requireAuth, requireVC24, async (req, res) => {
   if (idx.length > 60) { for (const d of idx.slice(0, idx.length - 60)) await redisSet(VK.uploads + ':' + d.id, gzPack(null)); idx = idx.slice(-60); }
   await redisSet(VK.uploads, gzPack(idx));
   await redisSet(VK.draft, gzPack(null));
-  await vcLog('commit', `Đẩy lên tổng: +${added} đơn${wk ? ` [${wk}]` : ''}${dup.length ? `, ${dup.length} trùng bỏ qua` : ''} (file ${draft.fileName || '-'})`);
+  await vcLog('commit', `Đẩy lên tổng: +${added} đơn${wk ? ` [${wk}]` : ''}${dup.length ? `, ${dup.length} trùng bỏ qua` : ''} (file ${draft.fileName || '-'})`, userFromReq(req));
   res.json({ ok: true, added, dup, total: o.rows.length });
 });
 
@@ -768,8 +775,11 @@ app.post('/api/vc24/edit', requireAuth, requireVC24, async (req, res) => {
   const o = await vcLoadOrders();
   const row = o.rows.find(r => keyOf(r) === key);
   if (!row) return res.json({ ok: false, message: 'not found' });
+  const old = row[field];
   row[field] = value;
   const saved = await vcSaveOrders(o);
+  if (saved && String(old ?? '') !== String(value ?? ''))
+    await vcLog('edit', `Sửa đơn ${key} · ${field}: "${String(old ?? '')}" → "${String(value ?? '')}"`, userFromReq(req));
   res.json({ ok: saved, reason: saved ? undefined : 'save' });
 });
 
@@ -781,9 +791,15 @@ app.post('/api/vc24/save', requireAuth, requireVC24, async (req, res) => {
   const o = await vcLoadOrders();
   const cur = o.rows.find(r => keyOf(r) === key);
   if (!cur) return res.json({ ok: false, message: 'not found' });
-  for (const f of VC24_EDITABLE) { if (Object.prototype.hasOwnProperty.call(row, f)) cur[f] = row[f]; }
+  const changes = [];
+  for (const f of VC24_EDITABLE) {
+    if (Object.prototype.hasOwnProperty.call(row, f) && String(cur[f] ?? '') !== String(row[f] ?? '')) {
+      changes.push(`${f}: "${String(cur[f] ?? '')}"→"${String(row[f] ?? '')}"`);
+      cur[f] = row[f];
+    }
+  }
   const saved = await vcSaveOrders(o);
-  if (saved) await vcLog('edit', 'Sửa đơn ' + key);
+  if (saved && changes.length) await vcLog('edit', `Sửa đơn ${key} · ${changes.join('; ')}`, userFromReq(req));
   res.json({ ok: saved, reason: saved ? undefined : 'save' });
 });
 
@@ -796,6 +812,7 @@ app.post('/api/vc24/bulkpay', requireAuth, requireVC24, async (req, res) => {
   const o = await vcLoadOrders(); let n = 0;
   o.rows.forEach(r => { if (set.has(keyOf(r))) { r.pay = val; if (paidDate != null) r.paidDate = String(paidDate); n++; } });
   const saved = await vcSaveOrders(o);
+  if (saved && n) await vcLog('bulkpay', `Cập nhật TT ${n} đơn → "${val}"${paidDate ? ` (ngày thu ${paidDate})` : ''}`, userFromReq(req));
   res.json({ ok: saved, updated: n, reason: saved ? undefined : 'save' });
 });
 
@@ -811,7 +828,7 @@ app.post('/api/vc24/delete', requireAuth, requireVC24, async (req, res) => {
   o.rows = o.rows.filter(r => keyOf(r) !== key);
   if (o.rows.length === before) return res.json({ ok: false, reason: 'notfound' });
   const saved = await vcSaveOrders(o);
-  if (saved) await vcLog('delete', 'Xóa đơn ' + key);
+  if (saved) await vcLog('delete', 'Xóa đơn ' + key, userFromReq(req));
   res.json({ ok: saved, reason: saved ? undefined : 'save' });
 });
 
@@ -826,7 +843,7 @@ app.post('/api/vc24/reset', requireAuth, requireVC24, async (req, res) => {
   const s1 = await vcSaveOrders({ rows: [], fileName: '', uploadedAt: null });
   const s2 = await redisSet(VK.ledger, '{}');
   await redisSet(VK.draft, gzPack(null));
-  if (s1 && s2) await vcLog('reset', 'Xóa TOÀN BỘ dữ liệu kế toán');
+  if (s1 && s2) await vcLog('reset', 'Xóa TOÀN BỘ dữ liệu kế toán', userFromReq(req));
   res.json({ ok: s1 && s2 });
 });
 
@@ -849,7 +866,7 @@ app.post('/api/vc24/week-delete', requireAuth, requireVC24, async (req, res) => 
   o.uploadedAt = new Date().toISOString();
   const saved = await vcSaveOrders(o);
   if (!saved) return res.json({ ok: false, reason: 'save' });
-  await vcLog('week-delete', `Xóa dữ liệu tuần ${week}: ${removed} đơn`);
+  await vcLog('week-delete', `Xóa dữ liệu tuần ${week}: ${removed} đơn`, userFromReq(req));
   res.json({ ok: true, removed });
 });
 
@@ -945,7 +962,7 @@ app.get('/demo', (req, res) => {
 
 // ── Trang xử lý file vận đơn — chỉ gói Pro / Enterprise ──────────────────────
 app.get('/shipping', requireAuth, (req, res) => {
-  if (userFromReq(req) !== 'vhpro') return res.redirect('/');   // chỉ account VC24 (vhpro)
+  if (!isVC24(userFromReq(req))) return res.redirect('/');   // nhóm account VC24
   sendPage(res, 'views', 'shipping.html');
 });
 

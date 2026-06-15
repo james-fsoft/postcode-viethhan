@@ -1058,7 +1058,7 @@ async function clearDraft(){
 
 /* ---------- Lịch sử ---------- */
 function fmtDT(s){ try{ return new Date(s).toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }catch(e){ return String(s||''); } }
-function actLabel(a){ return ({commit:'Đẩy lên tổng',payment:'Thu tiền',delete:'Xóa đơn',edit:'Sửa đơn',reset:'Xóa toàn bộ'})[a]||a; }
+function actLabel(a){ return ({commit:'Đẩy lên tổng',payment:'Thu tiền',bulkpay:'Thu nhiều đơn',delete:'Xóa đơn',edit:'Sửa đơn',reset:'Xóa toàn bộ',rates:'Cài giá VC',surcharge:'Phí phát sinh','payment-edit':'Sửa lịch sử thu','payment-delete':'Xóa dòng thu','week-delete':'Xóa tuần'})[a]||a; }
 async function renderHistory(){
   const box=$('histList'); box.innerHTML='<div class="small muted" style="padding:20px">Đang tải lịch sử…</div>';
   let d={uploads:[],log:[]}; try{ d=await fetch('/api/vc24/history').then(r=>r.json()); }catch(e){}
@@ -1071,8 +1071,8 @@ async function renderHistory(){
       <tbody>${ups.map(u=>`<tr><td>${esc(fmtDT(u.at))}</td><td>${esc(u.fileName||'-')}</td><td class="r">${u.added||0}</td><td class="r">${u.total||0}</td><td class="r"><button class="btn sm" onclick="downloadUpload('${escJs(u.id)}','${escJs(u.fileName||'file')}')">⬇ Tải lại file</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Chưa có lần đẩy lên nào.</div>'}
     </div>
     <div class="panel" style="margin-top:16px"><div class="ph"><h2>🧾 Nhật ký thao tác</h2>${log.length?'<button class="btn sm" onclick="downloadLog()">⬇ Tải nhật ký (Excel)</button>':''}</div>
-      ${log.length?`<div class="tbl-wrap" style="max-height:48vh"><table><thead><tr><th>Thời gian</th><th>Thao tác</th><th>Chi tiết</th></tr></thead>
-      <tbody>${log.slice(0,600).map(e=>`<tr><td>${esc(fmtDT(e.at))}</td><td><b>${esc(actLabel(e.action))}</b></td><td>${esc(e.detail)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Chưa có thao tác nào.</div>'}
+      ${log.length?`<div class="tbl-wrap" style="max-height:48vh"><table><thead><tr><th>Thời gian</th><th>Ai</th><th>Thao tác</th><th>Chi tiết</th></tr></thead>
+      <tbody>${log.slice(0,800).map(e=>`<tr><td>${esc(fmtDT(e.at))}</td><td><b>${esc(e.user||'—')}</b></td><td><b>${esc(actLabel(e.action))}</b></td><td>${esc(e.detail)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Chưa có thao tác nào.</div>'}
     </div>`;
 }
 function exportRowsXlsx(rows, base){
@@ -1105,8 +1105,8 @@ async function downloadUpload(id,fname){
 }
 function downloadLog(){
   if(!HIST_LOG.length){ alert('Chưa có nhật ký.'); return; }
-  const aoa=[['Thời gian','Thao tác','Chi tiết']].concat(HIST_LOG.map(e=>[fmtDT(e.at),actLabel(e.action),e.detail]));
-  const ws=XLSX.utils.aoa_to_sheet(aoa); ws['!cols']=[{wch:18},{wch:16},{wch:60}];
+  const aoa=[['Thời gian','Ai','Thao tác','Chi tiết']].concat(HIST_LOG.map(e=>[fmtDT(e.at),e.user||'',actLabel(e.action),e.detail]));
+  const ws=XLSX.utils.aoa_to_sheet(aoa); ws['!cols']=[{wch:18},{wch:14},{wch:16},{wch:60}];
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Nhật ký'); XLSX.writeFile(wb,'VC24_nhat-ky_'+todayISO()+'.xlsx');
 }
 

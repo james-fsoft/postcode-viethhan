@@ -368,7 +368,8 @@ function cleanAddress(addr){
 function hasBuildingNo(addr){
   const s = cleanAddress(addr);
   const m = s.match(/.*[로길가동리]/);
-  const after = m ? s.slice(m[0].length) : s;
+  if (!m) return false;                  // không có token đường/khu (vd "6 so") -> coi như thiếu số nhà
+  const after = s.slice(m[0].length);
   return /\d/.test(after);
 }
 

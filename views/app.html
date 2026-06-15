@@ -1944,8 +1944,9 @@ function cleanAddress(addr) {
 function hasBuildingNo(addr) {
   const s = cleanAddress(addr);
   const m = s.match(/.*[로길가동리]/);   // tới token đường/khu CUỐI CÙNG
-  const after = m ? s.slice(m[0].length) : s;
-  return /\d/.test(after);
+  if (!m) return false;                  // không có token đường/khu (vd "6 so") -> coi như thiếu số nhà
+  const after = s.slice(m[0].length);
+  return /\d/.test(after);               // phải có SỐ NHÀ ngay sau token đường/khu
 }
 
 // Tạo nhiều biến thể địa chỉ, thử từ cụ thể → tổng quát để tăng tỉ lệ tìm thấy

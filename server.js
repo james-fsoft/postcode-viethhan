@@ -878,7 +878,13 @@ app.get('/sitemap.xml', (req, res) => {
     `<xhtml:link rel="alternate" hreflang="ko" href="${SITE}/about?lang=ko"/></url>\n` +
     `  <url><loc>${SITE}/about?lang=en</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
     `  <url><loc>${SITE}/about?lang=ko</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
-    `  <url><loc>${SITE}/</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n` +
+    `  <url><loc>${SITE}/</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority>` +
+    `<xhtml:link rel="alternate" hreflang="en" href="${SITE}/"/>` +
+    `<xhtml:link rel="alternate" hreflang="vi" href="${SITE}/?lang=vi"/>` +
+    `<xhtml:link rel="alternate" hreflang="ko" href="${SITE}/?lang=ko"/>` +
+    `<xhtml:link rel="alternate" hreflang="x-default" href="${SITE}/"/></url>\n` +
+    `  <url><loc>${SITE}/?lang=vi</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>\n` +
+    `  <url><loc>${SITE}/?lang=ko</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>\n` +
     `  <url><loc>${SITE}/demo</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>\n` +
     `  <url><loc>${SITE}/tracking</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>\n` +
     `  <url><loc>${SITE}/tracking-info</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority>` +
@@ -901,9 +907,35 @@ app.get('/sitemap.xml', (req, res) => {
   );
 });
 
+// ── SEO trang chủ theo ngôn ngữ (đa ngữ index được trên Google/Naver) ────────
+const HOME_SEO = {
+  en: {
+    title: 'Logistics Software & Accounting for Korea–Global Operations | TransFlash Logistics',
+    desc:  'Logistics software for businesses: bulk Korean postal code lookup, customs clearance tracking (UNI-PASS), address normalization, Excel waybill automation and logistics accounting. EN · KO · VI.',
+    kw:    'logistics software, logistics accounting software, logistics management software, software for logistics company, bulk korean postal code lookup, korea postal code api, korea customs tracking, UNI-PASS, address normalization, waybill automation',
+    locale: 'en_US', canon: '',
+  },
+  vi: {
+    title: 'Phần mềm logistics & kế toán cho công ty logistics Hàn – Việt | TransFlash Logistics',
+    desc:  'Phần mềm logistics cho doanh nghiệp: tra mã bưu điện Hàn Quốc hàng loạt, tra cứu thông quan (UNI-PASS), chuẩn hóa địa chỉ, xử lý Excel vận đơn và kế toán công ty logistics. Việt · Anh · Hàn.',
+    kw:    'phần mềm logistics, phần mềm quản lý logistics, phần mềm kế toán logistics, phần mềm kế toán công ty logistics, tra mã bưu điện hàn quốc hàng loạt, tra cứu thông quan hàn quốc, UNI-PASS, phần mềm vận đơn, chuẩn hóa địa chỉ hàn quốc',
+    locale: 'vi_VN', canon: '?lang=vi',
+  },
+  ko: {
+    title: '물류 소프트웨어 & 물류 회계 (한국-글로벌) | TransFlash Logistics',
+    desc:  '물류 기업을 위한 소프트웨어: 한국 우편번호 일괄 조회, 통관 조회(UNI-PASS), 주소 정규화, 엑셀 운송장 자동화, 물류 회계. 한국어·영어·베트남어 지원.',
+    kw:    '물류 소프트웨어, 물류 회계 소프트웨어, 물류 관리 소프트웨어, 한국 우편번호 일괄 조회, 우편번호 조회 API, 통관 조회, UNI-PASS, 주소 정규화, 운송장 자동화',
+    locale: 'ko_KR', canon: '?lang=ko',
+  },
+};
 // ── Trang chính — PUBLIC: ai cũng vào được (khách hoặc đã login) ─────────────
 app.get('/', (req, res) => {
-  sendTpl(res, 'app.html');
+  const lang = ['vi', 'en', 'ko'].includes(req.query.lang) ? req.query.lang : 'en';
+  const s = HOME_SEO[lang];
+  sendTpl(res, 'app.html', {
+    __LANG__: lang, __TITLE__: s.title, __DESC__: s.desc,
+    __KEYWORDS__: s.kw, __LOCALE__: s.locale, __CANON__: s.canon,
+  });
 });
 
 // ── Trang DEMO — PUBLIC: gộp 2 tool (mã bưu điện + thông quan) qua iframe embed

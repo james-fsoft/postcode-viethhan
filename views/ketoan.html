@@ -1554,9 +1554,11 @@ function invCompute(){
   const credit=creditOf(cust);
   const surcharge=surchargeOf(cust), surchargeVnd=surchargeVndOf(cust);
   // dư (credit) trừ vào TOÀN BỘ nợ Won = đơn chưa thu + phí phát sinh (không kẹp riêng ở đơn)
-  const payableWon=Math.max(0, shownOweWon + surcharge - credit), payableVnd=oweVnd+surchargeVnd;
+  const balanceWon=shownOweWon + surcharge - credit;   // >0 = còn nợ, <0 = khách trả THỪA
+  const payableWon=Math.max(0, balanceWon), payableVnd=oweVnd+surchargeVnd;
+  const overpaidWon=Math.max(0, -balanceWon);          // số tiền khách trả dư (KRW)
   const oweWon=payableWon;   // "còn nợ" hiển thị = số phải trả cuối cùng (khớp tab Theo khách)
-  return {cust,rows,totWon,totPhiWon,totVnd,totPhi,oweRows,paidRows,shownOweWon,shownPaidWon,oweVnd,credit,oweWon,surcharge,surchargeVnd,payableWon,payableVnd,payable:payableWon};
+  return {cust,rows,totWon,totPhiWon,totVnd,totPhi,oweRows,paidRows,shownOweWon,shownPaidWon,oweVnd,credit,oweWon,surcharge,surchargeVnd,balanceWon,payableWon,payableVnd,overpaidWon,payable:payableWon};
 }
 function renderInvoiceDoc(){
   const cust=INV_CUST, rows=INV_ROWS, X=invCompute();
@@ -1617,11 +1619,16 @@ function renderInvoiceDoc(){
         <tr class="only-print" style="display:none"><td>Phí phát sinh · ${kr('발생비용')}:</td><td class="r">${X.surcharge?'₩'+nf(X.surcharge):''}${X.surchargeVnd?'<br>'+nf(X.surchargeVnd)+' ₫':''}</td></tr>
         ${surNote?`<tr><td colspan="2" style="font-size:.78rem;color:#888;padding-top:0">Ghi chú phí/${kr('비고')}: ${esc(surNote)} <button class="btn sm no-print" onclick="editSurNote()" style="margin-left:4px">✎</button></td></tr>`:`<tr class="no-print"><td colspan="2"><button class="btn sm" onclick="editSurNote()">✎ Thêm ghi chú phí phát sinh</button></td></tr>`}
         ${(X.shownPaidWon+X.credit)?`<tr><td>Đã thanh toán (KRW) · ${kr('결제됨')}:</td><td class="r" style="color:#16a34a">−₩${nf(X.shownPaidWon+X.credit)}</td></tr>`:''}
-        <tr class="grand"><td>TỔNG THANH TOÁN (còn nợ)<br>${kr('총 결제금액 (미납)')}:</td><td class="r"><div>₩${nf(X.payableWon)}</div>${X.payableVnd?`<div>${nf(X.payableVnd)} ₫</div>`:''}</td></tr>
+        ${(X.payableWon||X.payableVnd)?`<tr class="grand"><td>TỔNG THANH TOÁN (còn nợ)<br>${kr('총 결제금액 (미납)')}:</td><td class="r"><div>₩${nf(X.payableWon)}</div>${X.payableVnd?`<div>${nf(X.payableVnd)} ₫</div>`:''}</td></tr>`:''}
+        ${X.overpaidWon?`<tr class="grand" style="color:#2563eb"><td>KHÁCH TRẢ THỪA (dư)<br>${kr('초과 입금 (잔액)')}:</td><td class="r" style="color:#2563eb">+₩${nf(X.overpaidWon)}</td></tr>`:''}
+        ${(!X.payableWon&&!X.payableVnd&&!X.overpaidWon)?`<tr class="grand" style="color:#16a34a"><td>ĐÃ THANH TOÁN ĐỦ<br>${kr('결제 완료')}:</td><td class="r" style="color:#16a34a">₩0</td></tr>`:''}
       </table>
     </div>
-    <div class="note">Kính đề nghị Quý khách thanh toán số tiền còn nợ <b>₩${nf(X.payableWon)}${X.payableVnd?' + '+nf(X.payableVnd)+' ₫':''}</b>. Cảm ơn Quý khách đã sử dụng dịch vụ của ${esc(co.name||'VC24 Global')}.<br>
-      ${kr('위 미납 금액의 결제를 요청드립니다. '+esc(co.name||'VC24 Global')+'을(를) 이용해 주셔서 감사합니다.')}<br>
+    <div class="note">${(X.payableWon||X.payableVnd)
+        ? `Kính đề nghị Quý khách thanh toán số tiền còn nợ <b>₩${nf(X.payableWon)}${X.payableVnd?' + '+nf(X.payableVnd)+' ₫':''}</b>. Cảm ơn Quý khách đã sử dụng dịch vụ của ${esc(co.name||'VC24 Global')}.<br>${kr('위 미납 금액의 결제를 요청드립니다. '+esc(co.name||'VC24 Global')+'을(를) 이용해 주셔서 감사합니다.')}`
+        : X.overpaidWon
+          ? `Quý khách đã thanh toán dư <b style="color:#2563eb">₩${nf(X.overpaidWon)}</b>. Số tiền dư này sẽ được trừ vào các đơn/hóa đơn tiếp theo. Cảm ơn Quý khách đã sử dụng dịch vụ của ${esc(co.name||'VC24 Global')}.<br>${kr('초과 입금액 ₩'+nf(X.overpaidWon)+'은(는) 다음 청구서에서 차감됩니다. '+esc(co.name||'VC24 Global')+'을(를) 이용해 주셔서 감사합니다.')}`
+          : `Quý khách đã thanh toán đủ. Cảm ơn Quý khách đã sử dụng dịch vụ của ${esc(co.name||'VC24 Global')}.<br>${kr('결제가 완료되었습니다. '+esc(co.name||'VC24 Global')+'을(를) 이용해 주셔서 감사합니다.')}`}<br>
       <span style="color:#999">* Còn nợ = Tiền hàng − đã thanh toán − dư + Phí phát sinh · ${kr('미납액 = 상품금액 − 결제됨 − 잔액 + 발생비용')}</span></div>`;
 }
 function editSurNote(){
@@ -1669,8 +1676,12 @@ function exportInvoiceXlsx(){
   if(X.surchargeVnd) row(['Phí phát sinh (VND) / 발생비용:',X.surchargeVnd],{1:XF_VND});
   if(surchargeNoteOf(cust)) row(['Ghi chú phí / 비고:',surchargeNoteOf(cust)]);
   if(X.shownPaidWon+X.credit) row(['Đã thanh toán (KRW) / 결제됨:',X.shownPaidWon+X.credit],{1:XF_WON});
-  row(['TỔNG THANH TOÁN - CÒN NỢ (KRW) / 총 결제금액(미납):',X.payableWon],{1:XF_WON});
-  if(X.payableVnd) row(['TỔNG THANH TOÁN - CÒN NỢ (VND) / 총 결제금액(미납):',X.payableVnd],{1:XF_VND});
+  if(X.payableWon||X.payableVnd){
+    row(['TỔNG THANH TOÁN - CÒN NỢ (KRW) / 총 결제금액(미납):',X.payableWon],{1:XF_WON});
+    if(X.payableVnd) row(['TỔNG THANH TOÁN - CÒN NỢ (VND) / 총 결제금액(미납):',X.payableVnd],{1:XF_VND});
+  }
+  if(X.overpaidWon) row(['KHÁCH TRẢ THỪA - DƯ (KRW) / 초과 입금(잔액):',X.overpaidWon],{1:XF_WON});
+  if(!X.payableWon&&!X.payableVnd&&!X.overpaidWon) row(['ĐÃ THANH TOÁN ĐỦ / 결제 완료:',0],{1:XF_WON});
   const ws=XLSX.utils.aoa_to_sheet(aoa);
   ws['!cols']=[{wch:5},{wch:12},{wch:12},{wch:18},{wch:14},{wch:34},{wch:10},{wch:8},{wch:13},{wch:15},{wch:13},{wch:13},{wch:15},{wch:10}];
   // Thông tin tài khoản nhận thanh toán -> đặt ở khu G6:G9 (ngang phần đầu)

@@ -183,6 +183,13 @@ app.get('/login', (req, res) => {
 app.post('/api/login', (req, res) => {
   const { username, password, remember } = req.body;
   if (USERS[username] && USERS[username] === password) {
+    // Nhóm VC24 (kế toán dùng chung): KHÔNG giữ đăng nhập dài — luôn dùng cookie
+    // phiên (đóng trình duyệt là phải nhập lại), bỏ qua "remember 30 ngày".
+    if (isVC24(username)) {
+      const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '12h' });
+      res.cookie(COOKIE, token, authCookieOpts());   // không maxAge → cookie phiên
+      return res.json({ ok: true });
+    }
     const expiresIn = remember === 'true' ? '30d' : '12h';
     const maxAge    = remember === 'true' ? 30 * 86400 * 1000 : 12 * 3600 * 1000;
     const token = jwt.sign({ username }, JWT_SECRET, { expiresIn });

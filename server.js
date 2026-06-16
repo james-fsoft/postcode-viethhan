@@ -14,9 +14,11 @@ const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1);
 
 // Parse USERS env: "admin:pass123,user2:secret"
+// USERS_EXTRA: account bổ sung (gộp vào USERS) — để THÊM account mà KHÔNG cần
+// sửa biến USERS sẵn có (vd biến USERS là Sensitive, không xem lại được giá trị cũ).
 const USERS = {};
 const usersEnv = process.env.USERS || `${process.env.ADMIN_USER || 'admin'}:${process.env.ADMIN_PASS || 'admin123'}`;
-usersEnv.split(',').forEach(pair => {
+[usersEnv, process.env.USERS_EXTRA || ''].join(',').split(',').forEach(pair => {
   const idx = pair.indexOf(':');
   if (idx > 0) USERS[pair.slice(0, idx).trim()] = pair.slice(idx + 1).trim();
 });

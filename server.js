@@ -204,6 +204,24 @@ app.post('/api/logout', (req, res) => {
   res.json({ ok: true });
 });
 
+// Tải file qua server: nhận base64 client dựng, trả về dạng attachment thật.
+// Dùng cho trình duyệt trong app (Zalo/Messenger/Kakao) — webview không tải được
+// blob do JS tạo, nhưng tải tốt response HTTP có Content-Disposition: attachment.
+app.post('/api/download', requireAuth, (req, res) => {
+  const { filename, b64, type } = req.body || {};
+  if (!b64) return res.status(400).send('no data');
+  let buf;
+  try { buf = Buffer.from(String(b64), 'base64'); } catch { return res.status(400).send('bad data'); }
+  if (!buf.length || buf.length > 15 * 1024 * 1024) return res.status(413).send('size');
+  const safe = (String(filename || 'download.xlsx').replace(/[^\w.\-]+/g, '_').slice(0, 120)) || 'download.xlsx';
+  const ct = type === 'pdf' ? 'application/pdf'
+    : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  res.setHeader('Content-Type', ct);
+  res.setHeader('Content-Disposition', `attachment; filename="${safe}"`);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.send(buf);
+});
+
 // ── Juso proxy (행정안전부 도로명주소 API) ────────────────────────────────────
 app.get('/api/juso', requireAuth, async (req, res) => {
   const { q } = req.query;

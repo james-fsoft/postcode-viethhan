@@ -250,7 +250,10 @@
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
         <div class="small muted" id="listSummary"></div>
-        <button class="btn sm" onclick="downloadAllXlsx()" style="border-color:#86efac;color:#16a34a">⬇️ Tải Excel dữ liệu tổng</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn sm" onclick="downloadPaidXlsx()" style="border-color:#86efac;color:#16a34a">✅ Tải đơn đã thanh toán</button>
+          <button class="btn sm" onclick="downloadAllXlsx()" style="border-color:#86efac;color:#16a34a">⬇️ Tải Excel dữ liệu tổng</button>
+        </div>
       </div>
       <div id="listProfitBox" style="margin-bottom:12px"></div>
       <div class="small muted" style="margin-bottom:8px;">💡 Bấm vào 1 dòng để mở cửa sổ sửa/xóa — tự lưu online. Phân trang để chạy nhanh trên mọi máy.</div>
@@ -1114,6 +1117,21 @@ function downloadAllXlsx(){
   const suffix=(ff||ft)?('_'+(ff||'dau')+'_den_'+(ft||'cuoi')):'';
   saveWB(wb,'VC24_du-lieu-tong'+suffix+'_'+todayISO()+'.xlsx');
 }
+// Tải TẤT CẢ đơn đã thanh toán (Đã TT) để theo dõi & đối chiếu bill
+function downloadPaidXlsx(){
+  const rows=ROWS.filter(paid).slice().sort((a,b)=>String(a.paidDate||a.date).localeCompare(String(b.paidDate||b.date)));
+  if(!rows.length){ alert('Chưa có đơn nào đã thanh toán.'); return; }
+  const headers=['STT','NGÀY VỀ','TUẦN','MÃ KIỆN','MÃ KHÁCH HÀNG','NGƯỜI NHẬN','SĐT NGƯỜI NHẬN','KHU VỰC','무게 (KG)','THÀNH TIỀN WON','PHỤ PHÍ (KRW)','PHỤ PHÍ (VND)','THÀNH TIỀN VND','NGÀY THU'];
+  const aoa=[headers].concat(rows.map((r,i)=>[i+1,r.date,weekKey(r),r.pkg,r.cust,r.rcv,r.rcvPh,r.region,Number(r.weight)||'',Number(r.won)||'',Number(r.phuPhiWon)||'',Number(r.phuPhi)||'',Number(r.vnd)||'',r.paidDate||'']));
+  aoa.push(['TỔNG','','','',rows.length+' đơn','','','',sum(rows,'weight')||'',sum(rows,'won'),sum(rows,'phuPhiWon'),sum(rows,'phuPhi'),sum(rows,'vnd'),'']);
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:5},{wch:12},{wch:10},{wch:12},{wch:18},{wch:16},{wch:14},{wch:10},{wch:9},{wch:15},{wch:13},{wch:13},{wch:15},{wch:12}];
+  const colFmt={8:XF_KG,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND};
+  for(let r=1;r<aoa.length;r++){ Object.keys(colFmt).forEach(c=>{ const a=XLSX.utils.encode_cell({r,c:+c}); if(ws[a] && typeof ws[a].v==='number'){ ws[a].s=Object.assign(ws[a].s||{},{numFmt:colFmt[c]}); } }); }
+  for(let c=0;c<headers.length;c++){ const a=XLSX.utils.encode_cell({r:0,c}); if(ws[a]) ws[a].s={font:{bold:true},fill:{fgColor:{rgb:'DDEBF7'}},alignment:{horizontal:'center'},border:{bottom:{style:'thin',color:{rgb:'9CB3D4'}}}}; }
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Đã thanh toán');
+  saveWB(wb,'VC24_da-thanh-toan_'+todayISO()+'.xlsx');
+}
 async function downloadUpload(id,fname){
   let d; try{ d=await fetch('/api/vc24/upload-file?id='+encodeURIComponent(id)).then(r=>r.json()); }catch(e){}
   if(!d||!d.ok||!Array.isArray(d.rows)){ alert('Không tải được file (có thể đã bị dọn do quá cũ).'); return; }
@@ -1604,7 +1622,6 @@ function renderInvoiceDoc(){
         ${(co.bank||co.acc||co.holder)?`<div style="margin-bottom:7px"><b>🇻🇳 TK nhận VND · ${kr('VND 계좌')}:</b><br>Ngân hàng/은행: ${ln(co.bank,'(cập nhật)')}<br>Số TK/계좌: <b>${ln(co.acc,'(cập nhật)')}</b> · Chủ TK/예금주: ${ln(co.holder,'(cập nhật)')}</div>`:''}
         ${(co.bankWon||co.accWon||co.holderWon)?`<div style="margin-bottom:7px"><b>🇰🇷 TK nhận Won (KRW) · ${kr('원화 계좌')}:</b><br>Ngân hàng/은행: ${ln(co.bankWon,'(cập nhật)')}<br>Số TK/계좌: <b>${ln(co.accWon,'(cập nhật)')}</b> · Chủ TK/예금주: ${ln(co.holderWon,'(cập nhật)')}</div>`:''}
         ${(!(co.bank||co.acc||co.holder||co.bankWon||co.accWon||co.holderWon))?`<div style="color:#aaa;margin-bottom:7px">(Tài khoản nhận thanh toán: đang cập nhật)</div>`:''}
-        <div><b>Nội dung CK · ${kr('입금 메모')}:</b> ${co.memo?esc(co.memo):esc(cust)}</div>
       </div>
       <table class="sumtbl">
         <tr><td>Tiền hàng (KRW) · ${kr('상품금액')}:</td><td class="r">₩${nf(X.totWon)}</td></tr>
@@ -1689,7 +1706,6 @@ function exportInvoiceXlsx(){
   putG(5,'THÔNG TIN THANH TOÁN / 결제 정보', true);
   putG(6,'TK nhận VND: '+[co.bank,co.acc,co.holder].filter(Boolean).join(' · '));
   putG(7,'TK nhận Won (KRW): '+[co.bankWon,co.accWon,co.holderWon].filter(Boolean).join(' · '));
-  putG(8,'Nội dung CK: '+(co.memo||cust));
   fmtCells.forEach(({r,c,f})=>{ const a=XLSX.utils.encode_cell({r,c}); if(ws[a] && typeof ws[a].v==='number'){ ws[a].s=Object.assign(ws[a].s||{},{numFmt:f}); } });
   const hr=aoa.findIndex(r=>String(r[0]||'').indexOf('STT')===0);
   if(hr>=0){ for(let cc=0;cc<head.length;cc++){ const a=XLSX.utils.encode_cell({r:hr,c:cc}); if(ws[a]) ws[a].s={font:{bold:true},fill:{fgColor:{rgb:'DDEBF7'}},alignment:{horizontal:'center'}}; } }

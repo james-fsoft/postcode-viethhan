@@ -698,23 +698,26 @@ app.post('/api/vc24/surcharge', requireAuth, requireVC24, async (req, res) => {
 // Sửa 1 dòng lịch sử thanh toán — ghi log (thời điểm + lý do) ngay trong dòng đó
 app.post('/api/vc24/payment-edit', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
-  const { cust, at, amount, date, reason } = req.body || {};
+  const { cust, at, amount, amountVnd, date, reason } = req.body || {};
   if (!cust || !at || !String(reason || '').trim()) return res.json({ ok: false, reason: 'bad' });
   let ledger = {}; try { const s = await redisGet(VK.ledger); if (s) ledger = JSON.parse(s); } catch { /* ok */ }
   const led = ledger[cust];
   if (!led || !Array.isArray(led.history)) return res.json({ ok: false, reason: 'notfound' });
   const e = led.history.find(h => h.at === at);
   if (!e) return res.json({ ok: false, reason: 'notfound' });
-  const oldAmt = Number(e.amount) || 0, oldDate = e.date || '';
-  const newAmt = Math.round(Number(amount) || 0), newDate = String(date || e.date || '');
-  led.credit = (Number(led.credit) || 0) + (newAmt - oldAmt); // điều chỉnh dư theo chênh lệch
-  e.amount = newAmt; e.date = newDate;
+  const oldAmt = Number(e.amount) || 0, oldVnd = Number(e.amountVnd) || 0, oldDate = e.date || '';
+  const newAmt = Math.round(Number(amount) || 0), newVnd = Math.round(Number(amountVnd) || 0), newDate = String(date || e.date || '');
+  led.credit = (Number(led.credit) || 0) + (newAmt - oldAmt);       // điều chỉnh dư Won theo chênh lệch
+  led.creditVnd = (Number(led.creditVnd) || 0) + (newVnd - oldVnd); // điều chỉnh dư VND theo chênh lệch
+  e.amount = newAmt; e.amountVnd = newVnd; e.date = newDate;
   e.edits = e.edits || [];
-  e.edits.push({ at: new Date().toISOString(), by: userFromReq(req), oldAmount: oldAmt, newAmount: newAmt, oldDate, newDate, reason: String(reason).slice(0, 300) });
+  e.edits.push({ at: new Date().toISOString(), by: userFromReq(req), oldAmount: oldAmt, newAmount: newAmt, oldVnd, newVnd, oldDate, newDate, reason: String(reason).slice(0, 300) });
   ledger[cust] = led;
   const ok = await redisSet(VK.ledger, JSON.stringify(ledger));
   if (!ok) return res.json({ ok: false, reason: 'save' });
-  await vcLog('payment-edit', `Sửa lịch sử thu ${cust}: ₩${oldAmt.toLocaleString('en-US')}→₩${newAmt.toLocaleString('en-US')} — ${String(reason).slice(0, 120)}`, userFromReq(req));
+  const chg = [`₩${oldAmt.toLocaleString('en-US')}→₩${newAmt.toLocaleString('en-US')}`];
+  if (oldVnd || newVnd) chg.push(`${oldVnd.toLocaleString('en-US')}đ→${newVnd.toLocaleString('en-US')}đ`);
+  await vcLog('payment-edit', `Sửa lịch sử thu ${cust}: ${chg.join(', ')} — ${String(reason).slice(0, 120)}`, userFromReq(req));
   res.json({ ok: true });
 });
 

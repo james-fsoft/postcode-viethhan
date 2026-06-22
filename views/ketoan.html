@@ -469,8 +469,10 @@
     <div class="modal-bar"><h3>✎ Sửa lịch sử thanh toán</h3><button class="btn" onclick="closePayEdit()">Đóng</button></div>
     <div style="padding:18px">
       <div class="small muted" id="peInfo" style="margin-bottom:12px"></div>
-      <label class="field" style="margin:0 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Số tiền đã nhận (₩)</span></label>
+      <label class="field" style="margin:0 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Số tiền đã nhận (₩ Won)</span></label>
       <input id="peAmt" class="ef" inputmode="numeric" oninput="onMoneyInput(this)" style="width:100%;font-weight:700" />
+      <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Số tiền đã nhận (₫ VND)</span></label>
+      <input id="peAmtVnd" class="ef" inputmode="numeric" oninput="onMoneyInput(this)" style="width:100%;font-weight:700" />
       <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Ngày nhận thanh toán</span></label>
       <input type="date" id="peDate" class="ef" style="width:100%" />
       <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:#dc2626">Lý do sửa (bắt buộc)</span></label>
@@ -561,16 +563,16 @@ function showCustHistory(cust){ CH_CUST=cust; renderCustHist(); $('custHistModal
 function closeCustHist(){ $('custHistModal').classList.remove('show'); }
 function renderCustHist(){
   const cust=CH_CUST, hist=historyOf(cust);
-  const total=hist.reduce((s,h)=>s+(Number(h.amount)||0),0);
+  const total=hist.reduce((s,h)=>s+(Number(h.amount)||0),0), totalVnd=hist.reduce((s,h)=>s+(Number(h.amountVnd)||0),0);
   $('chTitle').textContent='Lịch sử thu — '+cust;
   $('chBody').innerHTML=hist.length?`
-    <div class="small" style="margin-bottom:10px">Tổng đã ghi nhận thu: <b style="color:var(--green);font-size:1.05rem">₩${total.toLocaleString('en-US')}</b> <span class="muted">· ${hist.length} lần · bấm 1 dòng để xem đơn đã thanh toán</span></div>
+    <div class="small" style="margin-bottom:10px">Tổng đã ghi nhận thu: <b style="color:var(--green);font-size:1.05rem">₩${total.toLocaleString('en-US')}</b>${totalVnd?` <b style="color:var(--green);font-size:1.05rem">+ ${totalVnd.toLocaleString('en-US')} ₫</b>`:''} <span class="muted">· ${hist.length} lần · bấm 1 dòng để xem đơn đã thanh toán</span></div>
     <div style="border:1px solid var(--g200);border-radius:10px;overflow:hidden">
     ${hist.map((h,idx)=>({h,idx})).reverse().map(({h,idx})=>`
       <div style="border-bottom:1px solid var(--g100)">
         <div class="rowclick" onclick="toggleHistOrders(${idx})" style="display:flex;justify-content:space-between;gap:10px;padding:10px 12px;cursor:pointer;align-items:center">
           <span><b>${fmtPaidDate(h.date)}</b> <span class="muted">· gạch ${h.marked||0} đơn ${(h.keys&&h.keys.length)?'▸':''}</span></span>
-          <b style="color:var(--green)">₩${(Number(h.amount)||0).toLocaleString('en-US')}</b>
+          <b style="color:var(--green)">${[Number(h.amount)>0?'₩'+Number(h.amount).toLocaleString('en-US'):'',Number(h.amountVnd)>0?Number(h.amountVnd).toLocaleString('en-US')+' ₫':''].filter(Boolean).join(' + ')||'₩0'}</b>
         </div>
         <div id="histOrders_${idx}" style="display:none;padding:0 12px 10px"></div>
       </div>`).join('')}
@@ -655,15 +657,15 @@ function renderDash(){
 function filterRegion(r){ tab('list'); $('fRegion').value=r; $('fPay').value='owe'; filterChanged(); }
 function showHistory(){
   const items=[];
-  Object.keys(LEDGER||{}).forEach(c=>{ historyOf(c).forEach(h=>items.push({cust:c,date:h.date,amount:Number(h.amount)||0,marked:h.marked||0,at:h.at||''})); });
+  Object.keys(LEDGER||{}).forEach(c=>{ historyOf(c).forEach(h=>items.push({cust:c,date:h.date,amount:Number(h.amount)||0,amountVnd:Number(h.amountVnd)||0,marked:h.marked||0,at:h.at||''})); });
   items.sort((a,b)=> String(b.at||b.date).localeCompare(String(a.at||a.date)));
-  const total=items.reduce((s,x)=>s+x.amount,0);
+  const total=items.reduce((s,x)=>s+x.amount,0), totalVnd=items.reduce((s,x)=>s+x.amountVnd,0);
   $('histBody').innerHTML=items.length?`
-    <div class="small" style="margin-bottom:10px">Tổng đã thu: <b style="color:var(--green);font-size:1.05rem">₩${total.toLocaleString('en-US')}</b> <span class="muted">· ${items.length} lần thu</span></div>
-    <div class="tbl-wrap" style="max-height:62vh"><table><thead><tr><th>Ngày thu</th><th>Khách hàng</th><th class="r">Số tiền (₩)</th><th class="r">Gạch đơn</th></tr></thead>
+    <div class="small" style="margin-bottom:10px">Tổng đã thu: <b style="color:var(--green);font-size:1.05rem">₩${total.toLocaleString('en-US')}</b>${totalVnd?` <b style="color:var(--green);font-size:1.05rem">+ ${totalVnd.toLocaleString('en-US')} ₫</b>`:''} <span class="muted">· ${items.length} lần thu</span></div>
+    <div class="tbl-wrap" style="max-height:62vh"><table><thead><tr><th>Ngày thu</th><th>Khách hàng</th><th class="r">Số tiền</th><th class="r">Gạch đơn</th></tr></thead>
     <tbody>${items.map(x=>`<tr class="rowclick" onclick="closeHist();openPay('${escJs(x.cust)}')" title="Bấm để mở khách">
       <td>${fmtPaidDate(x.date)}</td><td><b>${esc(x.cust)}</b></td>
-      <td class="r num" style="color:var(--green);font-weight:800">₩${x.amount.toLocaleString('en-US')}</td><td class="r">${x.marked}</td></tr>`).join('')}</tbody></table></div>`
+      <td class="r num" style="color:var(--green);font-weight:800">${[x.amount>0?'₩'+x.amount.toLocaleString('en-US'):'',x.amountVnd>0?x.amountVnd.toLocaleString('en-US')+' ₫':''].filter(Boolean).join(' + ')||'₩0'}</td><td class="r">${x.marked}</td></tr>`).join('')}</tbody></table></div>`
     :'<div class="empty">Chưa có lần thu tiền nào được ghi nhận.</div>';
   $('histModal').classList.add('show');
 }
@@ -713,30 +715,32 @@ function payHistRowHTML(h){
   return `<div style="padding:7px 11px;border-bottom:1px solid var(--g100);font-size:.84rem">
     <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
       <span>${fmtPaidDate(h.date)}${h.marked?` <span class="muted">· gạch ${h.marked} đơn</span>`:''}${edits.length?` <span style="color:#d97706;font-size:.72rem" title="Đã chỉnh sửa">✎ đã sửa ${edits.length}×</span>`:''}</span>
-      <span style="display:flex;align-items:center;gap:6px"><b style="color:var(--green)">${amtTxt}</b>${canEdit?`${won>0&&vnd<=0?`<button class="btn sm" onclick="editPayHist('${escJs(h.at)}')" title="Sửa dòng này">✎</button>`:''}<button class="btn sm" onclick="deletePayHist('${escJs(h.at)}')" title="Xóa dòng thu này" style="border-color:#fecaca;color:#dc2626">🗑</button>`:''}</span>
+      <span style="display:flex;align-items:center;gap:6px"><b style="color:var(--green)">${amtTxt}</b>${canEdit?`<button class="btn sm" onclick="editPayHist('${escJs(h.at)}')" title="Sửa dòng này">✎</button><button class="btn sm" onclick="deletePayHist('${escJs(h.at)}')" title="Xóa dòng thu này" style="border-color:#fecaca;color:#dc2626">🗑</button>`:''}</span>
     </div>
-    ${edits.length?`<div style="margin-top:4px;padding-left:6px;border-left:2px solid #fde68a">${edits.slice().reverse().map(e=>`<div style="font-size:.72rem;color:#92400e">✎ Sửa lúc <b>${esc(fmtDT(e.at))}</b>${e.by?' bởi '+esc(e.by):''}: ₩${Number(e.oldAmount||0).toLocaleString('en-US')} → ₩${Number(e.newAmount||0).toLocaleString('en-US')}${e.oldDate!==e.newDate?` · ngày ${esc(fmtPaidDate(e.oldDate))}→${esc(fmtPaidDate(e.newDate))}`:''}<br>Lý do: ${esc(e.reason||'')}</div>`).join('')}</div>`:''}
+    ${edits.length?`<div style="margin-top:4px;padding-left:6px;border-left:2px solid #fde68a">${edits.slice().reverse().map(e=>`<div style="font-size:.72rem;color:#92400e">✎ Sửa lúc <b>${esc(fmtDT(e.at))}</b>${e.by?' bởi '+esc(e.by):''}: ₩${Number(e.oldAmount||0).toLocaleString('en-US')} → ₩${Number(e.newAmount||0).toLocaleString('en-US')}${(e.oldVnd||e.newVnd)?` · ${Number(e.oldVnd||0).toLocaleString('en-US')}đ→${Number(e.newVnd||0).toLocaleString('en-US')}đ`:''}${e.oldDate!==e.newDate?` · ngày ${esc(fmtPaidDate(e.oldDate))}→${esc(fmtPaidDate(e.newDate))}`:''}<br>Lý do: ${esc(e.reason||'')}</div>`).join('')}</div>`:''}
   </div>`;
 }
 let PE_AT='';
 function editPayHist(at){
   const h=historyOf(PAY_CUST).find(x=>x.at===at); if(!h){ alert('Không tìm thấy dòng.'); return; }
   PE_AT=at;
-  $('peInfo').innerHTML=`Khách <b>${esc(PAY_CUST)}</b> · dòng thu ngày ${esc(fmtPaidDate(h.date))} · hiện ₩${Number(h.amount||0).toLocaleString('en-US')}${h.marked?` (gạch ${h.marked} đơn)`:''}`;
+  const amtTxt=[Number(h.amount)>0?'₩'+Number(h.amount).toLocaleString('en-US'):'',Number(h.amountVnd)>0?Number(h.amountVnd).toLocaleString('en-US')+'₫':''].filter(Boolean).join(' + ')||'₩0';
+  $('peInfo').innerHTML=`Khách <b>${esc(PAY_CUST)}</b> · dòng thu ngày ${esc(fmtPaidDate(h.date))} · hiện ${amtTxt}${h.marked?` (gạch ${h.marked} đơn)`:''}`;
   $('peAmt').value=Number(h.amount||0).toLocaleString('en-US');
+  $('peAmtVnd').value=Number(h.amountVnd||0).toLocaleString('en-US');
   $('peDate').value=/^\d{4}-\d{2}-\d{2}$/.test(h.date||'')?h.date:todayISO();
   $('peReason').value='';
   $('payEditModal').classList.add('show'); setTimeout(()=>$('peReason').focus(),50);
 }
 function closePayEdit(){ $('payEditModal').classList.remove('show'); PE_AT=''; }
 async function savePayHist(){
-  const amt=money($('peAmt').value), date=$('peDate').value, reason=$('peReason').value.trim();
+  const amt=money($('peAmt').value), amtVnd=money($('peAmtVnd').value), date=$('peDate').value, reason=$('peReason').value.trim();
   if(!reason){ alert('Hãy nhập LÝ DO sửa.'); $('peReason').focus(); return; }
-  if(amt<=0){ if(!confirm('Số tiền = 0. Bạn chắc chắn?')) return; }
+  if(amt<=0 && amtVnd<=0){ if(!confirm('Cả Won và VND đều = 0. Bạn chắc chắn?')) return; }
   if(!REDIS){ alert('Chưa bật lưu trữ server.'); return; }
   const btn=$('peSaveBtn'); if(btn){ btn.disabled=true; btn.textContent='⏳ Đang lưu…'; }
   try{
-    const r=await fetch('/api/vc24/payment-edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,at:PE_AT,amount:amt,date,reason})}).then(x=>x.json());
+    const r=await fetch('/api/vc24/payment-edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,at:PE_AT,amount:amt,amountVnd:amtVnd,date,reason})}).then(x=>x.json());
     if(btn){ btn.disabled=false; btn.textContent='💾 Lưu sửa'; }
     if(!r.ok){ alert(r.reason==='notfound'?'Không tìm thấy dòng (có thể đã thay đổi).':(r.reason==='save'?'Lưu thất bại.':'Sửa thất bại.')); return; }
     closePayEdit(); await loadServerData(); openPay(PAY_CUST,'✅ Đã sửa & ghi log dòng thanh toán.'); refreshCD(); renderDebt();

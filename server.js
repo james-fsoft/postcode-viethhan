@@ -204,6 +204,14 @@ app.post('/api/logout', (req, res) => {
   res.json({ ok: true });
 });
 
+// Cho biết bản code đang chạy live là commit nào (để kiểm tra deploy đã cập nhật chưa)
+app.get('/api/version', (req, res) => {
+  res.set('Cache-Control', 'no-store').json({
+    commit: (process.env.VERCEL_GIT_COMMIT_SHA || 'local').slice(0, 7),
+    msg: process.env.VERCEL_GIT_COMMIT_MESSAGE || '',
+  });
+});
+
 // Tải file qua server: nhận base64 client dựng, trả về dạng attachment thật.
 // Dùng cho trình duyệt trong app (Zalo/Messenger/Kakao) — webview không tải được
 // blob do JS tạo, nhưng tải tốt response HTTP có Content-Disposition: attachment.

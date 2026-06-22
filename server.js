@@ -628,37 +628,54 @@ app.post('/api/vc24/rates', requireAuth, requireVC24, async (req, res) => {
 // Thu tiền theo SỐ TIỀN (hỗ trợ trả từng phần) + ghi lịch sử
 app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
-  const { cust, amount, date, settleAll } = req.body || {};
+  const { cust, amount, amountVnd, date, settleAll, settleAllVnd } = req.body || {};
   const amt = Math.round(Number(amount) || 0);
-  if (!cust || amt <= 0) return res.json({ ok: false, message: 'bad' });
+  const amtVnd = Math.round(Number(amountVnd) || 0);
+  if (!cust || (amt <= 0 && amtVnd <= 0)) return res.json({ ok: false, message: 'bad' });
   const o = await vcLoadOrders();
   let ledger = {}; try { const s = await redisGet(VK.ledger); if (s) ledger = JSON.parse(s); } catch { /* ok */ }
   const led = ledger[cust] || { credit: 0, history: [] };
-  // dư thực tế = tổng đã nhận − tổng tiền đơn đang Đã TT (không tin số dư đã lưu vì có thể lệch)
-  const received0 = (led.history || []).reduce((s, h) => s + (Number(h.amount) || 0), 0);
-  const paidWon0 = o.rows.filter(r => r.cust === cust && isPaidPay(r.pay)).reduce((s, r) => s + (Number(r.won) || 0) + (Number(r.phuPhiWon) || 0), 0);
-  let credit = Math.max(0, received0 - paidWon0) + amt;
-  const unpaid = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay)).sort((a, b) => String(a.date).localeCompare(String(b.date)));
   const wonAmt = r => (Number(r.won) || 0) + (Number(r.phuPhiWon) || 0);   // tiền hàng + phụ phí KRW
+  const vndAmt = r => (Number(r.vnd) || 0) + (Number(r.phuPhi) || 0);      // tiền hàng + phụ phí VND
+  const byDate = (a, b) => String(a.date).localeCompare(String(b.date));
   let marked = 0; const markedKeys = [];
-  if (settleAll) {
-    // Trả đủ/đủ-hơn -> gạch SẠCH mọi đơn (tránh sót vài đồng do số quá lớn mất chính xác)
-    const totalUnpaid = unpaid.reduce((s, r) => s + wonAmt(r), 0);
-    unpaid.forEach(r => { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); marked++; markedKeys.push(keyOf(r)); });
-    credit = Math.max(0, credit - totalUnpaid);
-  } else {
-    // Trả từng phần: gạch nợ dần các đơn cũ nhất khi đủ tiền
-    for (const r of unpaid) { const w = wonAmt(r); if (w > 0 && credit >= w) { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); credit -= w; marked++; markedKeys.push(keyOf(r)); } }
+
+  // ── Thu Won: gạch các đơn Won (wonAmt>0) ─────────────────────────────────
+  let credit = Math.max(0, (led.history || []).reduce((s, h) => s + (Number(h.amount) || 0), 0)
+    - o.rows.filter(r => r.cust === cust && isPaidPay(r.pay)).reduce((s, r) => s + wonAmt(r), 0)) + amt;
+  if (amt > 0) {
+    const wonOrders = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay) && wonAmt(r) > 0).sort(byDate);
+    if (settleAll) {
+      credit = Math.max(0, credit - wonOrders.reduce((s, r) => s + wonAmt(r), 0));
+      wonOrders.forEach(r => { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); marked++; markedKeys.push(keyOf(r)); });
+    } else {
+      for (const r of wonOrders) { const w = wonAmt(r); if (credit >= w) { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); credit -= w; marked++; markedKeys.push(keyOf(r)); } }
+    }
   }
-  led.credit = credit;
+
+  // ── Thu VND: gạch các đơn VND (vndAmt>0) — song song, độc lập với Won ─────
+  let creditVnd = Math.max(0, (led.history || []).reduce((s, h) => s + (Number(h.amountVnd) || 0), 0)
+    - o.rows.filter(r => r.cust === cust && isPaidPay(r.pay)).reduce((s, r) => s + vndAmt(r), 0)) + amtVnd;
+  if (amtVnd > 0) {
+    const vndOrders = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay) && vndAmt(r) > 0).sort(byDate);
+    if (settleAllVnd) {
+      creditVnd = Math.max(0, creditVnd - vndOrders.reduce((s, r) => s + vndAmt(r), 0));
+      vndOrders.forEach(r => { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); marked++; markedKeys.push(keyOf(r)); });
+    } else {
+      for (const r of vndOrders) { const v = vndAmt(r); if (creditVnd >= v) { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); creditVnd -= v; marked++; markedKeys.push(keyOf(r)); } }
+    }
+  }
+
+  led.credit = credit; led.creditVnd = creditVnd;
   led.history = led.history || [];
-  led.history.push({ date: String(date || ''), amount: amt, marked, keys: markedKeys, at: new Date().toISOString() });
+  led.history.push({ date: String(date || ''), amount: amt, amountVnd: amtVnd, marked, keys: markedKeys, at: new Date().toISOString() });
   ledger[cust] = led;
   const s1 = await vcSaveOrders(o);
   const s2 = await redisSet(VK.ledger, JSON.stringify(ledger));
   if (!s1 || !s2) return res.json({ ok: false, reason: 'save' });
-  await vcLog('payment', `Thu ₩${amt.toLocaleString('en-US')} của ${cust} (gạch ${marked} đơn)`, userFromReq(req));
-  res.json({ ok: true, marked, credit });
+  const parts = []; if (amt > 0) parts.push(`₩${amt.toLocaleString('en-US')}`); if (amtVnd > 0) parts.push(`${amtVnd.toLocaleString('en-US')}đ`);
+  await vcLog('payment', `Thu ${parts.join(' + ')} của ${cust} (gạch ${marked} đơn)`, userFromReq(req));
+  res.json({ ok: true, marked, credit, creditVnd });
 });
 
 // Phí phát sinh theo khách hàng (KRW + VND) — ghi trên hóa đơn, lưu lại

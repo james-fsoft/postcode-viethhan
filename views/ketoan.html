@@ -546,6 +546,8 @@ function historyOf(c){ return (LEDGER[c] && Array.isArray(LEDGER[c].history)) ? 
 function totalReceivedOf(c){ return historyOf(c).reduce((s,h)=>s+(Number(h.amount)||0),0); }
 // Dư (đã trả trước) = TỔNG đã nhận − tổng tiền của MỌI đơn đang "Đã TT" (kể cả đơn sẵn Đã TT từ file)
 function creditOf(c){ const paidWon=ROWS.filter(r=>r.cust===c && paid(r)).reduce((s,r)=>s+(Number(r.won)||0)+(Number(r.phuPhiWon)||0),0); return Math.max(0, totalReceivedOf(c)-paidWon); }
+function totalReceivedVndOf(c){ return historyOf(c).reduce((s,h)=>s+(Number(h.amountVnd)||0),0); }
+function creditVndOf(c){ const paidVnd=ROWS.filter(r=>r.cust===c && paid(r)).reduce((s,r)=>s+(Number(r.vnd)||0)+(Number(r.phuPhi)||0),0); return Math.max(0, totalReceivedVndOf(c)-paidVnd); }
 function surchargeOf(c){ return (LEDGER[c] && Number(LEDGER[c].surcharge)) || 0; }
 function surchargeVndOf(c){ return (LEDGER[c] && Number(LEDGER[c].surchargeVnd)) || 0; }
 function surchargeNoteOf(c){ return (LEDGER[c] && LEDGER[c].surchargeNote) || ''; }
@@ -673,17 +675,24 @@ $('custHistModal').addEventListener('click',e=>{ if(e.target.id==='custHistModal
 function openPay(cust,msg){
   PAY_CUST=cust;
   const unpaid=ROWS.filter(r=>r.cust===cust && !paid(r));
-  const rawOwe=sumWon(unpaid)+surchargeOf(cust), credit=creditOf(cust), owe=Math.max(0,rawOwe-credit);
+  const credit=creditOf(cust), owe=Math.max(0,sumWon(unpaid)+surchargeOf(cust)-credit);
+  const creditVnd=creditVndOf(cust), oweVnd=Math.max(0,sumVnd(unpaid)+surchargeVndOf(cust)-creditVnd);
+  const hasDebt=owe>0||oweVnd>0;
   const hist=historyOf(cust);
   $('payTitle').textContent='Thu tiền — '+cust;
   $('payBody').innerHTML=`
-    <div class="small muted" style="margin-bottom:4px">${unpaid.length} đơn chưa thu · còn nợ (Won)</div>
-    <div style="font-size:1.5rem;font-weight:800;color:#e11d48;margin-bottom:6px">₩${owe.toLocaleString('en-US')}</div>
-    ${credit>0?`<div class="small" style="color:var(--green);margin:-2px 0 8px">Đã trả trước (dư chưa gạch đủ 1 đơn): <b>₩${credit.toLocaleString('en-US')}</b></div>`:''}
+    <div class="small muted" style="margin-bottom:4px">${unpaid.length} đơn chưa thu · còn nợ</div>
+    <div style="font-size:1.4rem;font-weight:800;color:#e11d48;margin-bottom:6px">${owe>0?'₩'+owe.toLocaleString('en-US'):''}${(owe>0&&oweVnd>0)?' + ':''}${oweVnd>0?oweVnd.toLocaleString('en-US')+' ₫':''}${(!owe&&!oweVnd)?'₩0':''}</div>
+    ${credit>0?`<div class="small" style="color:var(--green);margin:-2px 0 6px">Đã trả trước (Won): <b>₩${credit.toLocaleString('en-US')}</b></div>`:''}
+    ${creditVnd>0?`<div class="small" style="color:var(--green);margin:-2px 0 6px">Đã trả trước (VND): <b>${creditVnd.toLocaleString('en-US')} ₫</b></div>`:''}
+    ${hasDebt?`
     ${owe>0?`
-    <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Số tiền đã nhận (₩)</span></label>
-    <input id="payAmt" class="ef" inputmode="numeric" value="${owe.toLocaleString('en-US')}" oninput="onMoneyInput(this)" style="font-size:1.05rem;font-weight:700" />
-    <div class="small muted" style="margin-top:5px">Mặc định = toàn bộ nợ. <b>Nhập số NHỎ HƠN cũng được</b> (trả từng phần) — phần dư tự gạch nợ ở lần sau.</div>
+    <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Số tiền đã nhận (₩ Won)</span></label>
+    <input id="payAmt" class="ef" inputmode="numeric" value="${owe.toLocaleString('en-US')}" oninput="onMoneyInput(this)" style="font-size:1.05rem;font-weight:700" />`:''}
+    ${oweVnd>0?`
+    <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Số tiền đã nhận (₫ VND)</span></label>
+    <input id="payAmtVnd" class="ef" inputmode="numeric" value="${oweVnd.toLocaleString('en-US')}" oninput="onMoneyInput(this)" style="font-size:1.05rem;font-weight:700" />`:''}
+    <div class="small muted" style="margin-top:5px">Mặc định = toàn bộ nợ. <b>Nhập số NHỎ HƠN cũng được</b> (trả từng phần) — phần dư tự gạch nợ ở lần sau. Để trống/0 loại tiền nào thì không thu loại đó.</div>
     <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Ngày nhận thanh toán</span></label>
     <input type="date" id="payDate" class="ef" value="${todayISO()}" />
     <label class="paychk"><input type="checkbox" id="payChk" onchange="updatePayBtn()" />
@@ -699,10 +708,12 @@ function openPay(cust,msg){
 function payHistRowHTML(h){
   const canEdit=!!h.at;
   const edits=(h.edits||[]);
+  const won=Number(h.amount)||0, vnd=Number(h.amountVnd)||0;
+  const amtTxt=[won>0?'₩'+won.toLocaleString('en-US'):'',vnd>0?vnd.toLocaleString('en-US')+' ₫':''].filter(Boolean).join(' + ')||'₩0';
   return `<div style="padding:7px 11px;border-bottom:1px solid var(--g100);font-size:.84rem">
     <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
       <span>${fmtPaidDate(h.date)}${h.marked?` <span class="muted">· gạch ${h.marked} đơn</span>`:''}${edits.length?` <span style="color:#d97706;font-size:.72rem" title="Đã chỉnh sửa">✎ đã sửa ${edits.length}×</span>`:''}</span>
-      <span style="display:flex;align-items:center;gap:6px"><b style="color:var(--green)">₩${Number(h.amount||0).toLocaleString('en-US')}</b>${canEdit?`<button class="btn sm" onclick="editPayHist('${escJs(h.at)}')" title="Sửa dòng này">✎</button><button class="btn sm" onclick="deletePayHist('${escJs(h.at)}')" title="Xóa dòng thu này" style="border-color:#fecaca;color:#dc2626">🗑</button>`:''}</span>
+      <span style="display:flex;align-items:center;gap:6px"><b style="color:var(--green)">${amtTxt}</b>${canEdit?`${won>0&&vnd<=0?`<button class="btn sm" onclick="editPayHist('${escJs(h.at)}')" title="Sửa dòng này">✎</button>`:''}<button class="btn sm" onclick="deletePayHist('${escJs(h.at)}')" title="Xóa dòng thu này" style="border-color:#fecaca;color:#dc2626">🗑</button>`:''}</span>
     </div>
     ${edits.length?`<div style="margin-top:4px;padding-left:6px;border-left:2px solid #fde68a">${edits.slice().reverse().map(e=>`<div style="font-size:.72rem;color:#92400e">✎ Sửa lúc <b>${esc(fmtDT(e.at))}</b>${e.by?' bởi '+esc(e.by):''}: ₩${Number(e.oldAmount||0).toLocaleString('en-US')} → ₩${Number(e.newAmount||0).toLocaleString('en-US')}${e.oldDate!==e.newDate?` · ngày ${esc(fmtPaidDate(e.oldDate))}→${esc(fmtPaidDate(e.newDate))}`:''}<br>Lý do: ${esc(e.reason||'')}</div>`).join('')}</div>`:''}
   </div>`;
@@ -778,27 +789,34 @@ function renderCD(){
 let _paying=false;
 async function confirmPay(){
   if(_paying) return;   // chống double-click ra 2 dòng
-  const amt=money($('payAmt').value);
+  const amt=$('payAmt')?money($('payAmt').value):0;
+  const amtVnd=$('payAmtVnd')?money($('payAmtVnd').value):0;
   const pdate=($('payDate')&&$('payDate').value)||todayISO();
   const dstr=fmtPaidDate(pdate);
-  if(!amt||amt<=0){ $('payMsg').innerHTML='⚠️ Nhập số tiền hợp lệ.'; return; }
+  if(amt<=0 && amtVnd<=0){ $('payMsg').innerHTML='⚠️ Nhập số tiền hợp lệ (Won hoặc VND).'; return; }
   if(!REDIS){ alert('Chưa bật lưu trữ server — không ghi nhận được.'); return; }
-  const owe=Math.max(0,sumWon(ROWS.filter(r=>r.cust===PAY_CUST&&!paid(r)))+surchargeOf(PAY_CUST)-creditOf(PAY_CUST));
-  const settleAll=amt>=owe;   // trả đủ/đủ-hơn -> gạch sạch
-  if(!confirm(`Ghi nhận khách "${PAY_CUST}" trả ₩${amt.toLocaleString('en-US')} ngày ${dstr}?`+(settleAll?'\n(Trả ĐỦ — sẽ gạch hết đơn còn nợ.)':''))) return;
+  const unpaid=ROWS.filter(r=>r.cust===PAY_CUST&&!paid(r));
+  const owe=Math.max(0,sumWon(unpaid)+surchargeOf(PAY_CUST)-creditOf(PAY_CUST));
+  const oweVnd=Math.max(0,sumVnd(unpaid)+surchargeVndOf(PAY_CUST)-creditVndOf(PAY_CUST));
+  const settleAll=amt>0 && amt>=owe;          // trả đủ Won -> gạch sạch đơn Won
+  const settleAllVnd=amtVnd>0 && amtVnd>=oweVnd;  // trả đủ VND -> gạch sạch đơn VND
+  const amtStr=[amt>0?'₩'+amt.toLocaleString('en-US'):'',amtVnd>0?amtVnd.toLocaleString('en-US')+'₫':''].filter(Boolean).join(' + ');
+  if(!confirm(`Ghi nhận khách "${PAY_CUST}" trả ${amtStr} ngày ${dstr}?`+((settleAll||settleAllVnd)?'\n(Trả ĐỦ — sẽ gạch hết đơn còn nợ tương ứng.)':''))) return;
   _paying=true;
   const btn=$('payConfirm'); if(btn){ btn.disabled=true; btn.textContent='⏳ Đang ghi nhận…'; }
   try{
-    const res=await fetch('/api/vc24/payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,amount:amt,date:pdate,settleAll})}).then(r=>r.json());
+    const res=await fetch('/api/vc24/payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,amount:amt,amountVnd:amtVnd,date:pdate,settleAll,settleAllVnd})}).then(r=>r.json());
     if(!res.ok){ alert(res.reason==='save'?'❌ Lưu thất bại (kho dữ liệu quá lớn).':'Ghi nhận thất bại.'); if(btn){btn.disabled=false;btn.textContent='✅ Ghi nhận thu tiền';} return; }
     await loadServerData();
-    openPay(PAY_CUST, `✅ Đã ghi nhận trả ₩${amt.toLocaleString('en-US')} ngày ${dstr}.`+(res.marked?` Gạch ${res.marked} đơn (Đã TT).`:' Chưa đủ gạch đơn — cộng vào tiền đã trả trước.')+(res.credit>0?` Dư ₩${Number(res.credit).toLocaleString('en-US')}.`:''));
+    const dur=[res.credit>0?`Dư Won ₩${Number(res.credit).toLocaleString('en-US')}`:'',res.creditVnd>0?`Dư VND ${Number(res.creditVnd).toLocaleString('en-US')}₫`:''].filter(Boolean).join(' · ');
+    openPay(PAY_CUST, `✅ Đã ghi nhận trả ${amtStr} ngày ${dstr}.`+(res.marked?` Gạch ${res.marked} đơn (Đã TT).`:' Chưa đủ gạch đơn — cộng vào tiền đã trả trước.')+(dur?' '+dur+'.':''));
   }catch(e){ alert('Lỗi khi ghi nhận.'); if(btn){btn.disabled=false;btn.textContent='✅ Ghi nhận thu tiền';} }
   finally{ _paying=false; }
 }
 async function deletePayHist(at){
   const h=historyOf(PAY_CUST).find(x=>x.at===at); if(!h){ alert('Không tìm thấy dòng.'); return; }
-  if(!confirm(`Xóa dòng thu ₩${Number(h.amount||0).toLocaleString('en-US')} ngày ${fmtPaidDate(h.date)} của ${PAY_CUST}?\n\nCác đơn đã gạch bởi lần thu này sẽ trả về CHƯA THU. Không hồi phục.`)) return;
+  const amtTxt=[Number(h.amount)>0?'₩'+Number(h.amount).toLocaleString('en-US'):'',Number(h.amountVnd)>0?Number(h.amountVnd).toLocaleString('en-US')+'₫':''].filter(Boolean).join(' + ')||'₩0';
+  if(!confirm(`Xóa dòng thu ${amtTxt} ngày ${fmtPaidDate(h.date)} của ${PAY_CUST}?\n\nCác đơn đã gạch bởi lần thu này sẽ trả về CHƯA THU. Không hồi phục.`)) return;
   try{
     const r=await fetch('/api/vc24/payment-delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,at})}).then(x=>x.json());
     if(!r.ok){ alert(r.reason==='notfound'?'Không tìm thấy dòng.':(r.reason==='save'?'Lưu thất bại.':'Xóa thất bại.')); return; }

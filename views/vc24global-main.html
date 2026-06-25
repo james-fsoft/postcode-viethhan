@@ -52,6 +52,7 @@
     </nav>
     <div class="hr-right">
       <div class="chip" id="userChip" style="display:none"><span class="av" id="uAv">V</span><span class="nm" id="uName"></span></div>
+      <button class="btn-out" id="pwBtn" style="display:none" onclick="openPwModal()">🔑 Đổi mật khẩu</button>
       <button class="btn-out" onclick="logout()">Đăng xuất</button>
     </div>
   </div>
@@ -85,13 +86,80 @@
   <footer>VC24 Global · Trang nội bộ · © 2026</footer>
 </div>
 
+<div id="pwModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:99;align-items:flex-start;justify-content:center;padding:6vh 16px;overflow:auto">
+  <div style="background:#fff;border-radius:16px;max-width:460px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #eef2f7">
+      <b style="font-size:1.05rem">🔑 Mật khẩu</b>
+      <button class="btn-out" onclick="closePwModal()">Đóng</button>
+    </div>
+    <div style="padding:18px 20px">
+      <h3 style="margin:0 0 10px;font-size:.95rem;color:#334155">Đổi mật khẩu của tôi (<b id="pwMe">—</b>)</h3>
+      <input id="pwOld" type="password" placeholder="Mật khẩu hiện tại" autocomplete="current-password" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;margin-bottom:8px;font-size:.95rem" />
+      <input id="pwNew" type="password" placeholder="Mật khẩu mới (≥ 6 ký tự)" autocomplete="new-password" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;margin-bottom:8px;font-size:.95rem" />
+      <input id="pwNew2" type="password" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;margin-bottom:10px;font-size:.95rem" />
+      <button onclick="changeMyPassword()" style="font-size:.85rem;font-weight:700;color:#fff;background:#2563eb;border:none;border-radius:9px;padding:9px 16px;cursor:pointer;font-family:inherit">🔑 Đổi mật khẩu</button>
+      <div id="pwMsg" style="margin-top:8px;font-size:.85rem;font-weight:700"></div>
+
+      <div id="pwResetBox" style="display:none;border-top:1px solid #eef2f7;margin-top:18px;padding-top:14px">
+        <h3 style="margin:0 0 4px;font-size:.95rem;color:#334155">Reset mật khẩu cho account khác</h3>
+        <p style="margin:0 0 10px;font-size:.8rem;color:#94a3b8">Dùng khi đồng nghiệp quên mật khẩu. Cần nhập mật khẩu CỦA BẠN để xác nhận.</p>
+        <select id="pwTarget" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;margin-bottom:8px;font-size:.95rem"></select>
+        <input id="pwResetNew" type="password" placeholder="Mật khẩu mới cho account đó (≥ 6)" autocomplete="new-password" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;margin-bottom:8px;font-size:.95rem" />
+        <input id="pwResetMine" type="password" placeholder="Mật khẩu CỦA BẠN (xác nhận)" autocomplete="current-password" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;margin-bottom:10px;font-size:.95rem" />
+        <button class="btn-out" style="border-color:#f59e0b;color:#b45309" onclick="resetUserPassword()">♻️ Reset mật khẩu account đã chọn</button>
+        <div id="pwResetMsg" style="margin-top:8px;font-size:.85rem;font-weight:700"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
+var ME='', VC24_USERS_LIST=[], HAS_REDIS=false;
 async function logout(){ try{ await fetch('/api/logout',{method:'POST'});}catch(e){} location.href='/login'; }
+function openPwModal(){ document.getElementById('pwModal').style.display='flex'; }
+function closePwModal(){ document.getElementById('pwModal').style.display='none'; }
+function pwSet(id,t,ok){ var e=document.getElementById(id); e.textContent=t; e.style.color=ok?'#16a34a':'#dc2626'; }
+async function changeMyPassword(){
+  var oldP=document.getElementById('pwOld').value, np=document.getElementById('pwNew').value, np2=document.getElementById('pwNew2').value;
+  if(!oldP){ pwSet('pwMsg','⚠️ Nhập mật khẩu hiện tại.',0); return; }
+  if((np||'').length<6){ pwSet('pwMsg','⚠️ Mật khẩu mới phải ≥ 6 ký tự.',0); return; }
+  if(np!==np2){ pwSet('pwMsg','⚠️ Nhập lại không khớp.',0); return; }
+  if(!HAS_REDIS){ pwSet('pwMsg','⚠️ Chưa bật lưu trữ server.',0); return; }
+  pwSet('pwMsg','⏳ Đang đổi…',1);
+  try{
+    var r=await fetch('/api/change-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({oldPassword:oldP,newPassword:np})}).then(x=>x.json());
+    if(!r.ok){ pwSet('pwMsg', r.reason==='oldwrong'?'❌ Mật khẩu hiện tại sai.':(r.reason==='short'?'❌ Mật khẩu mới quá ngắn.':'❌ Đổi thất bại.'),0); return; }
+    document.getElementById('pwOld').value=document.getElementById('pwNew').value=document.getElementById('pwNew2').value='';
+    pwSet('pwMsg','✓ Đã đổi mật khẩu. Lần đăng nhập sau dùng mật khẩu mới.',1);
+  }catch(e){ pwSet('pwMsg','❌ Lỗi khi đổi.',0); }
+}
+async function resetUserPassword(){
+  var target=document.getElementById('pwTarget').value, np=document.getElementById('pwResetNew').value, mine=document.getElementById('pwResetMine').value;
+  if(!target){ pwSet('pwResetMsg','⚠️ Chọn account.',0); return; }
+  if((np||'').length<6){ pwSet('pwResetMsg','⚠️ Mật khẩu mới phải ≥ 6 ký tự.',0); return; }
+  if(!mine){ pwSet('pwResetMsg','⚠️ Nhập mật khẩu của bạn.',0); return; }
+  if(!confirm('Reset mật khẩu cho account "'+target+'"?')) return;
+  pwSet('pwResetMsg','⏳ Đang reset…',1);
+  try{
+    var r=await fetch('/api/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({targetUser:target,newPassword:np,password:mine})}).then(x=>x.json());
+    if(!r.ok){ pwSet('pwResetMsg', r.reason==='password'?'❌ Mật khẩu của bạn sai.':(r.reason==='notarget'?'❌ Account không hợp lệ.':(r.reason==='short'?'❌ Mật khẩu mới quá ngắn.':'❌ Reset thất bại.')),0); return; }
+    document.getElementById('pwResetNew').value=document.getElementById('pwResetMine').value='';
+    pwSet('pwResetMsg','✓ Đã reset cho "'+target+'". Báo họ mật khẩu mới.',1);
+  }catch(e){ pwSet('pwResetMsg','❌ Lỗi khi reset.',0); }
+}
 (async function(){
   try{ const c=await fetch('/api/config').then(r=>r.json());
     if(c && c.username){ var ch=document.getElementById('userChip'); ch.style.display='flex'; document.getElementById('uAv').textContent=String(c.username).charAt(0); document.getElementById('uName').textContent=c.username; }
+    ME=(c&&c.username)||''; HAS_REDIS=!!(c&&c.redis); VC24_USERS_LIST=(c&&c.vc24Users)||[];
+    if(c&&c.vc24){
+      document.getElementById('pwBtn').style.display='inline-flex';
+      document.getElementById('pwMe').textContent=ME||'(bạn)';
+      var others=VC24_USERS_LIST.filter(function(u){return u!==ME;});
+      if(others.length){ document.getElementById('pwResetBox').style.display='block'; document.getElementById('pwTarget').innerHTML=others.map(function(u){return '<option value="'+u+'">'+u+'</option>';}).join(''); }
+    }
   }catch(e){}
 })();
+document.getElementById('pwModal').addEventListener('click',function(e){ if(e.target.id==='pwModal') closePwModal(); });
 </script>
 <script src="/userhub.js"></script>
 </body>

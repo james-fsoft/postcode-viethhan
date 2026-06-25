@@ -490,6 +490,8 @@ app.get('/api/config', async (req, res) => {
     redis: useRedis,
     contact,
     hub: USER_HUBS[username] || (isVC24(username) ? { url: '/vc24global-main', label: '🏢 VC24 Global' } : null),
+    vc24: isVC24(username),
+    vc24Users: isVC24(username) ? [...VC24_USERS] : undefined,
   });
 });
 

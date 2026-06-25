@@ -97,9 +97,12 @@
       <input id="pwOld" type="password" placeholder="Mật khẩu hiện tại" autocomplete="current-password" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;margin-bottom:8px;font-size:.95rem" />
       <input id="pwNew" type="password" placeholder="Mật khẩu mới (≥ 6 ký tự)" autocomplete="new-password" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;margin-bottom:8px;font-size:.95rem" />
       <input id="pwNew2" type="password" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;margin-bottom:10px;font-size:.95rem" />
-      <button onclick="changeMyPassword()" style="font-size:.85rem;font-weight:700;color:#fff;background:#2563eb;border:none;border-radius:9px;padding:9px 16px;cursor:pointer;font-family:inherit">🔑 Đổi mật khẩu</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button onclick="changeMyPassword()" style="font-size:.85rem;font-weight:700;color:#fff;background:#2563eb;border:none;border-radius:9px;padding:9px 16px;cursor:pointer;font-family:inherit">🔑 Đổi mật khẩu</button>
+        <button class="btn-out" onclick="restoreMyPassword()" title="Quên mật khẩu đã đổi? Đưa về mật khẩu gốc">↩️ Khôi phục mật khẩu gốc</button>
+      </div>
       <div id="pwMsg" style="margin-top:8px;font-size:.85rem;font-weight:700"></div>
-      <p style="margin:14px 0 0;font-size:.78rem;color:#94a3b8">🔒 Chỉ chính bạn đổi được mật khẩu của mình — không ai reset hộ được.</p>
+      <p style="margin:14px 0 0;font-size:.78rem;color:#94a3b8">🔒 Chỉ chính bạn đổi được mật khẩu của mình — không ai reset hộ được. Quên mật khẩu đã đổi (khi còn đăng nhập) thì bấm "Khôi phục mật khẩu gốc".</p>
     </div>
   </div>
 </div>
@@ -123,6 +126,16 @@ async function changeMyPassword(){
     document.getElementById('pwOld').value=document.getElementById('pwNew').value=document.getElementById('pwNew2').value='';
     pwSet('pwMsg','✓ Đã đổi mật khẩu. Lần đăng nhập sau dùng mật khẩu mới.',1);
   }catch(e){ pwSet('pwMsg','❌ Lỗi khi đổi.',0); }
+}
+async function restoreMyPassword(){
+  if(!HAS_REDIS){ pwSet('pwMsg','⚠️ Chưa bật lưu trữ server.',0); return; }
+  if(!confirm('Khôi phục mật khẩu của BẠN về mật khẩu gốc (env)?\nSau đó đăng nhập bằng mật khẩu gốc do quản trị cấp.')) return;
+  pwSet('pwMsg','⏳ Đang khôi phục…',1);
+  try{
+    var r=await fetch('/api/restore-password',{method:'POST',headers:{'Content-Type':'application/json'}}).then(x=>x.json());
+    if(!r.ok){ pwSet('pwMsg', r.reason==='noenv'?'❌ Account không có mật khẩu gốc trong env.':'❌ Khôi phục thất bại.',0); return; }
+    pwSet('pwMsg','✓ Đã khôi phục. Lần đăng nhập sau dùng mật khẩu gốc (env).',1);
+  }catch(e){ pwSet('pwMsg','❌ Lỗi khi khôi phục.',0); }
 }
 (async function(){
   try{ const c=await fetch('/api/config').then(r=>r.json());

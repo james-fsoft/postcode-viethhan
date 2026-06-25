@@ -402,8 +402,9 @@
         <div class="field"><label>Nhập lại mật khẩu mới</label><input id="pwNew2" type="password" autocomplete="new-password" /></div>
       </div>
       <button class="btn primary" onclick="changeMyPassword()">🔑 Đổi mật khẩu</button>
+      <button class="btn" onclick="restoreMyPassword()" title="Quên mật khẩu đã đổi? Đưa về mật khẩu gốc">↩️ Khôi phục mật khẩu gốc</button>
       <span class="small" id="pwMsg" style="margin-left:10px;font-weight:700"></span>
-      <p class="small muted" style="margin:14px 0 0">🔒 Chỉ chính bạn đổi được mật khẩu của mình — không ai reset hộ được.</p>
+      <p class="small muted" style="margin:14px 0 0">🔒 Chỉ chính bạn đổi được mật khẩu của mình — không ai reset hộ được. Quên mật khẩu đã đổi (khi còn đăng nhập) thì bấm "Khôi phục mật khẩu gốc".</p>
     </div>
     <div class="panel" style="max-width:680px;border-color:#fecaca;background:#fff8f8;margin-top:16px">
       <div class="ph"><h2 style="color:#dc2626">⚠️ Vùng nguy hiểm</h2></div>
@@ -858,6 +859,17 @@ async function changeMyPassword(){
     $('pwOld').value=$('pwNew').value=$('pwNew2').value='';
     set('✓ Đã đổi mật khẩu. Lần đăng nhập sau dùng mật khẩu mới.',1);
   }catch(e){ set('❌ Lỗi khi đổi mật khẩu.',0); }
+}
+async function restoreMyPassword(){
+  const msg=$('pwMsg'); const set=(t,ok)=>{ msg.textContent=t; msg.style.color=ok?'var(--green)':'#dc2626'; };
+  if(!REDIS){ set('⚠️ Chưa bật lưu trữ server.',0); return; }
+  if(!confirm('Khôi phục mật khẩu của BẠN về mật khẩu gốc (env)?\nSau đó đăng nhập bằng mật khẩu gốc do quản trị cấp.')) return;
+  set('⏳ Đang khôi phục…',1);
+  try{
+    const r=await fetch('/api/restore-password',{method:'POST',headers:{'Content-Type':'application/json'}}).then(x=>x.json());
+    if(!r.ok){ set(r.reason==='noenv'?'❌ Account không có mật khẩu gốc trong env.':'❌ Khôi phục thất bại.',0); return; }
+    set('✓ Đã khôi phục. Lần đăng nhập sau dùng mật khẩu gốc (env).',1);
+  }catch(e){ set('❌ Lỗi khi khôi phục.',0); }
 }
 
 setTimeout(()=>{ const ov=$('loadOverlay'); if(ov) ov.classList.add('hide'); }, 20000);   // an toàn: không kẹt spinner

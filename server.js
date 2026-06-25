@@ -226,6 +226,18 @@ app.post('/api/change-password', requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
+// Khôi phục mật khẩu của CHÍNH MÌNH về mật khẩu gốc (env) — xóa override Redis.
+// Dùng khi quên mật khẩu đã đổi mà phiên còn đăng nhập. Phiên hợp lệ = đã xác thực.
+app.post('/api/restore-password', requireAuth, async (req, res) => {
+  const user = userFromReq(req);
+  if (!user) return res.json({ ok: false, reason: 'auth' });
+  if (!useRedis) return res.json({ ok: false, reason: 'noredis' });
+  if (!USERS[user]) return res.json({ ok: false, reason: 'noenv' });   // không có mật khẩu env -> không cho (tránh tự khóa)
+  if (!(await clearPassword(user))) return res.json({ ok: false, reason: 'save' });
+  await vcLog('password', 'Khôi phục mật khẩu gốc (env) của chính mình', user);
+  res.json({ ok: true });
+});
+
 // Tải file qua server: nhận base64 client dựng, trả về dạng attachment thật.
 // Dùng cho trình duyệt trong app (Zalo/Messenger/Kakao) — webview không tải được
 // blob do JS tạo, nhưng tải tốt response HTTP có Content-Disposition: attachment.
@@ -424,6 +436,13 @@ async function setPassword(user, pw) {
   if (!useRedis) return false;
   const ov = await loadPwOverrides();
   ov[user] = hashPw(pw);
+  return redisSet(PW_KEY, JSON.stringify(ov));
+}
+async function clearPassword(user) {   // xóa override -> mật khẩu quay về env gốc
+  if (!useRedis) return false;
+  const ov = await loadPwOverrides();
+  if (!ov[user]) return true;
+  delete ov[user];
   return redisSet(PW_KEY, JSON.stringify(ov));
 }
 async function getUsage(user) {

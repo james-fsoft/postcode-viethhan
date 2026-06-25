@@ -99,22 +99,13 @@
       <input id="pwNew2" type="password" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;margin-bottom:10px;font-size:.95rem" />
       <button onclick="changeMyPassword()" style="font-size:.85rem;font-weight:700;color:#fff;background:#2563eb;border:none;border-radius:9px;padding:9px 16px;cursor:pointer;font-family:inherit">🔑 Đổi mật khẩu</button>
       <div id="pwMsg" style="margin-top:8px;font-size:.85rem;font-weight:700"></div>
-
-      <div id="pwResetBox" style="display:none;border-top:1px solid #eef2f7;margin-top:18px;padding-top:14px">
-        <h3 style="margin:0 0 4px;font-size:.95rem;color:#334155">Reset mật khẩu cho account khác</h3>
-        <p style="margin:0 0 10px;font-size:.8rem;color:#94a3b8">Dùng khi đồng nghiệp quên mật khẩu. Cần nhập mật khẩu CỦA BẠN để xác nhận.</p>
-        <select id="pwTarget" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;margin-bottom:8px;font-size:.95rem"></select>
-        <input id="pwResetNew" type="password" placeholder="Mật khẩu mới cho account đó (≥ 6)" autocomplete="new-password" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;margin-bottom:8px;font-size:.95rem" />
-        <input id="pwResetMine" type="password" placeholder="Mật khẩu CỦA BẠN (xác nhận)" autocomplete="current-password" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;margin-bottom:10px;font-size:.95rem" />
-        <button class="btn-out" style="border-color:#f59e0b;color:#b45309" onclick="resetUserPassword()">♻️ Reset mật khẩu account đã chọn</button>
-        <div id="pwResetMsg" style="margin-top:8px;font-size:.85rem;font-weight:700"></div>
-      </div>
+      <p style="margin:14px 0 0;font-size:.78rem;color:#94a3b8">🔒 Chỉ chính bạn đổi được mật khẩu của mình — không ai reset hộ được.</p>
     </div>
   </div>
 </div>
 
 <script>
-var ME='', VC24_USERS_LIST=[], HAS_REDIS=false;
+var ME='', HAS_REDIS=false;
 async function logout(){ try{ await fetch('/api/logout',{method:'POST'});}catch(e){} location.href='/login'; }
 function openPwModal(){ document.getElementById('pwModal').style.display='flex'; }
 function closePwModal(){ document.getElementById('pwModal').style.display='none'; }
@@ -133,29 +124,13 @@ async function changeMyPassword(){
     pwSet('pwMsg','✓ Đã đổi mật khẩu. Lần đăng nhập sau dùng mật khẩu mới.',1);
   }catch(e){ pwSet('pwMsg','❌ Lỗi khi đổi.',0); }
 }
-async function resetUserPassword(){
-  var target=document.getElementById('pwTarget').value, np=document.getElementById('pwResetNew').value, mine=document.getElementById('pwResetMine').value;
-  if(!target){ pwSet('pwResetMsg','⚠️ Chọn account.',0); return; }
-  if((np||'').length<6){ pwSet('pwResetMsg','⚠️ Mật khẩu mới phải ≥ 6 ký tự.',0); return; }
-  if(!mine){ pwSet('pwResetMsg','⚠️ Nhập mật khẩu của bạn.',0); return; }
-  if(!confirm('Reset mật khẩu cho account "'+target+'"?')) return;
-  pwSet('pwResetMsg','⏳ Đang reset…',1);
-  try{
-    var r=await fetch('/api/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({targetUser:target,newPassword:np,password:mine})}).then(x=>x.json());
-    if(!r.ok){ pwSet('pwResetMsg', r.reason==='password'?'❌ Mật khẩu của bạn sai.':(r.reason==='notarget'?'❌ Account không hợp lệ.':(r.reason==='short'?'❌ Mật khẩu mới quá ngắn.':'❌ Reset thất bại.')),0); return; }
-    document.getElementById('pwResetNew').value=document.getElementById('pwResetMine').value='';
-    pwSet('pwResetMsg','✓ Đã reset cho "'+target+'". Báo họ mật khẩu mới.',1);
-  }catch(e){ pwSet('pwResetMsg','❌ Lỗi khi reset.',0); }
-}
 (async function(){
   try{ const c=await fetch('/api/config').then(r=>r.json());
     if(c && c.username){ var ch=document.getElementById('userChip'); ch.style.display='flex'; document.getElementById('uAv').textContent=String(c.username).charAt(0); document.getElementById('uName').textContent=c.username; }
-    ME=(c&&c.username)||''; HAS_REDIS=!!(c&&c.redis); VC24_USERS_LIST=(c&&c.vc24Users)||[];
+    ME=(c&&c.username)||''; HAS_REDIS=!!(c&&c.redis);
     if(c&&c.vc24){
       document.getElementById('pwBtn').style.display='inline-flex';
       document.getElementById('pwMe').textContent=ME||'(bạn)';
-      var others=VC24_USERS_LIST.filter(function(u){return u!==ME;});
-      if(others.length){ document.getElementById('pwResetBox').style.display='block'; document.getElementById('pwTarget').innerHTML=others.map(function(u){return '<option value="'+u+'">'+u+'</option>';}).join(''); }
     }
   }catch(e){}
 })();

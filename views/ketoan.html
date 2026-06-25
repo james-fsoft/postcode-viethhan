@@ -403,17 +403,7 @@
       </div>
       <button class="btn primary" onclick="changeMyPassword()">🔑 Đổi mật khẩu</button>
       <span class="small" id="pwMsg" style="margin-left:10px;font-weight:700"></span>
-      <div id="pwResetBox" style="display:none;border-top:1px solid var(--g200);margin-top:18px;padding-top:14px">
-        <h2 style="font-size:.92rem;margin:0 0 4px;color:var(--g700)">Reset mật khẩu cho account khác (nhóm VC24)</h2>
-        <p class="small muted" style="margin-bottom:10px">Dùng khi đồng nghiệp quên mật khẩu. Cần nhập mật khẩu CỦA BẠN để xác nhận.</p>
-        <div class="grid2">
-          <div class="field"><label>Chọn account</label><select id="pwTarget" class="ef"></select></div>
-          <div class="field"><label>Mật khẩu mới cho account đó (≥ 6)</label><input id="pwResetNew" type="password" autocomplete="new-password" /></div>
-        </div>
-        <div class="field"><label>Mật khẩu CỦA BẠN (xác nhận)</label><input id="pwResetMine" type="password" autocomplete="current-password" /></div>
-        <button class="btn" onclick="resetUserPassword()" style="border-color:#f59e0b;color:#b45309">♻️ Reset mật khẩu account đã chọn</button>
-        <span class="small" id="pwResetMsg" style="margin-left:10px;font-weight:700"></span>
-      </div>
+      <p class="small muted" style="margin:14px 0 0">🔒 Chỉ chính bạn đổi được mật khẩu của mình — không ai reset hộ được.</p>
     </div>
     <div class="panel" style="max-width:680px;border-color:#fecaca;background:#fff8f8;margin-top:16px">
       <div class="ph"><h2 style="color:#dc2626">⚠️ Vùng nguy hiểm</h2></div>
@@ -852,16 +842,8 @@ async function deletePayHist(at){
 async function logout(){ try{ await fetch('/api/logout',{method:'POST'});}catch(e){} location.reload(); }
 
 /* ---------- Đổi / Reset mật khẩu ---------- */
-let ME='', VC24_USERS_LIST=[];
-function renderPwUI(){
-  const meEl=$('pwMe'); if(meEl) meEl.textContent=ME||'(bạn)';
-  const others=VC24_USERS_LIST.filter(u=>u!==ME);
-  const box=$('pwResetBox'), sel=$('pwTarget');
-  if(box && sel){
-    if(others.length){ box.style.display='block'; sel.innerHTML=others.map(u=>`<option value="${escA(u)}">${esc(u)}</option>`).join(''); }
-    else box.style.display='none';
-  }
-}
+let ME='';
+function renderPwUI(){ const meEl=$('pwMe'); if(meEl) meEl.textContent=ME||'(bạn)'; }
 async function changeMyPassword(){
   const oldP=$('pwOld').value, np=$('pwNew').value, np2=$('pwNew2').value, msg=$('pwMsg');
   const set=(t,ok)=>{ msg.textContent=t; msg.style.color=ok?'var(--green)':'#dc2626'; };
@@ -876,21 +858,6 @@ async function changeMyPassword(){
     $('pwOld').value=$('pwNew').value=$('pwNew2').value='';
     set('✓ Đã đổi mật khẩu. Lần đăng nhập sau dùng mật khẩu mới.',1);
   }catch(e){ set('❌ Lỗi khi đổi mật khẩu.',0); }
-}
-async function resetUserPassword(){
-  const target=$('pwTarget').value, np=$('pwResetNew').value, mine=$('pwResetMine').value, msg=$('pwResetMsg');
-  const set=(t,ok)=>{ msg.textContent=t; msg.style.color=ok?'var(--green)':'#dc2626'; };
-  if(!target){ set('⚠️ Chọn account.',0); return; }
-  if((np||'').length<6){ set('⚠️ Mật khẩu mới phải ≥ 6 ký tự.',0); return; }
-  if(!mine){ set('⚠️ Nhập mật khẩu của bạn để xác nhận.',0); return; }
-  if(!confirm(`Reset mật khẩu cho account "${target}" thành mật khẩu mới?`)) return;
-  set('⏳ Đang reset…',1);
-  try{
-    const r=await fetch('/api/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({targetUser:target,newPassword:np,password:mine})}).then(x=>x.json());
-    if(!r.ok){ set(r.reason==='password'?'❌ Mật khẩu của bạn sai.':(r.reason==='notarget'?'❌ Account không hợp lệ.':(r.reason==='forbidden'?'❌ Không có quyền.':(r.reason==='short'?'❌ Mật khẩu mới quá ngắn.':'❌ Reset thất bại.'))),0); return; }
-    $('pwResetNew').value=$('pwResetMine').value='';
-    set(`✓ Đã reset mật khẩu cho "${target}". Báo họ mật khẩu mới.`,1);
-  }catch(e){ set('❌ Lỗi khi reset.',0); }
 }
 
 setTimeout(()=>{ const ov=$('loadOverlay'); if(ov) ov.classList.add('hide'); }, 20000);   // an toàn: không kẹt spinner
@@ -912,7 +879,7 @@ async function loadServerData(){
     LEDGER = d.ledger || {};
     RATES = d.rates || {};
     DRAFT = d.draft || null;
-    ME = d.me || ''; VC24_USERS_LIST = Array.isArray(d.vc24Users)?d.vc24Users:[];
+    ME = d.me || '';
     renderPwUI();
     if(d.cfg && Object.keys(d.cfg).length){ CFG=d.cfg; CFG_KEYS.forEach(k=>{const el=$('cfg_'+k); if(el)el.value=CFG[k]||'';}); }
     else loadCfgLocal();

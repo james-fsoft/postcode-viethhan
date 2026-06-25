@@ -226,20 +226,6 @@ app.post('/api/change-password', requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
-// Reset mật khẩu cho account KHÁC trong nhóm VC24 (xác nhận bằng mật khẩu của người reset)
-app.post('/api/reset-password', requireAuth, async (req, res) => {
-  const actor = userFromReq(req);
-  const { targetUser, newPassword, password } = req.body || {};
-  if (!actor || !isVC24(actor)) return res.json({ ok: false, reason: 'forbidden' });
-  if (!useRedis) return res.json({ ok: false, reason: 'noredis' });
-  if (!isVC24(targetUser) || !USERS[targetUser]) return res.json({ ok: false, reason: 'notarget' });
-  if (!(await verifyPassword(actor, password))) return res.json({ ok: false, reason: 'password' });
-  if (String(newPassword || '').length < 6) return res.json({ ok: false, reason: 'short' });
-  if (!(await setPassword(targetUser, newPassword))) return res.json({ ok: false, reason: 'save' });
-  await vcLog('password-reset', `Reset mật khẩu cho account "${targetUser}"`, actor);
-  res.json({ ok: true });
-});
-
 // Tải file qua server: nhận base64 client dựng, trả về dạng attachment thật.
 // Dùng cho trình duyệt trong app (Zalo/Messenger/Kakao) — webview không tải được
 // blob do JS tạo, nhưng tải tốt response HTTP có Content-Disposition: attachment.
@@ -491,7 +477,6 @@ app.get('/api/config', async (req, res) => {
     contact,
     hub: USER_HUBS[username] || (isVC24(username) ? { url: '/vc24global-main', label: '🏢 VC24 Global' } : null),
     vc24: isVC24(username),
-    vc24Users: isVC24(username) ? [...VC24_USERS] : undefined,
   });
 });
 
@@ -667,7 +652,7 @@ app.get('/api/vc24/data', requireAuth, requireVC24, async (req, res) => {
   let ledger = {}; try { ledger = ledg ? JSON.parse(ledg) : {}; } catch { /* ok */ }
   let rates = {}; try { rates = rt ? JSON.parse(rt) : {}; } catch { /* ok */ }
   const draft = gzUnpack(drf, null);
-  res.json({ ok: true, redis: true, rows: o.rows, fileName: o.fileName, uploadedAt: o.uploadedAt, cfg: c, ledger, draft, rates, me: userFromReq(req), vc24Users: [...VC24_USERS] });
+  res.json({ ok: true, redis: true, rows: o.rows, fileName: o.fileName, uploadedAt: o.uploadedAt, cfg: c, ledger, draft, rates, me: userFromReq(req) });
 });
 
 // Giá vận chuyển/kg theo khu vực cho từng tuần

@@ -7,6 +7,7 @@ const fs   = require('fs');
 const https = require('https');
 const http  = require('http');
 const zlib  = require('zlib');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -180,9 +181,9 @@ app.get('/login', (req, res) => {
   sendPage(res, 'login.html');
 });
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { username, password, remember } = req.body;
-  if (USERS[username] && USERS[username] === password) {
+  if (username && await verifyPassword(username, password)) {
     // Nhóm VC24 (kế toán dùng chung): KHÔNG giữ đăng nhập dài — luôn dùng cookie
     // phiên (đóng trình duyệt là phải nhập lại), bỏ qua "remember 30 ngày".
     if (isVC24(username)) {
@@ -210,6 +211,33 @@ app.get('/api/version', (req, res) => {
     commit: (process.env.VERCEL_GIT_COMMIT_SHA || 'local').slice(0, 7),
     msg: process.env.VERCEL_GIT_COMMIT_MESSAGE || '',
   });
+});
+
+// Đổi mật khẩu của CHÍNH MÌNH (cần mật khẩu hiện tại)
+app.post('/api/change-password', requireAuth, async (req, res) => {
+  const user = userFromReq(req);
+  const { oldPassword, newPassword } = req.body || {};
+  if (!user) return res.json({ ok: false, reason: 'auth' });
+  if (!useRedis) return res.json({ ok: false, reason: 'noredis' });
+  if (!(await verifyPassword(user, oldPassword))) return res.json({ ok: false, reason: 'oldwrong' });
+  if (String(newPassword || '').length < 6) return res.json({ ok: false, reason: 'short' });
+  if (!(await setPassword(user, newPassword))) return res.json({ ok: false, reason: 'save' });
+  await vcLog('password', 'Đổi mật khẩu của chính mình', user);
+  res.json({ ok: true });
+});
+
+// Reset mật khẩu cho account KHÁC trong nhóm VC24 (xác nhận bằng mật khẩu của người reset)
+app.post('/api/reset-password', requireAuth, async (req, res) => {
+  const actor = userFromReq(req);
+  const { targetUser, newPassword, password } = req.body || {};
+  if (!actor || !isVC24(actor)) return res.json({ ok: false, reason: 'forbidden' });
+  if (!useRedis) return res.json({ ok: false, reason: 'noredis' });
+  if (!isVC24(targetUser) || !USERS[targetUser]) return res.json({ ok: false, reason: 'notarget' });
+  if (!(await verifyPassword(actor, password))) return res.json({ ok: false, reason: 'password' });
+  if (String(newPassword || '').length < 6) return res.json({ ok: false, reason: 'short' });
+  if (!(await setPassword(targetUser, newPassword))) return res.json({ ok: false, reason: 'save' });
+  await vcLog('password-reset', `Reset mật khẩu cho account "${targetUser}"`, actor);
+  res.json({ ok: true });
 });
 
 // Tải file qua server: nhận base64 client dựng, trả về dạng attachment thật.
@@ -381,6 +409,36 @@ async function redisGet(key) {
     const j = await r.json();
     return j.result;
   } catch { return null; }
+}
+// ── Mật khẩu: override (băm scrypt) lưu Redis, ưu tiên hơn env USERS ─────────
+const PW_KEY = 'auth:pw';
+async function loadPwOverrides() {
+  if (!useRedis) return {};
+  try { const s = await redisGet(PW_KEY); return s ? JSON.parse(s) : {}; } catch { return {}; }
+}
+function hashPw(pw, salt) {
+  salt = salt || crypto.randomBytes(16).toString('hex');
+  return { salt, hash: crypto.scryptSync(String(pw), salt, 32).toString('hex') };
+}
+function pwMatches(rec, pw) {
+  if (!rec || !rec.salt || !rec.hash) return false;
+  try {
+    const h = crypto.scryptSync(String(pw), rec.salt, 32).toString('hex');
+    return crypto.timingSafeEqual(Buffer.from(rec.hash, 'hex'), Buffer.from(h, 'hex'));
+  } catch { return false; }
+}
+// Xác thực: nếu có override trong Redis -> so băm; nếu không -> so env USERS
+async function verifyPassword(user, pw) {
+  if (!user || pw == null) return false;
+  const ov = await loadPwOverrides();
+  if (ov[user]) return pwMatches(ov[user], pw);
+  return !!(USERS[user] && USERS[user] === String(pw));
+}
+async function setPassword(user, pw) {
+  if (!useRedis) return false;
+  const ov = await loadPwOverrides();
+  ov[user] = hashPw(pw);
+  return redisSet(PW_KEY, JSON.stringify(ov));
 }
 async function getUsage(user) {
   if (useRedis) return parseInt(await redisCmd('get', `usage:${user}`) || '0', 10);
@@ -607,7 +665,7 @@ app.get('/api/vc24/data', requireAuth, requireVC24, async (req, res) => {
   let ledger = {}; try { ledger = ledg ? JSON.parse(ledg) : {}; } catch { /* ok */ }
   let rates = {}; try { rates = rt ? JSON.parse(rt) : {}; } catch { /* ok */ }
   const draft = gzUnpack(drf, null);
-  res.json({ ok: true, redis: true, rows: o.rows, fileName: o.fileName, uploadedAt: o.uploadedAt, cfg: c, ledger, draft, rates });
+  res.json({ ok: true, redis: true, rows: o.rows, fileName: o.fileName, uploadedAt: o.uploadedAt, cfg: c, ledger, draft, rates, me: userFromReq(req), vc24Users: [...VC24_USERS] });
 });
 
 // Giá vận chuyển/kg theo khu vực cho từng tuần
@@ -876,7 +934,7 @@ app.post('/api/vc24/delete', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
   const { key, password } = req.body || {};
   const user = userFromReq(req);
-  if (!password || password !== USERS[user]) return res.json({ ok: false, reason: 'password' });
+  if (!password || !(await verifyPassword(user, password))) return res.json({ ok: false, reason: 'password' });
   if (!key) return res.json({ ok: false });
   const o = await vcLoadOrders();
   const before = o.rows.length;
@@ -892,7 +950,7 @@ app.post('/api/vc24/reset', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
   const { password, confirm } = req.body || {};
   const user = userFromReq(req);
-  if (!password || password !== USERS[user]) return res.json({ ok: false, reason: 'password' });
+  if (!password || !(await verifyPassword(user, password))) return res.json({ ok: false, reason: 'password' });
   const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toUpperCase().replace(/\s+/g, ' ').trim();
   if (norm(confirm) !== 'TOI DONG Y XOA') return res.json({ ok: false, reason: 'confirm' });
   const s1 = await vcSaveOrders({ rows: [], fileName: '', uploadedAt: null });
@@ -910,7 +968,7 @@ app.post('/api/vc24/week-delete', requireAuth, requireVC24, async (req, res) => 
   if (!useRedis) return res.json({ ok: false, redis: false });
   const { week, password, confirm } = req.body || {};
   const user = userFromReq(req);
-  if (!password || password !== USERS[user]) return res.json({ ok: false, reason: 'password' });
+  if (!password || !(await verifyPassword(user, password))) return res.json({ ok: false, reason: 'password' });
   const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toUpperCase().replace(/\s+/g, ' ').trim();
   if (norm(confirm) !== 'TOI DONG Y XOA') return res.json({ ok: false, reason: 'confirm' });
   if (!/^\d{4}-W\d{2}$/.test(String(week || ''))) return res.json({ ok: false, reason: 'week' });

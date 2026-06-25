@@ -393,6 +393,28 @@
       <button class="btn primary" onclick="saveCfg()">💾 Lưu thông tin</button>
       <span class="small" id="cfgSaved" style="margin-left:10px;color:var(--green);font-weight:700;display:none">✓ Đã lưu</span>
     </div>
+    <div class="panel" style="max-width:680px;margin-top:16px">
+      <div class="ph"><h2>🔑 Mật khẩu</h2></div>
+      <h2 style="font-size:.92rem;margin:4px 0 8px;color:var(--g700)">Đổi mật khẩu của tôi (<b id="pwMe">—</b>)</h2>
+      <div class="field"><label>Mật khẩu hiện tại</label><input id="pwOld" type="password" autocomplete="current-password" /></div>
+      <div class="grid2">
+        <div class="field"><label>Mật khẩu mới (≥ 6 ký tự)</label><input id="pwNew" type="password" autocomplete="new-password" /></div>
+        <div class="field"><label>Nhập lại mật khẩu mới</label><input id="pwNew2" type="password" autocomplete="new-password" /></div>
+      </div>
+      <button class="btn primary" onclick="changeMyPassword()">🔑 Đổi mật khẩu</button>
+      <span class="small" id="pwMsg" style="margin-left:10px;font-weight:700"></span>
+      <div id="pwResetBox" style="display:none;border-top:1px solid var(--g200);margin-top:18px;padding-top:14px">
+        <h2 style="font-size:.92rem;margin:0 0 4px;color:var(--g700)">Reset mật khẩu cho account khác (nhóm VC24)</h2>
+        <p class="small muted" style="margin-bottom:10px">Dùng khi đồng nghiệp quên mật khẩu. Cần nhập mật khẩu CỦA BẠN để xác nhận.</p>
+        <div class="grid2">
+          <div class="field"><label>Chọn account</label><select id="pwTarget" class="ef"></select></div>
+          <div class="field"><label>Mật khẩu mới cho account đó (≥ 6)</label><input id="pwResetNew" type="password" autocomplete="new-password" /></div>
+        </div>
+        <div class="field"><label>Mật khẩu CỦA BẠN (xác nhận)</label><input id="pwResetMine" type="password" autocomplete="current-password" /></div>
+        <button class="btn" onclick="resetUserPassword()" style="border-color:#f59e0b;color:#b45309">♻️ Reset mật khẩu account đã chọn</button>
+        <span class="small" id="pwResetMsg" style="margin-left:10px;font-weight:700"></span>
+      </div>
+    </div>
     <div class="panel" style="max-width:680px;border-color:#fecaca;background:#fff8f8;margin-top:16px">
       <div class="ph"><h2 style="color:#dc2626">⚠️ Vùng nguy hiểm</h2></div>
       <p class="small" style="color:var(--g600);margin-bottom:12px">Xóa <b>TOÀN BỘ</b> kiện hàng + công nợ + lịch sử thu tiền của VC24. <b style="color:#dc2626">KHÔNG THỂ HỒI PHỤC.</b></p>
@@ -829,6 +851,48 @@ async function deletePayHist(at){
 }
 async function logout(){ try{ await fetch('/api/logout',{method:'POST'});}catch(e){} location.reload(); }
 
+/* ---------- Đổi / Reset mật khẩu ---------- */
+let ME='', VC24_USERS_LIST=[];
+function renderPwUI(){
+  const meEl=$('pwMe'); if(meEl) meEl.textContent=ME||'(bạn)';
+  const others=VC24_USERS_LIST.filter(u=>u!==ME);
+  const box=$('pwResetBox'), sel=$('pwTarget');
+  if(box && sel){
+    if(others.length){ box.style.display='block'; sel.innerHTML=others.map(u=>`<option value="${escA(u)}">${esc(u)}</option>`).join(''); }
+    else box.style.display='none';
+  }
+}
+async function changeMyPassword(){
+  const oldP=$('pwOld').value, np=$('pwNew').value, np2=$('pwNew2').value, msg=$('pwMsg');
+  const set=(t,ok)=>{ msg.textContent=t; msg.style.color=ok?'var(--green)':'#dc2626'; };
+  if(!oldP){ set('⚠️ Nhập mật khẩu hiện tại.',0); return; }
+  if((np||'').length<6){ set('⚠️ Mật khẩu mới phải ≥ 6 ký tự.',0); return; }
+  if(np!==np2){ set('⚠️ Nhập lại mật khẩu mới không khớp.',0); return; }
+  if(!REDIS){ set('⚠️ Chưa bật lưu trữ server.',0); return; }
+  set('⏳ Đang đổi…',1);
+  try{
+    const r=await fetch('/api/change-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({oldPassword:oldP,newPassword:np})}).then(x=>x.json());
+    if(!r.ok){ set(r.reason==='oldwrong'?'❌ Mật khẩu hiện tại sai.':(r.reason==='short'?'❌ Mật khẩu mới quá ngắn.':(r.reason==='noredis'?'❌ Chưa bật lưu trữ.':'❌ Đổi thất bại.')),0); return; }
+    $('pwOld').value=$('pwNew').value=$('pwNew2').value='';
+    set('✓ Đã đổi mật khẩu. Lần đăng nhập sau dùng mật khẩu mới.',1);
+  }catch(e){ set('❌ Lỗi khi đổi mật khẩu.',0); }
+}
+async function resetUserPassword(){
+  const target=$('pwTarget').value, np=$('pwResetNew').value, mine=$('pwResetMine').value, msg=$('pwResetMsg');
+  const set=(t,ok)=>{ msg.textContent=t; msg.style.color=ok?'var(--green)':'#dc2626'; };
+  if(!target){ set('⚠️ Chọn account.',0); return; }
+  if((np||'').length<6){ set('⚠️ Mật khẩu mới phải ≥ 6 ký tự.',0); return; }
+  if(!mine){ set('⚠️ Nhập mật khẩu của bạn để xác nhận.',0); return; }
+  if(!confirm(`Reset mật khẩu cho account "${target}" thành mật khẩu mới?`)) return;
+  set('⏳ Đang reset…',1);
+  try{
+    const r=await fetch('/api/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({targetUser:target,newPassword:np,password:mine})}).then(x=>x.json());
+    if(!r.ok){ set(r.reason==='password'?'❌ Mật khẩu của bạn sai.':(r.reason==='notarget'?'❌ Account không hợp lệ.':(r.reason==='forbidden'?'❌ Không có quyền.':(r.reason==='short'?'❌ Mật khẩu mới quá ngắn.':'❌ Reset thất bại.'))),0); return; }
+    $('pwResetNew').value=$('pwResetMine').value='';
+    set(`✓ Đã reset mật khẩu cho "${target}". Báo họ mật khẩu mới.`,1);
+  }catch(e){ set('❌ Lỗi khi reset.',0); }
+}
+
 setTimeout(()=>{ const ov=$('loadOverlay'); if(ov) ov.classList.add('hide'); }, 20000);   // an toàn: không kẹt spinner
 (async function(){
   initUpWeek();
@@ -848,6 +912,8 @@ async function loadServerData(){
     LEDGER = d.ledger || {};
     RATES = d.rates || {};
     DRAFT = d.draft || null;
+    ME = d.me || ''; VC24_USERS_LIST = Array.isArray(d.vc24Users)?d.vc24Users:[];
+    renderPwUI();
     if(d.cfg && Object.keys(d.cfg).length){ CFG=d.cfg; CFG_KEYS.forEach(k=>{const el=$('cfg_'+k); if(el)el.value=CFG[k]||'';}); }
     else loadCfgLocal();
     if(Array.isArray(d.rows) && d.rows.length){
@@ -1084,7 +1150,7 @@ async function clearDraft(){
 
 /* ---------- Lịch sử ---------- */
 function fmtDT(s){ try{ return new Date(s).toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }catch(e){ return String(s||''); } }
-function actLabel(a){ return ({commit:'Đẩy lên tổng',payment:'Thu tiền',bulkpay:'Thu nhiều đơn',delete:'Xóa đơn',edit:'Sửa đơn',reset:'Xóa toàn bộ',rates:'Cài giá VC',surcharge:'Phí phát sinh','payment-edit':'Sửa lịch sử thu','payment-delete':'Xóa dòng thu','week-delete':'Xóa tuần'})[a]||a; }
+function actLabel(a){ return ({commit:'Đẩy lên tổng',payment:'Thu tiền',bulkpay:'Thu nhiều đơn',delete:'Xóa đơn',edit:'Sửa đơn',reset:'Xóa toàn bộ',rates:'Cài giá VC',surcharge:'Phí phát sinh','payment-edit':'Sửa lịch sử thu','payment-delete':'Xóa dòng thu','week-delete':'Xóa tuần','password':'Đổi mật khẩu','password-reset':'Reset mật khẩu'})[a]||a; }
 async function renderHistory(){
   const box=$('histList'); box.innerHTML='<div class="small muted" style="padding:20px">Đang tải lịch sử…</div>';
   let d={uploads:[],log:[]}; try{ d=await fetch('/api/vc24/history').then(r=>r.json()); }catch(e){}

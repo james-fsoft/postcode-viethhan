@@ -765,10 +765,21 @@ $('payModal').addEventListener('click',e=>{ if(e.target.id==='payModal') closePa
 $('payEditModal').addEventListener('click',e=>{ if(e.target.id==='payEditModal') closePayEdit(); });
 
 /* ---------- Modal chi tiết đơn của khách (riêng, dễ đóng/quay lại) ---------- */
-let CD_CUST='', CD_SEL=new Set();
-function showCustDetail(cust){ CD_CUST=cust; CD_SEL=new Set(); renderCD(); $('custDetailModal').classList.add('show'); }
+let CD_CUST='', CD_SEL=new Set(), CD_FROM='', CD_TO='';
+function showCustDetail(cust){ CD_CUST=cust; CD_SEL=new Set(); CD_FROM=''; CD_TO=''; renderCD(); $('custDetailModal').classList.add('show'); }
+// Lọc đơn của khách theo NGÀY VỀ (khoảng từ–đến)
+function cdInRange(r){
+  if(!CD_FROM && !CD_TO) return true;
+  const d=parseVNDate(r.date); if(!d) return false;
+  if(CD_FROM && d < new Date(CD_FROM+'T00:00:00Z')) return false;
+  if(CD_TO && d > new Date(CD_TO+'T00:00:00Z')) return false;
+  return true;
+}
+function cdViewRows(){ return ROWS.filter(r=>r.cust===CD_CUST && cdInRange(r)); }
+function cdDateChanged(){ CD_FROM=$('cdFrom').value; CD_TO=$('cdTo').value; renderCD(); }
+function cdClearDate(){ CD_FROM=''; CD_TO=''; renderCD(); }
 function cdToggle(key,el){ if(el.checked)CD_SEL.add(key); else CD_SEL.delete(key); cdUpdateSelBtn(); }
-function cdSelAll(el){ const rows=ROWS.filter(r=>r.cust===CD_CUST); if(el.checked) rows.forEach(r=>CD_SEL.add(r.key)); else CD_SEL.clear(); renderCD(); }
+function cdSelAll(el){ const rows=cdViewRows(); if(el.checked) rows.forEach(r=>CD_SEL.add(r.key)); else rows.forEach(r=>CD_SEL.delete(r.key)); renderCD(); }
 function cdUpdateSelBtn(){ const b=$('cdSelInvBtn'); if(!b)return; const n=CD_SEL.size; b.style.display=n?'inline-flex':'none'; const c=$('cdSelN'); if(c)c.textContent=n; }
 function cdInvoiceSel(){ const rows=ROWS.filter(r=>r.cust===CD_CUST && CD_SEL.has(r.key)); if(!rows.length){ alert('Hãy tick chọn ít nhất 1 dòng.'); return; } openInvoice(CD_CUST,false,rows); }
 function closeCustDetail(){ $('custDetailModal').classList.remove('show'); }
@@ -778,28 +789,36 @@ function refreshCD(){ if($('custDetailModal').classList.contains('show')) render
 $('custDetailModal').addEventListener('click',e=>{ if(e.target.id==='custDetailModal') closeCustDetail(); });
 function oweText(oweWon,oweVnd){ const a=[]; if(oweWon)a.push('₩'+oweWon.toLocaleString('en-US')); if(oweVnd)a.push(oweVnd.toLocaleString('en-US')+' ₫'); return a.length?a.join(' + '):'₩0'; }
 function renderCD(){
-  const cust=CD_CUST, rows=ROWS.filter(r=>r.cust===cust);
-  const owe=rows.filter(r=>!paid(r));
+  const cust=CD_CUST, all=ROWS.filter(r=>r.cust===cust), rows=cdViewRows();
+  const owe=all.filter(r=>!paid(r));
   const oweWon=Math.max(0,sumWon(owe)+surchargeOf(cust)-creditOf(cust)), oweVnd=sumVnd(owe)+surchargeVndOf(cust);
   const hasDebt=owe.length||oweWon||oweVnd;
-  $('cdTitle').innerHTML=`👤 ${esc(cust)} <span style="font-weight:600;color:var(--g400);font-size:.85rem">— ${rows.length} đơn`+(hasDebt?`, nợ <b style="color:#e11d48">${oweText(oweWon,oweVnd)}</b>`:`, <b style="color:var(--green)">đã thu hết</b>`)+`</span>`;
+  $('cdTitle').innerHTML=`👤 ${esc(cust)} <span style="font-weight:600;color:var(--g400);font-size:.85rem">— ${all.length} đơn`+(hasDebt?`, nợ <b style="color:#e11d48">${oweText(oweWon,oweVnd)}</b>`:`, <b style="color:var(--green)">đã thu hết</b>`)+`</span>`;
   $('cdPayBtn').style.display=owe.length?'inline-flex':'none';
+  const filtering=!!(CD_FROM||CD_TO);
   $('cdBody').innerHTML=`
     <div style="margin-bottom:10px">${paidToggleHTML()}</div>
     <div class="stats" style="margin-bottom:12px">
-      ${stat('Tổng đơn',rows.length,'','')}${stat('Đơn chưa thu',owe.length,owe.length?'owe':'','')}${stat('Còn nợ (KRW)','₩'+oweWon.toLocaleString('en-US'),'owe','')}${oweVnd?stat('Còn nợ (VND)',oweVnd.toLocaleString('en-US')+' ₫','owe','gồm phụ phí'):''}${SHOW_PAID?`<div class="stat" style="cursor:pointer;border-color:#86efac" onclick="showCustHistory('${escJs(cust)}')"><div class="lab">💰 Đã trả (KRW) — lịch sử ›</div><div class="val paid">₩${paidWonOf(cust).toLocaleString('en-US')}</div></div>`:''}
+      ${stat('Tổng đơn',all.length,'','')}${stat('Đơn chưa thu',owe.length,owe.length?'owe':'','')}${stat('Còn nợ (KRW)','₩'+oweWon.toLocaleString('en-US'),'owe','')}${oweVnd?stat('Còn nợ (VND)',oweVnd.toLocaleString('en-US')+' ₫','owe','gồm phụ phí'):''}${SHOW_PAID?`<div class="stat" style="cursor:pointer;border-color:#86efac" onclick="showCustHistory('${escJs(cust)}')"><div class="lab">💰 Đã trả (KRW) — lịch sử ›</div><div class="val paid">₩${paidWonOf(cust).toLocaleString('en-US')}</div></div>`:''}
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;padding:8px 10px;background:var(--g50,#f8fafc);border:1px solid var(--g200);border-radius:10px">
+      <span class="small" style="font-weight:700;color:var(--g600)">📅 Lọc theo ngày về:</span>
+      <input type="date" id="cdFrom" class="ef" style="width:auto" value="${CD_FROM}" onchange="cdDateChanged()" />
+      <span class="small muted">→</span>
+      <input type="date" id="cdTo" class="ef" style="width:auto" value="${CD_TO}" onchange="cdDateChanged()" />
+      ${filtering?`<button class="btn sm" onclick="cdClearDate()">✖ Xóa lọc</button><span class="small" style="font-weight:700;color:#2563eb">Hiện ${rows.length}/${all.length} đơn</span>`:''}
     </div>
     <div class="small muted" style="margin-bottom:6px">💡 Bấm 1 dòng để sửa. Tick ô đầu dòng để chọn các mục cần xuất hóa đơn riêng.</div>
     <div class="tbl-wrap" style="max-height:52vh">
       <table><thead><tr><th style="width:30px"><input type="checkbox" onclick="cdSelAll(this)" title="Chọn tất cả" ${(CD_SEL.size&&CD_SEL.size===rows.length)?'checked':''} /></th><th>Ngày về</th><th>Mã kiện</th><th>Check TT</th><th>Ngày thu</th><th>Người nhận</th><th>Địa chỉ</th><th>Khu vực</th><th class="r">KG</th><th class="r">Tiền Won (₩)</th><th class="r">Phụ phí (₫)</th><th class="r">Phụ phí (₩)</th><th>Ghi chú</th></tr></thead>
-      <tbody>${rows.map(r=>`<tr class="rowclick" onclick="openEdit('${escJs(r.key)}')">
+      <tbody>${rows.length?rows.map(r=>`<tr class="rowclick" onclick="openEdit('${escJs(r.key)}')">
         <td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" ${CD_SEL.has(r.key)?'checked':''} onclick="cdToggle('${escJs(r.key)}',this)" /></td>
         <td>${esc(r.date)}</td><td style="font-weight:700">${esc(r.pkg)}</td>
         <td><span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span></td>
         <td>${paid(r)?fmtPaidDate(r.paidDate):'<span class="muted">—</span>'}</td>
         <td>${esc(r.rcv)}</td><td>${esc(r.addr)}</td><td>${r.region?'<span class="pill reg">'+esc(r.region)+'</span>':''}</td>
         <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.won)}</td><td class="r num">${fmtVnd(r.phuPhi)}</td><td class="r num">${fmtWon(r.phuPhiWon)}</td><td>${esc(r.ghiChu)}</td>
-      </tr>`).join('')}</tbody></table>
+      </tr>`).join(''):`<tr><td colspan="13" style="text-align:center;color:var(--g400);padding:18px">Không có đơn nào trong khoảng ngày đã chọn.</td></tr>`}</tbody></table>
     </div>`;
   cdUpdateSelBtn();
 }

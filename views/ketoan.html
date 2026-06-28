@@ -1698,8 +1698,8 @@ function renderInvoiceDoc(){
           <td style="text-align:right">${r.phuPhiWon?'₩'+nf(r.phuPhiWon):''}</td>
           <td style="text-align:right">${r.phuPhi?nf(r.phuPhi)+' ₫':''}</td>
           <td style="text-align:right">${r.vnd?nf(r.vnd)+' ₫':''}</td></tr>`).join('')}
-        <tr class="tot-row"><td colspan="6" style="text-align:right">TỔNG · ${kr('합계')} (${rows.length} đơn/건)</td>
-          <td style="text-align:right">${X.totWon?'₩'+nf(X.totWon):''}</td><td style="text-align:right">${X.totPhiWon?'₩'+nf(X.totPhiWon):''}</td><td style="text-align:right">${X.totPhi?nf(X.totPhi)+' ₫':''}</td><td style="text-align:right">${X.totVnd?nf(X.totVnd)+' ₫':''}</td></tr>
+        <tr class="tot-row"><td colspan="6" style="text-align:right">TỔNG (gồm phụ phí) · ${kr('합계')} (${rows.length} đơn/건)</td>
+          <td style="text-align:right">${(X.totWon+X.totPhiWon)?'₩'+nf(X.totWon+X.totPhiWon):''}</td><td style="text-align:right">${X.totPhiWon?'₩'+nf(X.totPhiWon):''}</td><td style="text-align:right">${X.totPhi?nf(X.totPhi)+' ₫':''}</td><td style="text-align:right">${(X.totVnd+X.totPhi)?nf(X.totVnd+X.totPhi)+' ₫':''}</td></tr>
       </tbody>
     </table>
     ${hist.length?`<div class="inv-pay-hist" style="margin-top:14px;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;background:#f8fafc">
@@ -1774,7 +1774,7 @@ function exportInvoiceXlsx(){
   const head=['STT / No.','Ngày về / 날짜','Mã kiện / 송장번호','Người nhận / 수취인','SĐT nhận / 연락처','Địa chỉ / 주소','Khu vực / 지역','KG / 중량','Đơn giá (₩) / 단가','Tiền Won (₩) / 금액','Phụ phí (₩) / 추가비용','Phụ phí (₫) / 추가비용','Tiền VND (₫) / 금액'];
   row(head);
   rows.forEach((r,i)=>row([i+1,r.date,r.pkg,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.phuPhiWon)||'',Number(r.phuPhi)||'',Number(r.vnd)||''],{7:XF_KG,8:XF_WON,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND}));
-  row(['','','','','','','TỔNG / 합계',sum(rows,'weight')||'','',X.totWon,X.totPhiWon,X.totPhi,X.totVnd],{7:XF_KG,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND});
+  row(['','','','','','','TỔNG (gồm phụ phí) / 합계',sum(rows,'weight')||'','',X.totWon+X.totPhiWon,X.totPhiWon,X.totPhi,X.totVnd+X.totPhi],{7:XF_KG,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND});
   row([]);
   const hist=historyOf(cust);
   if(hist.length){ row(['LỊCH SỬ THANH TOÁN / 입금 내역']); row(['Ngày / 날짜','Số tiền (₩) / 금액','Số đơn gạch / 처리건']); hist.forEach(h=>row([fmtPaidDate(h.date),Number(h.amount)||0,h.marked||0],{1:XF_WON})); row(['Tổng đã nhận / 총 입금액',hist.reduce((s,h)=>s+(Number(h.amount)||0),0),''],{1:XF_WON}); row([]); }

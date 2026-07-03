@@ -15,11 +15,12 @@ const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1);
 
 // Parse USERS env: "admin:pass123,user2:secret"
-// USERS_EXTRA: account bổ sung (gộp vào USERS) — để THÊM account mà KHÔNG cần
-// sửa biến USERS sẵn có (vd biến USERS là Sensitive, không xem lại được giá trị cũ).
+// Gộp thêm MỌI biến bắt đầu bằng USERS_EXTRA (USERS_EXTRA, USERS_EXTRA2, …) —
+// để THÊM account mới bằng cách tạo BIẾN MỚI, không phải mở/sửa biến cũ.
 const USERS = {};
 const usersEnv = process.env.USERS || `${process.env.ADMIN_USER || 'admin'}:${process.env.ADMIN_PASS || 'admin123'}`;
-[usersEnv, process.env.USERS_EXTRA || ''].join(',').split(',').forEach(pair => {
+const extraUserSrc = Object.keys(process.env).filter(k => /^USERS_EXTRA/i.test(k)).sort().map(k => process.env[k] || '');
+[usersEnv, ...extraUserSrc].join(',').split(',').forEach(pair => {
   const idx = pair.indexOf(':');
   if (idx > 0) USERS[pair.slice(0, idx).trim()] = pair.slice(idx + 1).trim();
 });
@@ -362,12 +363,16 @@ const PLANS = {
   enterprise: { maxLookups: 0,  maxPerLookup: 10000 },
 };
 
-// USER_PLANS env: "admin:trial,company1:pro" — mặc định trial
+// USER_PLANS env: "admin:trial,company1:pro" — mặc định trial.
+// Gộp mọi biến bắt đầu bằng USER_PLANS (USER_PLANS, USER_PLANS2, …) để thêm gói
+// cho account mới bằng biến MỚI, không phải sửa biến cũ.
 function getPlan(username) {
   const map = {};
-  (process.env.USER_PLANS || '').split(',').forEach(p => {
-    const i = p.indexOf(':');
-    if (i > 0) map[p.slice(0, i).trim()] = p.slice(i + 1).trim();
+  Object.keys(process.env).filter(k => /^USER_PLANS/i.test(k)).sort().forEach(k => {
+    (process.env[k] || '').split(',').forEach(p => {
+      const i = p.indexOf(':');
+      if (i > 0) map[p.slice(0, i).trim()] = p.slice(i + 1).trim();
+    });
   });
   const name = map[username] || 'trial';
   return { name, ...(PLANS[name] || PLANS.trial) };

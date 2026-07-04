@@ -32,12 +32,12 @@ const VC24_USERS = new Set(
 );
 function isVC24(user) { return !!user && VC24_USERS.has(user); }
 
-// Account được vào /shipping (xử lý vận đơn) — NGOÀI nhóm VC24 (không có quyền kế toán).
-// Nhóm VC24 vẫn vào được. Thêm account qua env SHIPPING_USERS="user1,user2".
+// Account "vận hành VC24" (hub + tra thông quan + xử lý vận đơn) NHƯNG KHÔNG có
+// quyền kế toán. Nhóm VC24 vẫn có tất cả. Thêm account qua env SHIPPING_USERS="user1,user2".
 const SHIPPING_USERS = new Set(
   (process.env.SHIPPING_USERS || 'user1').split(',').map(s => s.trim()).filter(Boolean)
 );
-function isShipping(user) { return isVC24(user) || (!!user && SHIPPING_USERS.has(user)); }
+function isOps(user) { return isVC24(user) || (!!user && SHIPPING_USERS.has(user)); }
 
 const JWT_SECRET = process.env.SESSION_SECRET || 'vh-logistics-change-this-secret';
 const COOKIE = 'vh_token';
@@ -506,8 +506,9 @@ app.get('/api/config', async (req, res) => {
     canUpload: true, isGuest: false, used,
     redis: useRedis,
     contact,
-    hub: USER_HUBS[username] || (isVC24(username) ? { url: '/vc24global-main', label: '🏢 VC24 Global' } : null),
+    hub: USER_HUBS[username] || (isOps(username) ? { url: '/vc24global-main', label: '🏢 VC24 Global' } : null),
     vc24: isVC24(username),
+    ops: isOps(username),
   });
 });
 
@@ -621,13 +622,13 @@ app.get('/tracking', (req, res) => {
 // ── Trang riêng theo công ty — mỗi công ty 1 account + 1 file để tuỳ biến ────
 // VC24 Global: chỉ account 'vhpro' mới vào được. Bản sao của /tracking để sau
 // này sửa format Excel / cách xử lý riêng mà không ảnh hưởng trang chung.
-// Trung tâm điều khiển VC24 (hub) — nhóm account VC24
+// Trung tâm điều khiển VC24 (hub) — vận hành VC24 (isOps); phần kế toán ẩn nếu không phải VC24
 app.get('/vc24global-main', requireAuth, (req, res) => {
-  if (!isVC24(userFromReq(req))) return res.redirect('/');
+  if (!isOps(userFromReq(req))) return res.redirect('/');
   sendTpl(res, 'vc24global-main.html');
 });
 app.get('/vc24global', requireAuth, (req, res) => {
-  if (!isVC24(userFromReq(req))) return res.redirect('/');
+  if (!isOps(userFromReq(req))) return res.redirect('/');
   sendTpl(res, 'vc24global.html');
 });
 // Kế toán & công nợ VC24 Global — nhóm account VC24
@@ -1093,7 +1094,7 @@ app.get('/demo', (req, res) => {
 
 // ── Trang xử lý file vận đơn — chỉ gói Pro / Enterprise ──────────────────────
 app.get('/shipping', requireAuth, (req, res) => {
-  if (!isShipping(userFromReq(req))) return res.redirect('/');   // nhóm VC24 + SHIPPING_USERS
+  if (!isOps(userFromReq(req))) return res.redirect('/');   // nhóm VC24 + SHIPPING_USERS
   sendPage(res, 'views', 'shipping.html');
 });
 

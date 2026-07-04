@@ -116,7 +116,7 @@
       </div>
     </div>
     <div class="topbar-right">
-      <a href="/vc24/ke-toan" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;border:1.5px solid var(--line,#e2e8f0);background:#fff;color:var(--blue,#1e40af);font-size:.8rem;font-weight:700;text-decoration:none">🧾 Kế toán</a>
+      <a href="/vc24/ke-toan" id="navKeToanShip" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;border:1.5px solid var(--line,#e2e8f0);background:#fff;color:var(--blue,#1e40af);font-size:.8rem;font-weight:700;text-decoration:none">🧾 Kế toán</a>
       <a href="/vc24global" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;border:1.5px solid var(--line,#e2e8f0);background:#fff;color:var(--blue,#1e40af);font-size:.8rem;font-weight:700;text-decoration:none">📦 Tra thông quan</a>
       <select class="lang-select" id="langSelect" onchange="setLang(this.value)">
         <option value="vi" data-i18n="langVI">Tiếng Việt</option>
@@ -635,6 +635,7 @@ function fmtBytes(b){ return b<1024?b+' B':b<1048576?(b/1024).toFixed(1)+' KB':(
   try {
     const cfg = await fetch('/api/config').then(r=>r.json());
     JUSO_KEY = cfg.jusoKey;
+    if (!cfg.vc24) { const k = document.getElementById('navKeToanShip'); if (k) k.style.display = 'none'; }
   } catch { /* ignore */ }
 })();
 </script>

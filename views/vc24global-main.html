@@ -47,7 +47,7 @@
     <a class="brand" href="/vc24global-main"><img src="/logo.svg" alt="VC24" /><span><b>VC24 Global</b><div class="sub">Trung tâm điều khiển</div></span></a>
     <nav class="top-nav">
       <a href="/vc24global">📦 Tra thông quan</a>
-      <a href="/vc24/ke-toan">🧾 Kế toán</a>
+      <a href="/vc24/ke-toan" id="navKeToan">🧾 Kế toán</a>
       <a href="/shipping">🚚 Xử lý vận đơn</a>
     </nav>
     <div class="hr-right">
@@ -70,7 +70,7 @@
       <p>Tra tiến trình thông quan hàng nhập về Hàn theo số vận đơn (HAWB) từ Hải quan — đơn lẻ hoặc quét Excel hàng loạt.</p>
       <span class="go">Mở <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
     </a>
-    <a class="card b2" href="/vc24/ke-toan">
+    <a class="card b2" href="/vc24/ke-toan" id="cardKeToan">
       <div class="ico green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10"/><path d="M7 12h6"/><path d="M7 16h4"/><circle cx="17" cy="15" r="2"/></svg></div>
       <h2>Kế toán &amp; Công nợ</h2>
       <p>Quản lý đơn hàng, công nợ theo khách, thu tiền &amp; lịch sử thanh toán, xuất hóa đơn — tất cả lưu trực tuyến.</p>
@@ -141,9 +141,13 @@ async function restoreMyPassword(){
   try{ const c=await fetch('/api/config').then(r=>r.json());
     if(c && c.username){ var ch=document.getElementById('userChip'); ch.style.display='flex'; document.getElementById('uAv').textContent=String(c.username).charAt(0); document.getElementById('uName').textContent=c.username; }
     ME=(c&&c.username)||''; HAS_REDIS=!!(c&&c.redis);
-    if(c&&c.vc24){
+    if(c&&c.username){
       document.getElementById('pwBtn').style.display='inline-flex';
       document.getElementById('pwMe').textContent=ME||'(bạn)';
+    }
+    // Không có quyền kế toán -> ẩn hẳn phần Kế toán
+    if(!(c&&c.vc24)){
+      ['navKeToan','cardKeToan'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; });
     }
   }catch(e){}
 })();

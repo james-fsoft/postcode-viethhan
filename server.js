@@ -32,6 +32,13 @@ const VC24_USERS = new Set(
 );
 function isVC24(user) { return !!user && VC24_USERS.has(user); }
 
+// Account được vào /shipping (xử lý vận đơn) — NGOÀI nhóm VC24 (không có quyền kế toán).
+// Nhóm VC24 vẫn vào được. Thêm account qua env SHIPPING_USERS="user1,user2".
+const SHIPPING_USERS = new Set(
+  (process.env.SHIPPING_USERS || 'user1').split(',').map(s => s.trim()).filter(Boolean)
+);
+function isShipping(user) { return isVC24(user) || (!!user && SHIPPING_USERS.has(user)); }
+
 const JWT_SECRET = process.env.SESSION_SECRET || 'vh-logistics-change-this-secret';
 const COOKIE = 'vh_token';
 // Để trống = chỉ dùng trên domain hiện tại. Đặt '.transflash.app' để dùng CHUNG đăng nhập
@@ -1086,7 +1093,7 @@ app.get('/demo', (req, res) => {
 
 // ── Trang xử lý file vận đơn — chỉ gói Pro / Enterprise ──────────────────────
 app.get('/shipping', requireAuth, (req, res) => {
-  if (!isVC24(userFromReq(req))) return res.redirect('/');   // nhóm account VC24
+  if (!isShipping(userFromReq(req))) return res.redirect('/');   // nhóm VC24 + SHIPPING_USERS
   sendPage(res, 'views', 'shipping.html');
 });
 

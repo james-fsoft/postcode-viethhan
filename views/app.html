@@ -1373,7 +1373,7 @@ const LANGS = {
     excelLockTitle: 'Tính năng dành cho thành viên',
     excelLockBody: 'Đăng nhập để tải lên file Excel và tra cứu hàng loạt hàng nghìn địa chỉ.',
     errBadFormat: 'File không đúng định dạng — không tìm thấy địa chỉ Hàn Quốc. Hãy bấm "Tải file mẫu", nhập địa chỉ Hàn vào cột 주소 (Address) rồi tải lên lại.',
-    errTooManyUpload: (n) => `Bản dùng thử chỉ cho tối đa ${n} địa chỉ mỗi lần. Cần tra nhiều hơn? Liên hệ support@transflash.app.`,
+    errTooManyUpload: (n) => `Tối đa ${n.toLocaleString('en-US')} địa chỉ mỗi lần upload. Cần tra nhiều hơn? Liên hệ support@transflash.app.`,
     bulkContactPre: 'Cần tra cứu số lượng lớn? Liên hệ:',
     errGuestMax: (n) => `Chế độ khách chỉ tra tối đa ${n} địa chỉ mỗi lần. Đăng nhập để tra nhiều hơn.`,
     tabManual: 'Tìm kiếm thủ công', tabExcel: 'Upload Excel',
@@ -1503,7 +1503,7 @@ const LANGS = {
     excelLockTitle: 'Members-only feature',
     excelLockBody: 'Sign in to upload Excel files and look up thousands of addresses in bulk.',
     errBadFormat: 'Invalid file — no Korean address found. Click "Download sample", put Korean addresses in the 주소 (Address) column, then upload again.',
-    errTooManyUpload: (n) => `Up to ${n} addresses per upload. Need more? Contact support@transflash.app.`,
+    errTooManyUpload: (n) => `Up to ${n.toLocaleString('en-US')} addresses per upload. Need more? Contact support@transflash.app.`,
     bulkContactPre: 'Need large-volume lookups? Contact:',
     errGuestMax: (n) => `Guest mode allows max ${n} addresses per search. Sign in for more.`,
     tabManual: 'Manual Search', tabExcel: 'Upload Excel',
@@ -1633,7 +1633,7 @@ const LANGS = {
     excelLockTitle: '회원 전용 기능',
     excelLockBody: '엑셀 파일을 업로드하고 수천 개의 주소를 일괄 조회하려면 로그인하세요.',
     errBadFormat: '잘못된 형식 — 한국 주소를 찾을 수 없습니다. "샘플 다운로드"를 눌러 주소(Address) 열에 한국 주소를 입력 후 다시 업로드하세요.',
-    errTooManyUpload: (n) => `업로드는 최대 ${n}개까지 가능합니다. 더 필요하시면 support@transflash.app 로 문의하세요.`,
+    errTooManyUpload: (n) => `업로드는 최대 ${n.toLocaleString('en-US')}개까지 가능합니다. 더 필요하시면 support@transflash.app 로 문의하세요.`,
     bulkContactPre: '대량 조회가 필요하신가요? 문의:',
     errGuestMax: (n) => `게스트 모드는 1회당 최대 ${n}개 주소까지 조회할 수 있습니다. 더 많은 조회는 로그인하세요.`,
     tabManual: '수동 검색', tabExcel: '엑셀 업로드',
@@ -2292,14 +2292,14 @@ function processFile(file) {
   reader.readAsArrayBuffer(file);
 }
 
-const UPLOAD_LIMIT = 5;   // bản công khai: tối đa 5 địa chỉ mỗi lần upload
+// Giới hạn số dòng/lần upload = MAX_UPLOAD theo gói (khách 5, Pro 2000, Enterprise 10000)
 
 // Trả về chuỗi lỗi nếu file không hợp lệ, null nếu OK
 function validateUpload(aoa) {
   if (!hasKoreanAddress(aoa)) return t('errBadFormat');
   const hasHeader = parseInt(document.getElementById('headerRowSelect').value) > 0;
   const dataRows = aoa.slice(hasHeader ? 1 : 0).filter(r => (r || []).some(c => String(c).trim() !== ''));
-  if (dataRows.length > UPLOAD_LIMIT) return t('errTooManyUpload', UPLOAD_LIMIT);
+  if (dataRows.length > MAX_UPLOAD) return t('errTooManyUpload', MAX_UPLOAD);
   return null;
 }
 
@@ -2373,7 +2373,7 @@ async function runExcelSearch() {
   const dataRows = workbookData.slice(hasH?1:0);
   const addresses = dataRows.map(row => String(row[col]||'').trim()).filter(Boolean);
   if (!addresses.length) { alert(t('errNoAddress')); return; }
-  if (addresses.length > UPLOAD_LIMIT) { alert(t('errTooManyUpload', UPLOAD_LIMIT)); return; }
+  if (addresses.length > MAX_UPLOAD) { alert(t('errTooManyUpload', MAX_UPLOAD)); return; }
   if (!(await useQuota(addresses.length, MAX_UPLOAD))) return;
   const btn=document.getElementById('excelSearchBtn'), wrap=document.getElementById('excelProgressWrap'),
         fill=document.getElementById('excelProgressFill'), lbl=document.getElementById('excelProgressLabel');

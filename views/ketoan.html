@@ -1793,7 +1793,7 @@ function exportInvoiceXlsx(){
   if(X.overpaidWon) row(['KHÁCH TRẢ THỪA - DƯ (KRW) / 초과 입금(잔액):',X.overpaidWon],{1:XF_WON});
   if(!X.payableWon&&!X.payableVnd&&!X.overpaidWon) row(['ĐÃ THANH TOÁN ĐỦ / 결제 완료:',0],{1:XF_WON});
   const ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols']=[{wch:5},{wch:12},{wch:12},{wch:18},{wch:14},{wch:34},{wch:10},{wch:8},{wch:13},{wch:15},{wch:13},{wch:13},{wch:15},{wch:10}];
+  ws['!cols']=[{wch:30},{wch:12},{wch:12},{wch:18},{wch:14},{wch:34},{wch:10},{wch:8},{wch:13},{wch:15},{wch:13},{wch:13},{wch:15},{wch:10}];
   // Thông tin tài khoản nhận thanh toán -> đặt ở khu G6:G9 (ngang phần đầu)
   const putG=(r,text,bold)=>{ const a=XLSX.utils.encode_cell({r,c:6}); ws[a]={t:'s',v:String(text)}; if(bold) ws[a].s={font:{bold:true}}; const ref=XLSX.utils.decode_range(ws['!ref']||'A1'); if(r>ref.e.r)ref.e.r=r; if(ref.e.c<6)ref.e.c=6; ws['!ref']=XLSX.utils.encode_range(ref); };
   putG(5,'THÔNG TIN THANH TOÁN / 결제 정보', true);

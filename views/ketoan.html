@@ -1690,15 +1690,17 @@ function renderInvoiceDoc(){
     </div>
     <div class="bill-to"><div class="t">Khách hàng · ${kr('고객')}</div><div class="v">${esc(cust)} <span style="font-weight:500;color:#888;font-size:.85rem">— ${rows.length} đơn / ${rows.length}건</span></div></div>
     <table>
-      <thead><tr><th>STT<br>${kr('No.')}</th><th>Ngày<br>${kr('날짜')}</th><th>Mã kiện<br>${kr('송장번호')}</th><th>Người nhận<br>${kr('수취인')}</th><th>Khu vực<br>${kr('지역')}</th><th style="text-align:right">KG<br>${kr('중량')}</th><th style="text-align:right">Tiền Won (₩)<br>${kr('금액 ₩')}</th><th style="text-align:right">Phụ phí (₩)<br>${kr('추가비용 ₩')}</th><th style="text-align:right">Phụ phí (₫)<br>${kr('추가비용 ₫')}</th><th style="text-align:right">Tiền VND (₫)<br>${kr('금액 ₫')}</th></tr></thead>
+      <thead><tr><th>STT<br>${kr('No.')}</th><th>Ngày<br>${kr('날짜')}</th><th>Mã kiện<br>${kr('송장번호')}</th><th>Người nhận<br>${kr('수취인')}</th><th>Khu vực<br>${kr('지역')}</th><th style="text-align:right">KG<br>${kr('중량')}</th><th style="text-align:right">Đơn giá (₩)<br>${kr('단가')}</th><th style="text-align:right">Tiền Won (₩)<br>${kr('금액 ₩')}</th><th style="text-align:right">Phụ phí (₩)<br>${kr('추가비용 ₩')}</th><th style="text-align:right">Phụ phí (₫)<br>${kr('추가비용 ₫')}</th><th style="text-align:right">Tiền VND (₫)<br>${kr('금액 ₫')}</th></tr></thead>
       <tbody>
         ${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.date)}</td><td>${esc(r.pkg)}</td><td>${esc(r.rcv)}</td><td>${esc(r.region)}</td>
           <td style="text-align:right">${r.weight?nf(r.weight):''}</td>
+          <td style="text-align:right">${r.price?'₩'+nf(r.price):''}</td>
           <td style="text-align:right">${r.won?'₩'+nf(r.won):''}</td>
           <td style="text-align:right">${r.phuPhiWon?'₩'+nf(r.phuPhiWon):''}</td>
           <td style="text-align:right">${r.phuPhi?nf(r.phuPhi)+' ₫':''}</td>
           <td style="text-align:right">${r.vnd?nf(r.vnd)+' ₫':''}</td></tr>`).join('')}
         <tr class="tot-row"><td colspan="6" style="text-align:right">TỔNG (gồm phụ phí) · ${kr('합계')} (${rows.length} đơn/건)</td>
+          <td></td>
           <td style="text-align:right">${(X.totWon+X.totPhiWon)?'₩'+nf(X.totWon+X.totPhiWon):''}</td><td style="text-align:right">${X.totPhiWon?'₩'+nf(X.totPhiWon):''}</td><td style="text-align:right">${X.totPhi?nf(X.totPhi)+' ₫':''}</td><td style="text-align:right">${(X.totVnd+X.totPhi)?nf(X.totVnd+X.totPhi)+' ₫':''}</td></tr>
       </tbody>
     </table>

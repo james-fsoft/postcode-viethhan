@@ -364,7 +364,7 @@
       <div id="custSummary" class="stats"></div>
       <div class="tbl-wrap" id="custTblWrap" style="display:none">
         <table>
-          <thead><tr><th style="width:30px"><input type="checkbox" id="ctSelAll" onclick="ctSelAll(this)" title="Chọn tất cả" /></th><th>Ngày về</th><th>Mã kiện</th><th>Check TT</th><th>Ngày thu</th><th>Người nhận</th><th>Khu vực</th><th class="r">KG</th><th class="r">Tiền Won (₩)</th><th class="r">Phụ phí (₫)</th><th class="r">Phụ phí (₩)</th><th class="r">Tiền VND (₫)</th><th>Ghi chú</th></tr></thead>
+          <thead><tr><th style="width:30px"><input type="checkbox" id="ctSelAll" onclick="ctSelAll(this)" title="Chọn tất cả" /></th><th>Ngày về</th><th>Mã kiện</th><th>Check TT</th><th>Ngày thu</th><th>Người nhận</th><th>Khu vực</th><th class="r">KG</th><th class="r">Đơn giá</th><th class="r">Tiền Won (₩)</th><th class="r">Phụ phí (₫)</th><th class="r">Phụ phí (₩)</th><th class="r">Tiền VND (₫)</th><th>Ghi chú</th></tr></thead>
           <tbody id="custBody"></tbody>
         </table>
       </div>
@@ -1634,7 +1634,7 @@ function renderCust(){
     <td><span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span></td>
     <td>${paid(r)?fmtPaidDate(r.paidDate):'<span class="muted">—</span>'}</td>
     <td>${esc(r.rcv)}</td><td>${r.region?'<span class="pill reg">'+esc(r.region)+'</span>':''}</td>
-    <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.won)}</td>
+    <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.price)}</td><td class="r num">${fmtWon(r.won)}</td>
     <td class="r num">${fmtVnd(r.phuPhi)}</td><td class="r num">${fmtWon(r.phuPhiWon)}</td><td class="r num">${fmtVnd(r.vnd)}</td><td>${esc(r.ghiChu)}</td>
   </tr>`).join('');
   const sa=$('ctSelAll'); if(sa) sa.checked = CT_SEL.size>0 && CT_SEL.size===rows.length;
@@ -1775,6 +1775,7 @@ function exportInvoiceXlsx(){
   row(['Khách hàng / 고객:',cust]); row(['Ngày xuất / 발행일:',todayISO()]); row([]);
   const head=['STT / No.','Ngày về / 날짜','Mã kiện / 송장번호','Người nhận / 수취인','SĐT nhận / 연락처','Địa chỉ / 주소','Khu vực / 지역','KG / 중량','Đơn giá (₩) / 단가','Tiền Won (₩) / 금액','Phụ phí (₩) / 추가비용','Phụ phí (₫) / 추가비용','Tiền VND (₫) / 금액'];
   row(head);
+  const firstDataRow=aoa.length;   // vị trí (0-based) dòng đơn đầu tiên trong aoa
   rows.forEach((r,i)=>row([i+1,r.date,r.pkg,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.phuPhiWon)||'',Number(r.phuPhi)||'',Number(r.vnd)||''],{7:XF_KG,8:XF_WON,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND}));
   row(['','','','','','','TỔNG (gồm phụ phí) / 합계',sum(rows,'weight')||'','',X.totWon+X.totPhiWon,X.totPhiWon,X.totPhi,X.totVnd+X.totPhi],{7:XF_KG,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND});
   row([]);
@@ -1795,6 +1796,9 @@ function exportInvoiceXlsx(){
   if(X.overpaidWon) row(['KHÁCH TRẢ THỪA - DƯ (KRW) / 초과 입금(잔액):',X.overpaidWon],{1:XF_WON});
   if(!X.payableWon&&!X.payableVnd&&!X.overpaidWon) row(['ĐÃ THANH TOÁN ĐỦ / 결제 완료:',0],{1:XF_WON});
   const ws=XLSX.utils.aoa_to_sheet(aoa);
+  // Công thức Tiền Won (cột J) = KG (H) × Đơn giá (I) — đơn nào có đủ KG & đơn giá.
+  // Sửa KG hoặc đơn giá trong Excel thì Tiền Won tự tính lại.
+  rows.forEach((r,i)=>{ const w=Number(r.weight)||0, p=Number(r.price)||0; if(w>0&&p>0){ const R=firstDataRow+i+1; const a=XLSX.utils.encode_cell({r:firstDataRow+i,c:9}); ws[a]={t:'n',f:'H'+R+'*I'+R,v:w*p}; } });
   ws['!cols']=[{wch:30},{wch:12},{wch:12},{wch:18},{wch:14},{wch:34},{wch:10},{wch:8},{wch:13},{wch:15},{wch:13},{wch:13},{wch:15},{wch:10}];
   // Thông tin tài khoản nhận thanh toán -> đặt ở khu G6:G9 (ngang phần đầu)
   const putG=(r,text,bold)=>{ const a=XLSX.utils.encode_cell({r,c:6}); ws[a]={t:'s',v:String(text)}; if(bold) ws[a].s={font:{bold:true}}; const ref=XLSX.utils.decode_range(ws['!ref']||'A1'); if(r>ref.e.r)ref.e.r=r; if(ref.e.c<6)ref.e.c=6; ws['!ref']=XLSX.utils.encode_range(ref); };

@@ -1848,6 +1848,8 @@ function exportInvoiceXlsx(){
   // Công thức Tiền Won (cột J) = KG (H) × Đơn giá (I) — CHỈ khi số Won thật khớp KG×Đơn giá.
   // Đơn nào sửa tay (Won ≠ KG×Đơn giá) thì GIỮ NGUYÊN số thật, không ép công thức để khỏi sai lệch.
   rows.forEach((r,i)=>{ const w=Number(r.weight)||0, p=Number(r.price)||0, won=Number(r.won)||0; if(w>0&&p>0&&Math.abs(w*p-won)<1){ const R=firstDataRow+i+1; const a=XLSX.utils.encode_cell({r:firstDataRow+i,c:9}); ws[a]={t:'n',f:'H'+R+'*I'+R,v:won}; } });
+  // Highlight nền cam ô KG (cột H) cho đơn dưới 2.5 kg — dễ soi hàng nhẹ
+  rows.forEach((r,i)=>{ const w=Number(r.weight)||0; if(w>0&&w<2.5){ const a=XLSX.utils.encode_cell({r:firstDataRow+i,c:7}); if(ws[a]) ws[a].s=Object.assign(ws[a].s||{},{fill:{fgColor:{rgb:'FFC000'}},font:{bold:true}}); } });
   ws['!cols']=[{wch:30},{wch:12},{wch:12},{wch:18},{wch:14},{wch:34},{wch:10},{wch:8},{wch:13},{wch:15},{wch:13},{wch:13},{wch:15},{wch:10}];
   // Thông tin tài khoản nhận thanh toán -> đặt ở khu G6:G9 (ngang phần đầu)
   const putG=(r,text,bold)=>{ const a=XLSX.utils.encode_cell({r,c:6}); ws[a]={t:'s',v:String(text)}; if(bold) ws[a].s={font:{bold:true}}; const ref=XLSX.utils.decode_range(ws['!ref']||'A1'); if(r>ref.e.r)ref.e.r=r; if(ref.e.c<6)ref.e.c=6; ws['!ref']=XLSX.utils.encode_range(ref); };

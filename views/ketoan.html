@@ -1695,7 +1695,7 @@ function ctUpdateSelBtn(){ const b=$('custSelInvBtn'); if(!b)return; const n=CT_
 function ctInvoiceSel(){ const rows=ROWS.filter(r=>r.cust===CUST_SEL && CT_SEL.has(r.key)); if(!rows.length){ alert('Hãy tick chọn ít nhất 1 dòng.'); return; } openInvoice(CUST_SEL,false,rows); }
 
 /* ---------- Hóa đơn (gồm phụ phí, rõ KRW/VND) ---------- */
-let INV_CUST='', INV_ROWS=[];
+let INV_CUST='', INV_ROWS=[], INV_WEEK_ONLY=true, INV_PICKED=false;
 function openInvoice(cust,onlyOwe,rowsOverride){
   if(!cust){ alert('Hãy chọn khách hàng.'); return; }
   let rows;
@@ -1703,9 +1703,15 @@ function openInvoice(cust,onlyOwe,rowsOverride){
   else { rows=ROWS.filter(r=>r.cust===cust); if(onlyOwe) rows=rows.filter(r=>!paid(r)); }
   if(!rows.length){ alert('Không có đơn để xuất hóa đơn.'); return; }
   INV_CUST=cust; INV_ROWS=rows;
+  INV_PICKED=!!rowsOverride;   // hóa đơn từ các dòng tự tick: không lọc theo tuần
+  INV_WEEK_ONLY=true;          // mặc định: chỉ hiện đơn tuần gần nhất
   renderInvoiceDoc();
   $('invoiceModal').classList.add('show');
 }
+// Tuần gần nhất (ISO week lớn nhất) trong tập đơn — dùng lọc hiển thị hóa đơn.
+function invLatestWeek(rows){ const ws=[...new Set((rows||[]).map(weekKey).filter(Boolean))].sort(); return ws.length?ws[ws.length-1]:''; }
+function invDistinctWeeks(rows){ return new Set((rows||[]).map(weekKey).filter(Boolean)).size; }
+function setInvWeekOnly(v){ INV_WEEK_ONLY=v; renderInvoiceDoc(); }
 function invCompute(){
   const cust=INV_CUST, rows=INV_ROWS;
   const totWon=sum(rows,'won'), totPhiWon=sum(rows,'phuPhiWon'), totVnd=sum(rows,'vnd'), totPhi=sum(rows,'phuPhi');
@@ -1722,7 +1728,13 @@ function invCompute(){
   return {cust,rows,totWon,totPhiWon,totVnd,totPhi,oweRows,paidRows,shownOweWon,shownPaidWon,oweVnd,credit,oweWon,surcharge,surchargeVnd,balanceWon,payableWon,payableVnd,overpaidWon,payable:payableWon};
 }
 function renderInvoiceDoc(){
-  const cust=INV_CUST, rows=INV_ROWS, X=invCompute();
+  const cust=INV_CUST, allRows=INV_ROWS, X=invCompute();
+  // Lọc hiển thị theo tuần gần nhất (mặc định). Tổng tiền phía dưới luôn tính trên TOÀN BỘ đơn (X).
+  const latestWk=invLatestWeek(allRows), canWeek=!INV_PICKED && invDistinctWeeks(allRows)>1 && !!latestWk;
+  const weekOnly=canWeek && INV_WEEK_ONLY;
+  const rows=weekOnly ? allRows.filter(r=>weekKey(r)===latestWk) : allRows;
+  // Tổng của riêng phần đơn ĐANG hiển thị (khớp danh sách bên trên); khi xem tất cả = đúng tổng full.
+  const dWon=sum(rows,'won'), dPhiWon=sum(rows,'phuPhiWon'), dVnd=sum(rows,'vnd'), dPhi=sum(rows,'phuPhi');
   const now=new Date(), dd=String(now.getDate()).padStart(2,'0'), mm=String(now.getMonth()+1).padStart(2,'0');
   const invNo='HD-'+noVN(cust).replace(/[^A-Z0-9]/g,'').slice(0,10)+'-'+now.getFullYear()+mm+dd;
   const co=CFG||{}; const ln=(v,fb)=>v?esc(v):`<span style="color:#aaa">${fb}</span>`;
@@ -1737,7 +1749,14 @@ function renderInvoiceDoc(){
         ${co.tax?`<div class="co-line">MST/사업자번호: ${esc(co.tax)}</div>`:''}</div>
       <div class="inv-title"><h1>HÓA ĐƠN<br>${kr('청구서')}</h1><div class="inv-meta">YÊU CẦU THANH TOÁN · ${kr('결제 요청')}</div><div class="inv-meta">Số/번호: <b>${esc(invNo)}</b></div><div class="inv-meta">Ngày/발행일: ${dd}/${mm}/${now.getFullYear()}</div></div>
     </div>
-    <div class="bill-to"><div class="t">Khách hàng · ${kr('고객')}</div><div class="v">${esc(cust)} <span style="font-weight:500;color:#888;font-size:.85rem">— ${rows.length} đơn / ${rows.length}건</span></div></div>
+    <div class="bill-to"><div class="t">Khách hàng · ${kr('고객')}</div><div class="v">${esc(cust)} <span style="font-weight:500;color:#888;font-size:.85rem">— ${rows.length} đơn / ${rows.length}건${weekOnly?` <span style="color:#2563eb">(tuần gần nhất${latestWk?': '+esc(weekLabel(latestWk)):''}; tổng cộng ${allRows.length} đơn)</span>`:''}</span></div></div>
+    ${canWeek?`<div class="no-print" style="display:flex;align-items:center;gap:8px;margin:2px 0 10px;flex-wrap:wrap">
+      <span class="small muted">Hiển thị đơn:</span>
+      <button class="btn sm" onclick="setInvWeekOnly(true)" style="${weekOnly?'background:#4f46e5;color:#fff;border-color:#4f46e5':''}">📅 Tuần gần nhất (${allRows.filter(r=>weekKey(r)===latestWk).length})</button>
+      <button class="btn sm" onclick="setInvWeekOnly(false)" style="${!weekOnly?'background:#4f46e5;color:#fff;border-color:#4f46e5':''}">📋 Tất cả (${allRows.length})</button>
+      <span class="small muted">· Tổng tiền bên dưới luôn tính đủ toàn bộ công nợ.</span>
+    </div>`:''}
+    ${weekOnly?`<div style="font-size:.8rem;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:7px 11px;margin-bottom:10px">ℹ️ Hóa đơn liệt kê <b>đơn tuần gần nhất${latestWk?' ('+esc(weekLabel(latestWk))+')':''}</b>. <b>Tổng thanh toán bên dưới tính trên toàn bộ công nợ còn lại</b> (${allRows.length} đơn). · ${kr('최근 주 배송건만 표시 · 결제 총액은 전체 미납 기준')}</div>`:''}
     <table>
       <thead><tr><th>STT<br>${kr('No.')}</th><th>Ngày<br>${kr('날짜')}</th><th>Mã kiện<br>${kr('송장번호')}</th><th>Người nhận<br>${kr('수취인')}</th><th>Khu vực<br>${kr('지역')}</th><th style="text-align:right">KG<br>${kr('중량')}</th><th style="text-align:right">Đơn giá (₩)<br>${kr('단가')}</th><th style="text-align:right">Tiền Won (₩)<br>${kr('금액 ₩')}</th><th style="text-align:right">Phụ phí (₩)<br>${kr('추가비용 ₩')}</th><th style="text-align:right">Phụ phí (₫)<br>${kr('추가비용 ₫')}</th><th style="text-align:right">Tiền VND (₫)<br>${kr('금액 ₫')}</th></tr></thead>
       <tbody>
@@ -1748,9 +1767,9 @@ function renderInvoiceDoc(){
           <td style="text-align:right">${r.phuPhiWon?'₩'+nf(r.phuPhiWon):''}</td>
           <td style="text-align:right">${r.phuPhi?nf(r.phuPhi)+' ₫':''}</td>
           <td style="text-align:right">${r.vnd?nf(r.vnd)+' ₫':''}</td></tr>`).join('')}
-        <tr class="tot-row"><td colspan="6" style="text-align:right">TỔNG (gồm phụ phí) · ${kr('합계')} (${rows.length} đơn/건)</td>
+        <tr class="tot-row"><td colspan="6" style="text-align:right">${weekOnly?'TỔNG tuần gần nhất':'TỔNG'} (gồm phụ phí) · ${kr('합계')} (${rows.length} đơn/건)</td>
           <td></td>
-          <td style="text-align:right">${(X.totWon+X.totPhiWon)?'₩'+nf(X.totWon+X.totPhiWon):''}</td><td style="text-align:right">${X.totPhiWon?'₩'+nf(X.totPhiWon):''}</td><td style="text-align:right">${X.totPhi?nf(X.totPhi)+' ₫':''}</td><td style="text-align:right">${(X.totVnd+X.totPhi)?nf(X.totVnd+X.totPhi)+' ₫':''}</td></tr>
+          <td style="text-align:right">${(dWon+dPhiWon)?'₩'+nf(dWon+dPhiWon):''}</td><td style="text-align:right">${dPhiWon?'₩'+nf(dPhiWon):''}</td><td style="text-align:right">${dPhi?nf(dPhi)+' ₫':''}</td><td style="text-align:right">${(dVnd+dPhi)?nf(dVnd+dPhi)+' ₫':''}</td></tr>
       </tbody>
     </table>
     ${hist.length?`<div class="inv-pay-hist" style="margin-top:14px;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;background:#f8fafc">

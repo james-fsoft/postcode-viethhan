@@ -502,7 +502,7 @@
 <div class="modal" id="invoiceModal">
   <div class="modal-box">
     <div class="modal-bar no-print"><h3>Hóa đơn / Yêu cầu thanh toán</h3>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="exportInvoiceXlsx()">⬇️ Tải Excel (full data)</button><button class="btn primary" onclick="window.print()">🖨️ In / Lưu PDF</button><button class="btn" onclick="closeInvoice()">Đóng</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="exportInvoiceXlsx()">⬇️ Tải Excel (theo đơn đang xem)</button><button class="btn primary" onclick="window.print()">🖨️ In / Lưu PDF</button><button class="btn" onclick="closeInvoice()">Đóng</button></div>
     </div>
     <div class="inv" id="invoiceDoc"></div>
   </div>
@@ -1712,6 +1712,14 @@ function openInvoice(cust,onlyOwe,rowsOverride){
 function invLatestWeek(rows){ const ws=[...new Set((rows||[]).map(weekKey).filter(Boolean))].sort(); return ws.length?ws[ws.length-1]:''; }
 function invDistinctWeeks(rows){ return new Set((rows||[]).map(weekKey).filter(Boolean)).size; }
 function setInvWeekOnly(v){ INV_WEEK_ONLY=v; renderInvoiceDoc(); }
+// Nguồn duy nhất quyết định đơn nào ĐANG hiển thị (dùng chung cho màn hình + Excel).
+function invDisplayRows(){
+  const allRows=INV_ROWS;
+  const latestWk=invLatestWeek(allRows), canWeek=!INV_PICKED && invDistinctWeeks(allRows)>1 && !!latestWk;
+  const weekOnly=canWeek && INV_WEEK_ONLY;
+  const rows=weekOnly ? allRows.filter(r=>weekKey(r)===latestWk) : allRows;
+  return {rows,allRows,weekOnly,canWeek,latestWk};
+}
 function invCompute(){
   const cust=INV_CUST, rows=INV_ROWS;
   const totWon=sum(rows,'won'), totPhiWon=sum(rows,'phuPhiWon'), totVnd=sum(rows,'vnd'), totPhi=sum(rows,'phuPhi');
@@ -1728,11 +1736,9 @@ function invCompute(){
   return {cust,rows,totWon,totPhiWon,totVnd,totPhi,oweRows,paidRows,shownOweWon,shownPaidWon,oweVnd,credit,oweWon,surcharge,surchargeVnd,balanceWon,payableWon,payableVnd,overpaidWon,payable:payableWon};
 }
 function renderInvoiceDoc(){
-  const cust=INV_CUST, allRows=INV_ROWS, X=invCompute();
+  const cust=INV_CUST, X=invCompute();
   // Lọc hiển thị theo tuần gần nhất (mặc định). Tổng tiền phía dưới luôn tính trên TOÀN BỘ đơn (X).
-  const latestWk=invLatestWeek(allRows), canWeek=!INV_PICKED && invDistinctWeeks(allRows)>1 && !!latestWk;
-  const weekOnly=canWeek && INV_WEEK_ONLY;
-  const rows=weekOnly ? allRows.filter(r=>weekKey(r)===latestWk) : allRows;
+  const {rows,allRows,weekOnly,canWeek,latestWk}=invDisplayRows();
   // Tổng của riêng phần đơn ĐANG hiển thị (khớp danh sách bên trên); khi xem tất cả = đúng tổng full.
   const dWon=sum(rows,'won'), dPhiWon=sum(rows,'phuPhiWon'), dVnd=sum(rows,'vnd'), dPhi=sum(rows,'phuPhi');
   const now=new Date(), dd=String(now.getDate()).padStart(2,'0'), mm=String(now.getMonth()+1).padStart(2,'0');
@@ -1832,7 +1838,10 @@ async function saveSurcharge(silent){
 }
 function exportInvoiceXlsx(){
   if(!INV_ROWS.length){ alert('Không có dữ liệu hóa đơn.'); return; }
-  const cust=INV_CUST, rows=INV_ROWS, co=CFG||{}, X=invCompute();
+  const cust=INV_CUST, co=CFG||{}, X=invCompute();
+  // Xuất đúng phần đơn ĐANG hiển thị (mặc định: tuần gần nhất). Tổng thanh toán vẫn tính đủ toàn bộ (X).
+  const {rows,allRows,weekOnly,latestWk}=invDisplayRows();
+  const dWon=sum(rows,'won'), dPhiWon=sum(rows,'phuPhiWon'), dVnd=sum(rows,'vnd'), dPhi=sum(rows,'phuPhi');
   const aoa=[], fmtCells=[];
   const row=(arr,fmtMap)=>{ const r=aoa.length; aoa.push(arr); if(fmtMap) Object.keys(fmtMap).forEach(c=>fmtCells.push({r,c:+c,f:fmtMap[c]})); };
   row([co.name||'VC24 GLOBAL']);
@@ -1840,12 +1849,14 @@ function exportInvoiceXlsx(){
   const l2=[]; if(co.phone)l2.push('ĐT: '+co.phone); if(co.email)l2.push(co.email); if(l2.length)row([l2.join(' · ')]);
   if(co.tax)row(['MST: '+co.tax]);
   row([]); row(['HÓA ĐƠN / 청구서 — YÊU CẦU THANH TOÁN / 결제 요청']);
-  row(['Khách hàng / 고객:',cust]); row(['Ngày xuất / 발행일:',todayISO()]); row([]);
+  row(['Khách hàng / 고객:',cust]); row(['Ngày xuất / 발행일:',todayISO()]);
+  if(weekOnly){ row(['Phạm vi / 범위:','Đơn tuần gần nhất'+(latestWk?' ('+weekLabel(latestWk)+')':'')+' — '+rows.length+'/'+allRows.length+' đơn · Tổng thanh toán tính đủ toàn bộ công nợ']); }
+  row([]);
   const head=['STT / No.','Ngày về / 날짜','Mã kiện / 송장번호','Người nhận / 수취인','SĐT nhận / 연락처','Địa chỉ / 주소','Khu vực / 지역','KG / 중량','Đơn giá (₩) / 단가','Tiền Won (₩) / 금액','Phụ phí (₩) / 추가비용','Phụ phí (₫) / 추가비용','Tiền VND (₫) / 금액'];
   row(head);
   const firstDataRow=aoa.length;   // vị trí (0-based) dòng đơn đầu tiên trong aoa
   rows.forEach((r,i)=>row([i+1,r.date,r.pkg,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.phuPhiWon)||'',Number(r.phuPhi)||'',Number(r.vnd)||''],{7:XF_KG,8:XF_WON,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND}));
-  row(['','','','','','','TỔNG (gồm phụ phí) / 합계',sum(rows,'weight')||'','',X.totWon+X.totPhiWon,X.totPhiWon,X.totPhi,X.totVnd+X.totPhi],{7:XF_KG,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND});
+  row(['','','','','','',(weekOnly?'TỔNG tuần gần nhất':'TỔNG')+' (gồm phụ phí) / 합계',sum(rows,'weight')||'','',dWon+dPhiWon,dPhiWon,dPhi,dVnd+dPhi],{7:XF_KG,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND});
   row([]);
   const hist=historyOf(cust);
   if(hist.length){ row(['LỊCH SỬ THANH TOÁN / 입금 내역']); row(['Ngày / 날짜','Số tiền (₩) / 금액','Số đơn gạch / 처리건']); hist.forEach(h=>row([fmtPaidDate(h.date),Number(h.amount)||0,h.marked||0],{1:XF_WON})); row(['Tổng đã nhận / 총 입금액',hist.reduce((s,h)=>s+(Number(h.amount)||0),0),''],{1:XF_WON}); row([]); }
@@ -1880,7 +1891,8 @@ function exportInvoiceXlsx(){
   if(hr>=0){ for(let cc=0;cc<head.length;cc++){ const a=XLSX.utils.encode_cell({r:hr,c:cc}); if(ws[a]) ws[a].s={font:{bold:true},fill:{fgColor:{rgb:'DDEBF7'}},alignment:{horizontal:'center'}}; } }
   const a0=XLSX.utils.encode_cell({r:0,c:0}); if(ws[a0]) ws[a0].s={font:{bold:true,sz:14,color:{rgb:'1E40AF'}}};
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Hóa đơn');
-  saveWB(wb,'HoaDon_'+noVN(cust).replace(/[^A-Z0-9]/g,'')+'_'+todayISO()+'.xlsx');
+  const wkSfx=(weekOnly&&latestWk)?('_'+String(latestWk).replace(/[^\w-]/g,'')):'';
+  saveWB(wb,'HoaDon_'+noVN(cust).replace(/[^A-Z0-9]/g,'')+wkSfx+'_'+todayISO()+'.xlsx');
 }
 function closeInvoice(){ $('invoiceModal').classList.remove('show'); }
 $('invoiceModal').addEventListener('click',e=>{ if(e.target.id==='invoiceModal') closeInvoice(); });

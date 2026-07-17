@@ -1826,13 +1826,13 @@ function renderInvoiceDoc(){
         ${X.totPhiWon?`<tr><td>Phụ phí (KRW) · ${kr('추가비용')}:</td><td class="r">₩${nf(X.totPhiWon)}</td></tr>`:''}
         ${X.totVnd?`<tr><td>Thành tiền (VND) · ${kr('금액')}:</td><td class="r">${nf(X.totVnd)} ₫</td></tr>`:''}
         ${X.totPhi?`<tr><td>Phụ phí (VND) · ${kr('추가비용')}:</td><td class="r">${nf(X.totPhi)} ₫</td></tr>`:''}
-        <tr class="no-print"><td>Phí phát sinh (KRW) · ${kr('발생비용')}:</td><td class="r" style="white-space:nowrap">
+        <tr class="no-print"><td>Nợ cũ (KRW) · ${kr('기존 미납')}:</td><td class="r" style="white-space:nowrap">
           <input id="invSur" inputmode="numeric" value="${escA(X.surcharge?grp(X.surcharge):'')}" oninput="onMoneyInput(this)" placeholder="0" style="width:120px;text-align:right;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit" /> ₩</td></tr>
-        <tr class="no-print"><td>Phí phát sinh (VND) · ${kr('발생비용')}:</td><td class="r" style="white-space:nowrap">
+        <tr class="no-print"><td>Nợ cũ (VND) · ${kr('기존 미납')}:</td><td class="r" style="white-space:nowrap">
           <input id="invSurVnd" inputmode="numeric" value="${escA(X.surchargeVnd?grp(X.surchargeVnd):'')}" oninput="onMoneyInput(this)" placeholder="0" style="width:120px;text-align:right;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit" /> ₫</td></tr>
-        <tr class="no-print"><td colspan="2" style="text-align:right;padding-top:2px"><button class="btn sm" id="invSurBtn" onclick="saveSurcharge()">💾 Lưu phí phát sinh</button></td></tr>
-        <tr class="only-print" style="display:none"><td>Phí phát sinh · ${kr('발생비용')}:</td><td class="r">${X.surcharge?'₩'+nf(X.surcharge):''}${X.surchargeVnd?'<br>'+nf(X.surchargeVnd)+' ₫':''}</td></tr>
-        ${surNote?`<tr><td colspan="2" style="font-size:.78rem;color:#888;padding-top:0">Ghi chú phí/${kr('비고')}: ${esc(surNote)} <button class="btn sm no-print" onclick="editSurNote()" style="margin-left:4px">✎</button></td></tr>`:`<tr class="no-print"><td colspan="2"><button class="btn sm" onclick="editSurNote()">✎ Thêm ghi chú phí phát sinh</button></td></tr>`}
+        <tr class="no-print"><td colspan="2" style="text-align:right;padding-top:2px"><button class="btn sm" id="invSurBtn" onclick="saveSurcharge()">💾 Lưu nợ cũ</button></td></tr>
+        <tr class="only-print" style="display:none"><td>Nợ cũ · ${kr('기존 미납')}:</td><td class="r">${X.surcharge?'₩'+nf(X.surcharge):''}${X.surchargeVnd?'<br>'+nf(X.surchargeVnd)+' ₫':''}</td></tr>
+        ${surNote?`<tr><td colspan="2" style="font-size:.78rem;color:#888;padding-top:0">Ghi chú nợ cũ/${kr('비고')}: ${esc(surNote)} <button class="btn sm no-print" onclick="editSurNote()" style="margin-left:4px">✎</button></td></tr>`:`<tr class="no-print"><td colspan="2"><button class="btn sm" onclick="editSurNote()">✎ Thêm ghi chú nợ cũ</button></td></tr>`}
         ${(X.shownPaidWon+X.credit)?`<tr><td>Đã thanh toán (KRW) · ${kr('결제됨')}:</td><td class="r" style="color:#16a34a">−₩${nf(X.shownPaidWon+X.credit)}</td></tr>`:''}
         ${(X.payableWon||X.payableVnd)?`<tr class="grand"><td>TỔNG THANH TOÁN (còn nợ)<br>${kr('총 결제금액 (미납)')}:</td><td class="r"><div>₩${nf(X.payableWon)}</div>${X.payableVnd?`<div>${nf(X.payableVnd)} ₫</div>`:''}</td></tr>`:''}
         ${X.overpaidWon?`<tr class="grand" style="color:#2563eb"><td>KHÁCH TRẢ THỪA (dư)<br>${kr('초과 입금 (잔액)')}:</td><td class="r" style="color:#2563eb">+₩${nf(X.overpaidWon)}</td></tr>`:''}
@@ -1844,11 +1844,11 @@ function renderInvoiceDoc(){
         : X.overpaidWon
           ? `Quý khách đã thanh toán dư <b style="color:#2563eb">₩${nf(X.overpaidWon)}</b>. Số tiền dư này sẽ được trừ vào các đơn/hóa đơn tiếp theo. Cảm ơn Quý khách đã sử dụng dịch vụ của ${esc(co.name||'VC24 Global')}.<br>${kr('초과 입금액 ₩'+nf(X.overpaidWon)+'은(는) 다음 청구서에서 차감됩니다. '+esc(co.name||'VC24 Global')+'을(를) 이용해 주셔서 감사합니다.')}`
           : `Quý khách đã thanh toán đủ. Cảm ơn Quý khách đã sử dụng dịch vụ của ${esc(co.name||'VC24 Global')}.<br>${kr('결제가 완료되었습니다. '+esc(co.name||'VC24 Global')+'을(를) 이용해 주셔서 감사합니다.')}`}<br>
-      <span style="color:#999">* Còn nợ = Tiền hàng − đã thanh toán − dư + Phí phát sinh · ${kr('미납액 = 상품금액 − 결제됨 − 잔액 + 발생비용')}</span></div>`;
+      <span style="color:#999">* Còn nợ = Tiền hàng − đã thanh toán − dư + Nợ cũ · ${kr('미납액 = 상품금액 − 결제됨 − 잔액 + 기존 미납')}</span></div>`;
 }
 function editSurNote(){
   const cur=surchargeNoteOf(INV_CUST);
-  const v=prompt('Ghi chú phí phát sinh (lý do):', cur); if(v==null) return;
+  const v=prompt('Ghi chú nợ cũ (lý do):', cur); if(v==null) return;
   LEDGER[INV_CUST]=LEDGER[INV_CUST]||{}; LEDGER[INV_CUST].surchargeNote=v;
   saveSurcharge(true);
 }
@@ -1907,9 +1907,9 @@ function exportInvoiceXlsx(){
   if(X.totPhiWon) row(['Phụ phí (KRW) / 추가비용:',X.totPhiWon],{1:XF_WON});
   if(X.totVnd) row(['Thành tiền (VND) / 금액:',X.totVnd],{1:XF_VND});
   if(X.totPhi) row(['Phụ phí (VND) / 추가비용:',X.totPhi],{1:XF_VND});
-  row(['Phí phát sinh (KRW) / 발생비용:',X.surcharge],{1:XF_WON});
-  if(X.surchargeVnd) row(['Phí phát sinh (VND) / 발생비용:',X.surchargeVnd],{1:XF_VND});
-  if(surchargeNoteOf(cust)) row(['Ghi chú phí / 비고:',surchargeNoteOf(cust)]);
+  row(['Nợ cũ (KRW) / 기존 미납:',X.surcharge],{1:XF_WON});
+  if(X.surchargeVnd) row(['Nợ cũ (VND) / 기존 미납:',X.surchargeVnd],{1:XF_VND});
+  if(surchargeNoteOf(cust)) row(['Ghi chú nợ cũ / 비고:',surchargeNoteOf(cust)]);
   if(X.shownPaidWon+X.credit) row(['Đã thanh toán (KRW) / 결제됨:',X.shownPaidWon+X.credit],{1:XF_WON});
   if(X.payableWon||X.payableVnd){
     row(['TỔNG THANH TOÁN - CÒN NỢ (KRW) / 총 결제금액(미납):',X.payableWon],{1:XF_WON});

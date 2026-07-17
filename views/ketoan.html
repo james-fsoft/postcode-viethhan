@@ -1704,7 +1704,7 @@ function openInvoice(cust,onlyOwe,rowsOverride){
   if(!rows.length){ alert('Không có đơn để xuất hóa đơn.'); return; }
   INV_CUST=cust; INV_ROWS=rows;
   INV_PICKED=!!rowsOverride;   // hóa đơn từ các dòng tự tick: không lọc theo tuần
-  INV_WEEK_ONLY=true;          // mặc định: chỉ hiện đơn tuần gần nhất
+  INV_WEEK_ONLY=false;         // mặc định: xem TẤT CẢ các tuần, tách nhóm từng tuần
   renderInvoiceDoc();
   $('invoiceModal').classList.add('show');
 }
@@ -1712,6 +1712,13 @@ function openInvoice(cust,onlyOwe,rowsOverride){
 function invLatestWeek(rows){ const ws=[...new Set((rows||[]).map(weekKey).filter(Boolean))].sort(); return ws.length?ws[ws.length-1]:''; }
 function invDistinctWeeks(rows){ return new Set((rows||[]).map(weekKey).filter(Boolean)).size; }
 function setInvWeekOnly(v){ INV_WEEK_ONLY=v; renderInvoiceDoc(); }
+// Gom đơn theo tuần, trả về mảng nhóm {wk, rows} — tuần mới nhất trước, đơn chưa rõ tuần xếp cuối.
+function invGroupByWeek(rows){
+  const m=new Map();
+  (rows||[]).forEach(r=>{ const k=weekKey(r)||''; if(!m.has(k))m.set(k,[]); m.get(k).push(r); });
+  const keys=[...m.keys()].sort((a,b)=>{ if(a===b)return 0; if(!a)return 1; if(!b)return -1; return b.localeCompare(a); });
+  return keys.map(k=>({wk:k,rows:m.get(k)}));
+}
 // Nguồn duy nhất quyết định đơn nào ĐANG hiển thị (dùng chung cho màn hình + Excel).
 function invDisplayRows(){
   const allRows=INV_ROWS;
@@ -1747,6 +1754,29 @@ function renderInvoiceDoc(){
   const nf=n=>Number(n||0).toLocaleString('en-US');
   const hist=historyOf(cust), surNote=surchargeNoteOf(cust);
   const kr=s=>`<span style="font-weight:400;color:#9aa3b2;font-size:.78em">${s}</span>`;   // dòng phụ tiếng Hàn
+  // ----- Dựng thân bảng: xem tất cả -> tách nhóm từng tuần (mỗi tuần có tiểu tổng) -----
+  const grouped = !weekOnly && canWeek;   // xem tất cả & có >1 tuần
+  const itemRow=(r,idx)=>`<tr><td>${idx}</td><td>${esc(r.date)}</td><td>${esc(r.pkg)}</td><td>${esc(r.rcv)}</td><td>${esc(r.region)}</td>
+      <td style="text-align:right">${r.weight?nf(r.weight):''}</td>
+      <td style="text-align:right">${r.price?'₩'+nf(r.price):''}</td>
+      <td style="text-align:right">${r.won?'₩'+nf(r.won):''}</td>
+      <td style="text-align:right">${r.phuPhiWon?'₩'+nf(r.phuPhiWon):''}</td>
+      <td style="text-align:right">${r.phuPhi?nf(r.phuPhi)+' ₫':''}</td>
+      <td style="text-align:right">${r.vnd?nf(r.vnd)+' ₫':''}</td></tr>`;
+  const sumRow=(vn,krl,won,phiWon,phi,vnd,cls,ts)=>`<tr class="${cls||''}"><td colspan="6" style="text-align:right;${ts||''}">${vn} · ${kr(krl)}</td><td style="${ts||''}"></td>`
+      +`<td style="text-align:right;${ts||''}">${(won+phiWon)?'₩'+nf(won+phiWon):''}</td><td style="text-align:right;${ts||''}">${phiWon?'₩'+nf(phiWon):''}</td><td style="text-align:right;${ts||''}">${phi?nf(phi)+' ₫':''}</td><td style="text-align:right;${ts||''}">${(vnd+phi)?nf(vnd+phi)+' ₫':''}</td></tr>`;
+  let tbodyHTML='', gi=0;
+  if(grouped){
+    invGroupByWeek(rows).forEach(g=>{
+      tbodyHTML+=`<tr><td colspan="11" style="background:#eef2ff;color:#3730a3;font-weight:800;padding:7px 9px">📅 ${g.wk?esc(weekLabel(g.wk)):'(chưa rõ tuần)'} <span style="font-weight:500;color:#6366f1">— ${g.rows.length} đơn/건</span></td></tr>`;
+      g.rows.forEach(r=>{ gi++; tbodyHTML+=itemRow(r,gi); });
+      tbodyHTML+=sumRow('Cộng tuần','주간 합계',sum(g.rows,'won'),sum(g.rows,'phuPhiWon'),sum(g.rows,'phuPhi'),sum(g.rows,'vnd'),'wk-sub','background:#f8fafc;font-style:italic;color:#475569');
+    });
+    tbodyHTML+=sumRow('TỔNG TẤT CẢ ('+rows.length+' đơn/건)','합계',dWon,dPhiWon,dPhi,dVnd,'tot-row','');
+  } else {
+    rows.forEach(r=>{ gi++; tbodyHTML+=itemRow(r,gi); });
+    tbodyHTML+=sumRow((weekOnly?'TỔNG tuần gần nhất':'TỔNG')+' (gồm phụ phí, '+rows.length+' đơn/건)','합계',dWon,dPhiWon,dPhi,dVnd,'tot-row','');
+  }
   $('invoiceDoc').innerHTML=`
     <div class="inv-top">
       <div><div class="co-name">${ln(co.name,'VC24 GLOBAL')}</div>
@@ -1758,24 +1788,17 @@ function renderInvoiceDoc(){
     <div class="bill-to"><div class="t">Khách hàng · ${kr('고객')}</div><div class="v">${esc(cust)} <span style="font-weight:500;color:#888;font-size:.85rem">— ${rows.length} đơn / ${rows.length}건${weekOnly?` <span style="color:#2563eb">(tuần gần nhất${latestWk?': '+esc(weekLabel(latestWk)):''}; tổng cộng ${allRows.length} đơn)</span>`:''}</span></div></div>
     ${canWeek?`<div class="no-print" style="display:flex;align-items:center;gap:8px;margin:2px 0 10px;flex-wrap:wrap">
       <span class="small muted">Hiển thị đơn:</span>
-      <button class="btn sm" onclick="setInvWeekOnly(true)" style="${weekOnly?'background:#4f46e5;color:#fff;border-color:#4f46e5':''}">📅 Tuần gần nhất (${allRows.filter(r=>weekKey(r)===latestWk).length})</button>
-      <button class="btn sm" onclick="setInvWeekOnly(false)" style="${!weekOnly?'background:#4f46e5;color:#fff;border-color:#4f46e5':''}">📋 Tất cả (${allRows.length})</button>
+      <button class="btn sm" onclick="setInvWeekOnly(false)" style="${!weekOnly?'background:#4f46e5;color:#fff;border-color:#4f46e5':''}">📋 Tất cả các tuần — tách riêng (${allRows.length})</button>
+      <button class="btn sm" onclick="setInvWeekOnly(true)" style="${weekOnly?'background:#4f46e5;color:#fff;border-color:#4f46e5':''}">📅 Chỉ tuần gần nhất (${allRows.filter(r=>weekKey(r)===latestWk).length})</button>
       <span class="small muted">· Tổng tiền bên dưới luôn tính đủ toàn bộ công nợ.</span>
     </div>`:''}
-    ${weekOnly?`<div style="font-size:.8rem;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:7px 11px;margin-bottom:10px">ℹ️ Hóa đơn liệt kê <b>đơn tuần gần nhất${latestWk?' ('+esc(weekLabel(latestWk))+')':''}</b>. <b>Tổng thanh toán bên dưới tính trên toàn bộ công nợ còn lại</b> (${allRows.length} đơn). · ${kr('최근 주 배송건만 표시 · 결제 총액은 전체 미납 기준')}</div>`:''}
+    ${weekOnly
+      ? `<div style="font-size:.8rem;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:7px 11px;margin-bottom:10px">ℹ️ Hóa đơn liệt kê <b>đơn tuần gần nhất${latestWk?' ('+esc(weekLabel(latestWk))+')':''}</b>. <b>Tổng thanh toán bên dưới tính trên toàn bộ công nợ còn lại</b> (${allRows.length} đơn). · ${kr('최근 주 배송건만 표시 · 결제 총액은 전체 미납 기준')}</div>`
+      : (grouped?`<div style="font-size:.8rem;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:7px 11px;margin-bottom:10px">ℹ️ Liệt kê <b>tất cả đơn, tách theo từng tuần</b> (mỗi tuần có cộng riêng). <b>Tổng thanh toán bên dưới gồm cả nợ cũ chưa trả từ các tuần trước</b> → ra công nợ còn lại. · ${kr('전체 배송건을 주별로 표시 · 결제 총액은 이전 미납 포함')}</div>`:'')}
     <table>
       <thead><tr><th>STT<br>${kr('No.')}</th><th>Ngày<br>${kr('날짜')}</th><th>Mã kiện<br>${kr('송장번호')}</th><th>Người nhận<br>${kr('수취인')}</th><th>Khu vực<br>${kr('지역')}</th><th style="text-align:right">KG<br>${kr('중량')}</th><th style="text-align:right">Đơn giá (₩)<br>${kr('단가')}</th><th style="text-align:right">Tiền Won (₩)<br>${kr('금액 ₩')}</th><th style="text-align:right">Phụ phí (₩)<br>${kr('추가비용 ₩')}</th><th style="text-align:right">Phụ phí (₫)<br>${kr('추가비용 ₫')}</th><th style="text-align:right">Tiền VND (₫)<br>${kr('금액 ₫')}</th></tr></thead>
       <tbody>
-        ${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.date)}</td><td>${esc(r.pkg)}</td><td>${esc(r.rcv)}</td><td>${esc(r.region)}</td>
-          <td style="text-align:right">${r.weight?nf(r.weight):''}</td>
-          <td style="text-align:right">${r.price?'₩'+nf(r.price):''}</td>
-          <td style="text-align:right">${r.won?'₩'+nf(r.won):''}</td>
-          <td style="text-align:right">${r.phuPhiWon?'₩'+nf(r.phuPhiWon):''}</td>
-          <td style="text-align:right">${r.phuPhi?nf(r.phuPhi)+' ₫':''}</td>
-          <td style="text-align:right">${r.vnd?nf(r.vnd)+' ₫':''}</td></tr>`).join('')}
-        <tr class="tot-row"><td colspan="6" style="text-align:right">${weekOnly?'TỔNG tuần gần nhất':'TỔNG'} (gồm phụ phí) · ${kr('합계')} (${rows.length} đơn/건)</td>
-          <td></td>
-          <td style="text-align:right">${(dWon+dPhiWon)?'₩'+nf(dWon+dPhiWon):''}</td><td style="text-align:right">${dPhiWon?'₩'+nf(dPhiWon):''}</td><td style="text-align:right">${dPhi?nf(dPhi)+' ₫':''}</td><td style="text-align:right">${(dVnd+dPhi)?nf(dVnd+dPhi)+' ₫':''}</td></tr>
+        ${tbodyHTML}
       </tbody>
     </table>
     ${hist.length?`<div class="inv-pay-hist" style="margin-top:14px;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;background:#f8fafc">
@@ -1840,7 +1863,8 @@ function exportInvoiceXlsx(){
   if(!INV_ROWS.length){ alert('Không có dữ liệu hóa đơn.'); return; }
   const cust=INV_CUST, co=CFG||{}, X=invCompute();
   // Xuất đúng phần đơn ĐANG hiển thị (mặc định: tuần gần nhất). Tổng thanh toán vẫn tính đủ toàn bộ (X).
-  const {rows,allRows,weekOnly,latestWk}=invDisplayRows();
+  const {rows,allRows,weekOnly,canWeek,latestWk}=invDisplayRows();
+  const grouped = !weekOnly && canWeek;   // xem tất cả & >1 tuần -> tách nhóm từng tuần
   const dWon=sum(rows,'won'), dPhiWon=sum(rows,'phuPhiWon'), dVnd=sum(rows,'vnd'), dPhi=sum(rows,'phuPhi');
   const aoa=[], fmtCells=[];
   const row=(arr,fmtMap)=>{ const r=aoa.length; aoa.push(arr); if(fmtMap) Object.keys(fmtMap).forEach(c=>fmtCells.push({r,c:+c,f:fmtMap[c]})); };
@@ -1851,12 +1875,25 @@ function exportInvoiceXlsx(){
   row([]); row(['HÓA ĐƠN / 청구서 — YÊU CẦU THANH TOÁN / 결제 요청']);
   row(['Khách hàng / 고객:',cust]); row(['Ngày xuất / 발행일:',todayISO()]);
   if(weekOnly){ row(['Phạm vi / 범위:','Đơn tuần gần nhất'+(latestWk?' ('+weekLabel(latestWk)+')':'')+' — '+rows.length+'/'+allRows.length+' đơn · Tổng thanh toán tính đủ toàn bộ công nợ']); }
+  else if(grouped){ row(['Phạm vi / 범위:','Tất cả đơn tách theo từng tuần ('+rows.length+' đơn) · Tổng thanh toán bên dưới gồm cả nợ cũ chưa trả']); }
   row([]);
   const head=['STT / No.','Ngày về / 날짜','Mã kiện / 송장번호','Người nhận / 수취인','SĐT nhận / 연락처','Địa chỉ / 주소','Khu vực / 지역','KG / 중량','Đơn giá (₩) / 단가','Tiền Won (₩) / 금액','Phụ phí (₩) / 추가비용','Phụ phí (₫) / 추가비용','Tiền VND (₫) / 금액'];
   row(head);
-  const firstDataRow=aoa.length;   // vị trí (0-based) dòng đơn đầu tiên trong aoa
-  rows.forEach((r,i)=>row([i+1,r.date,r.pkg,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.phuPhiWon)||'',Number(r.phuPhi)||'',Number(r.vnd)||''],{7:XF_KG,8:XF_WON,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND}));
-  row(['','','','','','',(weekOnly?'TỔNG tuần gần nhất':'TỔNG')+' (gồm phụ phí) / 합계',sum(rows,'weight')||'','',dWon+dPhiWon,dPhiWon,dPhi,dVnd+dPhi],{7:XF_KG,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND});
+  const itemRefs=[], grpHeadRows=[], grpSumRows=[];
+  const pushItem=(r,idx)=>{ const ar=aoa.length; row([idx,r.date,r.pkg,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.phuPhiWon)||'',Number(r.phuPhi)||'',Number(r.vnd)||''],{7:XF_KG,8:XF_WON,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND}); itemRefs.push({ar,r}); };
+  const sumRowX=(label,g,markSub)=>{ const w=sum(g,'won'),pw=sum(g,'phuPhiWon'),p=sum(g,'phuPhi'),v=sum(g,'vnd'); if(markSub)grpSumRows.push(aoa.length); row(['','','','','','',label,sum(g,'weight')||'','',w+pw,pw,p,v+p],{7:XF_KG,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND}); };
+  let gi=0;
+  if(grouped){
+    invGroupByWeek(rows).forEach(g=>{
+      grpHeadRows.push(aoa.length); row(['📅 '+(g.wk?weekLabel(g.wk):'(chưa rõ tuần)')+' — '+g.rows.length+' đơn/건']);
+      g.rows.forEach(r=>{ gi++; pushItem(r,gi); });
+      sumRowX('Cộng tuần / 주간 합계', g.rows, true);
+    });
+    sumRowX('TỔNG TẤT CẢ ('+rows.length+' đơn/건) / 합계', rows);
+  } else {
+    rows.forEach(r=>{ gi++; pushItem(r,gi); });
+    sumRowX((weekOnly?'TỔNG tuần gần nhất':'TỔNG')+' (gồm phụ phí) / 합계', rows);
+  }
   row([]);
   const hist=historyOf(cust);
   if(hist.length){ row(['LỊCH SỬ THANH TOÁN / 입금 내역']); row(['Ngày / 날짜','Số tiền (₩) / 금액','Số đơn gạch / 처리건']); hist.forEach(h=>row([fmtPaidDate(h.date),Number(h.amount)||0,h.marked||0],{1:XF_WON})); row(['Tổng đã nhận / 총 입금액',hist.reduce((s,h)=>s+(Number(h.amount)||0),0),''],{1:XF_WON}); row([]); }
@@ -1877,9 +1914,12 @@ function exportInvoiceXlsx(){
   const ws=XLSX.utils.aoa_to_sheet(aoa);
   // Công thức Tiền Won (cột J) = KG (H) × Đơn giá (I) — CHỈ khi số Won thật khớp KG×Đơn giá.
   // Đơn nào sửa tay (Won ≠ KG×Đơn giá) thì GIỮ NGUYÊN số thật, không ép công thức để khỏi sai lệch.
-  rows.forEach((r,i)=>{ const w=Number(r.weight)||0, p=Number(r.price)||0, won=Number(r.won)||0; if(w>0&&p>0&&Math.abs(w*p-won)<1){ const R=firstDataRow+i+1; const a=XLSX.utils.encode_cell({r:firstDataRow+i,c:9}); ws[a]={t:'n',f:'H'+R+'*I'+R,v:won}; } });
+  itemRefs.forEach(({ar,r})=>{ const w=Number(r.weight)||0, p=Number(r.price)||0, won=Number(r.won)||0; if(w>0&&p>0&&Math.abs(w*p-won)<1){ const R=ar+1; const a=XLSX.utils.encode_cell({r:ar,c:9}); ws[a]={t:'n',f:'H'+R+'*I'+R,v:won}; } });
   // Highlight nền cam ô KG (cột H) cho đơn dưới 2.5 kg — dễ soi hàng nhẹ
-  rows.forEach((r,i)=>{ const w=Number(r.weight)||0; if(w>0&&w<2.5){ const a=XLSX.utils.encode_cell({r:firstDataRow+i,c:7}); if(ws[a]) ws[a].s=Object.assign(ws[a].s||{},{fill:{fgColor:{rgb:'FFC000'}},font:{bold:true}}); } });
+  itemRefs.forEach(({ar,r})=>{ const w=Number(r.weight)||0; if(w>0&&w<2.5){ const a=XLSX.utils.encode_cell({r:ar,c:7}); if(ws[a]) ws[a].s=Object.assign(ws[a].s||{},{fill:{fgColor:{rgb:'FFC000'}},font:{bold:true}}); } });
+  // Tô đậm dòng tiêu đề tuần + dòng cộng tuần (khi tách nhóm)
+  grpHeadRows.forEach(rr=>{ const a=XLSX.utils.encode_cell({r:rr,c:0}); if(ws[a]) ws[a].s=Object.assign(ws[a].s||{},{font:{bold:true,color:{rgb:'3730A3'}},fill:{fgColor:{rgb:'EEF2FF'}}}); });
+  grpSumRows.forEach(rr=>{ for(let cc=6;cc<=12;cc++){ const a=XLSX.utils.encode_cell({r:rr,c:cc}); if(ws[a]) ws[a].s=Object.assign(ws[a].s||{},{font:{italic:true,bold:true},fill:{fgColor:{rgb:'F1F5F9'}}}); } });
   ws['!cols']=[{wch:38},{wch:14},{wch:12},{wch:18},{wch:14},{wch:34},{wch:10},{wch:8},{wch:13},{wch:15},{wch:13},{wch:13},{wch:15},{wch:10}];
   // Cột A (nhãn song ngữ dài) tự xuống dòng, không tràn/đè sang cột số bên cạnh.
   {const rng=XLSX.utils.decode_range(ws['!ref']||'A1'); for(let r=0;r<=rng.e.r;r++){ const a=XLSX.utils.encode_cell({r,c:0}); if(ws[a] && typeof ws[a].v==='string'){ const s=ws[a].s||{}; s.alignment=Object.assign({},s.alignment||{},{wrapText:true,vertical:'top'}); ws[a].s=s; } }}

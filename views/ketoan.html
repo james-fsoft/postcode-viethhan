@@ -1753,6 +1753,11 @@ function renderInvoiceDoc(){
   const {rows,allRows,weekOnly,canWeek,latestWk,selWk,weeks}=invDisplayRows();
   // Tổng của riêng phần đơn ĐANG hiển thị (khớp danh sách bên trên); khi xem tất cả = đúng tổng full.
   const dWon=sum(rows,'won'), dPhiWon=sum(rows,'phuPhiWon'), dVnd=sum(rows,'vnd'), dPhi=sum(rows,'phuPhi');
+  // Xem 1 tuần: tính riêng đã thanh toán tuần này + nợ cũ từ các tuần trước (không hiện tổng — tổng để ở view 'Tất cả các tuần').
+  const wUnpaid=rows.filter(r=>!paid(r));
+  const wkUnpaidWon=sum(wUnpaid,'won')+sum(wUnpaid,'phuPhiWon'), wkUnpaidVnd=sum(wUnpaid,'vnd')+sum(wUnpaid,'phuPhi');
+  const wkPaidWon=Math.max(0,(dWon+dPhiWon)-wkUnpaidWon), wkPaidVnd=Math.max(0,(dVnd+dPhi)-wkUnpaidVnd);   // giá trị đơn tuần này đã gạch
+  const oldDebtWon=Math.max(0,X.payableWon-wkUnpaidWon), oldDebtVnd=Math.max(0,X.payableVnd-wkUnpaidVnd);   // công nợ còn lại không thuộc tuần này
   const now=new Date(), dd=String(now.getDate()).padStart(2,'0'), mm=String(now.getMonth()+1).padStart(2,'0');
   const invNo='HD-'+noVN(cust).replace(/[^A-Z0-9]/g,'').slice(0,10)+'-'+now.getFullYear()+mm+dd;
   const co=CFG||{}; const ln=(v,fb)=>v?esc(v):`<span style="color:#aaa">${fb}</span>`;
@@ -1823,10 +1828,17 @@ function renderInvoiceDoc(){
         ${(!(co.bank||co.acc||co.holder||co.bankWon||co.accWon||co.holderWon))?`<div style="color:#aaa;margin-bottom:7px">(Tài khoản nhận thanh toán: đang cập nhật)</div>`:''}
       </div>
       <table class="sumtbl">
+        ${weekOnly?`
+        <tr><td>Tiền hàng tuần này (KRW) · ${kr('이번 주 상품금액')}:</td><td class="r">₩${nf(dWon)}</td></tr>
+        ${dPhiWon?`<tr><td>Phụ phí tuần này (KRW) · ${kr('추가비용')}:</td><td class="r">₩${nf(dPhiWon)}</td></tr>`:''}
+        ${dVnd?`<tr><td>Thành tiền tuần này (VND) · ${kr('이번 주 금액')}:</td><td class="r">${nf(dVnd)} ₫</td></tr>`:''}
+        ${dPhi?`<tr><td>Phụ phí tuần này (VND) · ${kr('추가비용')}:</td><td class="r">${nf(dPhi)} ₫</td></tr>`:''}
+        `:`
         <tr><td>Tiền hàng (KRW) · ${kr('상품금액')}:</td><td class="r">₩${nf(X.totWon)}</td></tr>
         ${X.totPhiWon?`<tr><td>Phụ phí (KRW) · ${kr('추가비용')}:</td><td class="r">₩${nf(X.totPhiWon)}</td></tr>`:''}
         ${X.totVnd?`<tr><td>Thành tiền (VND) · ${kr('금액')}:</td><td class="r">${nf(X.totVnd)} ₫</td></tr>`:''}
         ${X.totPhi?`<tr><td>Phụ phí (VND) · ${kr('추가비용')}:</td><td class="r">${nf(X.totPhi)} ₫</td></tr>`:''}
+        `}
         <tr class="no-print"><td>Nợ cũ (KRW) · ${kr('기존 미납')}:</td><td class="r" style="white-space:nowrap">
           <input id="invSur" inputmode="numeric" value="${escA(X.surcharge?grp(X.surcharge):'')}" oninput="onMoneyInput(this)" placeholder="0" style="width:120px;text-align:right;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit" /> ₩</td></tr>
         <tr class="no-print"><td>Nợ cũ (VND) · ${kr('기존 미납')}:</td><td class="r" style="white-space:nowrap">
@@ -1834,11 +1846,17 @@ function renderInvoiceDoc(){
         <tr class="no-print"><td colspan="2" style="text-align:right;padding-top:2px"><button class="btn sm" id="invSurBtn" onclick="saveSurcharge()">💾 Lưu nợ cũ</button></td></tr>
         <tr class="only-print" style="display:none"><td>Nợ cũ · ${kr('기존 미납')}:</td><td class="r">${X.surcharge?'₩'+nf(X.surcharge):''}${X.surchargeVnd?'<br>'+nf(X.surchargeVnd)+' ₫':''}</td></tr>
         ${surNote?`<tr><td colspan="2" style="font-size:.78rem;color:#888;padding-top:0">Ghi chú nợ cũ/${kr('비고')}: ${esc(surNote)} <button class="btn sm no-print" onclick="editSurNote()" style="margin-left:4px">✎</button></td></tr>`:`<tr class="no-print"><td colspan="2"><button class="btn sm" onclick="editSurNote()">✎ Thêm ghi chú nợ cũ</button></td></tr>`}
+        ${weekOnly?`
+        ${wkPaidWon?`<tr><td>Đã thanh toán tuần này (KRW) · ${kr('이번 주 결제')}:</td><td class="r" style="color:#16a34a">−₩${nf(wkPaidWon)}</td></tr>`:''}
+        ${wkPaidVnd?`<tr><td>Đã thanh toán tuần này (VND) · ${kr('이번 주 결제')}:</td><td class="r" style="color:#16a34a">−${nf(wkPaidVnd)} ₫</td></tr>`:''}
+        ${(oldDebtWon||oldDebtVnd)?`<tr class="grand" style="color:#e11d48"><td>NỢ CŨ TỪ CÁC TUẦN TRƯỚC<br>${kr('기존 미납 (이전 주)')}:</td><td class="r" style="color:#e11d48"><div>${oldDebtWon?'₩'+nf(oldDebtWon):''}</div>${oldDebtVnd?`<div>${nf(oldDebtVnd)} ₫</div>`:''}</td></tr>`:`<tr><td colspan="2" style="color:#16a34a;font-weight:700">✔ Không còn nợ cũ từ các tuần trước · ${kr('이전 주 미납 없음')}</td></tr>`}
+        `:`
         ${(X.shownPaidWon+X.credit)?`<tr><td>Đã thanh toán (KRW) · ${kr('결제됨')}:</td><td class="r" style="color:#16a34a">−₩${nf(X.shownPaidWon+X.credit)}</td></tr>`:''}
         ${(X.shownPaidVnd+X.creditVnd)?`<tr><td>Đã thanh toán (VND) · ${kr('결제됨')}:</td><td class="r" style="color:#16a34a">−${nf(X.shownPaidVnd+X.creditVnd)} ₫</td></tr>`:''}
         ${(X.payableWon||X.payableVnd)?`<tr class="grand"><td>TỔNG THANH TOÁN (còn nợ)<br>${kr('총 결제금액 (미납)')}:</td><td class="r"><div>₩${nf(X.payableWon)}</div>${X.payableVnd?`<div>${nf(X.payableVnd)} ₫</div>`:''}</td></tr>`:''}
         ${(X.overpaidWon||X.overpaidVnd)?`<tr class="grand" style="color:#2563eb"><td>KHÁCH TRẢ THỪA (dư)<br>${kr('초과 입금 (잔액)')}:</td><td class="r" style="color:#2563eb"><div>${X.overpaidWon?'+₩'+nf(X.overpaidWon):''}</div>${X.overpaidVnd?`<div>+${nf(X.overpaidVnd)} ₫</div>`:''}</td></tr>`:''}
         ${(!X.payableWon&&!X.payableVnd&&!X.overpaidWon&&!X.overpaidVnd)?`<tr class="grand" style="color:#16a34a"><td>ĐÃ THANH TOÁN ĐỦ<br>${kr('결제 완료')}:</td><td class="r" style="color:#16a34a">₩0</td></tr>`:''}
+        `}
       </table>
     </div>
     <div class="note">${(X.payableWon||X.payableVnd)
@@ -1874,6 +1892,11 @@ function exportInvoiceXlsx(){
   const {rows,allRows,weekOnly,canWeek,latestWk,selWk}=invDisplayRows();
   const grouped = !weekOnly && canWeek;   // xem tất cả & >1 tuần -> tách nhóm từng tuần
   const dWon=sum(rows,'won'), dPhiWon=sum(rows,'phuPhiWon'), dVnd=sum(rows,'vnd'), dPhi=sum(rows,'phuPhi');
+  // Xem 1 tuần: đã TT tuần này + nợ cũ tuần trước (không hiện tổng)
+  const wUnpaid=rows.filter(r=>!paid(r));
+  const wkUnpaidWon=sum(wUnpaid,'won')+sum(wUnpaid,'phuPhiWon'), wkUnpaidVnd=sum(wUnpaid,'vnd')+sum(wUnpaid,'phuPhi');
+  const wkPaidWon=Math.max(0,(dWon+dPhiWon)-wkUnpaidWon), wkPaidVnd=Math.max(0,(dVnd+dPhi)-wkUnpaidVnd);
+  const oldDebtWon=Math.max(0,X.payableWon-wkUnpaidWon), oldDebtVnd=Math.max(0,X.payableVnd-wkUnpaidVnd);
   const aoa=[], fmtCells=[];
   const row=(arr,fmtMap)=>{ const r=aoa.length; aoa.push(arr); if(fmtMap) Object.keys(fmtMap).forEach(c=>fmtCells.push({r,c:+c,f:fmtMap[c]})); };
   row([co.name||'VC24 GLOBAL']);
@@ -1905,6 +1928,18 @@ function exportInvoiceXlsx(){
   row([]);
   const hist=historyOf(cust);
   if(hist.length){ row(['LỊCH SỬ THANH TOÁN / 입금 내역']); row(['Ngày / 날짜','Số tiền (₩) / 금액','Số tiền (₫) / 금액','Số đơn gạch / 처리건']); hist.forEach(h=>row([fmtPaidDate(h.date),Number(h.amount)||0,Number(h.amountVnd)||0,h.marked||0],{1:XF_WON,2:XF_VND})); row(['Tổng đã nhận / 총 입금액',hist.reduce((s,h)=>s+(Number(h.amount)||0),0),hist.reduce((s,h)=>s+(Number(h.amountVnd)||0),0),''],{1:XF_WON,2:XF_VND}); row([]); }
+  if(weekOnly){
+    // Xem 1 tuần: tiền hàng tuần này + đã TT tuần này + nợ cũ các tuần trước (không hiện tổng)
+    row(['Tiền hàng tuần này (KRW) / 이번 주 상품금액:',dWon],{1:XF_WON});
+    if(dPhiWon) row(['Phụ phí tuần này (KRW) / 추가비용:',dPhiWon],{1:XF_WON});
+    if(dVnd) row(['Thành tiền tuần này (VND) / 이번 주 금액:',dVnd],{1:XF_VND});
+    if(dPhi) row(['Phụ phí tuần này (VND) / 추가비용:',dPhi],{1:XF_VND});
+    if(wkPaidWon) row(['Đã thanh toán tuần này (KRW) / 이번 주 결제:',wkPaidWon],{1:XF_WON});
+    if(wkPaidVnd) row(['Đã thanh toán tuần này (VND) / 이번 주 결제:',wkPaidVnd],{1:XF_VND});
+    if(oldDebtWon) row(['NỢ CŨ TỪ CÁC TUẦN TRƯỚC (KRW) / 기존 미납(이전 주):',oldDebtWon],{1:XF_WON});
+    if(oldDebtVnd) row(['NỢ CŨ TỪ CÁC TUẦN TRƯỚC (VND) / 기존 미납(이전 주):',oldDebtVnd],{1:XF_VND});
+    if(!oldDebtWon&&!oldDebtVnd) row(['Không còn nợ cũ từ các tuần trước / 이전 주 미납 없음:','']);
+  } else {
   row(['Tiền hàng (KRW) / 상품금액:',X.totWon],{1:XF_WON});
   if(X.totPhiWon) row(['Phụ phí (KRW) / 추가비용:',X.totPhiWon],{1:XF_WON});
   if(X.totVnd) row(['Thành tiền (VND) / 금액:',X.totVnd],{1:XF_VND});
@@ -1921,6 +1956,7 @@ function exportInvoiceXlsx(){
   if(X.overpaidWon) row(['KHÁCH TRẢ THỪA - DƯ (KRW) / 초과 입금(잔액):',X.overpaidWon],{1:XF_WON});
   if(X.overpaidVnd) row(['KHÁCH TRẢ THỪA - DƯ (VND) / 초과 입금(잔액):',X.overpaidVnd],{1:XF_VND});
   if(!X.payableWon&&!X.payableVnd&&!X.overpaidWon&&!X.overpaidVnd) row(['ĐÃ THANH TOÁN ĐỦ / 결제 완료:',0],{1:XF_WON});
+  }
   const ws=XLSX.utils.aoa_to_sheet(aoa);
   // Công thức Tiền Won (cột J) = KG (H) × Đơn giá (I) — CHỈ khi số Won thật khớp KG×Đơn giá.
   // Đơn nào sửa tay (Won ≠ KG×Đơn giá) thì GIỮ NGUYÊN số thật, không ép công thức để khỏi sai lệch.

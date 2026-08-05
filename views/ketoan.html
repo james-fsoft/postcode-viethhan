@@ -1936,28 +1936,47 @@ function exportInvoiceXlsx(){
   if(co.tax)row(['MST: '+co.tax]);
   row([]); row(['HÓA ĐƠN / 청구서 — YÊU CẦU THANH TOÁN / 결제 요청']);
   row(['Khách hàng / 고객:',cust]); row(['Ngày xuất / 발행일:',todayISO()]);
-  if(weekOnly){ row(['Phạm vi / 범위:','Chỉ '+(selWk?weekLabel(selWk):'1 tuần')+' — '+rows.length+'/'+allRows.length+' đơn · Tổng thanh toán tính đủ toàn bộ công nợ (gồm nợ cũ)']); }
+  if(weekOnly){ row(['Phạm vi / 범위:','Chỉ '+(selWk?weekLabel(selWk):'1 tuần')+' — '+rows.length+' đơn (chỉ thông tin tuần này)']); }
   else if(grouped){ row(['Phạm vi / 범위:','Tất cả đơn tách theo từng tuần ('+rows.length+' đơn) · Tổng thanh toán bên dưới gồm cả nợ cũ chưa trả']); }
   row([]);
   const head=['STT / No.','Ngày về / 날짜','Mã kiện / 송장번호','Người nhận / 수취인','SĐT nhận / 연락처','Địa chỉ / 주소','Khu vực / 지역','KG / 중량','Đơn giá (₩) / 단가','Tiền Won (₩) / 금액','Phụ phí (₩) / 추가비용','Phụ phí (₫) / 추가비용','Tiền VND (₫) / 금액'];
   row(head);
-  const itemRefs=[], grpHeadRows=[], grpSumRows=[], grpGreenRows=[];
+  const itemRefs=[], grpHeadRows=[], grpSumRows=[], grpGreenRows=[], stmtF=[];
   const pushItem=(r,idx)=>{ const ar=aoa.length; row([idx,r.date,r.pkg,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.phuPhiWon)||'',Number(r.phuPhi)||'',Number(r.vnd)||''],{7:XF_KG,8:XF_WON,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND}); itemRefs.push({ar,r}); };
   const sumRowX=(label,g,markSub)=>{ const w=sum(g,'won'),pw=sum(g,'phuPhiWon'),p=sum(g,'phuPhi'),v=sum(g,'vnd'); if(markSub)grpSumRows.push(aoa.length); row(['','','','','','',label,sum(g,'weight')||'','',w+pw,pw,p,v+p],{7:XF_KG,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND}); };
   const stRow=(label,won,vnd,mark)=>{ if(mark)grpSumRows.push(aoa.length); row(['','','','','','',label,'','',won||'','','',vnd||''],{9:XF_WON,12:XF_VND}); };
   const dmy=s=>{ let m=String(s||'').match(/(\d{4})-(\d{1,2})-(\d{1,2})/); if(m)return m[3].padStart(2,'0')+'/'+m[2].padStart(2,'0')+'/'+m[1]; m=String(s||'').match(/(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})/); if(m)return m[1].padStart(2,'0')+'/'+m[2].padStart(2,'0')+'/'+(m[3].length<4?'20'+m[3]:m[3]); return String(s||''); };
   let gi=0;
   if(grouped){
-    // Bảng kê LŨY KẾ theo tuần (tuần cũ trước): đơn + Cộng tuần + Nợ cũ (dồn) + Tổng TT + các lần Đã TT + Còn lại
+    // Bảng kê LŨY KẾ theo tuần (tuần cũ trước): đơn + Cộng tuần + Nợ cũ (dồn) + Tổng TT + các lần Đã TT + Còn lại.
+    // Các dòng Cộng tuần / Tổng TT / Còn lại / Nợ cũ để CÔNG THỨC Excel sống (sửa số -> tự tính lại).
     const blocks=invWeekStatement(rows, historyOf(cust), X.surcharge, X.surchargeVnd);
+    let prevCl=-1;   // aoa index dòng CÒN LẠI tuần trước (để nối Nợ cũ)
     blocks.forEach(b=>{
       grpHeadRows.push(aoa.length); row(['📅 '+(b.wk?weekLabel(b.wk):'(chưa rõ tuần)')+' — '+(b.ords.length?b.ords.length+' đơn/건':'chỉ thu tiền')]);
-      b.ords.forEach(r=>{ gi++; pushItem(r,gi); });
-      if(b.ords.length){ sumRowX('Cộng tuần / 주간 합계', b.ords, true); grpGreenRows.push(aoa.length-1); }
-      if(b.oldW||b.oldV) stRow('NỢ CŨ (dồn từ tuần trước) / 기존 미납', b.oldW, b.oldV);
-      stRow('TỔNG TT (nợ cũ + tuần này) / 총 결제', b.totW, b.totV, true);
+      const oStart=aoa.length; b.ords.forEach(r=>{ gi++; pushItem(r,gi); }); const oEnd=aoa.length-1;
+      let congIdx=-1;
+      if(b.ords.length){
+        sumRowX('Cộng tuần / 주간 합계', b.ords, true); congIdx=aoa.length-1; grpGreenRows.push(congIdx);
+        const f=oStart+1, l=oEnd+1;   // Cộng tuần = Σ Tiền Won(J)+Σ Phụ phí ₩(K); VND: Σ(M)+Σ(L)
+        stmtF.push({r:congIdx,c:9,f:`SUM(J${f}:J${l})+SUM(K${f}:K${l})`,v:b.gW});
+        stmtF.push({r:congIdx,c:12,f:`SUM(M${f}:M${l})+SUM(L${f}:L${l})`,v:b.gV});
+      }
+      let nocuIdx=-1;
+      if(b.oldW||b.oldV){
+        stRow('NỢ CŨ (dồn từ tuần trước) / 기존 미납', b.oldW, b.oldV); nocuIdx=aoa.length-1;
+        if(prevCl>=0){ stmtF.push({r:nocuIdx,c:9,f:`J${prevCl+1}`,v:b.oldW}); stmtF.push({r:nocuIdx,c:12,f:`M${prevCl+1}`,v:b.oldV}); }
+      }
+      stRow('TỔNG TT (nợ cũ + tuần này) / 총 결제', b.totW, b.totV, true); const tongIdx=aoa.length-1;
+      const p9=[],p12=[]; if(congIdx>=0){p9.push('J'+(congIdx+1));p12.push('M'+(congIdx+1));} if(nocuIdx>=0){p9.push('J'+(nocuIdx+1));p12.push('M'+(nocuIdx+1));}
+      if(p9.length){ stmtF.push({r:tongIdx,c:9,f:p9.join('+'),v:b.totW}); stmtF.push({r:tongIdx,c:12,f:p12.join('+'),v:b.totV}); }
+      const payFirst=aoa.length;
       b.pays.forEach(h=>{ const t=invPayTime(h); stRow('ĐÃ TT '+dmy(h.date)+(t?' '+t:''), -(Number(h.amount)||0)||'', -(Number(h.amountVnd)||0)||''); });
-      const clRow=aoa.length; stRow('CÒN LẠI / 미납 잔액', b.remW, b.remV, true); grpGreenRows.push(clRow);
+      const payLast=aoa.length-1, hasPay=b.pays.length>0;
+      const clIdx=aoa.length; stRow('CÒN LẠI / 미납 잔액', b.remW, b.remV, true); grpGreenRows.push(clIdx);
+      stmtF.push({r:clIdx,c:9,f:`J${tongIdx+1}`+(hasPay?`+SUM(J${payFirst+1}:J${payLast+1})`:''),v:b.remW});
+      stmtF.push({r:clIdx,c:12,f:`M${tongIdx+1}`+(hasPay?`+SUM(M${payFirst+1}:M${payLast+1})`:''),v:b.remV});
+      prevCl=clIdx;
       row([]);
     });
   } else {
@@ -1967,23 +1986,19 @@ function exportInvoiceXlsx(){
   row([]);
   if(!grouped){
   const hist=historyOf(cust);
-  if(hist.length){ row(['LỊCH SỬ THANH TOÁN / 입금 내역']); row(['Ngày / 날짜','Số tiền (₩) / 금액','Số tiền (₫) / 금액','Số đơn gạch / 처리건']); hist.forEach(h=>row([fmtPaidDate(h.date),Number(h.amount)||0,Number(h.amountVnd)||0,h.marked||0],{1:XF_WON,2:XF_VND})); row(['Tổng đã nhận / 총 입금액',hist.reduce((s,h)=>s+(Number(h.amount)||0),0),hist.reduce((s,h)=>s+(Number(h.amountVnd)||0),0),''],{1:XF_WON,2:XF_VND}); row([]); }
+  if(!weekOnly && hist.length){ row(['LỊCH SỬ THANH TOÁN / 입금 내역']); row(['Ngày / 날짜','Số tiền (₩) / 금액','Số tiền (₫) / 금액','Số đơn gạch / 처리건']); hist.forEach(h=>row([fmtPaidDate(h.date),Number(h.amount)||0,Number(h.amountVnd)||0,h.marked||0],{1:XF_WON,2:XF_VND})); row(['Tổng đã nhận / 총 입금액',hist.reduce((s,h)=>s+(Number(h.amount)||0),0),hist.reduce((s,h)=>s+(Number(h.amountVnd)||0),0),''],{1:XF_WON,2:XF_VND}); row([]); }
   if(weekOnly){
-    // Xem 1 tuần: tiền hàng tuần này + đã TT tuần này + nợ cũ các tuần trước (không hiện tổng)
+    // Xem 1 tuần: CHỈ thông tin của tuần đó (không kèm nợ cũ / tổng công nợ)
+    const wkOweWon=Math.max(0,(dWon+dPhiWon)-wkPaidWon), wkOweVnd=Math.max(0,(dVnd+dPhi)-wkPaidVnd);
     row(['Tiền hàng tuần này (KRW) / 이번 주 상품금액:',dWon],{1:XF_WON});
     if(dPhiWon) row(['Phụ phí tuần này (KRW) / 추가비용:',dPhiWon],{1:XF_WON});
     if(dVnd) row(['Thành tiền tuần này (VND) / 이번 주 금액:',dVnd],{1:XF_VND});
     if(dPhi) row(['Phụ phí tuần này (VND) / 추가비용:',dPhi],{1:XF_VND});
     if(wkPaidWon) row(['Đã thanh toán tuần này (KRW) / 이번 주 결제:',wkPaidWon],{1:XF_WON});
     if(wkPaidVnd) row(['Đã thanh toán tuần này (VND) / 이번 주 결제:',wkPaidVnd],{1:XF_VND});
-    if(oldDebtWon) row(['Nợ cũ từ các tuần trước (KRW) / 기존 미납(이전 주):',oldDebtWon],{1:XF_WON});
-    if(oldDebtVnd) row(['Nợ cũ từ các tuần trước (VND) / 기존 미납(이전 주):',oldDebtVnd],{1:XF_VND});
-    if(!oldDebtWon&&!oldDebtVnd) row(['Không còn nợ cũ từ các tuần trước / 이전 주 미납 없음:','']);
-    if(X.payableWon) row(['TỔNG NỢ CÒN LẠI (KRW) / 총 미납:',X.payableWon],{1:XF_WON});
-    if(X.payableVnd) row(['TỔNG NỢ CÒN LẠI (VND) / 총 미납:',X.payableVnd],{1:XF_VND});
-    if(X.overpaidWon) row(['KHÁCH TRẢ THỪA - DƯ (KRW) / 초과 입금(잔액):',X.overpaidWon],{1:XF_WON});
-    if(X.overpaidVnd) row(['KHÁCH TRẢ THỪA - DƯ (VND) / 초과 입금(잔액):',X.overpaidVnd],{1:XF_VND});
-    if(!X.payableWon&&!X.payableVnd&&!X.overpaidWon&&!X.overpaidVnd) row(['ĐÃ THANH TOÁN ĐỦ / 결제 완료:',0],{1:XF_WON});
+    if(wkOweWon) row(['CÒN NỢ TUẦN NÀY (KRW) / 이번 주 미납:',wkOweWon],{1:XF_WON});
+    if(wkOweVnd) row(['CÒN NỢ TUẦN NÀY (VND) / 이번 주 미납:',wkOweVnd],{1:XF_VND});
+    if(!wkOweWon&&!wkOweVnd) row(['Tuần này đã thanh toán đủ / 이번 주 결제 완료:','']);
   } else {
   row(['Tiền hàng (KRW) / 상품금액:',X.totWon],{1:XF_WON});
   if(X.totPhiWon) row(['Phụ phí (KRW) / 추가비용:',X.totPhiWon],{1:XF_WON});
@@ -2004,6 +2019,8 @@ function exportInvoiceXlsx(){
   }
   }
   const ws=XLSX.utils.aoa_to_sheet(aoa);
+  // Gắn CÔNG THỨC Excel cho bảng kê lũy kế: Cộng tuần=Σđơn, Tổng TT=cộng+nợ cũ, Còn lại=tổng TT+Σđã TT, Nợ cũ=còn lại tuần trước.
+  stmtF.forEach(({r,c,f,v})=>{ const a=XLSX.utils.encode_cell({r,c}); const s=ws[a]&&ws[a].s; ws[a]={t:'n',f,v}; if(s)ws[a].s=s; });
   // Công thức Tiền Won (cột J) = KG (H) × Đơn giá (I) — CHỈ khi số Won thật khớp KG×Đơn giá.
   // Đơn nào sửa tay (Won ≠ KG×Đơn giá) thì GIỮ NGUYÊN số thật, không ép công thức để khỏi sai lệch.
   itemRefs.forEach(({ar,r})=>{ const w=Number(r.weight)||0, p=Number(r.price)||0, won=Number(r.won)||0; if(w>0&&p>0&&Math.abs(w*p-won)<1){ const R=ar+1; const a=XLSX.utils.encode_cell({r:ar,c:9}); ws[a]={t:'n',f:'H'+R+'*I'+R,v:won}; } });

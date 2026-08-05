@@ -1721,6 +1721,34 @@ function invGroupByWeek(rows){
   const keys=[...m.keys()].sort((a,b)=>{ if(a===b)return 0; if(!a)return 1; if(!b)return -1; return b.localeCompare(a); });
   return keys.map(k=>({wk:k,rows:m.get(k)}));
 }
+// Tuần ISO của 1 lần thu tiền (ngày lưu dạng YYYY-MM-DD; fallback parseVNDate / h.at).
+function invPayWeek(h){
+  const s=String((h&&h.date)||''); const m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  let d=m?new Date(Date.UTC(+m[1],+m[2]-1,+m[3])):parseVNDate(s);
+  if((!d||isNaN(d))&&h&&h.at){ const t=new Date(h.at); if(!isNaN(t))d=t; }
+  return (d&&!isNaN(d))?isoWeekStr(d):'';
+}
+function invPayTime(h){ if(!(h&&h.at))return ''; const t=new Date(h.at); if(isNaN(t))return ''; return String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'); }
+// Bảng kê LŨY KẾ theo tuần (tuần cũ trước): nợ cũ dồn + tổng TT + các lần đã TT (theo tuần thu) + còn lại.
+// Số dư mở đầu = nợ cũ nhập tay (surcharge). Còn lại cuối cùng = payable của khách (khớp phần công nợ).
+function invWeekStatement(orders, payments, surWon, surVnd){
+  const og={}, pg={};
+  (orders||[]).forEach(r=>{ const k=weekKey(r)||''; (og[k]=og[k]||[]).push(r); });
+  (payments||[]).forEach(h=>{ const k=invPayWeek(h)||''; (pg[k]=pg[k]||[]).push(h); });
+  const named=[...new Set([...Object.keys(og),...Object.keys(pg)])].filter(Boolean).sort((a,b)=>a.localeCompare(b));
+  const keys=named.concat((og['']||pg[''])?['']:[]);   // tuần rõ trước (cũ->mới), chưa rõ tuần cuối
+  const blocks=[]; let runW=Number(surWon)||0, runV=Number(surVnd)||0;
+  keys.forEach(k=>{
+    const ords=og[k]||[], pays=(pg[k]||[]).slice().sort((a,b)=>String(a.at||a.date).localeCompare(String(b.at||b.date)));
+    const gW=ords.reduce((s,r)=>s+(Number(r.won)||0)+(Number(r.phuPhiWon)||0),0);
+    const gV=ords.reduce((s,r)=>s+(Number(r.vnd)||0)+(Number(r.phuPhi)||0),0);
+    const oldW=runW, oldV=runV, totW=oldW+gW, totV=oldV+gV;
+    const pW=pays.reduce((s,h)=>s+(Number(h.amount)||0),0), pV=pays.reduce((s,h)=>s+(Number(h.amountVnd)||0),0);
+    const remW=totW-pW, remV=totV-pV; runW=remW; runV=remV;
+    blocks.push({wk:k,ords,gW,gV,oldW,oldV,totW,totV,pays,pW,pV,remW,remV});
+  });
+  return blocks;
+}
 // Nguồn duy nhất quyết định đơn nào ĐANG hiển thị (dùng chung cho màn hình + Excel).
 function invDisplayRows(){
   const allRows=INV_ROWS;
@@ -1913,22 +1941,31 @@ function exportInvoiceXlsx(){
   row([]);
   const head=['STT / No.','Ngày về / 날짜','Mã kiện / 송장번호','Người nhận / 수취인','SĐT nhận / 연락처','Địa chỉ / 주소','Khu vực / 지역','KG / 중량','Đơn giá (₩) / 단가','Tiền Won (₩) / 금액','Phụ phí (₩) / 추가비용','Phụ phí (₫) / 추가비용','Tiền VND (₫) / 금액'];
   row(head);
-  const itemRefs=[], grpHeadRows=[], grpSumRows=[];
+  const itemRefs=[], grpHeadRows=[], grpSumRows=[], grpGreenRows=[];
   const pushItem=(r,idx)=>{ const ar=aoa.length; row([idx,r.date,r.pkg,r.rcv,r.rcvPh,r.addr,r.region,Number(r.weight)||'',Number(r.price)||'',Number(r.won)||'',Number(r.phuPhiWon)||'',Number(r.phuPhi)||'',Number(r.vnd)||''],{7:XF_KG,8:XF_WON,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND}); itemRefs.push({ar,r}); };
   const sumRowX=(label,g,markSub)=>{ const w=sum(g,'won'),pw=sum(g,'phuPhiWon'),p=sum(g,'phuPhi'),v=sum(g,'vnd'); if(markSub)grpSumRows.push(aoa.length); row(['','','','','','',label,sum(g,'weight')||'','',w+pw,pw,p,v+p],{7:XF_KG,9:XF_WON,10:XF_WON,11:XF_VND,12:XF_VND}); };
+  const stRow=(label,won,vnd,mark)=>{ if(mark)grpSumRows.push(aoa.length); row(['','','','','','',label,'','',won||'','','',vnd||''],{9:XF_WON,12:XF_VND}); };
+  const dmy=s=>{ let m=String(s||'').match(/(\d{4})-(\d{1,2})-(\d{1,2})/); if(m)return m[3].padStart(2,'0')+'/'+m[2].padStart(2,'0')+'/'+m[1]; m=String(s||'').match(/(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})/); if(m)return m[1].padStart(2,'0')+'/'+m[2].padStart(2,'0')+'/'+(m[3].length<4?'20'+m[3]:m[3]); return String(s||''); };
   let gi=0;
   if(grouped){
-    invGroupByWeek(rows).forEach(g=>{
-      grpHeadRows.push(aoa.length); row(['📅 '+(g.wk?weekLabel(g.wk):'(chưa rõ tuần)')+' — '+g.rows.length+' đơn/건']);
-      g.rows.forEach(r=>{ gi++; pushItem(r,gi); });
-      sumRowX('Cộng tuần / 주간 합계', g.rows, true);
+    // Bảng kê LŨY KẾ theo tuần (tuần cũ trước): đơn + Cộng tuần + Nợ cũ (dồn) + Tổng TT + các lần Đã TT + Còn lại
+    const blocks=invWeekStatement(rows, historyOf(cust), X.surcharge, X.surchargeVnd);
+    blocks.forEach(b=>{
+      grpHeadRows.push(aoa.length); row(['📅 '+(b.wk?weekLabel(b.wk):'(chưa rõ tuần)')+' — '+(b.ords.length?b.ords.length+' đơn/건':'chỉ thu tiền')]);
+      b.ords.forEach(r=>{ gi++; pushItem(r,gi); });
+      if(b.ords.length){ sumRowX('Cộng tuần / 주간 합계', b.ords, true); grpGreenRows.push(aoa.length-1); }
+      if(b.oldW||b.oldV) stRow('NỢ CŨ (dồn từ tuần trước) / 기존 미납', b.oldW, b.oldV);
+      stRow('TỔNG TT (nợ cũ + tuần này) / 총 결제', b.totW, b.totV, true);
+      b.pays.forEach(h=>{ const t=invPayTime(h); stRow('ĐÃ TT '+dmy(h.date)+(t?' '+t:''), -(Number(h.amount)||0)||'', -(Number(h.amountVnd)||0)||''); });
+      const clRow=aoa.length; stRow('CÒN LẠI / 미납 잔액', b.remW, b.remV, true); grpGreenRows.push(clRow);
+      row([]);
     });
-    sumRowX('TỔNG TẤT CẢ ('+rows.length+' đơn/건) / 합계', rows);
   } else {
     rows.forEach(r=>{ gi++; pushItem(r,gi); });
     sumRowX((weekOnly?('TỔNG '+(selWk?weekLabel(selWk):'tuần này')):'TỔNG')+' (gồm phụ phí) / 합계', rows);
   }
   row([]);
+  if(!grouped){
   const hist=historyOf(cust);
   if(hist.length){ row(['LỊCH SỬ THANH TOÁN / 입금 내역']); row(['Ngày / 날짜','Số tiền (₩) / 금액','Số tiền (₫) / 금액','Số đơn gạch / 처리건']); hist.forEach(h=>row([fmtPaidDate(h.date),Number(h.amount)||0,Number(h.amountVnd)||0,h.marked||0],{1:XF_WON,2:XF_VND})); row(['Tổng đã nhận / 총 입금액',hist.reduce((s,h)=>s+(Number(h.amount)||0),0),hist.reduce((s,h)=>s+(Number(h.amountVnd)||0),0),''],{1:XF_WON,2:XF_VND}); row([]); }
   if(weekOnly){
@@ -1965,6 +2002,7 @@ function exportInvoiceXlsx(){
   if(X.overpaidVnd) row(['KHÁCH TRẢ THỪA - DƯ (VND) / 초과 입금(잔액):',X.overpaidVnd],{1:XF_VND});
   if(!X.payableWon&&!X.payableVnd&&!X.overpaidWon&&!X.overpaidVnd) row(['ĐÃ THANH TOÁN ĐỦ / 결제 완료:',0],{1:XF_WON});
   }
+  }
   const ws=XLSX.utils.aoa_to_sheet(aoa);
   // Công thức Tiền Won (cột J) = KG (H) × Đơn giá (I) — CHỈ khi số Won thật khớp KG×Đơn giá.
   // Đơn nào sửa tay (Won ≠ KG×Đơn giá) thì GIỮ NGUYÊN số thật, không ép công thức để khỏi sai lệch.
@@ -1974,6 +2012,8 @@ function exportInvoiceXlsx(){
   // Tô đậm dòng tiêu đề tuần + dòng cộng tuần (khi tách nhóm)
   grpHeadRows.forEach(rr=>{ const a=XLSX.utils.encode_cell({r:rr,c:0}); if(ws[a]) ws[a].s=Object.assign(ws[a].s||{},{font:{bold:true,color:{rgb:'3730A3'}},fill:{fgColor:{rgb:'EEF2FF'}}}); });
   grpSumRows.forEach(rr=>{ for(let cc=6;cc<=12;cc++){ const a=XLSX.utils.encode_cell({r:rr,c:cc}); if(ws[a]) ws[a].s=Object.assign(ws[a].s||{},{font:{italic:true,bold:true},fill:{fgColor:{rgb:'F1F5F9'}}}); } });
+  // Tô xanh dòng Cộng tuần + Còn lại (bảng kê lũy kế) cho dễ nhìn như mẫu
+  grpGreenRows.forEach(rr=>{ for(let cc=6;cc<=12;cc++){ const a=XLSX.utils.encode_cell({r:rr,c:cc}); if(ws[a]) ws[a].s=Object.assign(ws[a].s||{},{font:{bold:true},fill:{fgColor:{rgb:'C6EFCE'}}}); } });
   ws['!cols']=[{wch:38},{wch:14},{wch:12},{wch:18},{wch:14},{wch:34},{wch:10},{wch:8},{wch:13},{wch:15},{wch:13},{wch:13},{wch:15},{wch:10}];
   // Cột A (nhãn song ngữ dài) tự xuống dòng, không tràn/đè sang cột số bên cạnh.
   {const rng=XLSX.utils.decode_range(ws['!ref']||'A1'); for(let r=0;r<=rng.e.r;r++){ const a=XLSX.utils.encode_cell({r,c:0}); if(ws[a] && typeof ws[a].v==='string'){ const s=ws[a].s||{}; s.alignment=Object.assign({},s.alignment||{},{wrapText:true,vertical:'top'}); ws[a].s=s; } }}

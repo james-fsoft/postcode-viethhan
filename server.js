@@ -781,14 +781,19 @@ app.post('/api/vc24/surcharge', requireAuth, requireVC24, async (req, res) => {
   const { cust, amount, amountVnd, note } = req.body || {};
   if (!cust) return res.json({ ok: false, message: 'bad' });
   let ledger = {}; try { const s = await redisGet(VK.ledger); if (s) ledger = JSON.parse(s); } catch { /* ok */ }
+  const { comp, compVnd, compNote } = req.body || {};
   const led = ledger[cust] || { credit: 0, history: [] };
   led.surcharge = Math.round(Number(amount) || 0);
   led.surchargeVnd = Math.round(Number(amountVnd) || 0);
   led.surchargeNote = String(note || '').slice(0, 200);
+  // Đền bù hàng vỡ/hỏng (công ty trả khách) — TRỪ vào công nợ. Lưu khi client gửi kèm.
+  if (comp !== undefined) led.comp = Math.round(Number(comp) || 0);
+  if (compVnd !== undefined) led.compVnd = Math.round(Number(compVnd) || 0);
+  if (compNote !== undefined) led.compNote = String(compNote || '').slice(0, 200);
   ledger[cust] = led;
   const ok = await redisSet(VK.ledger, JSON.stringify(ledger));
   if (!ok) return res.json({ ok: false, reason: 'save' });
-  await vcLog('surcharge', `Phí phát sinh ${cust}: ₩${led.surcharge.toLocaleString('en-US')} + ${led.surchargeVnd.toLocaleString('en-US')}đ${led.surchargeNote ? ' (' + led.surchargeNote + ')' : ''}`, userFromReq(req));
+  await vcLog('surcharge', `Nợ cũ/Đền bù ${cust}: nợ cũ ₩${led.surcharge.toLocaleString('en-US')}+${led.surchargeVnd.toLocaleString('en-US')}đ · đền bù ₩${(led.comp||0).toLocaleString('en-US')}+${(led.compVnd||0).toLocaleString('en-US')}đ`, userFromReq(req));
   res.json({ ok: true });
 });
 

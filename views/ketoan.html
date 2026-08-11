@@ -339,7 +339,7 @@
       <div id="dashSummary"></div>
     </div>
     <div class="panel">
-      <div class="ph"><h2>Ai đang nợ bao nhiêu (KRW &amp; VND)</h2><span class="small muted">Bấm 1 thanh để thu tiền cho khách đó</span></div>
+      <div class="ph"><h2>Ai đang nợ bao nhiêu (KRW &amp; VND)</h2><span class="small muted" id="dashWeekPick"></span></div>
       <div id="dashBars"></div>
     </div>
     <div class="panel">
@@ -621,8 +621,33 @@ function tab(name){
 let EDIT_SOURCE='main';
 let WEEK_SEL='', WPAGE=1, _weekSearchT=null, WEEK_VIEW='orders';
 let PAY_CUST='';
+let DASH_WEEK='';   // Phân bố nợ: ''=hiện tại (tất cả), hoặc 1 mã tuần -> công nợ LŨY KẾ đến hết tuần đó
+function setDashWeek(w){ DASH_WEEK=w||''; renderDash(); }
+// w<=sel (đơn/lần thu chưa rõ tuần -> tính là trước, luôn gồm). Chuỗi 'YYYY-Www' so sánh được.
+function weekLE(w,sel){ return !w || String(w)<=String(sel); }
+// Công nợ LŨY KẾ đến hết tuần sel: charges(đơn ≤ sel) − đã thu(≤ sel) + nợ cũ − đền bù (khớp công nợ tổng khi sel = tuần cuối).
+function customerAggUpTo(sel){
+  if(!sel) return customerAgg();
+  const m={};
+  ROWS.forEach(r=>{ if(!weekLE(weekKey(r),sel))return; const c=r.cust||'(không rõ)'; const a=m[c]=m[c]||{cust:c,total:0,owe:0,oweWon:0,oweVnd:0,paidWon:0,paidVnd:0,credit:0,chW:0,chV:0}; a.total++; a.chW+=wonOf(r); a.chV+=vndOf(r); if(!paid(r))a.owe++; });
+  Object.values(m).forEach(a=>{
+    const hs=historyOf(a.cust).filter(h=>weekLE(invPayWeek(h),sel));
+    const recW=hs.reduce((s,h)=>s+(Number(h.amount)||0),0), recV=hs.reduce((s,h)=>s+(Number(h.amountVnd)||0),0);
+    a.paidWon=recW; a.paidVnd=recV; a.credit=0;
+    a.oweWon=Math.max(0, a.chW + surchargeOf(a.cust) - compOf(a.cust) - recW);
+    a.oweVnd=Math.max(0, a.chV + surchargeVndOf(a.cust) - compVndOf(a.cust) - recV);
+  });
+  return Object.values(m);
+}
 function renderDash(){
-  const agg=customerAgg();
+  const agg=customerAggUpTo(DASH_WEEK);
+  // Dropdown chọn tuần (lũy kế đến hết tuần đó)
+  const wkKeys=Object.keys(weekGroups()).filter(Boolean).sort((a,b)=>b.localeCompare(a));
+  if($('dashWeekPick')) $('dashWeekPick').innerHTML=
+    `Đến hết tuần: <select onchange="setDashWeek(this.value)" style="padding:4px 8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit">`
+    +`<option value=""${!DASH_WEEK?' selected':''}>Hiện tại (tất cả)</option>`
+    +wkKeys.map(k=>`<option value="${escA(k)}"${DASH_WEEK===k?' selected':''}>${esc(weekLabel(k))}</option>`).join('')
+    +`</select>`+(DASH_WEEK?` <span style="color:#2563eb">· công nợ LŨY KẾ đến hết ${esc(weekLabel(DASH_WEEK))} (gồm nợ cũ các tuần trước)</span>`:'');
   const aggOwe=agg.filter(a=>a.oweWon>0).sort((a,b)=>b.oweWon-a.oweWon);
   const totalOweWon=agg.reduce((s,a)=>s+a.oweWon,0);
   const totalPaidWon=agg.reduce((s,a)=>s+a.paidWon+a.credit,0);
@@ -664,7 +689,7 @@ function renderDash(){
     return `<div class="bar-row" onclick="openPay('${escJs(a.cust)}')" title="Bấm để thu tiền"><div class="bar-name">${esc(a.cust)}</div>${track}<div class="bar-val">${val}</div></div>`;
   }).join(''):'<div class="empty">Không còn khoản nợ nào 🎉</div>';
   $('dashBars').innerHTML=`<div style="margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">${paidToggleHTML()}<span class="small muted">Bật để thấy phần ĐÃ THU (xanh) — bấm phần xanh để xem hóa đơn đã trả</span></div>`+barsHTML;
-  const rg={}; ROWS.forEach(r=>{ if(paid(r))return; const k=r.region||'(khác)'; rg[k]=(rg[k]||0)+(Number(r.won)||0); });
+  const rg={}; ROWS.forEach(r=>{ if(paid(r))return; if(DASH_WEEK && !weekLE(weekKey(r),DASH_WEEK))return; const k=r.region||'(khác)'; rg[k]=(rg[k]||0)+(Number(r.won)||0); });
   const rgArr=Object.entries(rg).sort((a,b)=>b[1]-a[1]), rgMax=rgArr.length?rgArr[0][1]:1;
   $('dashRegion').innerHTML=rgArr.length?rgArr.map(([k,v])=>`<div class="bar-row" onclick="filterRegion('${escJs(k)}')" title="Bấm để lọc danh sách">
     <div class="bar-name">${esc(k)}</div>

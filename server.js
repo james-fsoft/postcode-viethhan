@@ -725,9 +725,11 @@ app.post('/api/vc24/rates', requireAuth, requireVC24, async (req, res) => {
 // Thu tiền theo SỐ TIỀN (hỗ trợ trả từng phần) + ghi lịch sử
 app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
-  const { cust, amount, amountVnd, date, settleAll, settleAllVnd } = req.body || {};
+  const { cust, amount, amountVnd, date, settleAll, settleAllVnd, srcVnd, rate } = req.body || {};
   const amt = Math.round(Number(amount) || 0);
   const amtVnd = Math.round(Number(amountVnd) || 0);
+  const srcVndN = Math.round(Number(srcVnd) || 0);   // VND khách trả (quy ra Won để trả nợ Won)
+  const rateN = Number(rate) || 0;                    // tỷ giá 1₩ = ? ₫
   if (!cust || (amt <= 0 && amtVnd <= 0)) return res.json({ ok: false, message: 'bad' });
   const o = await vcLoadOrders();
   let ledger = {}; try { const s = await redisGet(VK.ledger); if (s) ledger = JSON.parse(s); } catch { /* ok */ }
@@ -765,7 +767,9 @@ app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
 
   led.credit = credit; led.creditVnd = creditVnd;
   led.history = led.history || [];
-  led.history.push({ date: String(date || ''), amount: amt, amountVnd: amtVnd, marked, keys: markedKeys, at: new Date().toISOString() });
+  const histEntry = { date: String(date || ''), amount: amt, amountVnd: amtVnd, marked, keys: markedKeys, at: new Date().toISOString() };
+  if (srcVndN > 0 && rateN > 0) { histEntry.srcVnd = srcVndN; histEntry.rate = rateN; }   // ghi lại: Won này quy từ VND @ tỷ giá
+  led.history.push(histEntry);
   ledger[cust] = led;
   const s1 = await vcSaveOrders(o);
   const s2 = await redisSet(VK.ledger, JSON.stringify(ledger));

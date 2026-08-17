@@ -743,6 +743,7 @@ function openPay(cust,msg){
   const creditVnd=creditVndOf(cust), oweVnd=Math.max(0,sumVnd(unpaid)+surchargeVndOf(cust)-compVndOf(cust)-creditVnd);
   const hasDebt=owe>0||oweVnd>0;
   const hist=historyOf(cust);
+  const lastRate=(function(){try{return localStorage.getItem('vc24_payRate')||'';}catch(e){return '';}})();
   $('payTitle').textContent='Thu tiền — '+cust;
   $('payBody').innerHTML=`
     <div class="small muted" style="margin-bottom:4px">${unpaid.length} đơn chưa thu · còn nợ</div>
@@ -752,7 +753,15 @@ function openPay(cust,msg){
     ${hasDebt?`
     ${owe>0?`
     <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Số tiền đã nhận (₩ Won)</span></label>
-    <input id="payAmt" class="ef" inputmode="numeric" value="${owe.toLocaleString('en-US')}" oninput="onMoneyInput(this)" style="font-size:1.05rem;font-weight:700" />`:''}
+    <input id="payAmt" class="ef" inputmode="numeric" value="${owe.toLocaleString('en-US')}" oninput="onMoneyInput(this)" style="font-size:1.05rem;font-weight:700" />
+    <details style="margin-top:6px">
+      <summary style="cursor:pointer;font-size:.82rem;color:#2563eb;user-select:none">💱 Khách trả bằng VND? Nhập VND + tỷ giá → tự tính ra Won</summary>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;align-items:flex-end">
+        <div style="flex:1;min-width:130px"><div style="font-size:.75rem;font-weight:700;color:var(--g600);margin-bottom:2px">Số VND đã nhận</div><input id="payVndSrc" class="ef" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this);calcVndToWon()" /></div>
+        <div style="width:130px"><div style="font-size:.75rem;font-weight:700;color:var(--g600);margin-bottom:2px">Tỷ giá (1₩ = ? ₫)</div><input id="payRate" class="ef" inputmode="decimal" placeholder="vd 18.5" value="${escA(lastRate)}" oninput="calcVndToWon()" /></div>
+      </div>
+      <div class="small" id="payVndCalc" style="margin-top:5px;color:#16a34a;font-weight:700"></div>
+    </details>`:''}
     ${oweVnd>0?`
     <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Số tiền đã nhận (₫ VND)</span></label>
     <input id="payAmtVnd" class="ef" inputmode="numeric" value="${oweVnd.toLocaleString('en-US')}" oninput="onMoneyInput(this)" style="font-size:1.05rem;font-weight:700" />`:''}
@@ -776,7 +785,7 @@ function payHistRowHTML(h){
   const amtTxt=[won>0?'₩'+won.toLocaleString('en-US'):'',vnd>0?vnd.toLocaleString('en-US')+' ₫':''].filter(Boolean).join(' + ')||'₩0';
   return `<div style="padding:7px 11px;border-bottom:1px solid var(--g100);font-size:.84rem">
     <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
-      <span>${fmtPaidDate(h.date)}${h.marked?` <span class="muted">· gạch ${h.marked} đơn</span>`:''}${edits.length?` <span style="color:#d97706;font-size:.72rem" title="Đã chỉnh sửa">✎ đã sửa ${edits.length}×</span>`:''}</span>
+      <span>${fmtPaidDate(h.date)}${h.marked?` <span class="muted">· gạch ${h.marked} đơn</span>`:''}${(Number(h.srcVnd)>0&&Number(h.rate)>0)?` <span style="color:#2563eb;font-size:.72rem" title="Won quy từ VND">💱 từ ${Number(h.srcVnd).toLocaleString('en-US')}₫ @ ${h.rate}</span>`:''}${edits.length?` <span style="color:#d97706;font-size:.72rem" title="Đã chỉnh sửa">✎ đã sửa ${edits.length}×</span>`:''}</span>
       <span style="display:flex;align-items:center;gap:6px"><b style="color:var(--green)">${amtTxt}</b>${canEdit?`<button class="btn sm" onclick="editPayHist('${escJs(h.at)}')" title="Sửa dòng này">✎</button><button class="btn sm" onclick="deletePayHist('${escJs(h.at)}')" title="Xóa dòng thu này" style="border-color:#fecaca;color:#dc2626">🗑</button>`:''}</span>
     </div>
     ${edits.length?`<div style="margin-top:4px;padding-left:6px;border-left:2px solid #fde68a">${edits.slice().reverse().map(e=>`<div style="font-size:.72rem;color:#92400e">✎ Sửa lúc <b>${esc(fmtDT(e.at))}</b>${e.by?' bởi '+esc(e.by):''}: ₩${Number(e.oldAmount||0).toLocaleString('en-US')} → ₩${Number(e.newAmount||0).toLocaleString('en-US')}${(e.oldVnd||e.newVnd)?` · ${Number(e.oldVnd||0).toLocaleString('en-US')}đ→${Number(e.newVnd||0).toLocaleString('en-US')}đ`:''}${e.oldDate!==e.newDate?` · ngày ${esc(fmtPaidDate(e.oldDate))}→${esc(fmtPaidDate(e.newDate))}`:''}<br>Lý do: ${esc(e.reason||'')}</div>`).join('')}</div>`:''}
@@ -872,10 +881,23 @@ function renderCD(){
   cdUpdateSelBtn();
 }
 let _paying=false;
+// Nhập VND + tỷ giá -> tự tính Won, điền vào ô "Số tiền đã nhận (Won)".
+function calcVndToWon(){
+  const vEl=$('payVndSrc'), rEl=$('payRate'); if(!vEl||!rEl) return;
+  const vnd=money(vEl.value), rate=parseFloat(String(rEl.value).replace(/,/g,'.'))||0, out=$('payVndCalc');
+  if(vnd>0 && rate>0){
+    const won=Math.round(vnd/rate);
+    if($('payAmt')) $('payAmt').value=won.toLocaleString('en-US');
+    if(out) out.innerHTML=`= ₩${won.toLocaleString('en-US')} <span style="color:#94a3b8;font-weight:400">(${vnd.toLocaleString('en-US')} ₫ ÷ ${rate})</span>`;
+    try{ localStorage.setItem('vc24_payRate', String(rate)); }catch(e){}
+  } else if(out) out.innerHTML='';
+}
 async function confirmPay(){
   if(_paying) return;   // chống double-click ra 2 dòng
   const amt=$('payAmt')?money($('payAmt').value):0;
   const amtVnd=$('payAmtVnd')?money($('payAmtVnd').value):0;
+  const srcVnd=$('payVndSrc')?money($('payVndSrc').value):0;
+  const rate=$('payRate')?(parseFloat(String($('payRate').value).replace(/,/g,'.'))||0):0;
   const pdate=($('payDate')&&$('payDate').value)||todayISO();
   const dstr=fmtPaidDate(pdate);
   if(amt<=0 && amtVnd<=0){ $('payMsg').innerHTML='⚠️ Nhập số tiền hợp lệ (Won hoặc VND).'; return; }
@@ -885,12 +907,13 @@ async function confirmPay(){
   const oweVnd=Math.max(0,sumVnd(unpaid)+surchargeVndOf(PAY_CUST)-compVndOf(PAY_CUST)-creditVndOf(PAY_CUST));
   const settleAll=amt>0 && amt>=owe;          // trả đủ Won -> gạch sạch đơn Won
   const settleAllVnd=amtVnd>0 && amtVnd>=oweVnd;  // trả đủ VND -> gạch sạch đơn VND
-  const amtStr=[amt>0?'₩'+amt.toLocaleString('en-US'):'',amtVnd>0?amtVnd.toLocaleString('en-US')+'₫':''].filter(Boolean).join(' + ');
+  const usedVnd=srcVnd>0&&rate>0;
+  const amtStr=[amt>0?'₩'+amt.toLocaleString('en-US'):'',amtVnd>0?amtVnd.toLocaleString('en-US')+'₫':''].filter(Boolean).join(' + ')+(usedVnd?` (quy từ ${srcVnd.toLocaleString('en-US')}₫ @ ${rate})`:'');
   if(!confirm(`Ghi nhận khách "${PAY_CUST}" trả ${amtStr} ngày ${dstr}?`+((settleAll||settleAllVnd)?'\n(Trả ĐỦ — sẽ gạch hết đơn còn nợ tương ứng.)':''))) return;
   _paying=true;
   const btn=$('payConfirm'); if(btn){ btn.disabled=true; btn.textContent='⏳ Đang ghi nhận…'; }
   try{
-    const res=await fetch('/api/vc24/payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,amount:amt,amountVnd:amtVnd,date:pdate,settleAll,settleAllVnd})}).then(r=>r.json());
+    const res=await fetch('/api/vc24/payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,amount:amt,amountVnd:amtVnd,date:pdate,settleAll,settleAllVnd,srcVnd:usedVnd?srcVnd:0,rate:usedVnd?rate:0})}).then(r=>r.json());
     if(!res.ok){ alert(res.reason==='save'?'❌ Lưu thất bại (kho dữ liệu quá lớn).':'Ghi nhận thất bại.'); if(btn){btn.disabled=false;btn.textContent='✅ Ghi nhận thu tiền';} return; }
     await loadServerData();
     const dur=[res.credit>0?`Dư Won ₩${Number(res.credit).toLocaleString('en-US')}`:'',res.creditVnd>0?`Dư VND ${Number(res.creditVnd).toLocaleString('en-US')}₫`:''].filter(Boolean).join(' · ');

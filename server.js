@@ -398,28 +398,25 @@ async function redisCmd(...parts) {
   return data.result;
 }
 // Lưu/đọc chuỗi lớn (JSON) — dùng POST body để không vướng giới hạn độ dài URL
-async function redisSet(key, value) {
-  if (!useRedis) return false;
-  try {
-    const r = await fetch(`${UPSTASH_URL}/set/${encodeURIComponent(key)}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
-      body: String(value),
-    });
-    return r.ok;
-  } catch { return false; }
-}
-// Như redisSet nhưng trả {ok, status, body} để CHẨN ĐOÁN (413=quá lớn, 401=auth…)
+// Ghi Redis, TỰ THỬ LẠI khi lỗi tạm thời (mạng / 429 / 5xx) — tránh "lưu thất bại" chớp nhoáng.
 async function redisSetX(key, value) {
   if (!useRedis) return { ok: false, status: 0, body: 'no-redis' };
-  try {
-    const r = await fetch(`${UPSTASH_URL}/set/${encodeURIComponent(key)}`, {
-      method: 'POST', headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }, body: String(value),
-    });
-    let body = ''; try { body = (await r.text()).slice(0, 160); } catch { /* ok */ }
-    return { ok: r.ok, status: r.status, body };
-  } catch (e) { return { ok: false, status: -1, body: String((e && e.message) || e).slice(0, 160) }; }
+  let last = { ok: false, status: -1, body: '' };
+  for (let i = 0; i < 3; i++) {
+    try {
+      const r = await fetch(`${UPSTASH_URL}/set/${encodeURIComponent(key)}`, {
+        method: 'POST', headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }, body: String(value),
+      });
+      let body = ''; try { body = (await r.text()).slice(0, 160); } catch { /* ok */ }
+      last = { ok: r.ok, status: r.status, body };
+      if (r.ok) return last;
+      if (r.status && r.status < 500 && r.status !== 429) return last;   // lỗi vĩnh viễn (4xx trừ 429) -> khỏi thử lại
+    } catch (e) { last = { ok: false, status: -1, body: String((e && e.message) || e).slice(0, 160) }; }
+    await new Promise(res => setTimeout(res, 300 * (i + 1)));   // chờ tăng dần rồi thử lại
+  }
+  return last;
 }
+async function redisSet(key, value) { return (await redisSetX(key, value)).ok; }
 async function redisGet(key) {
   if (!useRedis) return null;
   try {
@@ -734,17 +731,6 @@ app.post('/api/vc24/rates', requireAuth, requireVC24, async (req, res) => {
 });
 
 // Thu tiền theo SỐ TIỀN (hỗ trợ trả từng phần) + ghi lịch sử
-// TẠM (chẩn đoán, sẽ gỡ): trả kích thước blob + kết quả ghi thử lại (không lộ dữ liệu, ghi lại y nguyên).
-app.get('/api/vc24/_sizes', async (req, res) => {
-  try {
-    const ord = await redisGet(VK.orders), led = await redisGet(VK.ledger);
-    const ordKB = ord == null ? 0 : Math.round(Buffer.byteLength(String(ord), 'utf8') / 1024);
-    const ledKB = led == null ? 0 : Math.round(Buffer.byteLength(String(led), 'utf8') / 1024);
-    const r1 = ord == null ? { status: 'null' } : await redisSetX(VK.orders, String(ord));
-    const r2 = led == null ? { status: 'null' } : await redisSetX(VK.ledger, String(led));
-    res.json({ useRedis, ordKB, ledKB, ordSet: { ok: r1.ok, status: r1.status, body: r1.body }, ledSet: { ok: r2.ok, status: r2.status, body: r2.body } });
-  } catch (e) { res.json({ error: String((e && e.message) || e) }); }
-});
 app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
   const { cust, amount, amountVnd, date, settleAll, settleAllVnd, srcVnd, rate } = req.body || {};

@@ -916,7 +916,7 @@ async function confirmPay(){
     const resp=await fetch('/api/vc24/payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,amount:amt,amountVnd:amtVnd,date:pdate,settleAll,settleAllVnd,srcVnd:usedVnd?srcVnd:0,rate:usedVnd?rate:0})});
     const res=await resp.json().catch(()=>({ok:false,reason:'http'+resp.status}));
     if(!res.ok){
-      const why = res.reason==='save' ? 'Lưu thất bại — kho dữ liệu quá lớn (Redis)'
+      const why = res.reason==='save' ? `Lưu thất bại (Redis) — orders ${res.ordKB}KB [status ${res.ordStatus}], ledger ${res.ledKB}KB [status ${res.ledStatus}]${res.ordBody||res.ledBody?' · '+((res.ordStatus>=400?res.ordBody:'')||(res.ledStatus>=400?res.ledBody:'')||''):''}`
         : (res.reason==='bad'||res.message==='bad') ? `Số tiền/khách không hợp lệ (amount=${amt}, vnd=${amtVnd})`
         : res.redis===false ? 'Server chưa bật lưu trữ (Redis off)'
         : ('Lý do: '+JSON.stringify(res)+` · HTTP ${resp.status}`);

@@ -409,6 +409,17 @@ async function redisSet(key, value) {
     return r.ok;
   } catch { return false; }
 }
+// Như redisSet nhưng trả {ok, status, body} để CHẨN ĐOÁN (413=quá lớn, 401=auth…)
+async function redisSetX(key, value) {
+  if (!useRedis) return { ok: false, status: 0, body: 'no-redis' };
+  try {
+    const r = await fetch(`${UPSTASH_URL}/set/${encodeURIComponent(key)}`, {
+      method: 'POST', headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }, body: String(value),
+    });
+    let body = ''; try { body = (await r.text()).slice(0, 160); } catch { /* ok */ }
+    return { ok: r.ok, status: r.status, body };
+  } catch (e) { return { ok: false, status: -1, body: String((e && e.message) || e).slice(0, 160) }; }
+}
 async function redisGet(key) {
   if (!useRedis) return null;
   try {
@@ -771,9 +782,16 @@ app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   if (srcVndN > 0 && rateN > 0) { histEntry.srcVnd = srcVndN; histEntry.rate = rateN; }   // ghi lại: Won này quy từ VND @ tỷ giá
   led.history.push(histEntry);
   ledger[cust] = led;
-  const s1 = await vcSaveOrders(o);
-  const s2 = await redisSet(VK.ledger, JSON.stringify(ledger));
-  if (!s1 || !s2) return res.json({ ok: false, reason: 'save' });
+  const ordersBlob = vcPack(o);
+  const ledgerBlob = JSON.stringify(ledger);
+  const ordKB = Math.round(Buffer.byteLength(ordersBlob, 'utf8') / 1024);
+  const ledKB = Math.round(Buffer.byteLength(ledgerBlob, 'utf8') / 1024);
+  const r1 = await redisSetX(VK.orders, ordersBlob);
+  const r2 = await redisSetX(VK.ledger, ledgerBlob);
+  if (!r1.ok || !r2.ok) {
+    console.log('[payment save fail]', cust, 'orders', ordKB + 'KB', 'st=' + r1.status, r1.body, '| ledger', ledKB + 'KB', 'st=' + r2.status, r2.body);
+    return res.json({ ok: false, reason: 'save', ordKB, ledKB, ordStatus: r1.status, ledStatus: r2.status, ordBody: r1.body, ledBody: r2.body });
+  }
   const parts = []; if (amt > 0) parts.push(`₩${amt.toLocaleString('en-US')}`); if (amtVnd > 0) parts.push(`${amtVnd.toLocaleString('en-US')}đ`);
   await vcLog('payment', `Thu ${parts.join(' + ')} của ${cust} (gạch ${marked} đơn)`, userFromReq(req));
   res.json({ ok: true, marked, credit, creditVnd });

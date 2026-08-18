@@ -913,8 +913,16 @@ async function confirmPay(){
   _paying=true;
   const btn=$('payConfirm'); if(btn){ btn.disabled=true; btn.textContent='⏳ Đang ghi nhận…'; }
   try{
-    const res=await fetch('/api/vc24/payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,amount:amt,amountVnd:amtVnd,date:pdate,settleAll,settleAllVnd,srcVnd:usedVnd?srcVnd:0,rate:usedVnd?rate:0})}).then(r=>r.json());
-    if(!res.ok){ alert(res.reason==='save'?'❌ Lưu thất bại (kho dữ liệu quá lớn).':'Ghi nhận thất bại.'); if(btn){btn.disabled=false;btn.textContent='✅ Ghi nhận thu tiền';} return; }
+    const resp=await fetch('/api/vc24/payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,amount:amt,amountVnd:amtVnd,date:pdate,settleAll,settleAllVnd,srcVnd:usedVnd?srcVnd:0,rate:usedVnd?rate:0})});
+    const res=await resp.json().catch(()=>({ok:false,reason:'http'+resp.status}));
+    if(!res.ok){
+      const why = res.reason==='save' ? 'Lưu thất bại — kho dữ liệu quá lớn (Redis)'
+        : (res.reason==='bad'||res.message==='bad') ? `Số tiền/khách không hợp lệ (amount=${amt}, vnd=${amtVnd})`
+        : res.redis===false ? 'Server chưa bật lưu trữ (Redis off)'
+        : ('Lý do: '+JSON.stringify(res)+` · HTTP ${resp.status}`);
+      alert('❌ Ghi nhận thất bại — '+why);
+      if(btn){btn.disabled=false;btn.textContent='✅ Ghi nhận thu tiền';} return;
+    }
     await loadServerData();
     const dur=[res.credit>0?`Dư Won ₩${Number(res.credit).toLocaleString('en-US')}`:'',res.creditVnd>0?`Dư VND ${Number(res.creditVnd).toLocaleString('en-US')}₫`:''].filter(Boolean).join(' · ');
     openPay(PAY_CUST, `✅ Đã ghi nhận trả ${amtStr} ngày ${dstr}.`+(res.marked?` Gạch ${res.marked} đơn (Đã TT).`:' Chưa đủ gạch đơn — cộng vào tiền đã trả trước.')+(dur?' '+dur+'.':''));

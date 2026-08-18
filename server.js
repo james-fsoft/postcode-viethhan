@@ -734,6 +734,17 @@ app.post('/api/vc24/rates', requireAuth, requireVC24, async (req, res) => {
 });
 
 // Thu tiền theo SỐ TIỀN (hỗ trợ trả từng phần) + ghi lịch sử
+// TẠM (chẩn đoán, sẽ gỡ): trả kích thước blob + kết quả ghi thử lại (không lộ dữ liệu, ghi lại y nguyên).
+app.get('/api/vc24/_sizes', async (req, res) => {
+  try {
+    const ord = await redisGet(VK.orders), led = await redisGet(VK.ledger);
+    const ordKB = ord == null ? 0 : Math.round(Buffer.byteLength(String(ord), 'utf8') / 1024);
+    const ledKB = led == null ? 0 : Math.round(Buffer.byteLength(String(led), 'utf8') / 1024);
+    const r1 = ord == null ? { status: 'null' } : await redisSetX(VK.orders, String(ord));
+    const r2 = led == null ? { status: 'null' } : await redisSetX(VK.ledger, String(led));
+    res.json({ useRedis, ordKB, ledKB, ordSet: { ok: r1.ok, status: r1.status, body: r1.body }, ledSet: { ok: r2.ok, status: r2.status, body: r2.body } });
+  } catch (e) { res.json({ error: String((e && e.message) || e) }); }
+});
 app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
   const { cust, amount, amountVnd, date, settleAll, settleAllVnd, srcVnd, rate } = req.body || {};

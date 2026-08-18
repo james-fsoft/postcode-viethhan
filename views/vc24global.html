@@ -292,7 +292,7 @@
           <input type="file" id="fileInput" class="hidden" accept=".xlsx,.xls,.csv" onchange="onFile(event)" />
           <button class="btn-up" data-i18n="btnUpload" onclick="tryUpload()">⬆ Upload Excel</button>
           <button class="btn-ghost" data-i18n="btnRescan" onclick="rescan()">↻ Quét lại</button>
-          <button class="btn-ghost" data-i18n="btnDownload" onclick="exportResult()">⬇ Tải kết quả</button>
+          <button class="btn-up" id="btnDownloadResult" data-i18n="btnDownload" onclick="exportResult()" style="background:#16a34a;border-color:#16a34a;color:#fff;font-weight:700">⬇ Tải kết quả</button>
         </div>
       </div>
       <div class="progress-mini" id="batchProgress"></div>

@@ -752,7 +752,9 @@ app.get('/api/vc24/_diag', async (req, res) => {
         cust, orders: rows.length, charges, received, paidOrders,
         desync_paidOrders_minus_received: paidOrders - received,
         realDebt, flagDebt, diff: realDebt - flagDebt,
-        payments: hist.map(h => ({ date: h.date, amount: Number(h.amount) || 0, marked: h.marked || 0, keysLen: (h.keys || []).length, edits: (h.edits || []).length }))
+        payments: hist.map(h => ({ date: h.date, amount: Number(h.amount) || 0, marked: h.marked || 0, keysLen: (h.keys || []).length, edits: (h.edits || []).length })),
+        allKeys: hist.flatMap(h => h.keys || []),
+        rows: rows.map(r => ({ pkg: r.pkg, date: r.date, won: wonAmt(r), pay: r.pay, paid: isPaidPay(r.pay), key: keyOf(r), inKeys: hist.flatMap(h => h.keys || []).includes(keyOf(r)) }))
       };
     });
     res.json({ q, matched: custs.length, data: out });

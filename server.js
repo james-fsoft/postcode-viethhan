@@ -731,35 +731,6 @@ app.post('/api/vc24/rates', requireAuth, requireVC24, async (req, res) => {
 });
 
 // Thu tiền theo SỐ TIỀN (hỗ trợ trả từng phần) + ghi lịch sử
-// TẠM (chẩn đoán lệch cờ, sẽ gỡ): đối soát cờ 'ĐÃ TT' vs lịch sử thu tiền cho khách chứa ?q=
-app.get('/api/vc24/_diag', async (req, res) => {
-  try {
-    const q = String(req.query.q || '').toLowerCase();
-    const o = await vcLoadOrders();
-    let ledger = {}; try { const s = await redisGet(VK.ledger); if (s) ledger = JSON.parse(s); } catch { /* ok */ }
-    const wonAmt = r => (Number(r.won) || 0) + (Number(r.phuPhiWon) || 0);
-    const custs = [...new Set(o.rows.map(r => r.cust).filter(c => c && String(c).toLowerCase().includes(q)))];
-    const out = custs.map(cust => {
-      const rows = o.rows.filter(r => r.cust === cust);
-      const charges = rows.reduce((s, r) => s + wonAmt(r), 0);
-      const paidOrders = rows.filter(r => isPaidPay(r.pay)).reduce((s, r) => s + wonAmt(r), 0);
-      const led = ledger[cust] || { history: [] };
-      const hist = led.history || [];
-      const received = hist.reduce((s, h) => s + (Number(h.amount) || 0), 0);
-      const realDebt = Math.max(0, charges - received);
-      const flagDebt = Math.max(0, (charges - paidOrders) - Math.max(0, received - paidOrders));
-      return {
-        cust, orders: rows.length, charges, received, paidOrders,
-        desync_paidOrders_minus_received: paidOrders - received,
-        realDebt, flagDebt, diff: realDebt - flagDebt,
-        payments: hist.map(h => ({ date: h.date, amount: Number(h.amount) || 0, marked: h.marked || 0, keysLen: (h.keys || []).length, edits: (h.edits || []).length })),
-        allKeys: hist.flatMap(h => h.keys || []),
-        rows: rows.map(r => ({ pkg: r.pkg, date: r.date, won: wonAmt(r), pay: r.pay, paid: isPaidPay(r.pay), key: keyOf(r), inKeys: hist.flatMap(h => h.keys || []).includes(keyOf(r)) }))
-      };
-    });
-    res.json({ q, matched: custs.length, data: out });
-  } catch (e) { res.json({ error: String((e && e.message) || e) }); }
-});
 app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
   const { cust, amount, amountVnd, date, settleAll, settleAllVnd, srcVnd, rate } = req.body || {};

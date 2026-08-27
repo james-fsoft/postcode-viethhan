@@ -572,6 +572,14 @@ function compOf(c){ return (LEDGER[c] && Number(LEDGER[c].comp)) || 0; }
 function compVndOf(c){ return (LEDGER[c] && Number(LEDGER[c].compVnd)) || 0; }
 function compNoteOf(c){ return (LEDGER[c] && LEDGER[c].compNote) || ''; }
 function paidWonOf(c){ return totalReceivedOf(c); }   // tổng tiền đã nhận của khách (gồm cả phần dư)
+// Công nợ theo TIỀN THỰC NHẬN (chuẩn — KHÔNG phụ thuộc cờ 'ĐÃ TT'): tiền hàng + nợ cũ − đền bù − đã nhận.
+// Dùng cách này để tránh lệch khi cờ đơn không khớp lịch sử thu (đơn sẵn Đã TT từ file, đơn trùng…).
+function custChargesWon(c){ return ROWS.reduce((s,r)=> r.cust===c ? s+wonOf(r) : s, 0); }
+function custChargesVnd(c){ return ROWS.reduce((s,r)=> r.cust===c ? s+vndOf(r) : s, 0); }
+function custBalWon(c){ return custChargesWon(c) + surchargeOf(c) - compOf(c) - totalReceivedOf(c); }   // >0 = còn nợ, <0 = trả thừa
+function custBalVnd(c){ return custChargesVnd(c) + surchargeVndOf(c) - compVndOf(c) - totalReceivedVndOf(c); }
+function custDebtWon(c){ return Math.max(0, custBalWon(c)); }
+function custDebtVnd(c){ return Math.max(0, custBalVnd(c)); }
 let DRAFT=null, HIST_LOG=[];   // bản nháp chờ duyệt + nhật ký
 let SHOW_PAID=false;   // mặc định chỉ hiện số ĐANG NỢ; bật để hiện số ĐÃ TRẢ
 function togglePaidView(){ SHOW_PAID=!SHOW_PAID; if(CUST_SEL) renderCust(); refreshCD(); renderDash(); }
@@ -739,8 +747,8 @@ $('custHistModal').addEventListener('click',e=>{ if(e.target.id==='custHistModal
 function openPay(cust,msg){
   PAY_CUST=cust;
   const unpaid=ROWS.filter(r=>r.cust===cust && !paid(r));
-  const credit=creditOf(cust), owe=Math.max(0,sumWon(unpaid)+surchargeOf(cust)-compOf(cust)-credit);
-  const creditVnd=creditVndOf(cust), oweVnd=Math.max(0,sumVnd(unpaid)+surchargeVndOf(cust)-compVndOf(cust)-creditVnd);
+  const credit=creditOf(cust), owe=custDebtWon(cust);          // công nợ thật (theo tiền đã nhận)
+  const creditVnd=creditVndOf(cust), oweVnd=custDebtVnd(cust);
   const hasDebt=owe>0||oweVnd>0;
   const hist=historyOf(cust);
   const lastRate=(function(){try{return localStorage.getItem('vc24_payRate')||'';}catch(e){return '';}})();
@@ -849,7 +857,7 @@ function oweText(oweWon,oweVnd){ const a=[]; if(oweWon)a.push('₩'+oweWon.toLoc
 function renderCD(){
   const cust=CD_CUST, all=ROWS.filter(r=>r.cust===cust), rows=cdViewRows();
   const owe=all.filter(r=>!paid(r));
-  const oweWon=Math.max(0,sumWon(owe)+surchargeOf(cust)-compOf(cust)-creditOf(cust)), oweVnd=Math.max(0,sumVnd(owe)+surchargeVndOf(cust)-compVndOf(cust)-creditVndOf(cust));
+  const oweWon=custDebtWon(cust), oweVnd=custDebtVnd(cust);
   const hasDebt=owe.length||oweWon||oweVnd;
   $('cdTitle').innerHTML=`👤 ${esc(cust)} <span style="font-weight:600;color:var(--g400);font-size:.85rem">— ${all.length} đơn`+(hasDebt?`, nợ <b style="color:#e11d48">${oweText(oweWon,oweVnd)}</b>`:`, <b style="color:var(--green)">đã thu hết</b>`)+`</span>`;
   $('cdPayBtn').style.display=owe.length?'inline-flex':'none';
@@ -903,8 +911,8 @@ async function confirmPay(){
   if(amt<=0 && amtVnd<=0){ $('payMsg').innerHTML='⚠️ Nhập số tiền hợp lệ (Won hoặc VND).'; return; }
   if(!REDIS){ alert('Chưa bật lưu trữ server — không ghi nhận được.'); return; }
   const unpaid=ROWS.filter(r=>r.cust===PAY_CUST&&!paid(r));
-  const owe=Math.max(0,sumWon(unpaid)+surchargeOf(PAY_CUST)-compOf(PAY_CUST)-creditOf(PAY_CUST));
-  const oweVnd=Math.max(0,sumVnd(unpaid)+surchargeVndOf(PAY_CUST)-compVndOf(PAY_CUST)-creditVndOf(PAY_CUST));
+  const owe=custDebtWon(PAY_CUST);
+  const oweVnd=custDebtVnd(PAY_CUST);
   const settleAll=amt>0 && amt>=owe;          // trả đủ Won -> gạch sạch đơn Won
   const settleAllVnd=amtVnd>0 && amtVnd>=oweVnd;  // trả đủ VND -> gạch sạch đơn VND
   const usedVnd=srcVnd>0&&rate>0;
@@ -1667,8 +1675,19 @@ function aggregate(src, applyCredit, inclSurcharge){
     if(paid(r)){ a.paidWon+=wonOf(r); a.paidVnd+=vndOf(r); } else { a.owe++; a.oweWon+=wonOf(r); a.oweVnd+=vndOf(r); }
   });
   Object.values(m).forEach(a=>{
-    if(inclSurcharge){ a.oweWon+=surchargeOf(a.cust)-compOf(a.cust); a.oweVnd+=surchargeVndOf(a.cust)-compVndOf(a.cust); }   // nợ cũ cộng vào nợ, đền bù trừ ra
-    if(applyCredit){ a.credit=creditOf(a.cust); a.oweWon=Math.max(0,a.oweWon-a.credit); a.creditVnd=creditVndOf(a.cust); a.oweVnd=Math.max(0,a.oweVnd-a.creditVnd); } else { a.credit=0; a.creditVnd=0; }
+    if(applyCredit){
+      // Công nợ theo TIỀN THỰC NHẬN (chuẩn, khớp bảng kê/Excel): tiền hàng + nợ cũ − đền bù − đã nhận.
+      // (src phải gồm TOÀN BỘ đơn của khách — customerAgg dùng ROWS đầy đủ.)
+      const chW=a.paidWon+a.oweWon, chV=a.paidVnd+a.oweVnd;
+      const recW=totalReceivedOf(a.cust), recV=totalReceivedVndOf(a.cust);
+      const balW=chW+surchargeOf(a.cust)-compOf(a.cust)-recW, balV=chV+surchargeVndOf(a.cust)-compVndOf(a.cust)-recV;
+      a.oweWon=Math.max(0,balW); a.oweVnd=Math.max(0,balV);
+      a.credit=Math.max(0,-balW); a.creditVnd=Math.max(0,-balV);          // dư (trả thừa)
+      a.paidWon=Math.max(0,recW-a.credit); a.paidVnd=Math.max(0,recV-a.creditVnd);   // đã thu vào nợ (paidWon+credit = đã nhận)
+    } else {
+      if(inclSurcharge){ a.oweWon+=surchargeOf(a.cust)-compOf(a.cust); a.oweVnd+=surchargeVndOf(a.cust)-compVndOf(a.cust); }   // nợ cũ cộng vào nợ, đền bù trừ ra
+      a.credit=0; a.creditVnd=0;
+    }
   });
   return Object.values(m);
 }
@@ -1726,12 +1745,12 @@ function renderCust(){
   const owe0=has?rows.filter(r=>!paid(r)):[];
   $('custPayBtn').style.display=(has&&owe0.length)?'inline-flex':'none';
   const ch=$('custHead');
-  const oweW0=Math.max(0,sumWon(owe0)+surchargeOf(c)-compOf(c)-creditOf(c)), oweV0=Math.max(0,sumVnd(owe0)+surchargeVndOf(c)-compVndOf(c)-creditVndOf(c));
+  const oweW0=custDebtWon(c), oweV0=custDebtVnd(c);
   if(has){ ch.style.display='block'; ch.innerHTML=`👤 ${esc(c)} <span style="font-weight:600;color:var(--g400);font-size:.9rem">— ${rows.length} đơn`+((owe0.length||oweW0||oweV0)?`, còn nợ <b style="color:#e11d48">${oweText(oweW0,oweV0)}</b>`:`, <b style="color:var(--green)">đã thu hết</b>`)+`</span>`; }
   else ch.style.display='none';
   if(!has){ $('custSummary').innerHTML=''; return; }
-  const owe=rows.filter(r=>!paid(r)); const oweVnd=Math.max(0,sumVnd(owe)+surchargeVndOf(c)-compVndOf(c)-creditVndOf(c));
-  const oweWonC=Math.max(0,sumWon(owe)+surchargeOf(c)-compOf(c)-creditOf(c)), paidWonC=paidWonOf(c);
+  const owe=rows.filter(r=>!paid(r)); const oweVnd=custDebtVnd(c);
+  const oweWonC=custDebtWon(c), paidWonC=paidWonOf(c);
   $('custSummary').innerHTML=
     `<div style="grid-column:1/-1;margin-bottom:-2px">${paidToggleHTML()}</div>`+
     stat('Tổng đơn',rows.length,'','')+stat('Đơn chưa thu',owe.length,owe.length?'owe':'','')+
@@ -1828,13 +1847,14 @@ function invCompute(){
   const credit=creditOf(cust), creditVnd=creditVndOf(cust);
   const surcharge=surchargeOf(cust), surchargeVnd=surchargeVndOf(cust);
   const comp=compOf(cust), compVnd=compVndOf(cust);   // đền bù hàng vỡ/hỏng: TRỪ vào công nợ
-  // dư (credit) trừ vào TOÀN BỘ nợ = đơn chưa thu + nợ cũ − đền bù. Làm ĐỐI XỨNG cho cả Won và VND.
-  const balanceWon=shownOweWon + surcharge - comp - credit;         // >0 = còn nợ, <0 = khách trả THỪA
-  const balanceVnd=oweVnd + surchargeVnd - compVnd - creditVnd;
+  const receivedWon=totalReceivedOf(cust), receivedVnd=totalReceivedVndOf(cust);   // TIỀN THỰC NHẬN (theo lịch sử thu)
+  // Công nợ tính theo TIỀN THỰC NHẬN (không theo cờ 'ĐÃ TT') -> khớp bảng kê lũy kế / Excel, tránh lệch.
+  const balanceWon=custBalWon(cust);   // = tiền hàng(mọi đơn) + nợ cũ − đền bù − đã nhận
+  const balanceVnd=custBalVnd(cust);
   const payableWon=Math.max(0, balanceWon), payableVnd=Math.max(0, balanceVnd);
   const overpaidWon=Math.max(0, -balanceWon), overpaidVnd=Math.max(0, -balanceVnd);   // số tiền khách trả dư / được đền bù
   const oweWon=payableWon;   // "còn nợ" hiển thị = số phải trả cuối cùng (khớp tab Theo khách)
-  return {cust,rows,totWon,totPhiWon,totVnd,totPhi,oweRows,paidRows,shownOweWon,shownPaidWon,oweVnd,shownPaidVnd,credit,creditVnd,comp,compVnd,oweWon,surcharge,surchargeVnd,balanceWon,balanceVnd,payableWon,payableVnd,overpaidWon,overpaidVnd,payable:payableWon};
+  return {cust,rows,totWon,totPhiWon,totVnd,totPhi,oweRows,paidRows,shownOweWon,shownPaidWon,oweVnd,shownPaidVnd,credit,creditVnd,comp,compVnd,receivedWon,receivedVnd,oweWon,surcharge,surchargeVnd,balanceWon,balanceVnd,payableWon,payableVnd,overpaidWon,overpaidVnd,payable:payableWon};
 }
 function renderInvoiceDoc(){
   const cust=INV_CUST, X=invCompute();
@@ -1948,8 +1968,8 @@ function renderInvoiceDoc(){
         ${(_wkCompW||_wkCompV)?`<tr><td>Đền bù hàng vỡ/hỏng (trừ) · ${kr('파손 보상')}:</td><td class="r" style="color:#2563eb"><div>${_wkCompW?'−₩'+nf(_wkCompW):''}</div>${_wkCompV?`<div>−${nf(_wkCompV)} ₫</div>`:''}</td></tr>`:''}
         ${((_wkBlk.remW-_wkCompW)>0||(_wkBlk.remV-_wkCompV)>0)?`<tr class="grand"><td>TỔNG NỢ CÒN LẠI đến hết tuần này<br>${kr('총 미납')}:</td><td class="r"><div>${(_wkBlk.remW-_wkCompW)>0?'₩'+nf(_wkBlk.remW-_wkCompW):''}</div>${(_wkBlk.remV-_wkCompV)>0?`<div>${nf(_wkBlk.remV-_wkCompV)} ₫</div>`:''}</td></tr>`:`<tr class="grand" style="color:#16a34a"><td>ĐÃ THANH TOÁN ĐỦ<br>${kr('결제 완료')}:</td><td class="r" style="color:#16a34a">₩0</td></tr>`}
         `:`
-        ${(X.shownPaidWon+X.credit)?`<tr><td>Đã thanh toán (KRW) · ${kr('결제됨')}:</td><td class="r" style="color:#16a34a">−₩${nf(X.shownPaidWon+X.credit)}</td></tr>`:''}
-        ${(X.shownPaidVnd+X.creditVnd)?`<tr><td>Đã thanh toán (VND) · ${kr('결제됨')}:</td><td class="r" style="color:#16a34a">−${nf(X.shownPaidVnd+X.creditVnd)} ₫</td></tr>`:''}
+        ${X.receivedWon?`<tr><td>Đã thanh toán (KRW) · ${kr('결제됨')}:</td><td class="r" style="color:#16a34a">−₩${nf(X.receivedWon)}</td></tr>`:''}
+        ${X.receivedVnd?`<tr><td>Đã thanh toán (VND) · ${kr('결제됨')}:</td><td class="r" style="color:#16a34a">−${nf(X.receivedVnd)} ₫</td></tr>`:''}
         ${(X.payableWon||X.payableVnd)?`<tr class="grand"><td>TỔNG THANH TOÁN (còn nợ)<br>${kr('총 결제금액 (미납)')}:</td><td class="r"><div>₩${nf(X.payableWon)}</div>${X.payableVnd?`<div>${nf(X.payableVnd)} ₫</div>`:''}</td></tr>`:''}
         ${(X.overpaidWon||X.overpaidVnd)?`<tr class="grand" style="color:#2563eb"><td>KHÁCH TRẢ THỪA (dư)<br>${kr('초과 입금 (잔액)')}:</td><td class="r" style="color:#2563eb"><div>${X.overpaidWon?'+₩'+nf(X.overpaidWon):''}</div>${X.overpaidVnd?`<div>+${nf(X.overpaidVnd)} ₫</div>`:''}</td></tr>`:''}
         ${(!X.payableWon&&!X.payableVnd&&!X.overpaidWon&&!X.overpaidVnd)?`<tr class="grand" style="color:#16a34a"><td>ĐÃ THANH TOÁN ĐỦ<br>${kr('결제 완료')}:</td><td class="r" style="color:#16a34a">₩0</td></tr>`:''}
@@ -2100,8 +2120,8 @@ function exportInvoiceXlsx(){
   if(X.comp) row(['Đền bù hàng vỡ/hỏng (KRW) / 파손 보상(차감):',-X.comp],{1:XF_WON});
   if(X.compVnd) row(['Đền bù hàng vỡ/hỏng (VND) / 파손 보상(차감):',-X.compVnd],{1:XF_VND});
   if(compNoteOf(cust)) row(['Ghi chú đền bù / 비고:',compNoteOf(cust)]);
-  if(X.shownPaidWon+X.credit) row(['Đã thanh toán (KRW) / 결제됨:',X.shownPaidWon+X.credit],{1:XF_WON});
-  if(X.shownPaidVnd+X.creditVnd) row(['Đã thanh toán (VND) / 결제됨:',X.shownPaidVnd+X.creditVnd],{1:XF_VND});
+  if(X.receivedWon) row(['Đã thanh toán (KRW) / 결제됨:',X.receivedWon],{1:XF_WON});
+  if(X.receivedVnd) row(['Đã thanh toán (VND) / 결제됨:',X.receivedVnd],{1:XF_VND});
   if(X.payableWon||X.payableVnd){
     if(X.payableWon) row(['TỔNG THANH TOÁN - CÒN NỢ (KRW) / 총 결제금액(미납):',X.payableWon],{1:XF_WON});
     if(X.payableVnd) row(['TỔNG THANH TOÁN - CÒN NỢ (VND) / 총 결제금액(미납):',X.payableVnd],{1:XF_VND});

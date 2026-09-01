@@ -290,6 +290,7 @@
           <select class="sel" id="filterDate" onchange="renderBatch()"></select>
           <select class="sel" id="filterStatus" onchange="renderBatch()"></select>
           <input type="file" id="fileInput" class="hidden" accept=".xlsx,.xls,.csv" onchange="onFile(event)" />
+          <button class="btn-ghost" data-i18n="btnSample" onclick="downloadSample()" title="Tải file Excel mẫu đúng định dạng">⬇ Tải file mẫu</button>
           <button class="btn-up" data-i18n="btnUpload" onclick="tryUpload()">⬆ Upload Excel</button>
           <button class="btn-ghost" data-i18n="btnRescan" onclick="rescan()">↻ Quét lại</button>
           <button class="btn-up" id="btnDownloadResult" data-i18n="btnDownload" onclick="exportResult()" style="background:#16a34a;border-color:#16a34a;color:#fff;font-weight:700">⬇ Tải kết quả</button>
@@ -339,7 +340,7 @@ const LANGS = {
     searchPh:'Nhập số vận đơn / mã quản lý hàng (vd: 304433643476)', btnSearch:'Tra cứu',
     eyebrow2:'Tra cứu hàng loạt', h1b:'Quét toàn bộ danh sách kho một lần',
     lead2:'Tải lên danh sách Excel và quét toàn bộ vận đơn cùng lúc — thay vì tra từng số trên website.',
-    btnUpload:'⬆ Upload Excel', btnRescan:'↻ Quét lại', btnDownload:'⬇ Tải kết quả', noExport:'Chưa có kết quả để tải. Hãy upload và quét file trước.',
+    btnUpload:'⬆ Upload Excel', btnRescan:'↻ Quét lại', btnDownload:'⬇ Tải kết quả', btnSample:'⬇ Tải file mẫu', noExport:'Chưa có kết quả để tải. Hãy upload và quét file trước.',
     colSheet:'Sheet', colMbl:'Vận đơn chủ', colHawb:'Vận đơn', colArrival:'Ngày đến', colWeight:'Trọng lượng', colStatus:'Trạng thái thông quan',
     emptyFilter:'Không có vận đơn nào khớp bộ lọc.',
     footerTagline:'Giải pháp logistics Việt - Hàn', footerAbout:'Giới thiệu', footerPostal:'Tra mã bưu điện',
@@ -369,7 +370,7 @@ const LANGS = {
     searchPh:'Enter B/L / cargo number (e.g. 304433643476)', btnSearch:'Look up',
     eyebrow2:'Batch lookup', h1b:'Scan an entire warehouse list at once',
     lead2:'Upload an Excel list (like the Yongma cold-storage file) and scan every B/L at once — instead of looking up one by one.',
-    btnUpload:'⬆ Upload Excel', btnRescan:'↻ Rescan', btnDownload:'⬇ Download result', noExport:'No result to download yet. Please upload and scan a file first.',
+    btnUpload:'⬆ Upload Excel', btnRescan:'↻ Rescan', btnDownload:'⬇ Download result', btnSample:'⬇ Sample file', noExport:'No result to download yet. Please upload and scan a file first.',
     colSheet:'Sheet', colMbl:'Master B/L', colHawb:'B/L', colArrival:'Arrival', colWeight:'Weight', colStatus:'Clearance status',
     emptyFilter:'No B/L matches the filter.',
     footerTagline:'Vietnam - Korea logistics solution', footerAbout:'About', footerPostal:'Postal code lookup',
@@ -399,7 +400,7 @@ const LANGS = {
     searchPh:'운송장 / 화물관리번호 입력 (예: 304433643476)', btnSearch:'조회',
     eyebrow2:'대량 조회', h1b:'창고 리스트 전체를 한 번에 조회',
     lead2:'엑셀 목록(욜마 냉동창고 파일 등)을 업로드하면 모든 운송장을 한 번에 조회합니다 — 하나씩 조회할 필요 없이.',
-    btnUpload:'⬆ 엑셀 업로드', btnRescan:'↻ 다시 조회', btnDownload:'⬇ 결과 다운로드', noExport:'다운로드할 결과가 없습니다. 먼저 파일을 업로드하고 조회하세요.',
+    btnUpload:'⬆ 엑셀 업로드', btnRescan:'↻ 다시 조회', btnDownload:'⬇ 결과 다운로드', btnSample:'⬇ 양식 다운로드', noExport:'다운로드할 결과가 없습니다. 먼저 파일을 업로드하고 조회하세요.',
     colSheet:'시트', colMbl:'M B/L', colHawb:'운송장', colArrival:'입항일', colWeight:'중량', colStatus:'통관진행상태',
     emptyFilter:'필터에 맞는 운송장이 없습니다.',
     footerTagline:'베트남-한국 물류 솔루션', footerAbout:'소개', footerPostal:'우편번호 조회',
@@ -974,6 +975,20 @@ function exportResult() {
   const stamp = new Date().toISOString().slice(0, 10);
   const base = String(currentFile || 'vc24global').replace(/\.[^.]+$/, '');
   XLSX.writeFile(out, `${base}_M-B-L_${stamp}.xlsx`);
+}
+// Tải file Excel MẪU đúng định dạng để quét hàng loạt (bắt buộc cột HAWB; DATE / M B/L / WT là tùy chọn).
+function downloadSample() {
+  const aoa = [
+    ['HAWB', 'DATE', 'M B/L', 'WT'],
+    ['304433643476', '2026-08-01', 'MBLKR2608001', '10.9'],
+    ['304433645834', '2026-08-02', 'MBLKR2608002', '18.7'],
+    ['', '', '', ''],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{ wch: 16 }, { wch: 14 }, { wch: 18 }, { wch: 8 }];
+  for (let c = 0; c < 4; c++) { const a = XLSX.utils.encode_cell({ r: 0, c }); if (ws[a]) ws[a].s = STY.head; }
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Mau');
+  XLSX.writeFile(wb, 'VC24_mau_tra_thong_quan.xlsx');
 }
 
 // Dựng lại 1 sheet: chèn/điền cột M B/L + ép HAWB hiện đủ số + tô màu (vàng M B/L, header xanh, TOTAL cam)

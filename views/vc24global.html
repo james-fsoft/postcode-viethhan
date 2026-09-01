@@ -964,6 +964,21 @@ function fallbackCopyNF(txt, cb) {
 function rescan() { if (workbook) scanAll(); }
 
 // Tải kết quả: giữ nguyên dữ liệu mọi sheet, THÊM cột M B/L (vàng) đã điền số, HAWB hiện đủ, có định dạng
+// Trình duyệt trong app (Zalo/Kakao/Messenger/Line…) chặn tải blob -> tải qua server để ra file thật.
+function inAppBrowser(){ return /\bZalo\b|FBAN|FBAV|FB_IAB|Instagram|KAKAOTALK|\bLine\//i.test(navigator.userAgent||''); }
+function saveWB(wb, filename){
+  if(inAppBrowser()){
+    try{
+      const b64=XLSX.write(wb,{type:'base64',bookType:'xlsx'});
+      const f=document.createElement('form'); f.method='POST'; f.action='/api/download'; f.style.display='none';
+      const add=(n,v)=>{ const i=document.createElement('input'); i.type='hidden'; i.name=n; i.value=v; f.appendChild(i); };
+      add('filename',filename); add('b64',b64);
+      document.body.appendChild(f); f.submit(); setTimeout(()=>f.remove(),2000);
+      return;
+    }catch(e){ /* lỗi -> rơi xuống cách thường */ }
+  }
+  XLSX.writeFile(wb, filename);
+}
 function exportResult() {
   if (!workbook || !SHEETS.length) { alert(t('noExport')); return; }
   const byName = {}; SHEETS.forEach(s => byName[s.name] = s);
@@ -974,7 +989,7 @@ function exportResult() {
   });
   const stamp = new Date().toISOString().slice(0, 10);
   const base = String(currentFile || 'vc24global').replace(/\.[^.]+$/, '');
-  XLSX.writeFile(out, `${base}_M-B-L_${stamp}.xlsx`);
+  saveWB(out, `${base}_M-B-L_${stamp}.xlsx`);
 }
 // Tải file Excel MẪU đúng định dạng để quét hàng loạt (bắt buộc cột HAWB; DATE / M B/L / WT là tùy chọn).
 function downloadSample() {
@@ -988,7 +1003,7 @@ function downloadSample() {
   ws['!cols'] = [{ wch: 16 }, { wch: 14 }, { wch: 18 }, { wch: 8 }];
   for (let c = 0; c < 4; c++) { const a = XLSX.utils.encode_cell({ r: 0, c }); if (ws[a]) ws[a].s = STY.head; }
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Mau');
-  XLSX.writeFile(wb, 'VC24_mau_tra_thong_quan.xlsx');
+  saveWB(wb, 'VC24_mau_tra_thong_quan.xlsx');
 }
 
 // Dựng lại 1 sheet: chèn/điền cột M B/L + ép HAWB hiện đủ số + tô màu (vàng M B/L, header xanh, TOTAL cam)

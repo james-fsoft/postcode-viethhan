@@ -567,10 +567,16 @@ function creditVndOf(c){ const paidVnd=ROWS.filter(r=>r.cust===c && paid(r)).red
 function surchargeOf(c){ return (LEDGER[c] && Number(LEDGER[c].surcharge)) || 0; }
 function surchargeVndOf(c){ return (LEDGER[c] && Number(LEDGER[c].surchargeVnd)) || 0; }
 function surchargeNoteOf(c){ return (LEDGER[c] && LEDGER[c].surchargeNote) || ''; }
-// Đền bù hàng vỡ/hỏng (công ty trả khách) — TRỪ vào công nợ.
-function compOf(c){ return (LEDGER[c] && Number(LEDGER[c].comp)) || 0; }
-function compVndOf(c){ return (LEDGER[c] && Number(LEDGER[c].compVnd)) || 0; }
-function compNoteOf(c){ return (LEDGER[c] && LEDGER[c].compNote) || ''; }
+// Đền bù hàng vỡ/hỏng (công ty trả khách) — TRỪ vào công nợ. Hỗ trợ NHIỀU khoản (compItems).
+function compItemsOf(c){
+  const L=LEDGER[c]; if(!L) return [];
+  if(Array.isArray(L.compItems)) return L.compItems.map(it=>({won:Number(it.won)||0,vnd:Number(it.vnd)||0,note:String(it.note||'')}));
+  if(L.comp||L.compVnd||L.compNote) return [{won:Number(L.comp)||0,vnd:Number(L.compVnd)||0,note:String(L.compNote||'')}];   // tương thích dữ liệu cũ (1 khoản)
+  return [];
+}
+function compOf(c){ return compItemsOf(c).reduce((s,it)=>s+(Number(it.won)||0),0); }
+function compVndOf(c){ return compItemsOf(c).reduce((s,it)=>s+(Number(it.vnd)||0),0); }
+function compNoteOf(c){ return compItemsOf(c).map(it=>it.note).filter(Boolean).join(' · '); }
 function paidWonOf(c){ return totalReceivedOf(c); }   // tổng tiền đã nhận của khách (gồm cả phần dư)
 // Công nợ theo TIỀN THỰC NHẬN (chuẩn — KHÔNG phụ thuộc cờ 'ĐÃ TT'): tiền hàng + nợ cũ − đền bù − đã nhận.
 // Dùng cách này để tránh lệch khi cờ đơn không khớp lịch sử thu (đơn sẵn Đã TT từ file, đơn trùng…).
@@ -1955,13 +1961,15 @@ function renderInvoiceDoc(){
         <tr class="no-print"><td colspan="2" style="text-align:right;padding-top:2px"><button class="btn sm" id="invSurBtn" onclick="saveSurcharge()">💾 Lưu nợ cũ</button></td></tr>
         <tr class="only-print" style="display:none"><td>Nợ cũ · ${kr('기존 미납')}:</td><td class="r">${X.surcharge?'₩'+nf(X.surcharge):''}${X.surchargeVnd?'<br>'+nf(X.surchargeVnd)+' ₫':''}</td></tr>
         ${surNote?`<tr><td colspan="2" style="font-size:.78rem;color:#888;padding-top:0">Ghi chú nợ cũ/${kr('비고')}: ${esc(surNote)} <button class="btn sm no-print" onclick="editSurNote()" style="margin-left:4px">✎</button></td></tr>`:`<tr class="no-print"><td colspan="2"><button class="btn sm" onclick="editSurNote()">✎ Thêm ghi chú nợ cũ</button></td></tr>`}
-        <tr class="no-print"><td>Đền bù hàng vỡ/hỏng (KRW) · ${kr('파손 보상')}:</td><td class="r" style="white-space:nowrap">
-          <input id="invComp" inputmode="numeric" value="${escA(X.comp?grp(X.comp):'')}" oninput="onMoneyInput(this)" placeholder="0" style="width:120px;text-align:right;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit" /> ₩</td></tr>
-        <tr class="no-print"><td>Đền bù hàng vỡ/hỏng (VND) · ${kr('파손 보상')}:</td><td class="r" style="white-space:nowrap">
-          <input id="invCompVnd" inputmode="numeric" value="${escA(X.compVnd?grp(X.compVnd):'')}" oninput="onMoneyInput(this)" placeholder="0" style="width:120px;text-align:right;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit" /> ₫</td></tr>
-        <tr class="no-print"><td colspan="2" style="text-align:right;padding-top:2px"><button class="btn sm" id="invCompBtn" onclick="saveSurcharge()">💾 Lưu đền bù</button></td></tr>
-        ${compNote?`<tr><td colspan="2" style="font-size:.78rem;color:#888;padding-top:0">Ghi chú đền bù/${kr('비고')}: ${esc(compNote)} <button class="btn sm no-print" onclick="editCompNote()" style="margin-left:4px">✎</button></td></tr>`:`<tr class="no-print"><td colspan="2"><button class="btn sm" onclick="editCompNote()">✎ Thêm ghi chú đền bù</button></td></tr>`}
-        ${(!weekOnly&&(X.comp||X.compVnd))?`<tr><td>Đền bù hàng vỡ/hỏng (trừ) · ${kr('파손 보상 차감')}:</td><td class="r" style="color:#2563eb"><div>${X.comp?'−₩'+nf(X.comp):''}</div>${X.compVnd?`<div>−${nf(X.compVnd)} ₫</div>`:''}</td></tr>`:''}
+        <tr class="no-print"><td colspan="2" style="padding-top:6px">
+          <div style="font-size:.8rem;font-weight:700;color:var(--g600);margin-bottom:4px">Đền bù hàng vỡ/hỏng · ${kr('파손 보상')} <span style="font-weight:400;color:#9aa3b2">(nhập nhiều khoản được)</span></div>
+          <div id="invCompList"></div>
+          <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+            <button class="btn sm" onclick="addCompRow()">＋ Thêm khoản đền bù</button>
+            <button class="btn sm" id="invCompBtn" onclick="saveSurcharge()">💾 Lưu đền bù</button>
+          </div>
+        </td></tr>
+        ${(!weekOnly)?compItemsOf(cust).filter(it=>it.won||it.vnd).map(it=>`<tr><td>Đền bù${it.note?' — '+esc(it.note):''} (trừ) · ${kr('파손 보상')}:</td><td class="r" style="color:#2563eb"><div>${it.won?'−₩'+nf(it.won):''}</div>${it.vnd?`<div>−${nf(it.vnd)} ₫</div>`:''}</td></tr>`).join(''):''}
         ${weekOnly?`
         ${(_wkBlk.oldW||_wkBlk.oldV)?`<tr><td>Nợ cũ dồn từ các tuần trước · ${kr('기존 미납 (이전 주)')}:</td><td class="r" style="color:#e11d48;font-weight:700"><div>${_wkBlk.oldW?'₩'+nf(_wkBlk.oldW):''}</div>${_wkBlk.oldV?`<div>${nf(_wkBlk.oldV)} ₫</div>`:''}</td></tr>`:`<tr><td colspan="2" style="color:#16a34a;font-weight:700">✔ Không còn nợ cũ từ các tuần trước · ${kr('이전 주 미납 없음')}</td></tr>`}
         ${(_wkBlk.pays||[]).map(h=>{ const _t=invPayTime(h); const _amt=[Number(h.amount)?'−₩'+nf(h.amount):'',Number(h.amountVnd)?'−'+nf(h.amountVnd)+' ₫':''].filter(Boolean).join(' + '); return _amt?`<tr><td>Đã TT ${fmtPaidDate(h.date)}${_t?' '+_t:''} · ${kr('결제')}:</td><td class="r" style="color:#16a34a">${_amt}</td></tr>`:''; }).join('')}
@@ -1982,32 +1990,46 @@ function renderInvoiceDoc(){
           ? `Quý khách đã thanh toán dư <b style="color:#2563eb">${[X.overpaidWon?'₩'+nf(X.overpaidWon):'',X.overpaidVnd?nf(X.overpaidVnd)+' ₫':''].filter(Boolean).join(' + ')}</b>. Số tiền dư này sẽ được trừ vào các đơn/hóa đơn tiếp theo. Cảm ơn Quý khách đã sử dụng dịch vụ của ${esc(co.name||'VC24 Global')}.<br>${kr('초과 입금액은 다음 청구서에서 차감됩니다. '+esc(co.name||'VC24 Global')+'을(를) 이용해 주셔서 감사합니다.')}`
           : `Quý khách đã thanh toán đủ. Cảm ơn Quý khách đã sử dụng dịch vụ của ${esc(co.name||'VC24 Global')}.<br>${kr('결제가 완료되었습니다. '+esc(co.name||'VC24 Global')+'을(를) 이용해 주셔서 감사합니다.')}`}<br>
       <span style="color:#999">* Còn nợ = Tiền hàng − đã thanh toán − dư + Nợ cũ − Đền bù · ${kr('미납액 = 상품금액 − 결제됨 − 잔액 + 기존 미납 − 파손 보상')}</span></div>`;
+  renderCompRows();
 }
+// ---- Đền bù nhiều khoản: mỗi dòng KRW / VND / lý do ----
+function compRowHTML(won,vnd,note){
+  return `<div class="comprow" style="display:flex;gap:6px;margin-bottom:5px;align-items:center;flex-wrap:wrap">
+    <input class="cwon" inputmode="numeric" value="${escA(won?grp(won):'')}" oninput="onMoneyInput(this)" placeholder="0" style="width:100px;text-align:right;padding:4px 7px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit" /><span style="color:#64748b">₩</span>
+    <input class="cvnd" inputmode="numeric" value="${escA(vnd?grp(vnd):'')}" oninput="onMoneyInput(this)" placeholder="0" style="width:100px;text-align:right;padding:4px 7px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit" /><span style="color:#64748b">₫</span>
+    <input class="cnote" value="${escA(note||'')}" placeholder="lý do (vỡ / hỏng / mất...)" style="flex:1;min-width:130px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit" />
+    <button class="btn sm" title="Xóa khoản" onclick="this.closest('.comprow').remove()" style="border-color:#fecaca;color:#dc2626">✕</button>
+  </div>`;
+}
+function renderCompRows(){
+  const box=$('invCompList'); if(!box) return;
+  const items=compItemsOf(INV_CUST);
+  box.innerHTML = items.length ? items.map(it=>compRowHTML(it.won,it.vnd,it.note)).join('') : compRowHTML(0,0,'');
+}
+function addCompRow(){ const box=$('invCompList'); if(box) box.insertAdjacentHTML('beforeend', compRowHTML(0,0,'')); }
 function editSurNote(){
   const cur=surchargeNoteOf(INV_CUST);
   const v=prompt('Ghi chú nợ cũ (lý do):', cur); if(v==null) return;
   LEDGER[INV_CUST]=LEDGER[INV_CUST]||{}; LEDGER[INV_CUST].surchargeNote=v;
   saveSurcharge(true);
 }
-function editCompNote(){
-  const cur=compNoteOf(INV_CUST);
-  const v=prompt('Ghi chú đền bù (lý do — vd: hàng vỡ/hỏng):', cur); if(v==null) return;
-  LEDGER[INV_CUST]=LEDGER[INV_CUST]||{}; LEDGER[INV_CUST].compNote=v;
-  saveSurcharge(true);
-}
 // Lưu CHUNG cả Nợ cũ và Đền bù (đọc mọi ô hiện có) — 1 endpoint.
 async function saveSurcharge(silent){
   const cust=INV_CUST;
   const amt=$('invSur')?money($('invSur').value):surchargeOf(cust), amtVnd=$('invSurVnd')?money($('invSurVnd').value):surchargeVndOf(cust), note=surchargeNoteOf(cust);
-  const comp=$('invComp')?money($('invComp').value):compOf(cust), compVnd=$('invCompVnd')?money($('invCompVnd').value):compVndOf(cust), compNote=compNoteOf(cust);
+  // Đền bù: đọc từng dòng trong danh sách (nếu list không có trên DOM thì giữ nguyên khoản cũ).
+  const listEl=$('invCompList');
+  const compItems = listEl
+    ? [...listEl.querySelectorAll('.comprow')].map(r=>({won:money(r.querySelector('.cwon').value),vnd:money(r.querySelector('.cvnd').value),note:(r.querySelector('.cnote').value||'').trim()})).filter(it=>it.won||it.vnd||it.note)
+    : compItemsOf(cust);
   if(!REDIS){ alert('Chưa bật lưu trữ server.'); return; }
   const btns=[$('invSurBtn'),$('invCompBtn')].filter(Boolean); if(!silent) btns.forEach(b=>{ b.disabled=true; b.textContent='⏳'; });
   try{
-    const r=await fetch('/api/vc24/surcharge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust,amount:amt,amountVnd:amtVnd,note,comp,compVnd,compNote})}).then(x=>x.json());
+    const r=await fetch('/api/vc24/surcharge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust,amount:amt,amountVnd:amtVnd,note,compItems})}).then(x=>x.json());
     btns.forEach(b=>{ b.disabled=false; b.textContent='💾 Lưu'; });
     if(!r.ok){ alert('Lưu thất bại.'); return; }
     LEDGER[cust]=LEDGER[cust]||{}; LEDGER[cust].surcharge=amt; LEDGER[cust].surchargeVnd=amtVnd; LEDGER[cust].surchargeNote=note;
-    LEDGER[cust].comp=comp; LEDGER[cust].compVnd=compVnd; LEDGER[cust].compNote=compNote;
+    LEDGER[cust].compItems=compItems; LEDGER[cust].comp=compItems.reduce((s,it)=>s+(Number(it.won)||0),0); LEDGER[cust].compVnd=compItems.reduce((s,it)=>s+(Number(it.vnd)||0),0); LEDGER[cust].compNote=compItems.map(it=>it.note).filter(Boolean).join(' · ');
     renderInvoiceDoc(); refreshCD(); renderDebt();
     if(!silent){ const bb=$('invSurBtn'), cb=$('invCompBtn'); if(bb)bb.textContent='✓ Đã lưu'; if(cb)cb.textContent='✓ Đã lưu'; setTimeout(()=>{ if($('invSurBtn'))$('invSurBtn').textContent='💾 Lưu nợ cũ'; if($('invCompBtn'))$('invCompBtn').textContent='💾 Lưu đền bù'; },1500); }
   }catch(e){ btns.forEach(b=>{ b.disabled=false; b.textContent='💾 Lưu'; }); alert('Lỗi khi lưu.'); }

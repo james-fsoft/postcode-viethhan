@@ -804,15 +804,25 @@ app.post('/api/vc24/surcharge', requireAuth, requireVC24, async (req, res) => {
   const { cust, amount, amountVnd, note } = req.body || {};
   if (!cust) return res.json({ ok: false, message: 'bad' });
   let ledger = {}; try { const s = await redisGet(VK.ledger); if (s) ledger = JSON.parse(s); } catch { /* ok */ }
-  const { comp, compVnd, compNote } = req.body || {};
+  const { comp, compVnd, compNote, compItems } = req.body || {};
   const led = ledger[cust] || { credit: 0, history: [] };
   led.surcharge = Math.round(Number(amount) || 0);
   led.surchargeVnd = Math.round(Number(amountVnd) || 0);
   led.surchargeNote = String(note || '').slice(0, 200);
-  // Đền bù hàng vỡ/hỏng (công ty trả khách) — TRỪ vào công nợ. Lưu khi client gửi kèm.
-  if (comp !== undefined) led.comp = Math.round(Number(comp) || 0);
-  if (compVnd !== undefined) led.compVnd = Math.round(Number(compVnd) || 0);
-  if (compNote !== undefined) led.compNote = String(compNote || '').slice(0, 200);
+  // Đền bù hàng vỡ/hỏng (công ty trả khách) — TRỪ vào công nợ. Hỗ trợ NHIỀU khoản (compItems).
+  if (Array.isArray(compItems)) {
+    const items = compItems
+      .map(it => ({ won: Math.round(Number(it && it.won) || 0), vnd: Math.round(Number(it && it.vnd) || 0), note: String((it && it.note) || '').slice(0, 200) }))
+      .filter(it => it.won || it.vnd || it.note);
+    led.compItems = items;
+    led.comp = items.reduce((s, it) => s + it.won, 0);          // tổng (giữ để tương thích)
+    led.compVnd = items.reduce((s, it) => s + it.vnd, 0);
+    led.compNote = items.map(it => it.note).filter(Boolean).join(' · ').slice(0, 300);
+  } else {   // client cũ gửi 1 khoản
+    if (comp !== undefined) led.comp = Math.round(Number(comp) || 0);
+    if (compVnd !== undefined) led.compVnd = Math.round(Number(compVnd) || 0);
+    if (compNote !== undefined) led.compNote = String(compNote || '').slice(0, 200);
+  }
   ledger[cust] = led;
   const ok = await redisSet(VK.ledger, JSON.stringify(ledger));
   if (!ok) return res.json({ ok: false, reason: 'save' });

@@ -1,6 +1,9 @@
 node_modules/
 .env
+.env.*
 *.log
 
 .claude/
 _t.log
+
+.vercel

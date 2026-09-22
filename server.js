@@ -190,7 +190,8 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/api/login', async (req, res) => {
-  const { username, password, remember } = req.body;
+  const { password, remember } = req.body;
+  const username = String(req.body.username || '').trim();   // bỏ khoảng trắng thừa ở tên đăng nhập
   if (username && await verifyPassword(username, password)) {
     // Nhóm VC24 (kế toán dùng chung): KHÔNG giữ đăng nhập dài — luôn dùng cookie
     // phiên (đóng trình duyệt là phải nhập lại), bỏ qua "remember 30 ngày".
@@ -228,8 +229,9 @@ app.post('/api/change-password', requireAuth, async (req, res) => {
   if (!user) return res.json({ ok: false, reason: 'auth' });
   if (!useRedis) return res.json({ ok: false, reason: 'noredis' });
   if (!(await verifyPassword(user, oldPassword))) return res.json({ ok: false, reason: 'oldwrong' });
-  if (String(newPassword || '').length < 6) return res.json({ ok: false, reason: 'short' });
-  if (!(await setPassword(user, newPassword))) return res.json({ ok: false, reason: 'save' });
+  const np = String(newPassword || '').trim();   // mật khẩu mới (bỏ khoảng trắng thừa)
+  if (np.length < 6) return res.json({ ok: false, reason: 'short' });
+  if (!(await setPassword(user, np))) return res.json({ ok: false, reason: 'save' });
   await vcLog('password', 'Đổi mật khẩu của chính mình', user);
   res.json({ ok: true });
 });
@@ -445,17 +447,19 @@ function pwMatches(rec, pw) {
     return crypto.timingSafeEqual(Buffer.from(rec.hash, 'hex'), Buffer.from(h, 'hex'));
   } catch { return false; }
 }
-// Xác thực: nếu có override trong Redis -> so băm; nếu không -> so env USERS
+// Xác thực: nếu có override trong Redis -> so băm; nếu không -> so env USERS.
+// BỎ khoảng trắng thừa đầu/cuối của mật khẩu (khi gõ/tự điền lỡ có dấu cách) -> vẫn nhận.
 async function verifyPassword(user, pw) {
   if (!user || pw == null) return false;
+  const p = String(pw).trim();
   const ov = await loadPwOverrides();
-  if (ov[user]) return pwMatches(ov[user], pw);
-  return !!(USERS[user] && USERS[user] === String(pw));
+  if (ov[user]) return pwMatches(ov[user], p);
+  return !!(USERS[user] && String(USERS[user]).trim() === p);
 }
 async function setPassword(user, pw) {
   if (!useRedis) return false;
   const ov = await loadPwOverrides();
-  ov[user] = hashPw(pw);
+  ov[user] = hashPw(String(pw).trim());   // lưu mật khẩu ĐÃ bỏ khoảng trắng thừa
   return redisSet(PW_KEY, JSON.stringify(ov));
 }
 async function clearPassword(user) {   // xóa override -> mật khẩu quay về env gốc

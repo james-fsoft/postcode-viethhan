@@ -469,7 +469,7 @@ async function handleLogin(e) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         username: document.getElementById('username').value.trim(),
-        password: document.getElementById('password').value,
+        password: document.getElementById('password').value.trim(),
         remember: String(document.getElementById('remember').checked),
       }),
     });

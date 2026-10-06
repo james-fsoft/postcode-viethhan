@@ -768,7 +768,13 @@ function openPay(cust,msg,selKeys){
   $('payTitle').textContent = sel ? `Thu tiền — ${unpaid.length} đơn đã chọn` : ('Thu tiền — '+cust);
   $('payBody').innerHTML=`
     ${sel?`<div class="small" style="margin-bottom:4px;color:#4f46e5;font-weight:700">🧾 Chỉ thu cho ${unpaid.length} đơn ĐÃ CHỌN của «${esc(cust)}» (không tính nợ cũ/đơn khác)</div>`:''}
-    <div class="small muted" style="margin-bottom:4px">${unpaid.length} đơn ${sel?'đã chọn (chưa thu)':'chưa thu'} · ${sel?'tổng tiền':'còn nợ'}</div>
+    ${sel?`<div style="max-height:170px;overflow:auto;border:1px solid var(--g200);border-radius:8px;margin-bottom:8px">
+      ${unpaid.map((r,i)=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 9px;${i?'border-top:1px solid var(--g100);':''}font-size:.82rem;align-items:center">
+        <span style="min-width:0"><b>${esc(r.pkg||'—')}</b> · ${esc(r.rcv||'(không tên)')}${(Number(r.paidPartial)||Number(r.paidPartialVnd))?` <span style="color:#d97706;font-size:.72rem">(đã trả 1 phần)</span>`:''}${r.region?' <span class="muted" style="font-size:.72rem">'+esc(r.region)+'</span>':''}</span>
+        <span style="font-weight:700;white-space:nowrap;color:#e11d48">${[remWonOf(r)?'₩'+remWonOf(r).toLocaleString('en-US'):'',remVndOf(r)?remVndOf(r).toLocaleString('en-US')+'₫':''].filter(Boolean).join(' + ')||'₩0'}</span>
+      </div>`).join('')}
+    </div>`:''}
+    <div class="small muted" style="margin-bottom:4px">${unpaid.length} đơn ${sel?'đã chọn (chưa thu)':'chưa thu'} · ${sel?'TỔNG tiền':'còn nợ'}</div>
     <div style="font-size:1.4rem;font-weight:800;color:#e11d48;margin-bottom:6px">${owe>0?'₩'+owe.toLocaleString('en-US'):''}${(owe>0&&oweVnd>0)?' + ':''}${oweVnd>0?oweVnd.toLocaleString('en-US')+' ₫':''}${(!owe&&!oweVnd)?'₩0':''}</div>
     ${credit>0?`<div class="small" style="color:var(--green);margin:-2px 0 6px">Đã trả trước (Won): <b>₩${credit.toLocaleString('en-US')}</b></div>`:''}
     ${creditVnd>0?`<div class="small" style="color:var(--green);margin:-2px 0 6px">Đã trả trước (VND): <b>${creditVnd.toLocaleString('en-US')} ₫</b></div>`:''}

@@ -737,11 +737,13 @@ app.post('/api/vc24/rates', requireAuth, requireVC24, async (req, res) => {
 // Thu tiền theo SỐ TIỀN (hỗ trợ trả từng phần) + ghi lịch sử
 app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
-  const { cust, amount, amountVnd, date, settleAll, settleAllVnd, srcVnd, rate } = req.body || {};
+  const { cust, amount, amountVnd, date, settleAll, settleAllVnd, srcVnd, rate, payKeys } = req.body || {};
   const amt = Math.round(Number(amount) || 0);
   const amtVnd = Math.round(Number(amountVnd) || 0);
   const srcVndN = Math.round(Number(srcVnd) || 0);   // VND khách trả (quy ra Won để trả nợ Won)
   const rateN = Number(rate) || 0;                    // tỷ giá 1₩ = ? ₫
+  // Thu theo ĐƠN ĐÃ CHỌN: chỉ gạch đúng các đơn trong payKeys (dùng cho KH gộp như KH LẺ).
+  const payKeySet = Array.isArray(payKeys) && payKeys.length ? new Set(payKeys.map(String)) : null;
   if (!cust || (amt <= 0 && amtVnd <= 0)) return res.json({ ok: false, message: 'bad' });
   const o = await vcLoadOrders();
   let ledger = {}; try { const s = await redisGet(VK.ledger); if (s) ledger = JSON.parse(s); } catch { /* ok */ }
@@ -752,10 +754,11 @@ app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   let marked = 0; const markedKeys = [];
 
   // ── Thu Won: gạch các đơn Won (wonAmt>0) ─────────────────────────────────
-  let credit = Math.max(0, (led.history || []).reduce((s, h) => s + (Number(h.amount) || 0), 0)
-    - o.rows.filter(r => r.cust === cust && isPaidPay(r.pay)).reduce((s, r) => s + wonAmt(r), 0)) + amt;
+  // Chế độ chọn đơn: chỉ dùng số vừa trả (amt) để gạch đúng đơn đã chọn, KHÔNG gộp dư cũ của khách.
+  let credit = payKeySet ? amt : (Math.max(0, (led.history || []).reduce((s, h) => s + (Number(h.amount) || 0), 0)
+    - o.rows.filter(r => r.cust === cust && isPaidPay(r.pay)).reduce((s, r) => s + wonAmt(r), 0)) + amt);
   if (amt > 0) {
-    const wonOrders = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay) && wonAmt(r) > 0).sort(byDate);
+    const wonOrders = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay) && wonAmt(r) > 0 && (!payKeySet || payKeySet.has(keyOf(r)))).sort(byDate);
     if (settleAll) {
       credit = Math.max(0, credit - wonOrders.reduce((s, r) => s + wonAmt(r), 0));
       wonOrders.forEach(r => { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); marked++; markedKeys.push(keyOf(r)); });
@@ -765,10 +768,10 @@ app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   }
 
   // ── Thu VND: gạch các đơn VND (vndAmt>0) — song song, độc lập với Won ─────
-  let creditVnd = Math.max(0, (led.history || []).reduce((s, h) => s + (Number(h.amountVnd) || 0), 0)
-    - o.rows.filter(r => r.cust === cust && isPaidPay(r.pay)).reduce((s, r) => s + vndAmt(r), 0)) + amtVnd;
+  let creditVnd = payKeySet ? amtVnd : (Math.max(0, (led.history || []).reduce((s, h) => s + (Number(h.amountVnd) || 0), 0)
+    - o.rows.filter(r => r.cust === cust && isPaidPay(r.pay)).reduce((s, r) => s + vndAmt(r), 0)) + amtVnd);
   if (amtVnd > 0) {
-    const vndOrders = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay) && vndAmt(r) > 0).sort(byDate);
+    const vndOrders = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay) && vndAmt(r) > 0 && (!payKeySet || payKeySet.has(keyOf(r)))).sort(byDate);
     if (settleAllVnd) {
       creditVnd = Math.max(0, creditVnd - vndOrders.reduce((s, r) => s + vndAmt(r), 0));
       vndOrders.forEach(r => { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); marked++; markedKeys.push(keyOf(r)); });
@@ -777,9 +780,15 @@ app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
     }
   }
 
-  led.credit = credit; led.creditVnd = creditVnd;
   led.history = led.history || [];
   const histEntry = { date: String(date || ''), amount: amt, amountVnd: amtVnd, marked, keys: markedKeys, at: new Date().toISOString() };
+  // Dư (credit) = tổng đã nhận (gồm lần này) − tổng tiền đơn đang 'Đã TT' — tính lại cho đúng ở mọi chế độ.
+  const recvW = (led.history || []).reduce((s, h) => s + (Number(h.amount) || 0), 0) + amt;
+  const recvV = (led.history || []).reduce((s, h) => s + (Number(h.amountVnd) || 0), 0) + amtVnd;
+  const paidW = o.rows.filter(r => r.cust === cust && isPaidPay(r.pay)).reduce((s, r) => s + wonAmt(r), 0);
+  const paidV = o.rows.filter(r => r.cust === cust && isPaidPay(r.pay)).reduce((s, r) => s + vndAmt(r), 0);
+  led.credit = Math.max(0, recvW - paidW); led.creditVnd = Math.max(0, recvV - paidV);
+  credit = led.credit; creditVnd = led.creditVnd;   // trả về cho client hiển thị "dư"
   if (srcVndN > 0 && rateN > 0) { histEntry.srcVnd = srcVndN; histEntry.rate = rateN; }   // ghi lại: Won này quy từ VND @ tỷ giá
   led.history.push(histEntry);
   ledger[cust] = led;

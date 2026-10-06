@@ -356,7 +356,7 @@
           <button type="button" class="combo-caret" onclick="comboToggle()" tabindex="-1" title="Xổ danh sách">▾</button>
           <div class="combo-list" id="custList"></div>
         </div>
-        <button class="btn" id="custPayBtn" onclick="openPay(CUST_SEL)" style="display:none;border-color:#86efac;color:var(--green)">💵 Thu tiền</button>
+        <button class="btn" id="custPayBtn" onclick="payAction()" style="display:none;border-color:#86efac;color:var(--green)">💵 Thu tiền</button>
         <button class="btn primary" id="custSelInvBtn" onclick="ctInvoiceSel()" style="display:none">🧾 HĐ mục đã chọn (<span id="ctSelN">0</span>)</button>
         <button class="btn primary" id="custInvoiceBtn" onclick="invoiceSel(true)" style="display:none">🧾 Hóa đơn (đơn chưa thu)</button>
         <button class="btn" id="custInvoiceAllBtn" onclick="invoiceSel(false)" style="display:none">🧾 Hóa đơn tất cả</button>
@@ -750,17 +750,25 @@ $('histModal').addEventListener('click',e=>{ if(e.target.id==='histModal') close
 $('custHistModal').addEventListener('click',e=>{ if(e.target.id==='custHistModal') closeCustHist(); });
 
 /* ---------- Thu tiền ---------- */
-function openPay(cust,msg){
+let PAY_SEL_KEYS=null;   // null = thu cả khách; Set<key> = CHỈ thu các đơn đã chọn
+// Bấm "Thu tiền": nếu đang tick đơn -> thu đúng các đơn đã chọn; chưa tick -> thu cả khách.
+function payAction(){ if(CT_SEL && CT_SEL.size>0) openPay(CUST_SEL,'',CT_SEL); else openPay(CUST_SEL); }
+function openPay(cust,msg,selKeys){
   PAY_CUST=cust;
-  const unpaid=ROWS.filter(r=>r.cust===cust && !paid(r));
-  const credit=creditOf(cust), owe=custDebtWon(cust);          // công nợ thật (theo tiền đã nhận)
-  const creditVnd=creditVndOf(cust), oweVnd=custDebtVnd(cust);
+  const sel=(selKeys && selKeys.size)?new Set(selKeys):null;
+  PAY_SEL_KEYS=sel;
+  const allUnpaid=ROWS.filter(r=>r.cust===cust && !paid(r));
+  const unpaid=sel?allUnpaid.filter(r=>sel.has(r.key)):allUnpaid;
+  // Chế độ chọn: nợ = tổng các đơn đã chọn (chưa thu). Chế độ cả khách: công nợ thật (theo tiền đã nhận).
+  const credit=sel?0:creditOf(cust), owe=sel?sumWon(unpaid):custDebtWon(cust);
+  const creditVnd=sel?0:creditVndOf(cust), oweVnd=sel?sumVnd(unpaid):custDebtVnd(cust);
   const hasDebt=owe>0||oweVnd>0;
   const hist=historyOf(cust);
   const lastRate=(function(){try{return localStorage.getItem('vc24_payRate')||'';}catch(e){return '';}})();
-  $('payTitle').textContent='Thu tiền — '+cust;
+  $('payTitle').textContent = sel ? `Thu tiền — ${unpaid.length} đơn đã chọn` : ('Thu tiền — '+cust);
   $('payBody').innerHTML=`
-    <div class="small muted" style="margin-bottom:4px">${unpaid.length} đơn chưa thu · còn nợ</div>
+    ${sel?`<div class="small" style="margin-bottom:4px;color:#4f46e5;font-weight:700">🧾 Chỉ thu cho ${unpaid.length} đơn ĐÃ CHỌN của «${esc(cust)}» (không tính nợ cũ/đơn khác)</div>`:''}
+    <div class="small muted" style="margin-bottom:4px">${unpaid.length} đơn ${sel?'đã chọn (chưa thu)':'chưa thu'} · ${sel?'tổng tiền':'còn nợ'}</div>
     <div style="font-size:1.4rem;font-weight:800;color:#e11d48;margin-bottom:6px">${owe>0?'₩'+owe.toLocaleString('en-US'):''}${(owe>0&&oweVnd>0)?' + ':''}${oweVnd>0?oweVnd.toLocaleString('en-US')+' ₫':''}${(!owe&&!oweVnd)?'₩0':''}</div>
     ${credit>0?`<div class="small" style="color:var(--green);margin:-2px 0 6px">Đã trả trước (Won): <b>₩${credit.toLocaleString('en-US')}</b></div>`:''}
     ${creditVnd>0?`<div class="small" style="color:var(--green);margin:-2px 0 6px">Đã trả trước (VND): <b>${creditVnd.toLocaleString('en-US')} ₫</b></div>`:''}
@@ -779,13 +787,13 @@ function openPay(cust,msg){
     ${oweVnd>0?`
     <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Số tiền đã nhận (₫ VND)</span></label>
     <input id="payAmtVnd" class="ef" inputmode="numeric" value="${oweVnd.toLocaleString('en-US')}" oninput="onMoneyInput(this)" style="font-size:1.05rem;font-weight:700" />`:''}
-    <div class="small muted" style="margin-top:5px">Mặc định = toàn bộ nợ. <b>Nhập số NHỎ HƠN cũng được</b> (trả từng phần) — phần dư tự gạch nợ ở lần sau. Để trống/0 loại tiền nào thì không thu loại đó.</div>
+    <div class="small muted" style="margin-top:5px">Mặc định = ${sel?'tổng các đơn đã chọn':'toàn bộ nợ'}. <b>Nhập số NHỎ HƠN cũng được</b> (trả từng phần) — phần dư tự gạch nợ ở lần sau. Để trống/0 loại tiền nào thì không thu loại đó.</div>
     <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Ngày nhận thanh toán</span></label>
     <input type="date" id="payDate" class="ef" value="${todayISO()}" />
     <label class="paychk"><input type="checkbox" id="payChk" onchange="updatePayBtn()" />
       <span>Tôi xác nhận đã nhận <b>đúng số tiền nhập ở trên</b> từ khách <b>${esc(cust)}</b>.</span></label>
     <button id="payConfirm" class="btn primary" style="width:100%;justify-content:center" disabled onclick="confirmPay()">✅ Ghi nhận thu tiền</button>
-    `:'<div class="small" style="color:var(--green);font-weight:700;margin-top:6px">✓ Khách này đã thanh toán hết.</div>'}
+    `:`<div class="small" style="color:var(--green);font-weight:700;margin-top:6px">✓ ${sel?'Các đơn đã chọn đều đã thu.':'Khách này đã thanh toán hết.'}</div>`}
     <div class="small" id="payMsg" style="margin-top:12px;color:var(--g700)">${msg||''}</div>
     ${hist.length?`<div style="margin-top:16px"><div class="small" style="font-weight:700;color:var(--g600);margin-bottom:6px">🧾 Lịch sử thanh toán (${hist.length} lần)</div>
       <div style="max-height:200px;overflow:auto;border:1px solid var(--g200);border-radius:10px">${hist.slice().reverse().map(h=>payHistRowHTML(h)).join('')}</div></div>`:''}
@@ -852,10 +860,11 @@ function cdDateChanged(){ CD_FROM=$('cdFrom').value; CD_TO=$('cdTo').value; rend
 function cdClearDate(){ CD_FROM=''; CD_TO=''; renderCD(); }
 function cdToggle(key,el){ if(el.checked)CD_SEL.add(key); else CD_SEL.delete(key); cdUpdateSelBtn(); }
 function cdSelAll(el){ const rows=cdViewRows(); if(el.checked) rows.forEach(r=>CD_SEL.add(r.key)); else rows.forEach(r=>CD_SEL.delete(r.key)); renderCD(); }
-function cdUpdateSelBtn(){ const b=$('cdSelInvBtn'); if(!b)return; const n=CD_SEL.size; b.style.display=n?'inline-flex':'none'; const c=$('cdSelN'); if(c)c.textContent=n; }
+function cdUpdateSelBtn(){ const b=$('cdSelInvBtn'); const n=CD_SEL.size; if(b){ b.style.display=n?'inline-flex':'none'; const c=$('cdSelN'); if(c)c.textContent=n; }
+  const pb=$('cdPayBtn'); if(pb) pb.innerHTML = n>0 ? `💵 Thu tiền (${n} đơn chọn)` : '💵 Thu tiền'; }
 function cdInvoiceSel(){ const rows=ROWS.filter(r=>r.cust===CD_CUST && CD_SEL.has(r.key)); if(!rows.length){ alert('Hãy tick chọn ít nhất 1 dòng.'); return; } openInvoice(CD_CUST,false,rows); }
 function closeCustDetail(){ $('custDetailModal').classList.remove('show'); }
-function cdPay(){ openPay(CD_CUST); }
+function cdPay(){ if(CD_SEL && CD_SEL.size>0) openPay(CD_CUST,'',CD_SEL); else openPay(CD_CUST); }
 function cdInvoice(){ openInvoice(CD_CUST,true); }
 function refreshCD(){ if($('custDetailModal').classList.contains('show')) renderCD(); }
 $('custDetailModal').addEventListener('click',e=>{ if(e.target.id==='custDetailModal') closeCustDetail(); });
@@ -916,18 +925,20 @@ async function confirmPay(){
   const dstr=fmtPaidDate(pdate);
   if(amt<=0 && amtVnd<=0){ $('payMsg').innerHTML='⚠️ Nhập số tiền hợp lệ (Won hoặc VND).'; return; }
   if(!REDIS){ alert('Chưa bật lưu trữ server — không ghi nhận được.'); return; }
-  const unpaid=ROWS.filter(r=>r.cust===PAY_CUST&&!paid(r));
-  const owe=custDebtWon(PAY_CUST);
-  const oweVnd=custDebtVnd(PAY_CUST);
-  const settleAll=amt>0 && amt>=owe;          // trả đủ Won -> gạch sạch đơn Won
-  const settleAllVnd=amtVnd>0 && amtVnd>=oweVnd;  // trả đủ VND -> gạch sạch đơn VND
+  const sel=PAY_SEL_KEYS;   // chế độ CHỈ thu các đơn đã chọn
+  const unpaidAll=ROWS.filter(r=>r.cust===PAY_CUST&&!paid(r));
+  const unpaid=sel?unpaidAll.filter(r=>sel.has(r.key)):unpaidAll;
+  const owe=sel?sumWon(unpaid):custDebtWon(PAY_CUST);
+  const oweVnd=sel?sumVnd(unpaid):custDebtVnd(PAY_CUST);
+  const settleAll=amt>0 && amt>=owe;          // trả đủ Won -> gạch sạch đơn (trong phạm vi) Won
+  const settleAllVnd=amtVnd>0 && amtVnd>=oweVnd;  // trả đủ VND -> gạch sạch đơn (trong phạm vi) VND
   const usedVnd=srcVnd>0&&rate>0;
   const amtStr=[amt>0?'₩'+amt.toLocaleString('en-US'):'',amtVnd>0?amtVnd.toLocaleString('en-US')+'₫':''].filter(Boolean).join(' + ')+(usedVnd?` (quy từ ${srcVnd.toLocaleString('en-US')}₫ @ ${rate})`:'');
-  if(!confirm(`Ghi nhận khách "${PAY_CUST}" trả ${amtStr} ngày ${dstr}?`+((settleAll||settleAllVnd)?'\n(Trả ĐỦ — sẽ gạch hết đơn còn nợ tương ứng.)':''))) return;
+  if(!confirm(`Ghi nhận khách "${PAY_CUST}"${sel?` (${unpaid.length} đơn đã chọn)`:''} trả ${amtStr} ngày ${dstr}?`+((settleAll||settleAllVnd)?`\n(Trả ĐỦ — sẽ gạch hết đơn ${sel?'đã chọn':'còn nợ'} tương ứng.)`:''))) return;
   _paying=true;
   const btn=$('payConfirm'); if(btn){ btn.disabled=true; btn.textContent='⏳ Đang ghi nhận…'; }
   try{
-    const resp=await fetch('/api/vc24/payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,amount:amt,amountVnd:amtVnd,date:pdate,settleAll,settleAllVnd,srcVnd:usedVnd?srcVnd:0,rate:usedVnd?rate:0})});
+    const resp=await fetch('/api/vc24/payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,amount:amt,amountVnd:amtVnd,date:pdate,settleAll,settleAllVnd,srcVnd:usedVnd?srcVnd:0,rate:usedVnd?rate:0,payKeys:sel?[...sel]:undefined})});
     const res=await resp.json().catch(()=>({ok:false,reason:'http'+resp.status}));
     if(!res.ok){
       const why = res.reason==='save' ? `Lưu thất bại (Redis) — orders ${res.ordKB}KB [status ${res.ordStatus}], ledger ${res.ledKB}KB [status ${res.ledStatus}]${res.ordBody||res.ledBody?' · '+((res.ordStatus>=400?res.ordBody:'')||(res.ledStatus>=400?res.ledBody:'')||''):''}`
@@ -937,6 +948,7 @@ async function confirmPay(){
       alert('❌ Ghi nhận thất bại — '+why);
       if(btn){btn.disabled=false;btn.textContent='✅ Ghi nhận thu tiền';} return;
     }
+    if(sel){ try{CT_SEL=new Set();}catch(e){} try{CD_SEL=new Set();}catch(e){} try{ctUpdateSelBtn();}catch(e){} try{cdUpdateSelBtn();}catch(e){} }   // thu đơn chọn xong -> bỏ tick
     await loadServerData();
     const dur=[res.credit>0?`Dư Won ₩${Number(res.credit).toLocaleString('en-US')}`:'',res.creditVnd>0?`Dư VND ${Number(res.creditVnd).toLocaleString('en-US')}₫`:''].filter(Boolean).join(' · ');
     openPay(PAY_CUST, `✅ Đã ghi nhận trả ${amtStr} ngày ${dstr}.`+(res.marked?` Gạch ${res.marked} đơn (Đã TT).`:' Chưa đủ gạch đơn — cộng vào tiền đã trả trước.')+(dur?' '+dur+'.':''));
@@ -1776,7 +1788,8 @@ function renderCust(){
 }
 function ctToggle(key,el){ if(el.checked)CT_SEL.add(key); else CT_SEL.delete(key); const sa=$('ctSelAll'); if(sa){ const n=ROWS.filter(r=>r.cust===CUST_SEL).length; sa.checked=CT_SEL.size>0&&CT_SEL.size===n; } ctUpdateSelBtn(); }
 function ctSelAll(el){ const rows=ROWS.filter(r=>r.cust===CUST_SEL); if(el.checked) rows.forEach(r=>CT_SEL.add(r.key)); else CT_SEL.clear(); renderCust(); }
-function ctUpdateSelBtn(){ const b=$('custSelInvBtn'); if(!b)return; const n=CT_SEL.size; b.style.display=n?'inline-flex':'none'; const c=$('ctSelN'); if(c)c.textContent=n; }
+function ctUpdateSelBtn(){ const b=$('custSelInvBtn'); const n=CT_SEL.size; if(b){ b.style.display=n?'inline-flex':'none'; const c=$('ctSelN'); if(c)c.textContent=n; }
+  const pb=$('custPayBtn'); if(pb) pb.innerHTML = n>0 ? `💵 Thu tiền (${n} đơn chọn)` : '💵 Thu tiền'; }
 function ctInvoiceSel(){ const rows=ROWS.filter(r=>r.cust===CUST_SEL && CT_SEL.has(r.key)); if(!rows.length){ alert('Hãy tick chọn ít nhất 1 dòng.'); return; } openInvoice(CUST_SEL,false,rows); }
 
 /* ---------- Hóa đơn (gồm phụ phí, rõ KRW/VND) ---------- */

@@ -753,41 +753,45 @@ app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   const byDate = (a, b) => String(a.date).localeCompare(String(b.date));
   let marked = 0; const markedKeys = [];
 
-  // ── Thu Won: gạch các đơn Won (wonAmt>0) ─────────────────────────────────
-  // Chế độ chọn đơn: chỉ dùng số vừa trả (amt) để gạch đúng đơn đã chọn, KHÔNG gộp dư cũ của khách.
+  // ── Thu Won: gạch đơn theo CÒN LẠI = tiền đơn − đã trả 1 phần (paidPartial) ──
+  const sumPartW = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay)).reduce((s, r) => s + (Number(r.paidPartial) || 0), 0);
+  // Chế độ chọn đơn: chỉ dùng số vừa trả (amt). Cả khách: cộng thêm dư CHƯA phân bổ (đã trừ phần đã trả 1 phần).
   let credit = payKeySet ? amt : (Math.max(0, (led.history || []).reduce((s, h) => s + (Number(h.amount) || 0), 0)
-    - o.rows.filter(r => r.cust === cust && isPaidPay(r.pay)).reduce((s, r) => s + wonAmt(r), 0)) + amt);
+    - o.rows.filter(r => r.cust === cust && isPaidPay(r.pay)).reduce((s, r) => s + wonAmt(r), 0) - sumPartW) + amt);
   if (amt > 0) {
     const wonOrders = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay) && wonAmt(r) > 0 && (!payKeySet || payKeySet.has(keyOf(r)))).sort(byDate);
-    if (settleAll) {
-      credit = Math.max(0, credit - wonOrders.reduce((s, r) => s + wonAmt(r), 0));
-      wonOrders.forEach(r => { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); marked++; markedKeys.push(keyOf(r)); });
-    } else {
-      for (const r of wonOrders) { const w = wonAmt(r); if (credit >= w) { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); credit -= w; marked++; markedKeys.push(keyOf(r)); } }
+    for (const r of wonOrders) {
+      const remaining = wonAmt(r) - (Number(r.paidPartial) || 0);
+      if (remaining <= 0) continue;
+      if (credit >= remaining) { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); delete r.paidPartial; credit -= remaining; marked++; markedKeys.push(keyOf(r)); }
+      else if (credit > 0) { r.paidPartial = (Number(r.paidPartial) || 0) + credit; credit = 0; }   // trả 1 phần -> đơn còn nợ phần còn lại
     }
   }
 
-  // ── Thu VND: gạch các đơn VND (vndAmt>0) — song song, độc lập với Won ─────
+  // ── Thu VND: gạch đơn theo CÒN LẠI = tiền đơn − đã trả 1 phần (paidPartialVnd) ──
+  const sumPartV = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay)).reduce((s, r) => s + (Number(r.paidPartialVnd) || 0), 0);
   let creditVnd = payKeySet ? amtVnd : (Math.max(0, (led.history || []).reduce((s, h) => s + (Number(h.amountVnd) || 0), 0)
-    - o.rows.filter(r => r.cust === cust && isPaidPay(r.pay)).reduce((s, r) => s + vndAmt(r), 0)) + amtVnd);
+    - o.rows.filter(r => r.cust === cust && isPaidPay(r.pay)).reduce((s, r) => s + vndAmt(r), 0) - sumPartV) + amtVnd);
   if (amtVnd > 0) {
     const vndOrders = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay) && vndAmt(r) > 0 && (!payKeySet || payKeySet.has(keyOf(r)))).sort(byDate);
-    if (settleAllVnd) {
-      creditVnd = Math.max(0, creditVnd - vndOrders.reduce((s, r) => s + vndAmt(r), 0));
-      vndOrders.forEach(r => { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); marked++; markedKeys.push(keyOf(r)); });
-    } else {
-      for (const r of vndOrders) { const v = vndAmt(r); if (creditVnd >= v) { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); creditVnd -= v; marked++; markedKeys.push(keyOf(r)); } }
+    for (const r of vndOrders) {
+      const remaining = vndAmt(r) - (Number(r.paidPartialVnd) || 0);
+      if (remaining <= 0) continue;
+      if (creditVnd >= remaining) { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); delete r.paidPartialVnd; creditVnd -= remaining; marked++; markedKeys.push(keyOf(r)); }
+      else if (creditVnd > 0) { r.paidPartialVnd = (Number(r.paidPartialVnd) || 0) + creditVnd; creditVnd = 0; }
     }
   }
 
   led.history = led.history || [];
   const histEntry = { date: String(date || ''), amount: amt, amountVnd: amtVnd, marked, keys: markedKeys, at: new Date().toISOString() };
-  // Dư (credit) = tổng đã nhận (gồm lần này) − tổng tiền đơn đang 'Đã TT' — tính lại cho đúng ở mọi chế độ.
+  // Dư (credit) = tổng đã nhận (gồm lần này) − tiền đơn 'Đã TT' − phần đã trả 1 phần (đã phân bổ cho đơn còn nợ).
   const recvW = (led.history || []).reduce((s, h) => s + (Number(h.amount) || 0), 0) + amt;
   const recvV = (led.history || []).reduce((s, h) => s + (Number(h.amountVnd) || 0), 0) + amtVnd;
   const paidW = o.rows.filter(r => r.cust === cust && isPaidPay(r.pay)).reduce((s, r) => s + wonAmt(r), 0);
   const paidV = o.rows.filter(r => r.cust === cust && isPaidPay(r.pay)).reduce((s, r) => s + vndAmt(r), 0);
-  led.credit = Math.max(0, recvW - paidW); led.creditVnd = Math.max(0, recvV - paidV);
+  const partW = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay)).reduce((s, r) => s + (Number(r.paidPartial) || 0), 0);
+  const partV = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay)).reduce((s, r) => s + (Number(r.paidPartialVnd) || 0), 0);
+  led.credit = Math.max(0, recvW - paidW - partW); led.creditVnd = Math.max(0, recvV - paidV - partV);
   credit = led.credit; creditVnd = led.creditVnd;   // trả về cho client hiển thị "dư"
   if (srcVndN > 0 && rateN > 0) { histEntry.srcVnd = srcVndN; histEntry.rate = rateN; }   // ghi lại: Won này quy từ VND @ tỷ giá
   led.history.push(histEntry);

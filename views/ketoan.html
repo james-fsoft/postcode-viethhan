@@ -560,10 +560,10 @@ let LEDGER={};   // sổ thanh toán: { [cust]: { credit, history:[{date,amount,
 let RATES={};    // giá VC/kg theo tuần: { [week]: { [khu vực]: giá } }
 function historyOf(c){ return (LEDGER[c] && Array.isArray(LEDGER[c].history)) ? LEDGER[c].history : []; }
 function totalReceivedOf(c){ return historyOf(c).reduce((s,h)=>s+(Number(h.amount)||0),0); }
-// Dư (đã trả trước) = TỔNG đã nhận − tổng tiền của MỌI đơn đang "Đã TT" (kể cả đơn sẵn Đã TT từ file)
-function creditOf(c){ const paidWon=ROWS.filter(r=>r.cust===c && paid(r)).reduce((s,r)=>s+(Number(r.won)||0)+(Number(r.phuPhiWon)||0),0); return Math.max(0, totalReceivedOf(c)-paidWon); }
+// Dư (đã trả trước) = TỔNG đã nhận − tiền đơn đang "Đã TT" − phần đã trả 1 phần (đã phân bổ cho đơn còn nợ)
+function creditOf(c){ const rs=ROWS.filter(r=>r.cust===c); const paidWon=rs.filter(paid).reduce((s,r)=>s+(Number(r.won)||0)+(Number(r.phuPhiWon)||0),0); const partW=rs.filter(r=>!paid(r)).reduce((s,r)=>s+(Number(r.paidPartial)||0),0); return Math.max(0, totalReceivedOf(c)-paidWon-partW); }
 function totalReceivedVndOf(c){ return historyOf(c).reduce((s,h)=>s+(Number(h.amountVnd)||0),0); }
-function creditVndOf(c){ const paidVnd=ROWS.filter(r=>r.cust===c && paid(r)).reduce((s,r)=>s+(Number(r.vnd)||0)+(Number(r.phuPhi)||0),0); return Math.max(0, totalReceivedVndOf(c)-paidVnd); }
+function creditVndOf(c){ const rs=ROWS.filter(r=>r.cust===c); const paidVnd=rs.filter(paid).reduce((s,r)=>s+(Number(r.vnd)||0)+(Number(r.phuPhi)||0),0); const partV=rs.filter(r=>!paid(r)).reduce((s,r)=>s+(Number(r.paidPartialVnd)||0),0); return Math.max(0, totalReceivedVndOf(c)-paidVnd-partV); }
 function surchargeOf(c){ return (LEDGER[c] && Number(LEDGER[c].surcharge)) || 0; }
 function surchargeVndOf(c){ return (LEDGER[c] && Number(LEDGER[c].surchargeVnd)) || 0; }
 function surchargeNoteOf(c){ return (LEDGER[c] && LEDGER[c].surchargeNote) || ''; }
@@ -760,8 +760,8 @@ function openPay(cust,msg,selKeys){
   const allUnpaid=ROWS.filter(r=>r.cust===cust && !paid(r));
   const unpaid=sel?allUnpaid.filter(r=>sel.has(r.key)):allUnpaid;
   // Chế độ chọn: nợ = tổng các đơn đã chọn (chưa thu). Chế độ cả khách: công nợ thật (theo tiền đã nhận).
-  const credit=sel?0:creditOf(cust), owe=sel?sumWon(unpaid):custDebtWon(cust);
-  const creditVnd=sel?0:creditVndOf(cust), oweVnd=sel?sumVnd(unpaid):custDebtVnd(cust);
+  const credit=sel?0:creditOf(cust), owe=sel?unpaid.reduce((s,r)=>s+remWonOf(r),0):custDebtWon(cust);
+  const creditVnd=sel?0:creditVndOf(cust), oweVnd=sel?unpaid.reduce((s,r)=>s+remVndOf(r),0):custDebtVnd(cust);
   const hasDebt=owe>0||oweVnd>0;
   const hist=historyOf(cust);
   const lastRate=(function(){try{return localStorage.getItem('vc24_payRate')||'';}catch(e){return '';}})();
@@ -895,7 +895,7 @@ function renderCD(){
       <tbody>${rows.length?rows.map(r=>`<tr class="rowclick" onclick="openEdit('${escJs(r.key)}')">
         <td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" ${CD_SEL.has(r.key)?'checked':''} onclick="cdToggle('${escJs(r.key)}',this)" /></td>
         <td>${esc(r.date)}</td><td style="font-weight:700">${esc(r.pkg)}</td>
-        <td><span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span></td>
+        <td><span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span>${(!paid(r)&&(Number(r.paidPartial)||Number(r.paidPartialVnd)))?`<div style="font-size:.68rem;color:#d97706;margin-top:2px">đã trả ${[Number(r.paidPartial)?'₩'+Number(r.paidPartial).toLocaleString('en-US'):'',Number(r.paidPartialVnd)?Number(r.paidPartialVnd).toLocaleString('en-US')+'₫':''].filter(Boolean).join('+')} · còn ${[remWonOf(r)?'₩'+remWonOf(r).toLocaleString('en-US'):'',remVndOf(r)?remVndOf(r).toLocaleString('en-US')+'₫':''].filter(Boolean).join('+')||'0'}</div>`:''}</td>
         <td>${paid(r)?fmtPaidDate(r.paidDate):'<span class="muted">—</span>'}</td>
         <td>${esc(r.rcv)}</td><td>${esc(r.addr)}</td><td>${r.region?'<span class="pill reg">'+esc(r.region)+'</span>':''}</td>
         <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.won)}</td><td class="r num">${fmtVnd(r.phuPhi)}</td><td class="r num">${fmtWon(r.phuPhiWon)}</td><td>${esc(r.ghiChu)}</td>
@@ -928,8 +928,8 @@ async function confirmPay(){
   const sel=PAY_SEL_KEYS;   // chế độ CHỈ thu các đơn đã chọn
   const unpaidAll=ROWS.filter(r=>r.cust===PAY_CUST&&!paid(r));
   const unpaid=sel?unpaidAll.filter(r=>sel.has(r.key)):unpaidAll;
-  const owe=sel?sumWon(unpaid):custDebtWon(PAY_CUST);
-  const oweVnd=sel?sumVnd(unpaid):custDebtVnd(PAY_CUST);
+  const owe=sel?unpaid.reduce((s,r)=>s+remWonOf(r),0):custDebtWon(PAY_CUST);
+  const oweVnd=sel?unpaid.reduce((s,r)=>s+remVndOf(r),0):custDebtVnd(PAY_CUST);
   const settleAll=amt>0 && amt>=owe;          // trả đủ Won -> gạch sạch đơn (trong phạm vi) Won
   const settleAllVnd=amtVnd>0 && amtVnd>=oweVnd;  // trả đủ VND -> gạch sạch đơn (trong phạm vi) VND
   const usedVnd=srcVnd>0&&rate>0;
@@ -1604,6 +1604,9 @@ function sum(arr,k){ return arr.reduce((a,r)=>a+(Number(r[k])||0),0); }
 // Tổng tiền của 1 đơn: Won = Tiền Won + Phụ phí (KRW); VND = Tiền VND + Phụ phí (VND)
 function wonOf(r){ return (Number(r.won)||0)+(Number(r.phuPhiWon)||0); }
 function vndOf(r){ return (Number(r.vnd)||0)+(Number(r.phuPhi)||0); }
+// Còn lại của 1 đơn chưa thu = tiền đơn − đã trả 1 phần (dùng khi thu theo đơn chọn)
+function remWonOf(r){ return Math.max(0, wonOf(r)-(Number(r.paidPartial)||0)); }
+function remVndOf(r){ return Math.max(0, vndOf(r)-(Number(r.paidPartialVnd)||0)); }
 function sumWon(a){ return (a||[]).reduce((s,r)=>s+wonOf(r),0); }
 function sumVnd(a){ return (a||[]).reduce((s,r)=>s+vndOf(r),0); }
 function fillSel(id,vals,allLabel){ const el=$(id); if(!el)return; const cur=el.value; el.innerHTML=`<option value="">${allLabel}</option>`+vals.map(c=>`<option value="${escA(c)}">${esc(c)}</option>`).join(''); el.value=vals.includes(cur)?cur:''; }
@@ -1777,7 +1780,7 @@ function renderCust(){
   $('custBody').innerHTML=rows.map(r=>`<tr class="rowclick" onclick="openEdit('${escJs(r.key)}')">
     <td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" ${CT_SEL.has(r.key)?'checked':''} onclick="ctToggle('${escJs(r.key)}',this)" /></td>
     <td>${esc(r.date)}</td><td style="font-weight:700">${esc(r.pkg)}</td>
-    <td><span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span></td>
+    <td><span class="pill ${paid(r)?'paid':'owe'}">${esc(r.pay||'—')}</span>${(!paid(r)&&(Number(r.paidPartial)||Number(r.paidPartialVnd)))?`<div style="font-size:.68rem;color:#d97706;margin-top:2px">đã trả ${[Number(r.paidPartial)?'₩'+Number(r.paidPartial).toLocaleString('en-US'):'',Number(r.paidPartialVnd)?Number(r.paidPartialVnd).toLocaleString('en-US')+'₫':''].filter(Boolean).join('+')} · còn ${[remWonOf(r)?'₩'+remWonOf(r).toLocaleString('en-US'):'',remVndOf(r)?remVndOf(r).toLocaleString('en-US')+'₫':''].filter(Boolean).join('+')||'0'}</div>`:''}</td>
     <td>${paid(r)?fmtPaidDate(r.paidDate):'<span class="muted">—</span>'}</td>
     <td>${esc(r.rcv)}</td><td>${r.region?'<span class="pill reg">'+esc(r.region)+'</span>':''}</td>
     <td class="r num">${fmtKg(r.weight)}</td><td class="r num">${fmtWon(r.price)}</td><td class="r num">${fmtWon(r.won)}</td>

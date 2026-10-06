@@ -737,13 +737,17 @@ app.post('/api/vc24/rates', requireAuth, requireVC24, async (req, res) => {
 // Thu tiền theo SỐ TIỀN (hỗ trợ trả từng phần) + ghi lịch sử
 app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   if (!useRedis) return res.json({ ok: false, redis: false });
-  const { cust, amount, amountVnd, date, settleAll, settleAllVnd, srcVnd, rate, payKeys } = req.body || {};
+  const { cust, amount, amountVnd, date, settleAll, settleAllVnd, srcVnd, rate, payKeys, payItems } = req.body || {};
   const amt = Math.round(Number(amount) || 0);
   const amtVnd = Math.round(Number(amountVnd) || 0);
   const srcVndN = Math.round(Number(srcVnd) || 0);   // VND khách trả (quy ra Won để trả nợ Won)
   const rateN = Number(rate) || 0;                    // tỷ giá 1₩ = ? ₫
   // Thu theo ĐƠN ĐÃ CHỌN: chỉ gạch đúng các đơn trong payKeys (dùng cho KH gộp như KH LẺ).
   const payKeySet = Array.isArray(payKeys) && payKeys.length ? new Set(payKeys.map(String)) : null;
+  // Thu theo SỐ TIỀN TỪNG ĐƠN (payItems): áp đúng số cho mỗi đơn.
+  const payItemMap = (Array.isArray(payItems) && payItems.length)
+    ? new Map(payItems.map(it => [String(it && it.key), { won: Math.round(Number(it && it.won) || 0), vnd: Math.round(Number(it && it.vnd) || 0) }]))
+    : null;
   if (!cust || (amt <= 0 && amtVnd <= 0)) return res.json({ ok: false, message: 'bad' });
   const o = await vcLoadOrders();
   let ledger = {}; try { const s = await redisGet(VK.ledger); if (s) ledger = JSON.parse(s); } catch { /* ok */ }
@@ -753,6 +757,19 @@ app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
   const byDate = (a, b) => String(a.date).localeCompare(String(b.date));
   let marked = 0; const markedKeys = [];
 
+  if (payItemMap) {
+    // ── Thu THEO SỐ TIỀN TỪNG ĐƠN: áp đúng số cho mỗi đơn (trả đủ -> gạch, thiếu -> trả 1 phần) ──
+    for (const r of o.rows) {
+      if (r.cust !== cust || isPaidPay(r.pay)) continue;
+      const v = payItemMap.get(keyOf(r));
+      if (!v || (v.won <= 0 && v.vnd <= 0)) continue;
+      if (v.won > 0) r.paidPartial = (Number(r.paidPartial) || 0) + v.won;
+      if (v.vnd > 0) r.paidPartialVnd = (Number(r.paidPartialVnd) || 0) + v.vnd;
+      const remW = wonAmt(r) - (Number(r.paidPartial) || 0);
+      const remV = vndAmt(r) - (Number(r.paidPartialVnd) || 0);
+      if (remW <= 0 && remV <= 0) { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); delete r.paidPartial; delete r.paidPartialVnd; marked++; markedKeys.push(keyOf(r)); }
+    }
+  } else {
   // ── Thu Won: gạch đơn theo CÒN LẠI = tiền đơn − đã trả 1 phần (paidPartial) ──
   const sumPartW = o.rows.filter(r => r.cust === cust && !isPaidPay(r.pay)).reduce((s, r) => s + (Number(r.paidPartial) || 0), 0);
   // Chế độ chọn đơn: chỉ dùng số vừa trả (amt). Cả khách: cộng thêm dư CHƯA phân bổ (đã trừ phần đã trả 1 phần).
@@ -780,6 +797,7 @@ app.post('/api/vc24/payment', requireAuth, requireVC24, async (req, res) => {
       if (creditVnd >= remaining) { r.pay = 'ĐÃ TT'; if (date) r.paidDate = String(date); delete r.paidPartialVnd; creditVnd -= remaining; marked++; markedKeys.push(keyOf(r)); }
       else if (creditVnd > 0) { r.paidPartialVnd = (Number(r.paidPartialVnd) || 0) + creditVnd; creditVnd = 0; }
     }
+  }
   }
 
   led.history = led.history || [];

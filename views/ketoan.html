@@ -753,6 +753,13 @@ $('custHistModal').addEventListener('click',e=>{ if(e.target.id==='custHistModal
 let PAY_SEL_KEYS=null;   // null = thu cả khách; Set<key> = CHỈ thu các đơn đã chọn
 // Bấm "Thu tiền": nếu đang tick đơn -> thu đúng các đơn đã chọn; chưa tick -> thu cả khách.
 function payAction(){ if(CT_SEL && CT_SEL.size>0) openPay(CUST_SEL,'',CT_SEL); else openPay(CUST_SEL); }
+// ---- Thu nhiều đơn: sửa số từng đơn, tổng = số tiền đã nhận; mặc định đơn trên trả đủ trước ----
+function payAllocTopFirst(total, caps){ let left=Math.max(0,total); return caps.map(c=>{ const a=Math.min(Math.max(0,c),left); left-=a; return a; }); }
+function _piInputs(cls){ const box=$('payBody'); return box?[...box.querySelectorAll('.'+cls)]:[]; }
+function onPayTotalWon(){ const el=$('payAmt'); if(!el)return; const inps=_piInputs('piwon'); if(!inps.length)return; const caps=inps.map(i=>+i.dataset.cap||0); const alloc=payAllocTopFirst(money(el.value),caps); inps.forEach((i,k)=>{ i.value=alloc[k]?alloc[k].toLocaleString('en-US'):'0'; }); el.value=alloc.reduce((s,a)=>s+a,0).toLocaleString('en-US'); }
+function onPayTotalVnd(){ const el=$('payAmtVnd'); if(!el)return; const inps=_piInputs('pivnd'); if(!inps.length)return; const caps=inps.map(i=>+i.dataset.cap||0); const alloc=payAllocTopFirst(money(el.value),caps); inps.forEach((i,k)=>{ i.value=alloc[k]?alloc[k].toLocaleString('en-US'):'0'; }); el.value=alloc.reduce((s,a)=>s+a,0).toLocaleString('en-US'); }
+function onPayItemWon(){ const el=$('payAmt'); if(el) el.value=_piInputs('piwon').reduce((s,i)=>s+money(i.value),0).toLocaleString('en-US'); }
+function onPayItemVnd(){ const el=$('payAmtVnd'); if(el) el.value=_piInputs('pivnd').reduce((s,i)=>s+money(i.value),0).toLocaleString('en-US'); }
 function openPay(cust,msg,selKeys){
   PAY_CUST=cust;
   const sel=(selKeys && selKeys.size)?new Set(selKeys):null;
@@ -768,31 +775,35 @@ function openPay(cust,msg,selKeys){
   $('payTitle').textContent = sel ? `Thu tiền — ${unpaid.length} đơn đã chọn` : ('Thu tiền — '+cust);
   $('payBody').innerHTML=`
     ${sel?`<div class="small" style="margin-bottom:4px;color:#4f46e5;font-weight:700">🧾 Chỉ thu cho ${unpaid.length} đơn ĐÃ CHỌN của «${esc(cust)}» (không tính nợ cũ/đơn khác)</div>`:''}
-    ${sel?`<div style="max-height:170px;overflow:auto;border:1px solid var(--g200);border-radius:8px;margin-bottom:8px">
-      ${unpaid.map((r,i)=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 9px;${i?'border-top:1px solid var(--g100);':''}font-size:.82rem;align-items:center">
-        <span style="min-width:0"><b>${esc(r.pkg||'—')}</b> · ${esc(r.rcv||'(không tên)')}${(Number(r.paidPartial)||Number(r.paidPartialVnd))?` <span style="color:#d97706;font-size:.72rem">(đã trả 1 phần)</span>`:''}${r.region?' <span class="muted" style="font-size:.72rem">'+esc(r.region)+'</span>':''}</span>
-        <span style="font-weight:700;white-space:nowrap;color:#e11d48">${[remWonOf(r)?'₩'+remWonOf(r).toLocaleString('en-US'):'',remVndOf(r)?remVndOf(r).toLocaleString('en-US')+'₫':''].filter(Boolean).join(' + ')||'₩0'}</span>
-      </div>`).join('')}
-    </div>`:''}
+    ${sel?`<div style="max-height:200px;overflow:auto;border:1px solid var(--g200);border-radius:8px;margin-bottom:6px">
+      ${unpaid.map((r,i)=>{ const rw=remWonOf(r), rv=remVndOf(r); return `<div class="payitem" data-key="${escA(r.key)}" style="${i?'border-top:1px solid var(--g100);':''}padding:6px 9px;font-size:.82rem;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
+        <span style="min-width:120px;flex:1"><b>${esc(r.pkg||'—')}</b> · ${esc(r.rcv||'(không tên)')}${r.region?' <span class="muted" style="font-size:.72rem">'+esc(r.region)+'</span>':''}${(Number(r.paidPartial)||Number(r.paidPartialVnd))?` <span style="color:#d97706;font-size:.72rem">(đã trả 1 phần)</span>`:''}<div class="muted" style="font-size:.7rem">còn ${[rw?'₩'+rw.toLocaleString('en-US'):'',rv?rv.toLocaleString('en-US')+'₫':''].filter(Boolean).join(' + ')||'0'}</div></span>
+        <span style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+          ${rw?`<input class="piwon" data-key="${escA(r.key)}" data-cap="${rw}" inputmode="numeric" value="${rw.toLocaleString('en-US')}" oninput="onMoneyInput(this);onPayItemWon()" style="width:96px;text-align:right;padding:3px 6px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit;font-size:.82rem" title="còn ₩${rw.toLocaleString('en-US')}"/><span style="color:#64748b">₩</span>`:''}
+          ${rv?`<input class="pivnd" data-key="${escA(r.key)}" data-cap="${rv}" inputmode="numeric" value="${rv.toLocaleString('en-US')}" oninput="onMoneyInput(this);onPayItemVnd()" style="width:96px;text-align:right;padding:3px 6px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit;font-size:.82rem" title="còn ${rv.toLocaleString('en-US')}₫"/><span style="color:#64748b">₫</span>`:''}
+        </span>
+      </div>`; }).join('')}
+    </div>
+    <div class="small muted" style="margin-bottom:6px">✏️ Sửa số từng đơn nếu cần — tổng tự cộng vào «Số tiền đã nhận». Mặc định: đơn trên trả đủ trước, thiếu thì đơn dưới thiếu.</div>`:''}
     <div class="small muted" style="margin-bottom:4px">${unpaid.length} đơn ${sel?'đã chọn (chưa thu)':'chưa thu'} · ${sel?'TỔNG tiền':'còn nợ'}</div>
     <div style="font-size:1.4rem;font-weight:800;color:#e11d48;margin-bottom:6px">${owe>0?'₩'+owe.toLocaleString('en-US'):''}${(owe>0&&oweVnd>0)?' + ':''}${oweVnd>0?oweVnd.toLocaleString('en-US')+' ₫':''}${(!owe&&!oweVnd)?'₩0':''}</div>
     ${credit>0?`<div class="small" style="color:var(--green);margin:-2px 0 6px">Đã trả trước (Won): <b>₩${credit.toLocaleString('en-US')}</b></div>`:''}
     ${creditVnd>0?`<div class="small" style="color:var(--green);margin:-2px 0 6px">Đã trả trước (VND): <b>${creditVnd.toLocaleString('en-US')} ₫</b></div>`:''}
     ${hasDebt?`
     ${owe>0?`
-    <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Số tiền đã nhận (₩ Won)</span></label>
-    <input id="payAmt" class="ef" inputmode="numeric" value="${owe.toLocaleString('en-US')}" oninput="onMoneyInput(this)" style="font-size:1.05rem;font-weight:700" />
-    <details style="margin-top:6px">
+    <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Số tiền đã nhận (₩ Won)${sel?' — tổng các đơn ở trên':''}</span></label>
+    <input id="payAmt" class="ef" inputmode="numeric" value="${owe.toLocaleString('en-US')}" oninput="onMoneyInput(this)${sel?';onPayTotalWon()':''}" style="font-size:1.05rem;font-weight:700" />
+    ${!sel?`<details style="margin-top:6px">
       <summary style="cursor:pointer;font-size:.82rem;color:#2563eb;user-select:none">💱 Khách trả bằng VND? Nhập VND + tỷ giá → tự tính ra Won</summary>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;align-items:flex-end">
         <div style="flex:1;min-width:130px"><div style="font-size:.75rem;font-weight:700;color:var(--g600);margin-bottom:2px">Số VND đã nhận</div><input id="payVndSrc" class="ef" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this);calcVndToWon()" /></div>
         <div style="width:130px"><div style="font-size:.75rem;font-weight:700;color:var(--g600);margin-bottom:2px">Tỷ giá (1₩ = ? ₫)</div><input id="payRate" class="ef" inputmode="decimal" placeholder="vd 18.5" value="${escA(lastRate)}" oninput="calcVndToWon()" /></div>
       </div>
       <div class="small" id="payVndCalc" style="margin-top:5px;color:#16a34a;font-weight:700"></div>
-    </details>`:''}
+    </details>`:''}`:''}
     ${oweVnd>0?`
-    <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Số tiền đã nhận (₫ VND)</span></label>
-    <input id="payAmtVnd" class="ef" inputmode="numeric" value="${oweVnd.toLocaleString('en-US')}" oninput="onMoneyInput(this)" style="font-size:1.05rem;font-weight:700" />`:''}
+    <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Số tiền đã nhận (₫ VND)${sel?' — tổng các đơn ở trên':''}</span></label>
+    <input id="payAmtVnd" class="ef" inputmode="numeric" value="${oweVnd.toLocaleString('en-US')}" oninput="onMoneyInput(this)${sel?';onPayTotalVnd()':''}" style="font-size:1.05rem;font-weight:700" />`:''}
     <div class="small muted" style="margin-top:5px">Mặc định = ${sel?'tổng các đơn đã chọn':'toàn bộ nợ'}. <b>Nhập số NHỎ HƠN cũng được</b> (trả từng phần) — phần dư tự gạch nợ ở lần sau. Để trống/0 loại tiền nào thì không thu loại đó.</div>
     <label class="field" style="margin:12px 0 2px"><span style="font-size:.8rem;font-weight:700;color:var(--g600)">Ngày nhận thanh toán</span></label>
     <input type="date" id="payDate" class="ef" value="${todayISO()}" />
@@ -923,8 +934,11 @@ function calcVndToWon(){
 }
 async function confirmPay(){
   if(_paying) return;   // chống double-click ra 2 dòng
-  const amt=$('payAmt')?money($('payAmt').value):0;
-  const amtVnd=$('payAmtVnd')?money($('payAmtVnd').value):0;
+  // Thu nhiều đơn: gom số tiền TỪNG đơn (payItems); tổng = số đã nhận.
+  let payItems=null;
+  if(PAY_SEL_KEYS){ const box=$('payBody'); payItems=box?[...box.querySelectorAll('.payitem')].map(row=>{ const w=row.querySelector('.piwon'), v=row.querySelector('.pivnd'); return {key:row.dataset.key, won:w?money(w.value):0, vnd:v?money(v.value):0}; }).filter(it=>it.won>0||it.vnd>0):[]; }
+  const amt=payItems?payItems.reduce((s,it)=>s+it.won,0):($('payAmt')?money($('payAmt').value):0);
+  const amtVnd=payItems?payItems.reduce((s,it)=>s+it.vnd,0):($('payAmtVnd')?money($('payAmtVnd').value):0);
   const srcVnd=$('payVndSrc')?money($('payVndSrc').value):0;
   const rate=$('payRate')?(parseFloat(String($('payRate').value).replace(/,/g,'.'))||0):0;
   const pdate=($('payDate')&&$('payDate').value)||todayISO();
@@ -944,7 +958,7 @@ async function confirmPay(){
   _paying=true;
   const btn=$('payConfirm'); if(btn){ btn.disabled=true; btn.textContent='⏳ Đang ghi nhận…'; }
   try{
-    const resp=await fetch('/api/vc24/payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,amount:amt,amountVnd:amtVnd,date:pdate,settleAll,settleAllVnd,srcVnd:usedVnd?srcVnd:0,rate:usedVnd?rate:0,payKeys:sel?[...sel]:undefined})});
+    const resp=await fetch('/api/vc24/payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cust:PAY_CUST,amount:amt,amountVnd:amtVnd,date:pdate,settleAll,settleAllVnd,srcVnd:usedVnd?srcVnd:0,rate:usedVnd?rate:0,payKeys:sel?[...sel]:undefined,payItems:payItems||undefined})});
     const res=await resp.json().catch(()=>({ok:false,reason:'http'+resp.status}));
     if(!res.ok){
       const why = res.reason==='save' ? `Lưu thất bại (Redis) — orders ${res.ordKB}KB [status ${res.ordStatus}], ledger ${res.ledKB}KB [status ${res.ledStatus}]${res.ordBody||res.ledBody?' · '+((res.ordStatus>=400?res.ordBody:'')||(res.ledStatus>=400?res.ledBody:'')||''):''}`
